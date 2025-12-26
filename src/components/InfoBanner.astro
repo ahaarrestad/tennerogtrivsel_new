@@ -1,0 +1,17 @@
+---
+const message = "Vi holder stengt i romjulen. Ved akutt behov, ring tannlegevakten.";
+const start = "2025-12-24T00:00:00"; // Startdato for visning
+const end = "2026-01-02T23:59:59";   // Sluttdato for visning
+
+const now = new Date();
+const startDate = start ? new Date(start) : null;
+const endDate = end ? new Date(end) : null;
+const showBanner = (!startDate || now >= startDate) && (!endDate || now <= endDate);
+
+if (!showBanner) return;
+---
+<div class="w-full bg-blue-600 text-white py-3 relative z-10" role="banner">
+    <div class="container mx-auto px-4 text-center">
+        <p class="font-medium">{message}</p>
+    </div>
+</div>
