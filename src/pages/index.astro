@@ -256,16 +256,34 @@ const tannleger = [
                         behandling.</p>
                     <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
                 </div>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-7xl mx-auto">
                     {tannleger.map((d) => (
-                            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
-                                <div class="rounded-2xl shadow-2xl overflow-hidden bg-blue-50 flex items-center justify-center border border-slate-100 h-64 mb-7">
-                                    <img src={d.image} alt={`Bilde av ${d.name}`} loading="lazy" class="h-60"/>
-                                </div>
-                                <div class="team-content">
-                                    <h3 class="font-bold text-lg mb-2 text-blue-800 uppercase tracking-wide text-sm">{d.name}</h3>
-                                    <p class="text-slate-600 italic">{d.role}</p>
-                                    <p class="text-slate-600">{d.bio}</p>
+                            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 hover:border-blue-200 transition-all overflow-hidden w-full max-w-7xl mx-auto mb-8">
+                                <div class="flex flex-col md:flex-row">
+
+                                    <div class="w-full md:w-[40%] lg:w-[35%] flex-shrink-0 relative min-h-[300px] md:min-h-[350px] min-w-[200px] mx:min-w-[250px]">
+                                        <img
+                                                src={d.image}
+                                                alt={d.name}
+                                                class="absolute inset-0 w-full h-full object-cover object-center"
+                                        />
+                                        <div class="absolute inset-0 bg-gradient-to-t from-blue-900/20 to-transparent"></div>
+                                    </div>
+
+                                    <div class="p-8 md:p-12 flex flex-col justify-center flex-1 bg-white">
+                                        <div class="mb-6">
+                                            <span class="text-blue-600 font-bold tracking-widest uppercase text-xs mb-2 block">Vårt team</span>
+                                            <h3 class="text-3xl font-extrabold text-slate-900 mb-1">{d.name}</h3>
+                                            <p class="text-lg text-slate-500 font-medium italic">{d.role}</p>
+                                        </div>
+
+                                        <div class="h-1 w-20 bg-blue-600 rounded-full mb-6"></div>
+
+                                        <p class="text-slate-600 leading-relaxed text-base md:text-lg">
+                                            {d.bio}
+                                        </p>
+
+                                    </div>
                                 </div>
                             </div>
                     ))}
