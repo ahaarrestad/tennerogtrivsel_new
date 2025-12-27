@@ -1,9 +1,9 @@
 ---
 const navLinks = [
-    { name: 'Hjem', href: '/' },
-    { name: 'Kontakt', href: '#kontakt' },
-    { name: 'Tjenester', href: '#tjenester' },
-    { name: 'Om oss', href: '#tannleger' },
+    {name: 'Hjem', href: '/'},
+    {name: 'Kontakt', href: '#kontakt'},
+    {name: 'Tjenester', href: '#tjenester'},
+    {name: 'Om oss', href: '#tannleger'},
 ];
 ---
 
@@ -11,7 +11,7 @@ const navLinks = [
     <div class="container mx-auto px-4">
         <div class="flex justify-between items-center h-20">
             <a href="/" class="text-xl font-bold text-blue-900">
-            <img src="/logo.png" alt="Tenner og Trivsel" class="h-10 w-auto" />
+                <img src="/logo.png" alt="Tenner og Trivsel" class="h-16 w-auto"/>
             </a>
 
             <div class="hidden md:flex items-center gap-8">
@@ -20,15 +20,16 @@ const navLinks = [
                             {link.name}
                         </a>
                 ))}
-                <a href="tel:51529618" class="bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition shadow-md">
-                    Ring 51&nbsp;52&nbsp;96&nbsp;18
+                <a href="tel:51529618"
+                   class="bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition shadow-md">
+                    <span>📞</span> 51&nbsp;52&nbsp;96&nbsp;18
                 </a>
             </div>
 
             <button id="menu-btn" class="md:hidden flex flex-col gap-1.5 p-2" aria-label="Meny">
-                <span class="w-6 h-0.5 bg-slate-800 transition-all duration-300 origin-center"></span>
-                <span class="w-6 h-0.5 bg-slate-800 transition-all duration-300"></span>
-                <span class="w-6 h-0.5 bg-slate-800 transition-all duration-300 origin-center"></span>
+                <span class="w-6 h-0.5 bg-slate-900 transition-all duration-300 origin-center"></span>
+                <span class="w-6 h-0.5 bg-slate-900 transition-all duration-300"></span>
+                <span class="w-6 h-0.5 bg-slate-900 transition-all duration-300 origin-center"></span>
             </button>
         </div>
     </div>
@@ -40,7 +41,8 @@ const navLinks = [
                         {link.name}
                     </a>
             ))}
-            <a href="tel:51529618" class="bg-blue-600 text-white text-center py-4 rounded-xl font-bold mt-2 mobile-link">
+            <a href="tel:51529618"
+               class="bg-blue-600 text-white text-center py-4 rounded-xl font-bold mt-2 mobile-link">
                 Ring 51&nbsp;52&nbsp;96&nbsp;18
             </a>
         </div>
