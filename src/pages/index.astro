@@ -5,256 +5,283 @@ import InfoBanner from '../components/InfoBanner.astro';
 import Navbar from '../components/Navbar.astro';
 
 const services = [
-	{ title: "Allmenn tannbehandling", desc: "Regelmessig kontroll og vedlikehold av dine tenner." },
-	{ title: "Forebyggende behandling", desc: "Vi hjelper deg å unngå hull og tannkjøttsykdommer." },
-	{ title: "Tannkjøttbehandling", desc: "Behandling av periodontitt og andre tannkjøttplager." },
-	{ title: "Kroner og broer", desc: "Gjenoppretting av skadede eller manglende tenner." },
-	{ title: "Proteser", desc: "Gode løsninger for del- eller helproteser." },
-	{ title: "Bleking", desc: "Skånsom og effektiv tannbleking utført av profesjonelle." },
-	{ title: "Akutt hjelp", desc: "Vi strekker oss langt for å hjelpe deg ved akutte smerter." }
+    {title: "Allmenn tannbehandling", desc: "Regelmessig kontroll og vedlikehold av dine tenner."},
+    {title: "Forebyggende behandling", desc: "Vi hjelper deg å unngå hull og tannkjøttsykdommer."},
+    {title: "Tannkjøttbehandling", desc: "Behandling av periodontitt og andre tannkjøttplager."},
+    {title: "Kroner og broer", desc: "Gjenoppretting av skadede eller manglende tenner."},
+    {title: "Proteser", desc: "Gode løsninger for del- eller helproteser."},
+    {title: "Bleking", desc: "Skånsom og effektiv tannbleking utført av profesjonelle."},
+    {title: "Akutt hjelp", desc: "Vi strekker oss langt for å hjelpe deg ved akutte smerter."}
 ];
 
 const tannleger = [
-	{
-		name: 'Gro Knudsen',
-		role: '',
-		bio: 'Spesialist i endodonti (rotfylling)',
-		image: '/gro_christin_knudsen.png'
-	},
-	{
-		name: 'Kirsten Øvestad',
-		role: 'Allmenpraksis',
-		bio: 'Spesialkompetanse implantatprotetikk m/trygderefusjon',
-		image: '/kirsten_ovestad.png'
-	},
-	{
-		name: 'Sigrid Raugstad',
-		role: 'Allmenpraksis',
-		bio: 'Spesialkompetanse implantatprotetikk m/trygderefusjon',
-		image: '/sigrid_raugstad.png'
-	},
-	{
-		name: 'Tora Scandellari',
-		role: 'Allmenpraksis',
-		bio: 'Spesialkompetanse implantatprotetikk m/trygderefusjon',
-		image: '/tora.png'
-	},
-	{
-		name: 'Trude Namtvedt',
-		role: 'Allmenpraksis',
-		bio: '',
-		image: '/trude.jpg'
-	},
-	{
-		name: 'Ingjerd Øvestad',
-		role: 'Allmenpraksis',
-		bio: 'Spesialkompetanse implantatprotetikk m/trygderefusjon og behandling av pasienter med tannlegeskrekk(odontofobi)',
-		image: '/ingjerd.png'
-	},
-	{
-		name: 'Dyveke Knudsen',
-		role: 'Allmenpraksis',
-		bio: 'Spesialist i endodonti (rotfylling)',
-		image: '/dyveke.png'
-	},
-	{
-		name: 'Ida Kristine Gøransson',
-		role: 'Allmenpraksis',
-		bio: '',
-		image: '/ida.png'
-	}
+    {
+        name: 'Gro Knudsen',
+        role: '',
+        bio: 'Spesialist i endodonti (rotfylling)',
+        image: '/gro_christin_knudsen.png'
+    },
+    {
+        name: 'Kirsten Øvestad',
+        role: 'Allmenpraksis',
+        bio: 'Spesialkompetanse implantatprotetikk m/trygderefusjon',
+        image: '/kirsten_ovestad.png'
+    },
+    {
+        name: 'Sigrid Raugstad',
+        role: 'Allmenpraksis',
+        bio: 'Spesialkompetanse implantatprotetikk m/trygderefusjon',
+        image: '/sigrid_raugstad.png'
+    },
+    {
+        name: 'Tora Scandellari',
+        role: 'Allmenpraksis',
+        bio: 'Spesialkompetanse implantatprotetikk m/trygderefusjon',
+        image: '/tora.png'
+    },
+    {
+        name: 'Trude Namtvedt',
+        role: 'Allmenpraksis',
+        bio: '',
+        image: '/trude.jpg'
+    },
+    {
+        name: 'Ingjerd Øvestad',
+        role: 'Allmenpraksis',
+        bio: 'Spesialkompetanse implantatprotetikk m/trygderefusjon og behandling av pasienter med tannlegeskrekk(odontofobi)',
+        image: '/ingjerd.png'
+    },
+    {
+        name: 'Dyveke Knudsen',
+        role: 'Allmenpraksis',
+        bio: 'Spesialist i endodonti (rotfylling)',
+        image: '/dyveke.png'
+    },
+    {
+        name: 'Ida Kristine Gøransson',
+        role: 'Allmenpraksis',
+        bio: '',
+        image: '/ida.png'
+    }
 ];
 ---
 
 <Layout title="Tenner og Trivsel | Din Tannlege i Stavanger">
-	<InfoBanner />
-	<Navbar />
+    <Header/>
+    <InfoBanner/>
+    <Navbar/>
+    <main>
+        <section id="hjem" class="relative bg-white py-25 md:py-28 overflow-hidden md:pb-32">
+            <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
+                <div class="flex-1 space-y-6 text-center md:text-left">
+                    <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
+                        Tannhelse i <br/><span class="text-blue-600">trygge rammer</span>
+                    </h1>
+                    <p class="text-lg text-slate-600 max-w-xl mx-auto md:mx-0">
+                        Velkommen til Tenner og Trivsel i Armauer Hansens vei 11, Stavanger.
+                        Vi tilbyr moderne behandling med fokus på din komfort.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                        <a href="tel:51529618"
+                           class="bg-blue-600 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                            <span>📞</span> Ring 51 52 96 18
+                        </a>
 
-		<section id="hjem" class="relative bg-white py-16 md:py-28 overflow-hidden">
-			<div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
-				<div class="flex-1 space-y-6 text-center md:text-left">
-					<h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
-						Tannhelse i <br/><span class="text-blue-600">trygge rammer</span>
-					</h1>
-					<p class="text-lg text-slate-600 max-w-xl mx-auto md:mx-0">
-						Velkommen til Tenner og Trivsel i Armauer Hansens vei 11, Stavanger.
-						Vi tilbyr moderne behandling med fokus på din komfort.
-					</p>
-					<div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-						<a href="tel:51529618" class="bg-blue-600 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
-							<span>📞</span> Ring 51 52 96 18
-						</a>
+                        <a href="mailto:resepsjon@tennerogtrivsel.no"
+                           class="bg-white border border-blue-200 text-blue-700 px-8 py-4 rounded-full font-bold hover:bg-blue-50 transition flex items-center justify-center gap-2">
+                            <span>✉️</span> resepsjon@tennerogtrivsel.no
+                        </a>
 
-						<a href="mailto:resepsjon@tennerogtrivsel.no" class="bg-white border border-blue-200 text-blue-700 px-8 py-4 rounded-full font-bold hover:bg-blue-50 transition flex items-center justify-center gap-2">
-							<span>✉️</span> resepsjon@tennerogtrivsel.no
-						</a>
+                        <a href="#kontakt"
+                           class="bg-slate-100 text-slate-700 px-8 py-4 rounded-full font-bold hover:bg-slate-200 transition text-center">
+                            Se kart og parkering
+                        </a>
+                    </div>
+                </div>
+                <div class="flex-1 w-full max-w-md md:max-w-xl lg:max-w-2xl">
+                    <div
+                            class="rounded-2xl shadow-2xl overflow-hidden bg-blue-50 aspect-[16/10] flex items-center justify-center border border-slate-100">
+                        <img src="/hovedbilde.png" alt="Tenner og Trivsel"
+                             class="w-full h-full object-cover object-center"/>
+                    </div>
+                </div>
+            </div>
+            <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] z-20">
+                <svg class="relative block w-full h-[60px] md:h-[100px]" viewBox="0 0 1200 120"
+                     preserveAspectRatio="none">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C0,0,10,12.21,43.82,23.06,105.48,42.74,235.5,67.23,321.39,56.44Z"
+                          class="fill-slate-50"></path>
+                </svg>
+            </div>
+        </section>
 
-						<a href="#kontakt" class="bg-slate-100 text-slate-700 px-8 py-4 rounded-full font-bold hover:bg-slate-200 transition text-center">
-							Se kart og parkering
-						</a>
-					</div>
-				</div>
-				<div class="flex-1 w-full max-w-md md:max-w-xl lg:max-w-2xl">
-					<div
-						class="rounded-2xl shadow-2xl overflow-hidden bg-blue-50 aspect-[16/10] flex items-center justify-center border border-slate-100">
-						<img src="/hovedbilde.png" alt="Tenner og Trivsel"
-							 class="w-full h-full object-cover object-center"/>
-					</div>
-				</div>
-			</div>
-			<div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none uppercase">
-				<svg class="relative block w-full h-[50px] fill-slate-50" viewBox="0 0 1200 120" preserveAspectRatio="none">
-					<path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C0,0,10,12.21,43.82,23.06,105.48,42.74,235.5,67.23,321.39,56.44Z"></path>
-				</svg>
-			</div>
-		</section>
+        <section id="kontakt" class="relative bg-slate-50 py-24 md:pb-32">
+            <div class="container mx-auto px-4">
+                <div class="grid lg:grid-cols-3 gap-12">
 
-		<section id="kontakt" class="bg-slate-50 py-24">
-			<div class="container mx-auto px-4">
-				<div class="grid lg:grid-cols-3 gap-12">
+                    <div class="space-y-8">
+                        <div>
+                            <h2 class="text-3xl font-bold mb-6">Kontakt oss</h2>
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-4">
+                                    <span class="text-xl bg-blue-50 p-2 rounded-lg text-blue-600">📍</span>
+                                    <div>
+                                        <p class="font-bold">Adresse</p>
+                                        <p class="text-slate-600">Armauer Hansens vei 11,<br/>4011 Stavanger</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-4">
+                                    <span class="text-xl bg-blue-50 p-2 rounded-lg text-blue-600">📞</span>
+                                    <div>
+                                        <p class="font-bold">Telefon</p>
+                                        <p>Mandag - Fredag 07:45 - 11:15 og 12:15 - 15:15</p>
+                                        <p><a href="tel:51529618" class="text-blue-600 hover:underline">51 52 96 18</a>
+                                        </p>
+                                        <p><a href="tel:51536421" class="text-blue-600 hover:underline">51 53 64 21</a>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-4 text-blue-600">
+                                    <span class="text-xl bg-blue-50 p-2 rounded-lg text-blue-600">✉️</span>
+                                    <div>
+                                        <p class="font-bold text-slate-900">E-post</p>
+                                        <a href="mailto:resepsjon@tennerogtrivsel.no" class="hover:underline">resepsjon@tennerogtrivsel.no</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-					<div class="space-y-8">
-						<div>
-							<h2 class="text-3xl font-bold mb-6">Kontakt oss</h2>
-							<div class="space-y-4">
-								<div class="flex items-start gap-4">
-									<span class="text-xl bg-blue-50 p-2 rounded-lg text-blue-600">📍</span>
-									<div>
-										<p class="font-bold">Adresse</p>
-										<p class="text-slate-600">Armauer Hansens vei 11,<br/>4011 Stavanger</p>
-									</div>
-								</div>
-								<div class="flex items-start gap-4">
-									<span class="text-xl bg-blue-50 p-2 rounded-lg text-blue-600">📞</span>
-									<div>
-										<p class="font-bold">Telefon</p>
-										<p>Mandag - Fredag 07:45 - 11:15 og 12:15 - 15:15</p>
-										<p><a href="tel:51529618" class="text-blue-600 hover:underline">51 52 96 18</a></p>
-										<p><a href="tel:51536421" class="text-blue-600 hover:underline">51 53 64 21</a></p>
-									</div>
-								</div>
-								<div class="flex items-start gap-4 text-blue-600">
-									<span class="text-xl bg-blue-50 p-2 rounded-lg text-blue-600">✉️</span>
-									<div>
-										<p class="font-bold text-slate-900">E-post</p>
-										<a href="mailto:resepsjon@tennerogtrivsel.no" class="hover:underline">resepsjon@tennerogtrivsel.no</a>
-									</div>
-								</div>
-							</div>
-						</div>
+                        <div class="bg-green-50 p-6 rounded-2xl border border-green-100">
+                            <h3 class="font-bold text-green-900 mb-2 flex items-center gap-2">
+                                <span>🚗</span> Gratis Parkering
+                            </h3>
+                            <p class="text-sm text-green-800 leading-relaxed">
+                                Vi har gratis parkering rett utenfor kontoret. I tillegg er det 2 timer gratis parkering
+                                i Folke Bernadottes vei og Overlege Cappelens gate.
+                            </p>
+                        </div>
+                    </div>
 
-						<div class="bg-green-50 p-6 rounded-2xl border border-green-100">
-							<h3 class="font-bold text-green-900 mb-2 flex items-center gap-2">
-								<span>🚗</span> Gratis Parkering
-							</h3>
-							<p class="text-sm text-green-800 leading-relaxed">
-								Vi har gratis parkering rett utenfor kontoret. I tillegg er det 2 timer gratis parkering i Folke Bernadottes vei og Overlege Cappelens gate.
-							</p>
-						</div>
-					</div>
+                    <div class="bg-slate-900 text-white p-8 rounded-2xl shadow-xl">
+                        <h3 class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-400">
+                            <span>🕒</span> Åpningstider
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between border-b border-slate-700 pb-2">
+                                <span>Mandag</span>
+                                <span class="font-medium">08:00 - 15:30</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-700 pb-2 text-blue-300">
+                                <span>Tirsdag (Kveldsåpent)</span>
+                                <span class="font-bold">08:00 - 20:00</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-700 pb-2 text-blue-300">
+                                <span>Onsdag (Kveldsåpent)</span>
+                                <span class="font-bold">08:00 - 20:00</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-700 pb-2">
+                                <span>Torsdag</span>
+                                <span class="font-medium">08:00 - 15:30</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-700 pb-2">
+                                <span>Fredag</span>
+                                <span class="font-medium">08:00 - 15:00</span>
+                            </div>
+                            <div class="flex justify-between text-slate-500 pt-2">
+                                <span>Lørdag - Søndag</span>
+                                <span>Stengt</span>
+                            </div>
+                        </div>
+                    </div>
 
-					<div class="bg-slate-900 text-white p-8 rounded-2xl shadow-xl">
-						<h3 class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-400">
-							<span>🕒</span> Åpningstider
-						</h3>
-						<div class="space-y-4">
-							<div class="flex justify-between border-b border-slate-700 pb-2">
-								<span>Mandag</span>
-								<span class="font-medium">08:00 - 15:30</span>
-							</div>
-							<div class="flex justify-between border-b border-slate-700 pb-2 text-blue-300">
-								<span>Tirsdag (Kveldsåpent)</span>
-								<span class="font-bold">08:00 - 20:00</span>
-							</div>
-							<div class="flex justify-between border-b border-slate-700 pb-2 text-blue-300">
-								<span>Onsdag (Kveldsåpent)</span>
-								<span class="font-bold">08:00 - 20:00</span>
-							</div>
-							<div class="flex justify-between border-b border-slate-700 pb-2">
-								<span>Torsdag</span>
-								<span class="font-medium">08:00 - 15:30</span>
-							</div>
-							<div class="flex justify-between border-b border-slate-700 pb-2">
-								<span>Fredag</span>
-								<span class="font-medium">08:00 - 15:00</span>
-							</div>
-							<div class="flex justify-between text-slate-500 pt-2">
-								<span>Lørdag - Søndag</span>
-								<span>Stengt</span>
-							</div>
-						</div>
-					</div>
+                    <div class="h-full min-h-[400px] rounded-2xl overflow-hidden shadow-inner border border-slate-200">
+                        <iframe
+                                width="100%"
+                                height="100%"
+                                style="border:0"
+                                loading="lazy"
+                                allowfullscreen
+                                src="https://www.google.com/maps/embed/v1/place?key=AIzaSyB4ZI82GreDjtYc5vxoh3f4HE_Lg77QVmc&q=Armauer+Hansens+vei+11,4011+Stavanger">
+                        </iframe>
+                    </div>
 
-					<div class="h-full min-h-[400px] rounded-2xl overflow-hidden shadow-inner border border-slate-200">
-						<iframe
-							width="100%"
-							height="100%"
-							style="border:0"
-							loading="lazy"
-							allowfullscreen
-							src="https://www.google.com/maps/embed/v1/place?key=AIzaSyB4ZI82GreDjtYc5vxoh3f4HE_Lg77QVmc&q=Armauer+Hansens+vei+11,4011+Stavanger">
-						</iframe>
-					</div>
+                </div>
+            </div>
+            <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] z-20">
+                <svg class="relative block w-full h-[60px] md:h-[100px]" viewBox="0 0 1200 120"
+                     preserveAspectRatio="none">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C0,0,10,12.21,43.82,23.06,105.48,42.74,235.5,67.23,321.39,56.44Z"
+                          class="fill-white"></path>
+                </svg>
+            </div>
+        </section>
 
-				</div>
-			</div>
-		</section>
+        <section id="tjenester" class="relative bg-white py-16 md:py-24 overflow-hidden md:pb-32">
+            <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold text-slate-900 italic tracking-tight">Våre Tjenester</h2>
+                    <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {services.map((s) => (
+                            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
+                                <h3 class="font-bold text-lg mb-2 text-blue-800 uppercase tracking-wide text-sm">
+                                    / {s.title}</h3>
+                                <p class="text-slate-500 text-sm leading-relaxed">{s.desc}</p>
+                            </div>
+                    ))}
+                </div>
+            </div>
+            <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] z-20">
+                <svg class="relative block w-full h-[60px] md:h-[100px]" viewBox="0 0 1200 120"
+                     preserveAspectRatio="none">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C0,0,10,12.21,43.82,23.06,105.48,42.74,235.5,67.23,321.39,56.44Z"
+                          class="fill-slate-50"></path>
+                </svg>
+            </div>
+        </section>
 
-	<section id="tjenester" class="relative bg-white py-16 md:py-24 overflow-hidden">
-		<div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
-				<div class="text-center mb-16">
-					<h2 class="text-3xl font-bold text-slate-900 italic tracking-tight">Våre Tjenester</h2>
-					<div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
-				</div>
-				<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-					{services.map((s) => (
-						<div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
-							<h3 class="font-bold text-lg mb-2 text-blue-800 uppercase tracking-wide text-sm">/ {s.title}</h3>
-							<p class="text-slate-500 text-sm leading-relaxed">{s.desc}</p>
-						</div>
-					))}
-				</div>
-			</div>
-		<div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none uppercase">
-			<svg class="relative block w-full h-[50px] fill-slate-50" viewBox="0 0 1200 120" preserveAspectRatio="none">
-				<path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C0,0,10,12.21,43.82,23.06,105.48,42.74,235.5,67.23,321.39,56.44Z"></path>
-			</svg>
-		</div>
+        <section id="tannleger" class="relative bg-slate-50 py-24 md:pb-32">
+            <div class="team-inner">
+                <header class="team-header">
+                    <h2>Våre tannleger</h2>
+                    <p class="team-lead">Et varmt og erfarent team som setter pasienten i sentrum og tilbyr skreddersydd
+                        behandling.</p>
+                </header>
 
-	</section>
+                <div class="team-grid">
+                    {tannleger.map((d) => (
+                            <article class="team-card" key={d.name}>
+                                <div class="team-image">
+                                    <img src={d.image} alt={`Bilde av ${d.name}`} loading="lazy"/>
+                                </div>
+                                <div class="team-content">
+                                    <h3 class="team-name">{d.name}</h3>
+                                    <p class="team-role">{d.role}</p>
+                                    <p class="team-bio">{d.bio}</p>
+                                </div>
+                            </article>
+                    ))}
+                </div>
+            </div>
+            <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] z-20">
+                <svg class="relative block w-full h-[60px] md:h-[100px]" viewBox="0 0 1200 120"
+                     preserveAspectRatio="none">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C0,0,10,12.21,43.82,23.06,105.48,42.74,235.5,67.23,321.39,56.44Z"
+                          class="fill-slate-100"></path>
+                </svg>
+            </div>
+        </section>
 
-		<section id="tannleger" class="team-section">
-			<div class="team-inner">
-				<header class="team-header">
-					<h2>Våre tannleger</h2>
-					<p class="team-lead">Et varmt og erfarent team som setter pasienten i sentrum og tilbyr skreddersydd behandling.</p>
-				</header>
+    </main>
 
-				<div class="team-grid">
-					{tannleger.map((d) => (
-						<article class="team-card" key={d.name}>
-							<div class="team-image">
-								<img src={d.image} alt={`Bilde av ${d.name}`} loading="lazy" />
-							</div>
-							<div class="team-content">
-								<h3 class="team-name">{d.name}</h3>
-								<p class="team-role">{d.role}</p>
-								<p class="team-bio">{d.bio}</p>
-							</div>
-						</article>
-					))}
-				</div>
-			</div>
-		</section>
-
-	</main>
-
-	<footer class="bg-slate-100 text-slate-500 py-12 border-t border-slate-200">
-		<div class="container mx-auto px-4 text-center">
-			<p class="font-bold text-slate-900 mb-2">Tenner og Trivsel -
-				<a href="tel:51529618" class="text-blue-600 hover:underline">51 52 96 18</a> /
-				<a href="tel:51536421" class="text-blue-600 hover:underline">51 53 64 21</a> -
-				<a href="mailto:resepsjon@tennerogtrivsel.no" class="text-blue-600 hover:underline">resepsjon@tennerogtrivsel.no</a></p>
-		</div>
-	</footer>
+    <footer class="bg-slate-100 text-slate-500 py-12 border-t border-slate-200">
+        <div class="container mx-auto px-4 text-center">
+            <p class="font-bold text-slate-900 mb-2">Tenner og Trivsel -
+                <a href="tel:51529618" class="text-blue-600 hover:underline">51 52 96 18</a> /
+                <a href="tel:51536421" class="text-blue-600 hover:underline">51 53 64 21</a> -
+                <a href="mailto:resepsjon@tennerogtrivsel.no" class="text-blue-600 hover:underline">resepsjon@tennerogtrivsel.no</a>
+            </p>
+        </div>
+    </footer>
 </Layout>
