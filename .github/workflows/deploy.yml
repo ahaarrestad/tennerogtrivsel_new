@@ -30,14 +30,14 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-north-1 # Endre til din region (f.eks. eu-west-1)
+          aws-region: eu-west-1 # Endre til din region (f.eks. eu-west-1)
 
       - name: Deploy to S3
         run: |
-          aws s3 sync dist/ s3://www.tennerogtrivsel2.no --delete
+          aws s3 sync dist/ s3://test2.aarrestad.com --acl public-read --delete
 
-      - name: Invalidate CloudFront Cache
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
+#      - name: Invalidate CloudFront Cache
+#        run: |
+#          aws cloudfront create-invalidation \
+#            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+#            --paths "/*"
