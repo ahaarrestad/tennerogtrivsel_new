@@ -1,6 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
 import InfoBanner from '../components/InfoBanner.astro';
 import Navbar from '../components/Navbar.astro';
 
@@ -83,21 +82,16 @@ const tannleger = [
                     <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                         <a href="tel:51529618"
                            class="bg-blue-600 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
-                            <span>📞</span> Ring 51 52 96 18
+                            <span>📞</span> Ring 51&nbsp;52&nbsp;96&nbsp;18
                         </a>
 
                         <a href="mailto:resepsjon@tennerogtrivsel.no"
                            class="bg-white border border-blue-200 text-blue-700 px-8 py-4 rounded-full font-bold hover:bg-blue-50 transition flex items-center justify-center gap-2">
                             <span>✉️</span> resepsjon@tennerogtrivsel.no
                         </a>
-
-                        <a href="#kontakt"
-                           class="bg-slate-100 text-slate-700 px-8 py-4 rounded-full font-bold hover:bg-slate-200 transition text-center">
-                            Se kart og parkering
-                        </a>
                     </div>
                 </div>
-                <div class="flex-1 w-full max-w-md md:max-w-xl lg:max-w-2xl">
+                <div class="flex-1 w-full max-w-md md:max-w-xl lg:max-w-2xl min-w-[350px]">
                     <div
                             class="rounded-2xl shadow-2xl overflow-hidden bg-blue-50 aspect-[16/10] flex items-center justify-center border border-slate-100">
                         <img src="/hovedbilde.png" alt="Tenner og Trivsel"
@@ -200,7 +194,7 @@ const tannleger = [
 
                         // 3. Init-funksjon som kjøres når Google er klar
                         window.initMap = function() {
-                            const position = { lat: 58.9515, lng: 5.7327 }; // Armauer Hansens vei 11
+                            const position = { lat: 58.95426193582862, lng: 5.734568467856621 }; // Armauer Hansens vei 11
 
                             const map = new google.maps.Map(document.getElementById("map"), {
                                 zoom: 16,
@@ -255,25 +249,25 @@ const tannleger = [
         </section>
 
         <section id="tannleger" class="relative bg-slate-50 py-24 md:pb-32">
-            <div class="team-inner">
-                <header class="team-header">
-                    <h2>Våre tannleger</h2>
-                    <p class="team-lead">Et varmt og erfarent team som setter pasienten i sentrum og tilbyr skreddersydd
+            <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold text-slate-900 italic tracking-tight">Våre Tannleger</h2>
+                    <p class="text-slate-600">Et varmt og erfarent team som setter pasienten i sentrum og tilbyr skreddersydd
                         behandling.</p>
-                </header>
-
-                <div class="team-grid">
+                    <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {tannleger.map((d) => (
-                            <article class="team-card" key={d.name}>
-                                <div class="team-image">
-                                    <img src={d.image} alt={`Bilde av ${d.name}`} loading="lazy"/>
+                            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
+                                <div class="rounded-2xl shadow-2xl overflow-hidden bg-blue-50 flex items-center justify-center border border-slate-100 h-64 mb-7">
+                                    <img src={d.image} alt={`Bilde av ${d.name}`} loading="lazy" class="h-60"/>
                                 </div>
                                 <div class="team-content">
-                                    <h3 class="team-name">{d.name}</h3>
-                                    <p class="team-role">{d.role}</p>
-                                    <p class="team-bio">{d.bio}</p>
+                                    <h3 class="font-bold text-lg mb-2 text-blue-800 uppercase tracking-wide text-sm">{d.name}</h3>
+                                    <p class="text-slate-600 italic">{d.role}</p>
+                                    <p class="text-slate-600">{d.bio}</p>
                                 </div>
-                            </article>
+                            </div>
                     ))}
                 </div>
             </div>
