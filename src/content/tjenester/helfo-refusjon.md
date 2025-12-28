@@ -18,7 +18,7 @@ Selv om hovedregelen er at voksne må betale for tannbehandling selv, finnes det
 
 ## Vi gjør papirarbeidet for deg
 
-Du trenger ikke å oppsøke NAV eller trygdekontoret selv. Vi har godkjent **direkteoppgjør** med Helfo.
+Du trenger ikke å søke selv. Vi har godkjent **direkteoppgjør** med Helfo.
 
 ### Slik fungerer det i praksis:
 1.  **Vurdering:** Vi vurderer om din situasjon faller inn under kravene for stønad.
