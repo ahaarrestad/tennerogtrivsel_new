@@ -1,0 +1,96 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import {getCollection, render} from 'astro:content';
+import WaveFromWhite from "../../components/WaveFromWhite.astro";
+import {formatInfoText} from '../../scripts/textFormatter.js';
+
+// 1. Fortell Astro hvilke sider som skal genereres
+export async function getStaticPaths() {
+    const tjenester = await getCollection('tjenester');
+    return tjenester.map(entry => ({
+        params: {id: entry.id}, // Bruk entry.id i Astro 5
+        props: {entry, tjenester},
+    }));
+}
+
+// 2. Hent data for den gjeldende siden
+const {entry, tjenester} = Astro.props;
+
+// 3. "Pakk ut" innholdet fra Markdown-filen
+const {Content} = await render(entry);
+---
+
+<Layout title={`${entry.data.title} | Tenner og Trivsel`}>
+    <section class="bg-white pt-12 md:pt-20 pb-0 flex flex-col flex-grow">
+        {/* Dette er containeren for teksten din */}
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 flex-grow w-full">
+            {/* 1. Nav */}
+            <nav class="mb-8 text-sm text-gray-500">
+                <a href="/" class="hover:text-blue-600">Forside</a>
+                <span class="mx-2">/</span>
+                <span class="text-gray-900">{entry.data.title}</span>
+            </nav>
+
+            {/* 2. Tittel og Ingress */}
+            <header class="mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+                    {entry.data.title}
+                </h1>
+                <p class="text-xl text-slate-600 leading-relaxed font-light">
+                    {entry.data.ingress}
+                </p>
+            </header>
+
+            {/* 3. Body (Vi fjerner grid her for å få alt under hverandre) */}
+            <div class="prose prose-slate max-w-none">
+                <div class="text-lg text-slate-700 space-y-6">
+                    <Content/>
+                </div>
+
+                {/* Blå boks med kontaktinfo */}
+                <div class="mt-12 p-6 bg-blue-50 rounded-2xl border border-blue-100">
+                    <h3 class="text-blue-900 font-bold mb-2">Bestill time for {entry.data.title}</h3>
+                    <p class="text-blue-800 text-sm mb-4">Ring oss på telefon eller send e-post.</p>
+                    <a href="/#kontakt"
+                       class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">
+                        Gå til kontakt
+                    </a>
+                </div>
+            </div>
+
+            {/* 4. Alle tjenester sortert alfabetisk */}
+            <div class="mt-20 mb-12 border-t pt-10">
+                <h4 class="font-bold mb-6 text-slate-900 text-lg">Våre tjenester</h4>
+                <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-3">
+                    {tjenester
+                        .sort((a, b) => a.data.title.localeCompare(b.data.title, 'nb'))
+                        .map(s => {
+                            const isCurrent = s.id === entry.id;
+
+                            return (
+                                    <li class="flex items-center gap-2 py-1">
+                                        <span class={isCurrent ? "text-blue-600" : "text-slate-400"}>→</span>
+                                        {isCurrent ? (
+                                                <span class="text-sm font-bold text-slate-900">
+                                {s.data.title}
+                            </span>
+                                        ) : (
+                                                <a href={`/tjenester/${s.id}`}
+                                                   class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors">
+                                                    {s.data.title}
+                                                </a>
+                                        )}
+                                    </li>
+                            );
+                        })
+                    }
+                </ul>
+            </div>
+        </div>
+
+        {/* Bølgen ligger her, helt nederst i seksjonen, etter at alt innhold er ferdig */}
+        <div class="w-full leading-[0]">
+            <WaveFromWhite/>
+        </div>
+    </section>
+</Layout>

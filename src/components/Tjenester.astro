@@ -1,5 +1,14 @@
 ---
-import services from '../data/services.json';
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+
+// 1. Hent alle filene fra src/content/tjenester/
+const allServices = await getCollection('tjenester');
+
+// 2. Sorter dem alfabetisk basert på tittelen i frontmatter (nb = norsk)
+const sortedServices = allServices.sort((a, b) =>
+    a.data.title.localeCompare(b.data.title, 'nb')
+);
 import WaveFromWhite from "./WaveFromWhite.astro";
 ---
 <section id="tjenester" class="scroll-mt-6 relative bg-white py-16 md:py-24 overflow-hidden md:pb-0">
@@ -9,13 +18,13 @@ import WaveFromWhite from "./WaveFromWhite.astro";
             <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
         </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service) => (
+            {sortedServices.map((service) => (
                     <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
-                        <h3 class="font-bold text-lg mb-2 text-blue-800 uppercase tracking-wide text-sm">
-                            / {service.title}</h3>
-                        <p class="text-slate-500 text-sm leading-relaxed">{service.ingress}</p>
-                        <a href={`/tjenester/${service.slug}`} class="mt-4 inline-block text-blue-600 font-medium hover:translate-x-1 transition-transform">
-                            Les mer om {service.title} &rarr;
+                        <h2 class="font-bold text-lg mb-2 text-blue-800 uppercase tracking-wide text-sm">
+                            {service.data.title}</h2>
+                        <p class="text-slate-500 text-sm leading-relaxed line-clamp-3">{service.data.ingress}</p>
+                        <a href={`/tjenester/${service.id}`} class="mt-4 inline-block text-blue-600 font-medium hover:translate-x-1 transition-transform">
+                            Les mer om {service.data.title} &rarr;
                         </a>
                     </div>
             ))}
