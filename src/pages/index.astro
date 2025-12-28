@@ -3,6 +3,40 @@ import Layout from '../layouts/Layout.astro';
 import InfoBanner from '../components/InfoBanner.astro';
 import Navbar from '../components/Navbar.astro';
 
+
+// 1. Definer meldingene dine
+const messages = [
+    {
+        id: 1,
+        header: "🎄 Vi holder julestengt fra 23. desember til 2. januar. God jul!",
+        text: "Vi har åpent mandag 22 desember fra 08:00 - 15:30 og tirsdag 23 desember fra 08:00 til 14:30, samt i romjulen mandag 29 og tirsdag 30 desember klokken 8 - 15."
+            + "<br>Vanlige åpningstider etter nyttår fra og med fredag 2 januar."
+            + "<br>Du kan få akkutthjelp hos Stavanger Tannlegevakt i helger og på helligdager, Tastagt 30-32, tlf 51659270."
+            + "<br><br>"
+            + "🎄 Vi ønsker alle god jul! 🎄",
+        startDate: "2025-12-01",
+        endDate: "2026-01-02",
+    },
+    {
+        id: 2,
+        header: "⚠️ Vi har for tiden problemer med sentralbordet. Bruk epost.",
+        text: "Kontakt oss på epost <a href=mailto:resepsjon@tennerogtrivsel.no class='text-blue-600 underline'>resepsjon@tennerogtrivsel.no</a> så svarer vi så raskt vi kan."
+            + "<br><br>"
+            + "Beklager ulempen dette medfører.",
+        startDate: "2025-12-27", // Denne er aktiv nå i følge dagens dato
+        endDate: "2025-12-27",
+    }
+];
+
+// 2. Finn den aktive meldingen
+const now = new Date();
+const activeMessage = messages.find(m => {
+    const start = new Date(m.startDate);
+    const end = new Date(m.endDate);
+    end.setHours(23, 59, 59);
+    return now >= start && now <= end;
+});
+
 const services = [
     {title: "Allmenn tannbehandling", desc: "Regelmessig kontroll og vedlikehold av dine tenner."},
     {title: "Forebyggende behandling", desc: "Vi hjelper deg å unngå hull og tannkjøttsykdommer."},
@@ -66,8 +100,13 @@ const tannleger = [
 ---
 
 <Layout title="Tenner og Trivsel | Din Tannlege i Stavanger">
-    <InfoBanner/>
-    <Navbar/>
+
+    <InfoBanner message={activeMessage}/>
+
+    <div class={activeMessage ? "sticky top-[40px] z-50" : "sticky top-0 z-50"}>
+        <Navbar message={activeMessage}/>
+    </div>
+
     <main>
         <section id="hjem" class="relative bg-white py-25 md:py-28 overflow-hidden md:pb-32">
             <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
@@ -90,6 +129,16 @@ const tannleger = [
                             <span>✉️</span> resepsjon@tennerogtrivsel.no
                         </a>
                     </div>
+                    { activeMessage && (
+                            <div class="bg-slate-900 p-8 rounded-2xl shadow-xl border border-green-100">
+                                <h3 class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-600">
+                                    {activeMessage.header}
+                                </h3>
+                                <p class="text-sm text-white leading-relaxed" set:html={activeMessage.text}>
+                            </div>
+
+                    )}
+
                 </div>
                 <div class="flex-1 w-full max-w-md md:max-w-xl lg:max-w-2xl min-w-[350px]">
                     <div
@@ -112,7 +161,8 @@ const tannleger = [
             <div class="container mx-auto px-4 md:flex-row items-center gap-12">
                 <div class="text-center mb-16">
                     <h2 class="text-3xl font-bold text-slate-900 italic tracking-tight">Kontakt informasjon</h2>
-                    <p class="text-slate-600">Vi holder til like ved Stavanger Universitetssykehus på Våland og har parkering både på utsiden og i gatene rundt.</p>
+                    <p class="text-slate-600">Vi holder til like ved Stavanger Universitetssykehus på Våland og har
+                        parkering både på utsiden og i gatene rundt.</p>
                     <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
                 </div>
                 <div class="grid lg:grid-cols-3 gap-12">
@@ -148,7 +198,7 @@ const tannleger = [
                             </div>
                         </div>
 
-                        <div class="bg-green-50 p-6 rounded-2xl border border-green-100">
+                        <div class="bg-green-50 p-8 rounded-2xl shadow-xl border border-green-100">
                             <h3 class="font-bold text-green-900 mb-2 flex items-center gap-2">
                                 <span>🚗</span> Gratis Parkering
                             </h3>
@@ -191,14 +241,21 @@ const tannleger = [
                         </div>
                     </div>
 
-                    <div id="map" class="w-full h-[450px] rounded-3xl shadow-inner bg-slate-100 border border-slate-200"></div>
+                    <div id="map"
+                         class="w-full h-[450px] rounded-3xl shadow-inner bg-slate-100 border border-slate-200"></div>
 
                     <script is:inline>
-                        (g=>{var h,a,k,p="The Loader",obj={ls:"sig",bi:"-2147483648"},e=window,document=e.document,j=document.createElement("script");j.src=`https://maps.googleapis.com/maps/api/js?key=AIzaSyB4ZI82GreDjtYc5vxoh3f4HE_Lg77QVmc&callback=initMap&libraries=maps,marker&v=beta`;j.async=true;document.head.appendChild(j)})();
+                        (g => {
+                            var h, a, k, p = "The Loader", obj = {ls: "sig", bi: "-2147483648"}, e = window,
+                                document = e.document, j = document.createElement("script");
+                            j.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyB4ZI82GreDjtYc5vxoh3f4HE_Lg77QVmc&callback=initMap&libraries=maps,marker&v=beta`;
+                            j.async = true;
+                            document.head.appendChild(j)
+                        })();
 
                         // 3. Init-funksjon som kjøres når Google er klar
-                        window.initMap = function() {
-                            const position = { lat: 58.95426193582862, lng: 5.734568467856621 }; // Armauer Hansens vei 11
+                        window.initMap = function () {
+                            const position = {lat: 58.95426193582862, lng: 5.734568467856621}; // Armauer Hansens vei 11
 
                             const map = new google.maps.Map(document.getElementById("map"), {
                                 zoom: 16,
@@ -256,7 +313,8 @@ const tannleger = [
             <div class="container mx-auto px-4 md:flex-row items-center gap-12">
                 <div class="text-center mb-16">
                     <h2 class="text-3xl font-bold text-slate-900 italic tracking-tight">Våre Tannleger</h2>
-                    <p class="text-slate-600">Et varmt og erfarent team som setter pasienten i sentrum og tilbyr skreddersydd
+                    <p class="text-slate-600">Et varmt og erfarent team som setter pasienten i sentrum og tilbyr
+                        skreddersydd
                         behandling.</p>
                     <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
                 </div>

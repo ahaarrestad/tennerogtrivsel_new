@@ -1,36 +1,13 @@
 ---
-// 1. Definer meldingene dine
-const messages = [
-{
-    id: 1,
-    text: "🎄 Vi holder julestengt fra 23. desember til 2. januar. God jul!",
-    startDate: "2025-12-01",
-    endDate: "2026-01-02",
-    },
-{
-    id: 2,
-    text: "⚠️ Vi har for tiden problemer med sentralbordet. Bruk kontaktformulæret.",
-    startDate: "2025-12-27", // Denne er aktiv nå i følge dagens dato
-    endDate: "2025-12-30",
-    }
-];
-
-// 2. Finn den aktive meldingen
-const now = new Date();
-const activeMessage = messages.find(m => {
-    const start = new Date(m.startDate);
-    const end = new Date(m.endDate);
-    end.setHours(23, 59, 59);
-    return now >= start && now <= end;
-    });
+const { message } = Astro.props;
 ---
 
-{activeMessage && (
-<div class="bg-slate-900 text-white py-2.5 px-4 relative z-[60] border-b border-white/10">
+{message && (
+<div class="sticky top-0 z-[60] bg-slate-900 text-white py-2.5 px-4 relative z-[60] border-b border-white/10">
     <div class="container mx-auto flex items-center justify-center text-center">
         <p class="text-xs md:text-sm font-medium tracking-wide flex items-center gap-2">
             <span class="inline-block animate-pulse w-2 h-2 rounded-full bg-blue-400"></span>
-            {activeMessage.text}
+            {message.header}
         </p>
     </div>
 </div>
