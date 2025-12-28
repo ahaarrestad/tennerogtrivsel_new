@@ -1,17 +1,42 @@
 ---
-export interface Props { title?: string }
-const { title } = Astro.props;
+export interface Props {
+    title?: string
+}
+import Footer from '../components/Footer.astro';
 import '../styles/global.css';
+
+import InfoBanner from '../components/InfoBanner.astro';
+import Navbar from '../components/Navbar.astro';
+
+import {getActiveMessage} from '../scripts/activeMessage.js';
+
+const activeMessage = getActiveMessage();
+
+const {title} = Astro.props;
 ---
 <!doctype html>
-<html lang="no" class="scroll-smooth">
+<html lang="no" class="scroll-smooth h-full">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width"/>
     <title>{title ?? 'Tenner og Trivsel'}</title>
 </head>
-<body class="bg-slate-50 text-slate-900">
-<slot />
+
+<body class="text-slate-900 flex flex-col min-h-full">
+
+<InfoBanner message={activeMessage}/>
+
+{/* Flytter navbar litt ned hvis melding er aktiv */}
+<div class={activeMessage ? "sticky top-[40px] z-50" : "sticky top-0 z-50"}>
+    <Navbar message={activeMessage}/>
+</div>
+
+<main class="flex-grow flex flex-col">
+    <slot activeMessage={activeMessage}/>
+</main>
+
+<Footer/>
+
 </body>
 </html>
 

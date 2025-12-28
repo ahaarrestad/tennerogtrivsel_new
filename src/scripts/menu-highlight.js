@@ -34,5 +34,4 @@ export function initMenuHighlight() {
     document.querySelectorAll('section[id]').forEach(section => {
         observer.observe(section);
     });
-
 }

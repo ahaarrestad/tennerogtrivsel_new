@@ -1,19 +1,22 @@
 ---
-import {services} from '../data/services.js';
+import services from '../data/services.json';
 import WaveFromWhite from "./WaveFromWhite.astro";
 ---
-<section id="tjenester" class="relative bg-white py-16 md:py-24 overflow-hidden md:pb-32">
-    <div class="container mx-auto px-4 md:flex-row items-center gap-12">
+<section id="tjenester" class="scroll-mt-6 relative bg-white py-16 md:py-24 overflow-hidden md:pb-0">
+    <div class="container mx-auto px-4 md:flex-row items-center gap-12 mb-32">
         <div class="text-center mb-16">
             <h2 class="text-3xl font-bold text-slate-900 italic tracking-tight">Våre Tjenester</h2>
             <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
         </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((s) => (
+            {services.map((service) => (
                     <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
                         <h3 class="font-bold text-lg mb-2 text-blue-800 uppercase tracking-wide text-sm">
-                            / {s.title}</h3>
-                        <p class="text-slate-500 text-sm leading-relaxed">{s.desc}</p>
+                            / {service.title}</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">{service.ingress}</p>
+                        <a href={`/tjenester/${service.slug}`} class="mt-4 inline-block text-blue-600 font-medium hover:translate-x-1 transition-transform">
+                            Les mer om {service.title} &rarr;
+                        </a>
                     </div>
             ))}
         </div>

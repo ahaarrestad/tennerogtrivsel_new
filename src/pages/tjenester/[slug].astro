@@ -1,0 +1,77 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import services from '../../data/services.json';
+import WaveFromWhite from "../../components/WaveFromWhite.astro";
+import {formatInfoText} from '../../scripts/textFormatter.js';
+
+export async function getStaticPaths() {
+    return services.map((service) => ({
+        params: {slug: service.slug},
+        props: {service},
+    }));
+}
+
+const {service} = Astro.props;
+---
+
+<Layout title={`${service.title} | Tenner og Trivsel`}>
+    <section class="bg-white pt-12 md:pt-20 pb-0 flex flex-col flex-grow">
+        {/* Dette er containeren for teksten din */}
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 flex-grow w-full">
+            {/* 1. Nav */}
+            <nav class="mb-8 text-sm text-gray-500">
+                <a href="/" class="hover:text-blue-600">Forside</a>
+                <span class="mx-2">/</span>
+                <span class="text-gray-900">{service.title}</span>
+            </nav>
+
+            {/* 2. Tittel og Ingress */}
+            <header class="mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+                    {service.title}
+                </h1>
+                <p class="text-xl text-slate-600 leading-relaxed font-light">
+                    {service.ingress}
+                </p>
+            </header>
+
+            {/* 3. Body (Vi fjerner grid her for å få alt under hverandre) */}
+            <div class="prose prose-slate max-w-none">
+                <div class="text-lg text-slate-700 space-y-6">
+                    <p class="whitespace-pre-line">
+                        <span set:html={formatInfoText(service.body)}></span>
+                    </p>
+                </div>
+
+                {/* Blå boks med kontaktinfo */}
+                <div class="mt-12 p-6 bg-blue-50 rounded-2xl border border-blue-100">
+                    <h3 class="text-blue-900 font-bold mb-2">Bestill time for {service.title}</h3>
+                    <p class="text-blue-800 text-sm mb-4">Ring oss på telefon eller send e-post.</p>
+                    <a href="/#kontakt"
+                       class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">
+                        Gå til kontakt
+                    </a>
+                </div>
+            </div>
+
+            {/* 4. Andre tjenester (Flyttet under body for å beholde vertikal flyt) */}
+            <div class="mt-20 mb-12 border-t pt-10">
+                <h4 class="font-bold mb-4 text-slate-900">Våre andre tjenester</h4>
+                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {services.filter(s => s.slug !== service.slug).slice(0, 4).map(s => (
+                            <li>
+                                <a href={`/tjenester/${s.slug}`} class="text-blue-600 hover:underline text-sm">
+                                    {s.title}
+                                </a>
+                            </li>
+                    ))}
+                </ul>
+            </div>
+        </div>
+
+        {/* Bølgen ligger her, helt nederst i seksjonen, etter at alt innhold er ferdig */}
+        <div class="w-full leading-[0]">
+            <WaveFromWhite />
+        </div>
+    </section>
+</Layout>

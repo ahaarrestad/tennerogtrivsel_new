@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "tannbehandling",
+    "title": "Allmenn tannbehandling",
+    "ingress": "Regelmessig kontroll og vedlikehold av dine tenner.",
+    "body": "Vi tilbyr omfattende allmenn tannbehandling for å sikre at dine tenner og tannkjøtt er sunne. Våre tjenester inkluderer rutinemessige kontroller, rens, fyllinger, og andre nødvendige behandlinger for å opprettholde god munnhygiene."
+  },
+  {
+    "slug": "forebygging",
+    "title": "Forebyggende behandling",
+    "ingress": "Vi hjelper deg å unngå hull og tannkjøttsykdommer.",
+    "body": "Forebyggende behandling er nøkkelen til å opprettholde en sunn munn. Vi tilbyr profesjonell tannrens, fluorbehandlinger, og veiledning i god munnhygiene for å forhindre tannproblemer før de oppstår."
+  },
+  {
+    "slug": "tannkjott",
+    "title": "Tannkjøttbehandling",
+    "ingress": "Behandling av periodontitt og andre tannkjøttplager.",
+    "body": "Vårt team er spesialisert i behandling av tannkjøttsykdommer som periodontitt. Vi tilbyr grundig rensing under tannkjøttlinjen, samt veiledning i hvordan du kan forbedre din munnhygiene for å forhindre fremtidige problemer."
+  },
+  {
+    "slug": "kroner-broer",
+    "title": "Kroner og broer",
+    "ingress": "Gjenoppretting av skadede eller manglende tenner.",
+    "body": "Vi tilbyr skreddersydde kroner og broer for å gjenopprette funksjon og estetikk i ditt smil. Våre tannleger bruker moderne materialer og teknikker for å sikre at dine nye tenner ser naturlige ut og føles komfortable."
+  },
+  {
+    "slug": "proteser",
+    "title": "Proteser",
+    "ingress": "Gode løsninger for del- eller helproteser.",
+    "body": "Vi tilbyr tilpassede del- og helproteser for å erstatte tapte tenner. Våre proteser er designet for å gi komfort, funksjonalitet, og et naturlig utseende, slik at du kan smile og spise med selvtillit."
+  },
+  {
+    "slug": "bleking",
+    "title": "Bleking",
+    "ingress": "Skånsom og effektiv tannbleking utført av profesjonelle.",
+    "body": "Vi tilbyr profesjonell tannbleking som gir deg et lysere smil på en trygg og effektiv måte. Vår behandling er skreddersydd for å minimere sensitivitet og maksimere resultater, slik at du kan føle deg trygg på ditt nye, hvitere smil."
+  },
+  {
+    "slug": "akutt-hjelp",
+    "title": "Akutt hjelp",
+    "ingress": "Vi strekker oss langt for å hjelpe deg ved akutte smerter.",
+    "body": "Hvis du opplever akutte tannproblemer som smerte eller skade, er vi her for å hjelpe. Vi tilbyr rask vurdering og behandling for å lindre smerte og løse problemet så effektivt som mulig."
+  }
+]

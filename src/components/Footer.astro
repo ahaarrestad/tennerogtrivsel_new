@@ -1,0 +1,12 @@
+---
+import {formatInfoText} from '../scripts/textFormatter.js';
+---
+<footer class="bg-slate-50 text-slate-500 py-4">
+    <div class="container mx-auto px-4 text-center">
+        <p class="font-bold text-slate-900 mb-2">Tenner og Trivsel -
+            <span set:html={formatInfoText("51 52 96 18")}></span> /
+            <span set:html={formatInfoText("51 53 64 21")}></span> -
+            <span set:html={formatInfoText("resepsjon@tennerogtrivsel.no")}></span>
+        </p>
+    </div>
+</footer>
