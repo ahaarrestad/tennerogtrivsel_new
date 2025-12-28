@@ -5,14 +5,13 @@ const navLinks = [
     {name: 'Tjenester', href: '#tjenester'},
     {name: 'Om oss', href: '#tannleger'},
 ];
-
 ---
 
-<nav class="bg-white border-b border-slate-100">
+<nav class="bg-slate-50 border-b border-slate-100">
     <div class="container mx-auto px-4">
         <div class="flex justify-between items-center h-20">
             <a href="/" class="text-xl font-bold text-blue-900">
-                <img src="/logo.png" alt="Tenner og Trivsel" class="h-16 w-auto"/>
+                <img src="/logo2.png" alt="Tenner og Trivsel" class="h-16 w-auto"/>
             </a>
 
             <div class="hidden md:flex items-center gap-8">
@@ -53,100 +52,9 @@ const navLinks = [
 </nav>
 
 <script>
-    const menuBtn = document.getElementById('menu-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
-    const mobileLinks = document.querySelectorAll('.mobile-link');
-    const spans = menuBtn?.querySelectorAll('span');
+    import {initMobileMenu} from '../scripts/mobile-menu.js';
+    import {initMenuHighlight} from '../scripts/menu-highlight.js';
 
-    function toggleMenu() {
-        mobileMenu?.classList.toggle('hidden');
-
-        // Animerer hamburger-ikonet til et "X"
-        if (spans && !mobileMenu?.classList.contains('hidden')) {
-            spans[0].style.transform = 'rotate(45deg) translate(5px, 6px)';
-            spans[1].style.opacity = '0';
-            spans[2].style.transform = 'rotate(-45deg) translate(5px, -6px)';
-        } else if (spans) {
-            spans[0].style.transform = 'none';
-            spans[1].style.opacity = '1';
-            spans[2].style.transform = 'none';
-        }
-    }
-
-    menuBtn?.addEventListener('click', toggleMenu);
-
-    // Lukk menyen når man trykker på en lenke
-    mobileLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            mobileMenu?.classList.add('hidden');
-            if (spans) {
-                spans[0].style.transform = 'none';
-                spans[1].style.opacity = '1';
-                spans[2].style.transform = 'none';
-            }
-        });
-    });
-
-    const observerOptions = {
-        root: null,
-        rootMargin: '-20% 0px -70% 0px', // Trigger når seksjonen er i øvre del av skjermen
-        threshold: 0
-    };
-
-    const observerCallback = (entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                // Finn alle nav-lenker
-                const navLinks = document.querySelectorAll('[data-nav-link]');
-
-                navLinks.forEach(link => {
-                    // Hent id fra href (f.eks "#tjenester" blir "tjenester")
-                    const id = link.getAttribute('href').replace('#', '');
-
-                    if (id === entry.target.id) {
-                        link.classList.add('text-blue-600', 'font-bold');
-                        link.classList.remove('text-slate-600');
-                    } else {
-                        link.classList.remove('text-blue-600', 'font-bold');
-                        link.classList.add('text-slate-600');
-                    }
-                });
-            }
-        });
-    };
-
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
-
-    // Start overvåking av alle seksjoner som har en ID
-    document.querySelectorAll('section[id]').forEach(section => {
-        observer.observe(section);
-    });
+    initMobileMenu();
+    initMenuHighlight();
 </script>
-
-
-<!--
-<nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
-    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-        <a href="#" class="flex items-center gap-3">
-            <img src="/logo.png" alt="Tenner og Trivsel" class="h-10 w-auto" />
-            <div class="flex flex-col">
-                <span class="font-bold text-lg leading-none text-blue-900 uppercase tracking-tighter">Tenner og Trivsel</span>
-            </div>
-        </a>
-
-        <div class="hidden lg:flex gap-8 font-semibold text-sm text-slate-600 uppercase tracking-wide items-center">
-            <a href="#hjem" class="hover:text-blue-600 transition">Hjem</a>
-            <a href="#kontakt" class="hover:text-blue-600 transition">Kart & Parkering</a>
-            <a href="#tjenester" class="hover:text-blue-600 transition">Tjenester</a>
-            <a href="#tannleger" class="hover:text-blue-600 transition">Om oss</a>
-            <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
-            <a href="tel:51529618" class="bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition shadow-md">
-                Ring 51 52 96 18
-            </a>
-        </div>
-
-        <a href="tel:51529618" class="lg:hidden bg-blue-600 text-white px-4 py-2 rounded-full font-bold text-sm flex items-center gap-2">
-            <span>📞</span> Ring
-        </a>
-    </div>
-</nav>-->

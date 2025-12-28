@@ -1,0 +1,124 @@
+---
+import WaveToWhite from "./WaveToWhite.astro";
+---
+
+<section id="kontakt" class="relative bg-slate-50 py-24 md:pb-32">
+    <div class="container mx-auto px-4 md:flex-row items-center gap-12">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-bold text-slate-900 italic tracking-tight">Kontakt informasjon</h2>
+            <p class="text-slate-600">Vi holder til like ved Stavanger Universitetssykehus på Våland og har
+                parkering både på utsiden og i gatene rundt.</p>
+            <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
+        </div>
+        <div class="grid lg:grid-cols-3 gap-12">
+
+            <div class="space-y-8">
+                <div>
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4">
+                            <span class="text-xl bg-blue-50 p-2 rounded-lg text-blue-600">📍</span>
+                            <div>
+                                <p class="font-bold">Adresse</p>
+                                <p class="text-slate-600">Armauer Hansens vei 11,<br/>4011 Stavanger</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <span class="text-xl bg-blue-50 p-2 rounded-lg text-blue-600">📞</span>
+                            <div>
+                                <p class="font-bold">Telefon</p>
+                                <p class="text-slate-600">Mandag - Fredag 07:45 - 11:15 og 12:15 - 15:15</p>
+                                <p><a href="tel:51529618" class="text-blue-600 hover:underline">51 52 96 18</a>
+                                </p>
+                                <p><a href="tel:51536421" class="text-blue-600 hover:underline">51 53 64 21</a>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 text-blue-600">
+                            <span class="text-xl bg-blue-50 p-2 rounded-lg text-blue-600">✉️</span>
+                            <div>
+                                <p class="font-bold text-slate-900">E-post</p>
+                                <a href="mailto:resepsjon@tennerogtrivsel.no" class="hover:underline">resepsjon@tennerogtrivsel.no</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-green-50 p-8 rounded-2xl shadow-xl border border-green-100">
+                    <h3 class="font-bold text-green-900 mb-2 flex items-center gap-2">
+                        <span>🚗</span> Gratis Parkering
+                    </h3>
+                    <p class="text-sm text-green-800 leading-relaxed">
+                        Vi har gratis parkering rett utenfor kontoret. I tillegg er det 2 timer gratis parkering
+                        i Folke Bernadottes vei og Overlege Cappelens gate.
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 text-white p-8 rounded-2xl shadow-xl">
+                <h3 class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-600">
+                    <span>🕒</span> Åpningstider
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                        <span>Mandag</span>
+                        <span class="font-medium">08:00 - 15:30</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                        <span>Tirsdag (Kveldsåpent)</span>
+                        <span class="font-bold">08:00 - 20:00</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                        <span>Onsdag (Kveldsåpent)</span>
+                        <span class="font-bold">08:00 - 20:00</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                        <span>Torsdag</span>
+                        <span class="font-medium">08:00 - 15:30</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                        <span>Fredag</span>
+                        <span class="font-medium">08:00 - 15:00</span>
+                    </div>
+                    <div class="flex justify-between text-slate-500 pt-2">
+                        <span>Lørdag - Søndag</span>
+                        <span>Stengt</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="map"
+                 class="w-full h-[450px] rounded-3xl shadow-inner bg-slate-100 border border-slate-200"></div>
+
+            <script is:inline>
+                (g => {
+                    var h, a, k, p = "The Loader", obj = {ls: "sig", bi: "-2147483648"}, e = window,
+                        document = e.document, j = document.createElement("script");
+                    j.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyB4ZI82GreDjtYc5vxoh3f4HE_Lg77QVmc&callback=initMap&libraries=maps,marker&v=beta`;
+                    j.async = true;
+                    document.head.appendChild(j)
+                })();
+
+                // 3. Init-funksjon som kjøres når Google er klar
+                window.initMap = function () {
+                    const position = {lat: 58.95426193582862, lng: 5.734568467856621}; // Armauer Hansens vei 11
+
+                    const map = new google.maps.Map(document.getElementById("map"), {
+                        zoom: 16,
+                        center: position,
+                        mapId: "4504f8b37365c3d0", // Du kan bruke din egen mapId eller fjerne denne linjen
+                        disableDefaultUI: false,
+                        zoomControl: true,
+                    });
+
+                    new google.maps.marker.AdvancedMarkerElement({
+                        map: map,
+                        position: position,
+                        title: "Tenner og Trivsel",
+                    });
+                };
+            </script>
+
+        </div>
+    </div>
+    <WaveToWhite />
+</section>

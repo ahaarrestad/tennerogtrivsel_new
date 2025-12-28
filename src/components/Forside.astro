@@ -1,0 +1,55 @@
+---
+const {message} = Astro.props;
+
+import {formatInfoText} from '../scripts/textFormatter.js';
+import {getTextAsArray} from '../scripts/activeMessage.js';
+import WaveFromWhite from './WaveFromWhite.astro';
+---
+<section id="hjem" class="relative bg-white py-25 md:py-28 overflow-hidden md:pb-32">
+    <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
+        <div class="flex-1 space-y-6 text-center md:text-left">
+            <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
+                Tannhelse i <br/><span class="text-blue-600">trygge rammer</span>
+            </h1>
+            <p class="text-lg text-slate-600 max-w-xl mx-auto md:mx-0">
+                Velkommen til Tenner og Trivsel i Armauer Hansens vei 11, Stavanger.
+                Vi tilbyr moderne behandling med fokus på din komfort.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                <a href="tel:51529618"
+                   class="bg-blue-600 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-blue-600 transition flex items-center justify-center gap-2">
+                    <span>📞</span> 51&nbsp;52&nbsp;96&nbsp;18
+                </a>
+
+                <a href="mailto:resepsjon@tennerogtrivsel.no"
+                   class="bg-white border border-blue-200 text-blue-600 px-8 py-4 rounded-full font-bold hover:bg-blue-50 transition flex items-center justify-center gap-2">
+                    <span>✉️</span> resepsjon@tennerogtrivsel.no
+                </a>
+            </div>
+            {message && (
+                    <div class="bg-slate-900 p-8 rounded-2xl shadow-xl border border-green-100">
+                        <h3 class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-600">
+                            {message.header}
+                        </h3>
+                        {getTextAsArray(message.text).map((linje) => {
+                            // Vi behandler hver linje her
+                            return (
+                                    <p class="text-sm text-white leading-relaxed">
+                                        <span set:html={formatInfoText(linje)}/>
+                                    </p>
+                            );
+                        })}
+                    </div>
+            )}
+
+        </div>
+        <div class="flex-1 w-full max-w-md md:max-w-xl lg:max-w-2xl min-w-[350px]">
+            <div
+                    class="rounded-2xl shadow-2xl overflow-hidden bg-blue-50 aspect-[16/10] flex items-center justify-center border border-slate-100">
+                <img src="/hovedbilde.png" alt="Tenner og Trivsel"
+                     class="w-full h-full object-cover object-center"/>
+            </div>
+        </div>
+    </div>
+    <WaveFromWhite />
+</section>

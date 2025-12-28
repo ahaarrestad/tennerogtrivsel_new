@@ -1,0 +1,22 @@
+---
+import {services} from '../data/services.js';
+import WaveFromWhite from "./WaveFromWhite.astro";
+---
+<section id="tjenester" class="relative bg-white py-16 md:py-24 overflow-hidden md:pb-32">
+    <div class="container mx-auto px-4 md:flex-row items-center gap-12">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-bold text-slate-900 italic tracking-tight">Våre Tjenester</h2>
+            <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services.map((s) => (
+                    <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
+                        <h3 class="font-bold text-lg mb-2 text-blue-800 uppercase tracking-wide text-sm">
+                            / {s.title}</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">{s.desc}</p>
+                    </div>
+            ))}
+        </div>
+    </div>
+    <WaveFromWhite />
+</section>
