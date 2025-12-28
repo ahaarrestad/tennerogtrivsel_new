@@ -1,5 +1,5 @@
 ---
-title: "Trygdeordninger"
+title: "Helfo refusjon"
 ingress: "Gjør tannlegebesøket rimeligere med riktig refusjon. Vi har lang erfaring med Helfo-stønad for alt fra implantater til yrkesskader. Med vårt direkteoppgjør får du rabatten med en gang, uten at du trenger å kontakte myndighetene selv."
 ---
 Mange pasienter har rett på økonomisk støtte til tannbehandling gjennom Folketrygden uten å være klar over det. Hos Tenner og Trivsel har vi spesialkompetanse på Helfo-regelverket og hjelper deg med å kartlegge dine rettigheter, slik at du får den stønaden du har krav på.
@@ -25,4 +25,4 @@ Du trenger ikke å oppsøke NAV eller trygdekontoret selv. Vi har godkjent **dir
 2.  **Dokumentasjon:** Vi tar nødvendige røntgenbilder og journalfører dokumentasjonen myndighetene krever.
 3.  **Fratrekk på regningen:** Vi trekker beløpet du får dekket direkte fra fakturaen din. Du betaler kun din egenandel hos oss, så ordner vi resten med staten.
 
-> **Er du usikker på om du har krav på støtte?** > Ta kontakt med oss for en undersøkelse. Vi gir deg et skriftlig prisoverslag hvor eventuell trygderefusjon er trukket fra, slik at du har full oversikt over kostnadene før vi starter.
+> **Er du usikker på om du har krav på støtte?** > Ta kontakt med oss for en undersøkelse. Vi gir deg et skriftlig prisoverslag hvor eventuell Helfo refusjon er trukket fra, slik at du har full oversikt over kostnadene før vi starter.
