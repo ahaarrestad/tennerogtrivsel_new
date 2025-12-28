@@ -1,7 +1,7 @@
 ---
 title: "🎄 Vi holder julestengt fra 23. desember til 2. januar. God jul!"
 startDate: 2025-12-01
-endDate: 2026-01-02
+endDate: 2025-01-02
 ---
 Vi har åpent mandag 22. desember fra 08:00 - 15:30 og tirsdag 23. desember fra 08:00 til 14:30, samt i romjulen mandag 29. og tirsdag 30. desember klokken 8 - 15.
 
