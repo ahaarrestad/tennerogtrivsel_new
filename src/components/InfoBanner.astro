@@ -1,13 +1,42 @@
 ---
 const { activeMessage } = Astro.props;
 ---
-{activeMessage && (
-<div class="sticky top-0 z-[60] bg-slate-900 text-white py-2.5 px-4 relative z-[60] border-b border-white/10">
+<div id="banner-root" class="hidden sticky top-0 z-[60] bg-slate-900 text-white py-2.5 px-4 relative z-[60] border-b border-white/10">
     <div class="container mx-auto flex items-center justify-center text-center">
         <p class="text-xs md:text-sm font-medium tracking-wide flex items-center gap-2">
             <span class="inline-block animate-pulse w-2 h-2 rounded-full bg-blue-400"></span>
-            {activeMessage.data.title}
+            <span id="banner-title" class="prose prose-invert"></span>
         </p>
     </div>
 </div>
-    )}
+
+<script>
+    import { getActiveMessage } from '../scripts/messageClient.js';
+
+    async function initBanner() {
+        const active = await getActiveMessage();
+        const root = document.getElementById('banner-root');
+        const titleEl = document.getElementById('banner-title');
+        const navWrapper = document.getElementById('navbar-sticky-wrapper');
+
+        if (active && root && titleEl) {
+            // 1. Sett teksten og vis banneret
+            titleEl.textContent = active.title;
+            root.classList.remove('hidden');
+
+            // 2. Juster navbarens sticky-posisjon dynamisk
+            if (navWrapper) {
+                navWrapper.style.top = '40px';
+            }
+        } else {
+            // Hvis ingen melding er aktiv (viktig ved dato-skifte uten reload)
+            if (root) root.classList.add('hidden');
+            if (navWrapper) navWrapper.style.top = '0px';
+        }
+    }
+
+    // Kjører ved hver sideinnlasting (viktig for Astro View Transitions)
+    document.addEventListener('astro:page-load', initBanner);
+    // Kjører med en gang for vanlig statisk lasting
+    initBanner();
+</script>

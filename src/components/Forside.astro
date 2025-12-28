@@ -1,15 +1,7 @@
 ---
-import {render} from "astro:content";
-
 import TelefonKnapp from "./TelefonKnapp.astro";
 import EpostKnapp from "./EpostKnapp.astro";
 import WaveFromWhite from './WaveFromWhite.astro';
-
-import {getActiveMessage} from '../scripts/activeMessage.js';
-const activeMessage = await getActiveMessage();
-// 3. Render Markdown-innholdet hvis en melding er aktiv
-const rendered = activeMessage ? await render(activeMessage) : null;
-const ActiveMessageContent = rendered?.Content;
 ---
 <section id="forside" class="relative bg-white py-25 md:py-28 overflow-hidden md:pb-0">
     <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12 mb-32">
@@ -26,17 +18,14 @@ const ActiveMessageContent = rendered?.Content;
                 <EpostKnapp/>
             </div>
 
-            {activeMessage && (
-                <div class="bg-slate-900 p-8 rounded-2xl shadow-xl border border-green-100">
-                        <h3 class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-600">
-                            {activeMessage.data.title}
+
+                <div id="forside-message-root" class="bg-slate-900 p-8 rounded-2xl shadow-xl border border-green-100 hidden">
+                        <h3 id="forside-msg-title" class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-600">
                         </h3>
                         {/* Vi bruker en 'prose' wrapper for å style Markdown-teksten (hvit tekst på mørk bakgrunn) */}
-                        <div class="prose prose-invert max-w-none text-slate-300">
-                            {ActiveMessageContent && <ActiveMessageContent />}
+                        <div id="forside-msg-content" class="prose prose-invert max-w-none text-slate-300">
                         </div>
                     </div>
-            )}
 
         </div>
         <div class="flex-1 w-full max-w-md md:max-w-xl lg:max-w-2xl min-w-[350px]">
@@ -46,6 +35,29 @@ const ActiveMessageContent = rendered?.Content;
                      class="w-full h-full object-cover object-center"/>
             </div>
         </div>
+        <script>
+            // Bruk relativ sti fra der Forside.astro ligger til scriptet
+            import { getActiveMessage, renderMessageToElement } from '../scripts/messageClient.js';
+
+            async function init() {
+                const active = await getActiveMessage();
+
+                if (active) {
+                    renderMessageToElement(
+                        active,
+                        'forside-message-root',
+                        'forside-msg-title',
+                        'forside-msg-content'
+                    );
+                }
+            }
+
+            // Astro-spesifikk måte å kjøre script på ved lasting og navigering
+            document.addEventListener('astro:page-load', init);
+            // For sikkerhets skyld hvis du ikke bruker View Transitions:
+            init();
+        </script>
     </div>
     <WaveFromWhite />
 </section>
+
