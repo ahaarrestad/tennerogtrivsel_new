@@ -9,4 +9,14 @@ const tjenester = defineCollection({
     }),
 });
 
-export const collections = { tjenester };
+const meldinger = defineCollection({
+    loader: glob({ pattern: '**/[^_]*.{md,mdx}', base: "./src/content/meldinger" }),
+    schema: z.object({
+        title: z.string(),
+        startDate: z.date(),
+        endDate: z.date(),
+    }),
+});
+
+
+export const collections = { tjenester, meldinger};

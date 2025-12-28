@@ -5,14 +5,10 @@ import Forside from '../components/Forside.astro';
 import Kontakt from '../components/Kontakt.astro';
 import Tjenester from '../components/Tjenester.astro';
 import Tannleger from '../components/Tannleger.astro';
-
-const {activeMessage} = Astro.props;
-
-
 ---
 <Layout title="Tenner og Trivsel | Din Tannlege i Stavanger">
     <main>
-        <Forside message={activeMessage}/>
+        <Forside/>
         <Kontakt/>
         <Tjenester/>
         <Tannleger/>

@@ -1,22 +1,13 @@
-// 1. Definer meldingene dine
-import messages from '../data/meldinger.json';
+import { getCollection } from 'astro:content';
 
-// 2. Finn den aktive meldingen
-
-export function getActiveMessage() {
+export async function getActiveMessage() {
+    const all = await getCollection('meldinger');
     const now = new Date();
 
-    return messages.find(m => {
-        const start = new Date(m.startDate);
-        const end = new Date(m.endDate);
+    return all.find(m => {
+        const start = new Date(m.data.startDate);
+        const end = new Date(m.data.endDate);
         end.setHours(23, 59, 59);
         return now >= start && now <= end;
     });
-}
-
-// Her håndterer vi både streng og liste
-export function getTextAsArray(text) {
-    return text
-        ? (Array.isArray(text) ? text : [text])
-        : [];
 }

@@ -1,11 +1,15 @@
 ---
-import TelefonKnapp from "./TelefonKnapp.astro";
-const {message} = Astro.props;
+import {render} from "astro:content";
 
-import {formatInfoText} from '../scripts/textFormatter.js';
-import {getTextAsArray} from '../scripts/activeMessage.js';
-import WaveFromWhite from './WaveFromWhite.astro';
+import TelefonKnapp from "./TelefonKnapp.astro";
 import EpostKnapp from "./EpostKnapp.astro";
+import WaveFromWhite from './WaveFromWhite.astro';
+
+import {getActiveMessage} from '../scripts/activeMessage.js';
+const activeMessage = await getActiveMessage();
+// 3. Render Markdown-innholdet hvis en melding er aktiv
+const rendered = activeMessage ? await render(activeMessage) : null;
+const ActiveMessageContent = rendered?.Content;
 ---
 <section id="forside" class="relative bg-white py-25 md:py-28 overflow-hidden md:pb-0">
     <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12 mb-32">
@@ -21,19 +25,16 @@ import EpostKnapp from "./EpostKnapp.astro";
                 <TelefonKnapp/>
                 <EpostKnapp/>
             </div>
-            {message && (
-                    <div class="bg-slate-900 p-8 rounded-2xl shadow-xl border border-green-100">
+
+            {activeMessage && (
+                <div class="bg-slate-900 p-8 rounded-2xl shadow-xl border border-green-100">
                         <h3 class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-600">
-                            {message.header}
+                            {activeMessage.data.title}
                         </h3>
-                        {getTextAsArray(message.text).map((linje) => {
-                            // Vi behandler hver linje her
-                            return (
-                                    <p class="text-sm text-white leading-relaxed">
-                                        <span set:html={formatInfoText(linje)}/>
-                                    </p>
-                            );
-                        })}
+                        {/* Vi bruker en 'prose' wrapper for å style Markdown-teksten (hvit tekst på mørk bakgrunn) */}
+                        <div class="prose prose-invert max-w-none text-slate-300">
+                            {ActiveMessageContent && <ActiveMessageContent />}
+                        </div>
                     </div>
             )}
 

@@ -9,8 +9,7 @@ import InfoBanner from '../components/InfoBanner.astro';
 import Navbar from '../components/Navbar.astro';
 
 import {getActiveMessage} from '../scripts/activeMessage.js';
-
-const activeMessage = getActiveMessage();
+const activeMessage = await getActiveMessage();
 
 const {title} = Astro.props;
 ---
@@ -24,15 +23,15 @@ const {title} = Astro.props;
 
 <body class="text-slate-900 flex flex-col min-h-full">
 
-<InfoBanner message={activeMessage}/>
+<InfoBanner activeMessage={activeMessage}/>
 
 {/* Flytter navbar litt ned hvis melding er aktiv */}
 <div class={activeMessage ? "sticky top-[40px] z-50" : "sticky top-0 z-50"}>
-    <Navbar message={activeMessage}/>
+    <Navbar activeMessage={activeMessage}/>
 </div>
 
 <main class="flex-grow flex flex-col">
-    <slot activeMessage={activeMessage}/>
+    <slot/>
 </main>
 
 <Footer/>
