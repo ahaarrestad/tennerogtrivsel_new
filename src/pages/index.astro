@@ -3,9 +3,11 @@ import Layout from '../layouts/Layout.astro';
 import InfoBanner from '../components/InfoBanner.astro';
 import Navbar from '../components/Navbar.astro';
 
+import {services} from '../data/services.js';
+import {tannleger} from '../data/tannleger.js';
 
 // 1. Definer meldingene dine
-import {messages} from '../data/meldinger.js';
+import messages from '../data/meldinger.json';
 
 
 // 2. Finn den aktive meldingen
@@ -17,8 +19,34 @@ const activeMessage = messages.find(m => {
     return now >= start && now <= end;
 });
 
-import {services} from '../data/services.js';
-import {tannleger} from '../data/tannleger.js';
+// Her håndterer vi både streng og liste
+const messageTextRows = activeMessage?.text
+    ? (Array.isArray(activeMessage.text) ? activeMessage.text : [activeMessage.text])
+    : [];
+
+
+// Formaterer tekst fra JSON for sikker visning i HTML.
+// Håndterer norske spesialtegn, e-post og telefonnummer.
+function formatInfoText(rawText) {
+    if (!rawText) return "";
+
+    // 1. Definer mønstre
+    const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+    const phoneRegex = /((\+47|0047)?\s*[2-9]\d{1}\s*\d{2}\s*\d{2}\s*\d{2})/g;
+
+    // 2. Sikre korrekt håndtering av norske tegn
+    // Vi mapper de vanligste særnorske tegnene til deres HTML-entiteter
+    // Dette er valgfritt i moderne UTF-8, men gjør koden ekstremt robust.
+    const charMap = {
+        'æ': '&aelig;', 'ø': '&oslash;', 'å': '&aring;',
+        'Æ': '&AElig;', 'Ø': '&Oslash;', 'Å': '&Aring;'
+    };
+
+    return rawText
+        .replace(/[æøåÆØÅ]/g, (match) => charMap[match]) // html encode norske tegn
+        .replace(emailRegex, '<a href="mailto:$1" class="text-blue-600">$1</a>') // linkify e-post
+        .replace(phoneRegex, '<a href="tel:$1" class="text-blue-600">$1</a>'); // linkify telefon
+}
 ---
 
 <Layout title="Tenner og Trivsel | Din Tannlege i Stavanger">
@@ -43,23 +71,29 @@ import {tannleger} from '../data/tannleger.js';
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                         <a href="tel:51529618"
-                           class="bg-blue-600 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                           class="bg-blue-600 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-blue-600 transition flex items-center justify-center gap-2">
                             <span>📞</span> 51&nbsp;52&nbsp;96&nbsp;18
                         </a>
 
                         <a href="mailto:resepsjon@tennerogtrivsel.no"
-                           class="bg-white border border-blue-200 text-blue-700 px-8 py-4 rounded-full font-bold hover:bg-blue-50 transition flex items-center justify-center gap-2">
+                           class="bg-white border border-blue-200 text-blue-600 px-8 py-4 rounded-full font-bold hover:bg-blue-50 transition flex items-center justify-center gap-2">
                             <span>✉️</span> resepsjon@tennerogtrivsel.no
                         </a>
                     </div>
-                    { activeMessage && (
+                    {activeMessage && (
                             <div class="bg-slate-900 p-8 rounded-2xl shadow-xl border border-green-100">
                                 <h3 class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-600">
                                     {activeMessage.header}
                                 </h3>
-                                <p class="text-sm text-white leading-relaxed" set:html={activeMessage.text}>
+                                {messageTextRows.map((linje) => {
+                                    // Vi behandler hver linje her
+                                    return (
+                                            <p class="text-sm text-white leading-relaxed">
+                                                <span set:html={formatInfoText(linje)}/>
+                                            </p>
+                                    );
+                                })}
                             </div>
-
                     )}
 
                 </div>
