@@ -2,95 +2,101 @@
 import Layout from '../../layouts/Layout.astro';
 import {getCollection, render} from 'astro:content';
 import WaveFromWhite from "../../components/WaveFromWhite.astro";
-import {formatInfoText} from '../../scripts/textFormatter.js';
+import TelefonKnapp from "../../components/TelefonKnapp.astro";
+import EpostKnapp from "../../components/EpostKnapp.astro";
 
-// 1. Fortell Astro hvilke sider som skal genereres
 export async function getStaticPaths() {
     const tjenester = await getCollection('tjenester');
     return tjenester.map(entry => ({
-        params: {id: entry.id}, // Bruk entry.id i Astro 5
+        params: {id: entry.id},
         props: {entry, tjenester},
     }));
 }
 
-// 2. Hent data for den gjeldende siden
 const {entry, tjenester} = Astro.props;
-
-// 3. "Pakk ut" innholdet fra Markdown-filen
 const {Content} = await render(entry);
 ---
-
 <Layout title={`${entry.data.title} | Tenner og Trivsel`}>
-    <section class="bg-white pt-12 md:pt-20 pb-0 flex flex-col flex-grow">
-        {/* Dette er containeren for teksten din */}
-        <div class="container mx-auto px-4 flex-grow w-full">
-            {/* 1. Nav */}
-            <nav class="mb-8 text-sm text-gray-500">
-                <a href="/" class="hover:text-blue-600">Forside</a>
-                <span class="mx-2">/</span>
-                <span class="text-gray-900">{entry.data.title}</span>
-            </nav>
+    {/* 1. Vi fjerner 'flex' fra denne ytre diven for å unngå at den krymper innholdet */}
+    <div class="flex-grow bg-white w-full">
 
-            {/* 2. Tittel og Ingress */}
-            <header class="mb-12">
-                <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-                    {entry.data.title}
-                </h1>
-                <p class="text-xl text-slate-600 leading-relaxed font-light">
-                    {entry.data.ingress}
-                </p>
-            </header>
+        <section class="pt-12 md:pt-20 pb-0">
+            <div class="container mx-auto px-4 w-full">
+                {/* 1. Nav */}
+                <nav class="mb-8 text-sm text-gray-500">
+                    <a href="/" class="hover:text-blue-600">Forside</a>
+                    <span class="mx-2">/</span>
+                    <span class="text-gray-900">{entry.data.title}</span>
+                </nav>
 
-            {/* 3. Body (Vi fjerner grid her for å få alt under hverandre) */}
-            <div class="prose prose-slate max-w-none">
-                <div class="text-lg text-slate-700 space-y-6">
-                    <Content/>
+                {/* 2. Flex-oppsett for innhold og boks */}
+                <div class="flex flex-wrap xl:flex-nowrap gap-12 items-start">
+
+                    {/* Venstre side: Bruker flex-1 for å ta all ledig plass */}
+                    <div class="flex-1 prose prose-slate max-w-none">
+                        <header class="mb-12 not-prose"> {/* not-prose hindrer doble marginer fra tailwind typography */}
+                            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight">
+                                {entry.data.title}
+                            </h1>
+                            <p class="text-xl text-slate-600 leading-relaxed font-light italic">
+                                {entry.data.ingress}
+                            </p>
+                        </header>
+
+                        <div class="prose-lg text-slate-700">
+                            <Content/>
+                        </div>
+                    </div>
+
+                    {/* Høyre side: Fast bredde på desktop, full bredde på mobil */}
+                    <aside class="w-full lg:w-80 xl:w-96 lg:sticky lg:top-24 min-w-fit">
+                        <div class="p-8 bg-blue-50 rounded-2xl border border-blue-100 shadow-sm flex flex-col gap-4">
+                            <h3 class="text-blue-900 font-bold text-lg leading-snug">
+                                Ta kontakt med oss for mer informasjon
+                            </h3>
+                            <div class="flex flex-col gap-3">
+                                <TelefonKnapp/>
+                                <EpostKnapp/>
+                            </div>
+                            <hr class="border-blue-200 my-2" />
+                            <a href="/#kontakt"
+                               class="text-center bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition shadow-md">
+                                Gå til kontakt
+                            </a>
+                        </div>
+                    </aside>
                 </div>
 
-                {/* Blå boks med kontaktinfo */}
-                <div class="mt-12 p-6 bg-blue-50 rounded-2xl border border-blue-100">
-                    <h3 class="text-blue-900 font-bold mb-2">Bestill time for {entry.data.title}</h3>
-                    <p class="text-blue-800 text-sm mb-4">Ring oss på telefon eller send e-post.</p>
-                    <a href="/#kontakt"
-                       class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">
-                        Gå til kontakt
-                    </a>
+                {/* Sorterte tjenester */}
+                <div class="mt-20 mb-24 border-t pt-10">
+                    <h4 class="font-bold mb-6 text-slate-900 text-lg uppercase tracking-wide text-sm opacity-50">Våre tjenester</h4>
+                    <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-3">
+                        {tjenester
+                            .sort((a, b) => a.data.title.localeCompare(b.data.title, 'nb'))
+                            .map(s => {
+                                const isCurrent = s.id === entry.id;
+                                return (
+                                        <li class="flex items-center gap-2 py-1">
+                                            <span class={isCurrent ? "text-blue-600 font-bold" : "text-slate-300"}>→</span>
+                                            {isCurrent ? (
+                                                    <span class="text-sm font-bold text-slate-900">{s.data.title}</span>
+                                            ) : (
+                                                    <a href={`/tjenester/${s.id}`} class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                                                        {s.data.title}
+                                                    </a>
+                                            )}
+                                        </li>
+                                );
+                            })
+                        }
+                    </ul>
                 </div>
             </div>
+        </section>
 
-            {/* 4. Alle tjenester sortert alfabetisk */}
-            <div class="mt-20 mb-12 border-t pt-10">
-                <h4 class="font-bold mb-6 text-slate-900 text-lg">Våre tjenester</h4>
-                <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-3">
-                    {tjenester
-                        .sort((a, b) => a.data.title.localeCompare(b.data.title, 'nb'))
-                        .map(s => {
-                            const isCurrent = s.id === entry.id;
-
-                            return (
-                                    <li class="flex items-center gap-2 py-1">
-                                        <span class={isCurrent ? "text-blue-600" : "text-slate-400"}>→</span>
-                                        {isCurrent ? (
-                                                <span class="text-sm font-bold text-slate-900">
-                                {s.data.title}
-                            </span>
-                                        ) : (
-                                                <a href={`/tjenester/${s.id}`}
-                                                   class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors">
-                                                    {s.data.title}
-                                                </a>
-                                        )}
-                                    </li>
-                            );
-                        })
-                    }
-                </ul>
-            </div>
-        </div>
-
-        {/* Bølgen ligger her, helt nederst i seksjonen, etter at alt innhold er ferdig */}
-        <div class="w-full leading-[0]">
+        {/* Bølgen */}
+        <div class="w-full leading-[0] mt-auto">
             <WaveFromWhite/>
         </div>
-    </section>
+    </div>
 </Layout>
