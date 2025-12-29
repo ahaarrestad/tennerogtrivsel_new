@@ -1,5 +1,6 @@
 ---
 import WaveToWhite from "./WaveToWhite.astro";
+const googleMapKey = import.meta.env.PUBLIC_GOOGLE_MAP_KEY;
 ---
 
 <section id="kontakt" class="scroll-mt-6 relative bg-slate-50 py-24 md:pb-0">
@@ -89,11 +90,11 @@ import WaveToWhite from "./WaveToWhite.astro";
             <div id="map"
                  class="w-full h-[450px] rounded-3xl shadow-inner bg-slate-100 border border-slate-200"></div>
 
-            <script is:inline>
+            <script is:inline define:vars={{ googleMapKey }}>
                 (g => {
                     var h, a, k, p = "The Loader", obj = {ls: "sig", bi: "-2147483648"}, e = window,
                         document = e.document, j = document.createElement("script");
-                    j.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyB4ZI82GreDjtYc5vxoh3f4HE_Lg77QVmc&callback=initMap&libraries=maps,marker&v=beta`;
+                    j.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapKey}&callback=initMap&libraries=maps,marker&v=beta`;
                     j.async = true;
                     document.head.appendChild(j)
                 })();

@@ -30,7 +30,7 @@ jobs:
           GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
           GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
           GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
-          GOOGLE_MAP_KEY: ${{ secrets.GOOGLE_MAP_KEY }}
+          PUBLIC_GOOGLE_MAP_KEY: ${{ secrets.PUBLIC_GOOGLE_MAP_KEY }}
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
