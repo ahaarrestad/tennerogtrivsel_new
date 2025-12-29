@@ -1,7 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import {getCollection, render} from 'astro:content';
-import WaveFromWhite from "../../components/WaveFromWhite.astro";
 import TelefonKnapp from "../../components/TelefonKnapp.astro";
 import EpostKnapp from "../../components/EpostKnapp.astro";
 
@@ -93,10 +92,5 @@ const {Content} = await render(entry);
                 </div>
             </div>
         </section>
-
-        {/* Bølgen */}
-        <div class="w-full leading-[0] mt-auto">
-            <WaveFromWhite/>
-        </div>
     </div>
 </Layout>
