@@ -2,12 +2,9 @@ name: Deploy Tenner og Trivsel
 
 on:
   push:
-    branches:
-      - main  # Kjører hver gang du pusher til main
-  # DETTE ER DET VIKTIGE TILLEGGET:
+    branches: [ main ]
   repository_dispatch:
-    types: [ google_drive_update ]
-  # Gir deg også en knapp i GitHub-panelet:
+    types: [google_drive_update] # Sjekk at denne teksten er identisk med event_type i curl
   workflow_dispatch:
 
 jobs:
