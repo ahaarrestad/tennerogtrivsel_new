@@ -1,21 +1,21 @@
-// src/pages/meldinger.json.ts
-import { getCollection, render } from 'astro:content';
+import { getCollection } from 'astro:content';
 
 export async function GET() {
     const allMessages = await getCollection('meldinger');
 
-    const data = await Promise.all(allMessages.map(async (m) => {
-        const { Content } = await render(m);
-        // Vi må rendre innholdet til en streng her, men Astro sine komponenter
-        // er litt vriene å sende som JSON. Vi sender derfor dataene og
-        // bruker en enkel løsning i frontend.
+    const data = allMessages.map((m) => {
         return {
             title: m.data.title,
             startDate: m.data.startDate,
             endDate: m.data.endDate,
-            body: m.body // Her sender vi rå-markdown
+            // Siden vi manuelt la teksten i 'body' i config.ts loaderen:
+            body: m.data.body
         };
-    }));
+    });
 
-    return new Response(JSON.stringify(data));
+    return new Response(JSON.stringify(data), {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
 }

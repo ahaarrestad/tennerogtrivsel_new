@@ -24,7 +24,10 @@ jobs:
 
       - name: Build Astro site
         run: npm run build
-
+        env:
+          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
