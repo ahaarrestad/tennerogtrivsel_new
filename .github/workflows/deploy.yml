@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main  # Kjører hver gang du pusher til main
+  # DETTE ER DET VIKTIGE TILLEGGET:
+  repository_dispatch:
+    types: [ google_drive_update ]
+  # Gir deg også en knapp i GitHub-panelet:
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
