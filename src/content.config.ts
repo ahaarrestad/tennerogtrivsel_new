@@ -41,7 +41,7 @@ async function fetchDriveContent(folderName: string) {
 
         console.log("Found", files.length, "files in folder", folderName);
         for (const file of files) {
-            console.log("Fetching file:", file.name);
+            console.log("Folder:", folderName, "Processing file:", file.name);
 
             // Inne i loopen i content.config.ts
             const response = await drive.files.get({ fileId: file.id!, alt: 'media' });
@@ -58,13 +58,14 @@ async function fetchDriveContent(folderName: string) {
             const { data, content } = matter(rawContent);
             const slug = file.name!.replace('.md', '');
 
-            console.log("Slug complete:", slug);
 
             results.push({
                 id: slug,
                 ...data,
                 body: content.trim(), // Trim fjerner usynlige tegn i start/slutt
             });
+            console.log("Folder:", folderName, "Processing complete:", file.name);
+
         }
         return results;
     } catch (e) {
