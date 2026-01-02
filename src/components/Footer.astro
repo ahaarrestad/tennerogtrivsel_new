@@ -8,8 +8,10 @@ const settings = await getSiteSettings();
     <div class="container mx-auto px-4 text-center">
         <p class="font-bold text-slate-900 mb-2">Tenner og Trivsel -
             <span set:html={formatInfoText(settings.phone1)}></span> /
-            <span set:html={formatInfoText(settings.phone2)}></span> -
-            <span set:html={formatInfoText(settings.email)}></span>
+            <span set:html={formatInfoText(settings.phone2)}></span>
+            {settings.showEmail === "ja" && (
+            - <span set:html={formatInfoText(settings.email)}></span>
+            )}
         </p>
     </div>
 </footer>

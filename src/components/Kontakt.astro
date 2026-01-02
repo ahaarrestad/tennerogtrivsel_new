@@ -7,8 +7,8 @@ const settings = await getSiteSettings();
 const googleMapKey = import.meta.env.PUBLIC_GOOGLE_MAP_KEY;
 
 // Nøyaktige koordinater fra din lenke
-const lat = "58.95426193582862";
-const lng = "5.734568467856621";
+const lat = settings.latitude;
+const lng = settings.longitude;
 const zoom = "17"; // Justert for å matche utsnittet i lenken din
 const maptype = "roadmap";
 
@@ -21,9 +21,7 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleMapKey}&
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-3xl font-bold text-slate-900 italic tracking-tight">Kontakt oss</h2>
-            <p class="text-slate-600">Vi holder til like ved Stavanger Universitetssykehus på Våland og har
-                gratis parkering rett ufenfor kontoret. I tillegg er det 2 timer gratis parkering i Folke Bernadottes
-                vei og Overlege Cappelens gate.</p>
+            <p class="text-slate-600">{settings.kontaktTekst}</p>
             <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
         </div>
 
@@ -54,8 +52,8 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleMapKey}&
                 </div>
                 <h3 class="text-xl font-bold mb-3 text-gray-900">Besøksadresse</h3>
                 <div class="text-gray-600 space-y-1">
-                    <p>Armauer Hansens vei 11</p>
-                    <p>4011 Stavanger</p>
+                    <p>{settings.adresse1}</p>
+                    <p>{settings.adresse2}</p>
                 </div>
             </div>
 

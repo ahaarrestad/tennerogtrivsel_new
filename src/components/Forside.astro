@@ -2,16 +2,18 @@
 import TelefonKnapp from "./TelefonKnapp.astro";
 import EpostKnapp from "./EpostKnapp.astro";
 import WaveFromWhite from './WaveFromWhite.astro';
+import { getSiteSettings } from '../scripts/getSettings';
+
+const settings = await getSiteSettings();
 ---
 <section id="forside" class="relative bg-white py-25 md:py-28 overflow-hidden md:pb-0">
     <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12 mb-32">
         <div class="flex-1 space-y-6 text-center md:text-left">
             <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
-                Tannhelse i <br/><span class="text-blue-600">trygge rammer</span>
+                {settings.velkomstTittel1}<br/><span class="text-blue-600">{settings.velkomstTittel2}</span>
             </h1>
             <p class="text-lg text-slate-600 max-w-xl mx-auto md:mx-0">
-                Velkommen til Tenner og Trivsel i Armauer Hansens vei 11, Stavanger.
-                Vi tilbyr moderne behandling med fokus på din komfort.
+                {settings.velkomstTekst}
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <TelefonKnapp/>

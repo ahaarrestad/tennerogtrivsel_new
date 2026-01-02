@@ -71,8 +71,8 @@ const innstillinger = defineCollection({
             });
 
             // Hvilke data fant den? (Viser de 3 første som eksempel i loggen)
-            console.log("[Google Sheets] Mapping ferdig. Første elementer:");
-            console.table(mappedData.slice(0, 5));
+            console.log("[Google Sheets] Mapping ferdig.");
+            console.table(mappedData);
 
             return mappedData;
 
