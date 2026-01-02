@@ -37,8 +37,14 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleMapKey}&
                 </div>
                 <h3 class="text-xl font-bold mb-3 text-gray-900">Åpningstider</h3>
                 <div class="text-gray-600 space-y-1">
-                    <p>Mandag, Tordag, Fredag: 08:00 - 15:30</p>
-                    <p>Tirsdag, Onsdag: 08:00 - 20:00</p>
+                    {
+                        Object.keys(settings)
+                            .filter(key => key.startsWith('businessHours'))
+                            .sort()
+                            .map(key => settings[key])
+                            .filter(val => val && val.trim().length > 0)
+                            .map(text => <p>{text}</p>)
+                    }
                 </div>
             </div>
 
@@ -67,9 +73,9 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleMapKey}&
                 <h3 class="text-xl font-bold mb-3 text-gray-900">Telefon</h3>
                 <div class="text-gray-600 space-y-1"><p>
                     <span set:html={formatInfoText(settings.phone1)}></span> /
-                    <span set:html={formatInfoText(settings.phone2)}></span> -</p>
+                    <span set:html={formatInfoText(settings.phone2)}></span></p>
                 </div>
-                <p class="text-xs text-gray-500 italic">Sentralbordet er åpent 07:45 - 15:15 (Stengt 11:15 - 12:15)</p>
+                <p class="text-xs text-gray-500 italic">{settings.sentralbordTekst}</p>
             </div>
 
         </div>
