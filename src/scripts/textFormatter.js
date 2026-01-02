@@ -18,5 +18,9 @@ export function formatInfoText(rawText) {
     return rawText
         .replace(/[æøåÆØÅ]/g, (match) => charMap[match]) // html encode norske tegn
         .replace(emailRegex, '<a href="mailto:$1" class="text-blue-600">$1</a>') // linkify e-post
-        .replace(phoneRegex, '<a href="tel:$1" class="text-blue-600">$1</a>'); // linkify telefon
+        .replace(phoneRegex, (match) => {
+            // match er det fulle nummeret med mellomrom, f.eks. "51 42 33 33"
+            const cleanNumber = match.replace(/\s+/g, '');
+            return `<a href="tel:${cleanNumber}" class="text-blue-600">${match}</a>`;
+        }); // linkify telefon
 }

@@ -1,12 +1,15 @@
 ---
 import {formatInfoText} from '../scripts/textFormatter.js';
+import { getSiteSettings } from '../scripts/getSettings';
+
+const settings = await getSiteSettings();
 ---
 <footer class="bg-slate-50 text-slate-500 py-4">
     <div class="container mx-auto px-4 text-center">
         <p class="font-bold text-slate-900 mb-2">Tenner og Trivsel -
-            <span set:html={formatInfoText("51 52 96 18")}></span> /
-            <span set:html={formatInfoText("51 53 64 21")}></span> -
-            <span set:html={formatInfoText("resepsjon@tennerogtrivsel.no")}></span>
+            <span set:html={formatInfoText(settings.phone1)}></span> /
+            <span set:html={formatInfoText(settings.phone2)}></span> -
+            <span set:html={formatInfoText(settings.email)}></span>
         </p>
     </div>
 </footer>
