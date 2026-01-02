@@ -1,9 +1,10 @@
 ---
 import WaveToWhite from "./WaveToWhite.astro";
+import {formatInfoText} from "../scripts/textFormatter";
 const googleMapKey = import.meta.env.PUBLIC_GOOGLE_MAP_KEY;
 
 // Nøyaktige koordinater fra din lenke
-const lat= "58.95426193582862";
+const lat = "58.95426193582862";
 const lng = "5.734568467856621";
 const zoom = "17"; // Justert for å matche utsnittet i lenken din
 const maptype = "roadmap";
@@ -14,103 +15,76 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleMapKey}&
 ---
 
 <section id="kontakt" class="scroll-mt-6 relative bg-slate-50 py-24 md:pb-0">
-    <div class="container mx-auto px-4 md:flex-row items-center gap-12 mb-32">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
-            <h2 class="text-3xl font-bold text-slate-900 italic tracking-tight">Kontakt informasjon</h2>
+            <h2 class="text-3xl font-bold text-slate-900 italic tracking-tight">Kontakt oss</h2>
             <p class="text-slate-600">Vi holder til like ved Stavanger Universitetssykehus på Våland og har
-                parkering både på utsiden og i gatene rundt.</p>
+                gratis parkering rett ufenfor kontoret. I tillegg er det 2 timer gratis parkering i Folke Bernadottes
+                vei og Overlege Cappelens gate.</p>
             <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
         </div>
-        <div class="grid lg:grid-cols-3 gap-12">
 
-            <div class="bg-slate-900 text-white p-8 rounded-2xl shadow-xl">
-                <h3 class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-600">
-                    <span>🕒</span> Åpningstider
-                </h3>
-                <div class="space-y-4">
-                    <div class="flex justify-between border-b border-slate-700 pb-2">
-                        <span>Mandag</span>
-                        <span class="font-medium">08:00 - 15:30</span>
-                    </div>
-                    <div class="flex justify-between border-b border-slate-700 pb-2">
-                        <span>Tirsdag (Kveldsåpent)</span>
-                        <span class="font-bold">08:00 - 20:00</span>
-                    </div>
-                    <div class="flex justify-between border-b border-slate-700 pb-2">
-                        <span>Onsdag (Kveldsåpent)</span>
-                        <span class="font-bold">08:00 - 20:00</span>
-                    </div>
-                    <div class="flex justify-between border-b border-slate-700 pb-2">
-                        <span>Torsdag</span>
-                        <span class="font-medium">08:00 - 15:30</span>
-                    </div>
-                    <div class="flex justify-between border-b border-slate-700 pb-2">
-                        <span>Fredag</span>
-                        <span class="font-medium">08:00 - 15:00</span>
-                    </div>
-                    <div class="flex justify-between text-slate-500 pt-2">
-                        <span>Lørdag - Søndag</span>
-                        <span>Stengt</span>
-                    </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+
+            <div class="flex flex-col items-center text-center p-6 border border-gray-100 rounded-lg shadow-sm">
+                <div class="text-primary mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">Åpningstider</h3>
+                <div class="text-gray-600 space-y-1">
+                    <p>Mandag, Tordag, Fredag: 08:00 - 15:30</p>
+                    <p>Tirsdag, Onsdag: 08:00 - 20:00</p>
                 </div>
             </div>
 
-            <div class="space-y-8">
-                <div>
-                    <div class="space-y-4">
-                        <div class="flex items-start gap-4">
-                            <span class="text-xl bg-blue-50 p-2 rounded-lg text-blue-600">📍</span>
-                            <div>
-                                <p class="font-bold">Adresse</p>
-                                <p class="text-slate-600">Armauer Hansens vei 11,<br/>4011 Stavanger</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-4">
-                            <span class="text-xl bg-blue-50 p-2 rounded-lg text-blue-600">📞</span>
-                            <div>
-                                <p class="font-bold">Telefon</p>
-                                <p class="text-slate-600">Mandag - Fredag 07:45 - 11:15 og 12:15 - 15:15</p>
-                                <p><a href="tel:51529618" class="text-blue-600 hover:underline">51 52 96 18</a>
-                                </p>
-                                <p><a href="tel:51536421" class="text-blue-600 hover:underline">51 53 64 21</a>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-4 text-blue-600">
-                            <span class="text-xl bg-blue-50 p-2 rounded-lg text-blue-600">✉️</span>
-                            <div>
-                                <p class="font-bold text-slate-900">E-post</p>
-                                <a href="mailto:resepsjon@tennerogtrivsel.no" class="hover:underline">resepsjon@tennerogtrivsel.no</a>
-                            </div>
-                        </div>
-                    </div>
+            <div class="flex flex-col items-center text-center p-6 border border-gray-100 rounded-lg shadow-sm">
+                <div class="text-primary mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
                 </div>
-
-                <div class="bg-green-50 p-8 rounded-2xl shadow-xl border border-green-100">
-                    <h3 class="font-bold text-green-900 mb-2 flex items-center gap-2">
-                        <span>🚗</span> Gratis Parkering
-                    </h3>
-                    <p class="text-sm text-green-800 leading-relaxed">
-                        Vi har gratis parkering rett utenfor kontoret. I tillegg er det 2 timer gratis parkering
-                        i Folke Bernadottes vei og Overlege Cappelens gate.
-                    </p>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">Besøksadresse</h3>
+                <div class="text-gray-600 space-y-1">
+                    <p>Armauer Hansens vei 11</p>
+                    <p>4011 Stavanger</p>
                 </div>
             </div>
 
-            <div style="width: 100%; max-width: 1000px; height: 500px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.12); border: 1px solid #ececec; position: relative;">
-
-                <iframe
-                        width="100%"
-                        height="100%"
-                        style="border:0; display: block;"
-                        src={mapUrl}
-                        allowfullscreen
-                        loading="eager"
-                        referrerpolicy="no-referrer-when-downgrade"
-                ></iframe>
-
+            <div class="flex flex-col items-center text-center p-6 border border-gray-100 rounded-lg shadow-sm">
+                <div class="text-primary mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.21-2.21a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">Telefon</h3>
+                <div class="text-gray-600 space-y-1"><p>
+                    <span set:html={formatInfoText("51 52 96 18")}></span> /
+                    <span set:html={formatInfoText("51 53 64 21")}></span> -</p>
+                </div>
+                <p class="text-xs text-gray-500 italic">Sentralbordet er åpent 07:45 - 15:15 (Stengt 11:15 - 12:15)</p>
             </div>
+
         </div>
+
+        <div class="w-full h-[450px] md:h-[550px] rounded-2xl overflow-hidden shadow-xl border border-gray-200">
+            <iframe
+                    width="100%"
+                    height="100%"
+                    style="border:0"
+                    src={mapUrl}
+                    allowfullscreen
+                    loading="eager"
+                    referrerpolicy="no-referrer-when-downgrade"
+            ></iframe>
+        </div>
+
     </div>
-    <WaveToWhite />
+    <WaveToWhite/>
 </section>
