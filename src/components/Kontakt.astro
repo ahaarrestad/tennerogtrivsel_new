@@ -1,6 +1,16 @@
 ---
 import WaveToWhite from "./WaveToWhite.astro";
 const googleMapKey = import.meta.env.PUBLIC_GOOGLE_MAP_KEY;
+
+// Nøyaktige koordinater fra din lenke
+const lat= "58.95426193582862";
+const lng = "5.734568467856621";
+const zoom = "17"; // Justert for å matche utsnittet i lenken din
+const maptype = "roadmap";
+
+// Ved å bruke v1/search med koordinater som 'q', blir boksen ofte betydelig mindre
+// enn ved bruk av v1/place.
+const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleMapKey}&q=${lat},${lng}&zoom=${zoom}`;
 ---
 
 <section id="kontakt" class="scroll-mt-6 relative bg-slate-50 py-24 md:pb-0">
@@ -12,6 +22,38 @@ const googleMapKey = import.meta.env.PUBLIC_GOOGLE_MAP_KEY;
             <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
         </div>
         <div class="grid lg:grid-cols-3 gap-12">
+
+            <div class="bg-slate-900 text-white p-8 rounded-2xl shadow-xl">
+                <h3 class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-600">
+                    <span>🕒</span> Åpningstider
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                        <span>Mandag</span>
+                        <span class="font-medium">08:00 - 15:30</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                        <span>Tirsdag (Kveldsåpent)</span>
+                        <span class="font-bold">08:00 - 20:00</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                        <span>Onsdag (Kveldsåpent)</span>
+                        <span class="font-bold">08:00 - 20:00</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                        <span>Torsdag</span>
+                        <span class="font-medium">08:00 - 15:30</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                        <span>Fredag</span>
+                        <span class="font-medium">08:00 - 15:00</span>
+                    </div>
+                    <div class="flex justify-between text-slate-500 pt-2">
+                        <span>Lørdag - Søndag</span>
+                        <span>Stengt</span>
+                    </div>
+                </div>
+            </div>
 
             <div class="space-y-8">
                 <div>
@@ -55,70 +97,19 @@ const googleMapKey = import.meta.env.PUBLIC_GOOGLE_MAP_KEY;
                 </div>
             </div>
 
-            <div class="bg-slate-900 text-white p-8 rounded-2xl shadow-xl">
-                <h3 class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-600">
-                    <span>🕒</span> Åpningstider
-                </h3>
-                <div class="space-y-4">
-                    <div class="flex justify-between border-b border-slate-700 pb-2">
-                        <span>Mandag</span>
-                        <span class="font-medium">08:00 - 15:30</span>
-                    </div>
-                    <div class="flex justify-between border-b border-slate-700 pb-2">
-                        <span>Tirsdag (Kveldsåpent)</span>
-                        <span class="font-bold">08:00 - 20:00</span>
-                    </div>
-                    <div class="flex justify-between border-b border-slate-700 pb-2">
-                        <span>Onsdag (Kveldsåpent)</span>
-                        <span class="font-bold">08:00 - 20:00</span>
-                    </div>
-                    <div class="flex justify-between border-b border-slate-700 pb-2">
-                        <span>Torsdag</span>
-                        <span class="font-medium">08:00 - 15:30</span>
-                    </div>
-                    <div class="flex justify-between border-b border-slate-700 pb-2">
-                        <span>Fredag</span>
-                        <span class="font-medium">08:00 - 15:00</span>
-                    </div>
-                    <div class="flex justify-between text-slate-500 pt-2">
-                        <span>Lørdag - Søndag</span>
-                        <span>Stengt</span>
-                    </div>
-                </div>
+            <div style="width: 100%; max-width: 1000px; height: 500px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.12); border: 1px solid #ececec; position: relative;">
+
+                <iframe
+                        width="100%"
+                        height="100%"
+                        style="border:0; display: block;"
+                        src={mapUrl}
+                        allowfullscreen
+                        loading="eager"
+                        referrerpolicy="no-referrer-when-downgrade"
+                ></iframe>
+
             </div>
-
-            <div id="map"
-                 class="w-full h-[450px] rounded-3xl shadow-inner bg-slate-100 border border-slate-200"></div>
-
-            <script is:inline define:vars={{ googleMapKey }}>
-                (g => {
-                    var h, a, k, p = "The Loader", obj = {ls: "sig", bi: "-2147483648"}, e = window,
-                        document = e.document, j = document.createElement("script");
-                    j.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapKey}&callback=initMap&libraries=maps,marker&v=beta`;
-                    j.async = true;
-                    document.head.appendChild(j)
-                })();
-
-                // 3. Init-funksjon som kjøres når Google er klar
-                window.initMap = function () {
-                    const position = {lat: 58.95426193582862, lng: 5.734568467856621}; // Armauer Hansens vei 11
-
-                    const map = new google.maps.Map(document.getElementById("map"), {
-                        zoom: 16,
-                        center: position,
-                        mapId: "4504f8b37365c3d0", // Du kan bruke din egen mapId eller fjerne denne linjen
-                        disableDefaultUI: false,
-                        zoomControl: true,
-                    });
-
-                    new google.maps.marker.AdvancedMarkerElement({
-                        map: map,
-                        position: position,
-                        title: "Tenner og Trivsel",
-                    });
-                };
-            </script>
-
         </div>
     </div>
     <WaveToWhite />
