@@ -23,7 +23,7 @@ import WaveFromWhite from "./WaveFromWhite.astro";
                         <h2 class="font-bold text-lg mb-2 text-blue-800 uppercase tracking-wide text-sm">
                             {service.data.title}</h2>
                         <p class="text-slate-500 text-sm leading-relaxed line-clamp-3">{service.data.ingress}</p>
-                        <a href={`/tjenester/${service.id}`} class="mt-4 inline-block text-blue-600 font-medium hover:translate-x-1 transition-transform">
+                        <a href={`/tjenester/${service.slug}`} class="mt-4 inline-block text-blue-600 font-medium hover:translate-x-1 transition-transform">
                             Les mer om {service.data.title} &rarr;
                         </a>
                     </div>
