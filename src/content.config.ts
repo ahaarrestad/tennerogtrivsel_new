@@ -1,5 +1,5 @@
-import { defineCollection, z } from 'astro:content';
-import { google } from 'googleapis';
+import {defineCollection, z} from 'astro:content';
+import {google} from 'googleapis';
 import matter from 'gray-matter';
 import dotenv from 'dotenv';
 
@@ -13,11 +13,11 @@ const parentFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
 const formattedKey = key?.trim().replace(/^['"]|['"]$/g, '').replace(/\\n/g, '\n');
 
 const auth = new google.auth.GoogleAuth({
-    credentials: { client_email: email, private_key: formattedKey },
+    credentials: {client_email: email, private_key: formattedKey},
     scopes: ['https://www.googleapis.com/auth/drive.readonly'],
 });
 
-const drive = google.drive({ version: 'v3', auth });
+const drive = google.drive({version: 'v3', auth});
 
 // ... (samme auth-logikk øverst)
 
@@ -110,7 +110,7 @@ async function fetchDriveContent(folderName: string) {
             console.log("Folder:", folderName, "Processing file:", file.name);
 
             // Inne i loopen i content.config.ts
-            const response = await drive.files.get({ fileId: file.id!, alt: 'media' });
+            const response = await drive.files.get({fileId: file.id!, alt: 'media'});
 
             // Tving innholdet til å bli en ren tekststreng uten rart format
             let rawContent = "";
@@ -121,7 +121,7 @@ async function fetchDriveContent(folderName: string) {
                 rawContent = response.data.toString('utf-8');
             }
 
-            const { data, content } = matter(rawContent);
+            const {data, content} = matter(rawContent);
             const slug = file.name!.replace('.md', '');
 
 
@@ -140,19 +140,6 @@ async function fetchDriveContent(folderName: string) {
     }
 }
 
-const tjenester = defineCollection({
-    loader: async () => {
-        const data = await fetchDriveContent('tjenester');
-        return data; // Astro 5 tar imot arrayet direkte
-    },
-    schema: z.object({
-        id: z.string(),
-        title: z.string(),
-        ingress: z.string(),
-        body: z.string(), // Viktig: Definer denne i schema
-    }),
-});
-
 const meldinger = defineCollection({
     loader: async () => {
         return await fetchDriveContent('meldinger');
@@ -165,5 +152,15 @@ const meldinger = defineCollection({
         body: z.string(),
     }),
 });
+
+const tjenester = defineCollection({
+    type: 'content', // Viktig: Dette sier at det er .md-filer
+    schema: z.object({
+        id: z.string(),
+        title: z.string(),
+        ingress: z.string(),
+    }),
+});
+
 // --- 4. EKSPORT ---
-export const collections = { tjenester, meldinger, innstillinger };
+export const collections = {tjenester, meldinger, innstillinger};

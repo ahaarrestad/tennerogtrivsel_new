@@ -25,3 +25,5 @@ pnpm-debug.log*
 /src/assets/tannleger/
 !src/assets/tannleger/.gitkeep
 src/content/tannleger.json
+/src/content/tjenester/
+!/src/content/tjenester/.gitkeep

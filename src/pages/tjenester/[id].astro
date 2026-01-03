@@ -1,34 +1,21 @@
 ---
+import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
-import {getCollection} from 'astro:content';
 import TelefonKnapp from "../../components/TelefonKnapp.astro";
 import EpostKnapp from "../../components/EpostKnapp.astro";
-import { marked } from 'marked'; // Installer med: npm install marked
 
+// 1. Generer stier for alle tjenestene
 export async function getStaticPaths() {
-    const tjenester = await getCollection('tjenester');
-    return tjenester.map(entry => ({
-        params: {id: entry.id},
-        props: {entry, tjenester}, // Vi sender 'entry' her
+    const tjenesteEntries = await getCollection('tjenester');
+    return tjenesteEntries.map(entry => ({
+        params: { id: entry.slug },
+        props: { entry },
     }));
 }
 
-const { entry, tjenester } = Astro.props; // Hent 'entry' (ikke tjeneste)
-const { title, ingress, body } = entry.data; // Bruk entry.data
-
-// 1. "Vask" teksten: Fjern uønskede tegn og normaliser linjeskift
-const cleanBody = body
-    .replace(/\\n/g, '\n') // Gjør bokstavelige \n om til faktiske linjeskift
-    .trim();
-
-// 2. Konfigurer marked til å være streng på lister og overskrifter
-const htmlContent = await marked.parse(cleanBody, {
-    gfm: true,        // GitHub Flavored Markdown
-    breaks: true,     // Gjør enkle linjeskift til <br>
-    headerIds: true,
-    mangle: false,
-    headerPrefix: 'header-'
-});
+// 2. Hent data for den spesifikke siden
+const { entry } = Astro.props;
+const { Content } = await entry.render();
 ---
 <Layout title={`${entry.data.title} | Tenner og Trivsel`}>
     {/* 1. Vi fjerner 'flex' fra denne ytre diven for å unngå at den krymper innholdet */}
@@ -58,50 +45,9 @@ const htmlContent = await marked.parse(cleanBody, {
                         </header>
 
                         <div class="markdown-content">
-                            <span set:html={htmlContent}></span>
+                            <Content />
                         </div>
                     </div>
-
-                    <style>
-                        @reference "../../styles/global.css"; /* Peker til der du har @theme eller @tailwind */
-
-                        .markdown-content :global(h2) {
-                            @apply text-3xl font-bold text-slate-900 mt-10 mb-4;
-                        }
-
-                        .markdown-content :global(h3) {
-                            @apply text-2xl font-semibold text-slate-800 mt-8 mb-3;
-                        }
-
-                        .markdown-content :global(p) {
-                            @apply text-lg text-slate-700 leading-relaxed mb-6;
-                        }
-
-                        .markdown-content :global(ul) {
-                            @apply list-disc list-outside mb-8 ml-6 space-y-2 text-slate-700;
-                        }
-
-                        .markdown-content :global(ol) {
-                            @apply list-decimal list-outside mb-8 ml-6 space-y-2 text-slate-700;
-                        }
-
-                        .markdown-content :global(li) {
-                            @apply pl-2;
-                        }
-
-                        .markdown-content :global(strong) {
-                            @apply font-bold text-slate-900;
-                        }
-
-                        .markdown-content :global(em) {
-                            @apply italic;
-                        }
-
-                        /* Styling for lenker i teksten */
-                        .markdown-content :global(a) {
-                            @apply text-blue-600 underline hover:text-blue-800 transition-colors;
-                        }
-                    </style>
 
                     {/* Høyre side: Fast bredde på desktop, full bredde på mobil */}
                     <aside class="w-full lg:w-80 xl:w-96 lg:sticky lg:top-24 min-w-fit">
