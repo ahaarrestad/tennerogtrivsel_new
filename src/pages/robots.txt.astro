@@ -1,20 +1,33 @@
 ---
 // src/pages/robots.txt.astro
-// Vi fjerner all automatisk layout-wrapping
 export const partial = true;
 
-const siteUrl = Astro.site ? Astro.site.href : 'https://www.tennerogtrivsel.no';
-const sitemapUrl = new URL('sitemap-index.xml', siteUrl).href;
+// 1. Hent hostname (fungerer best hvis du har SSR aktivert)
+// Hvis du kjører statisk build, er det tryggere å sjekke en miljøvariabel
+// som settes av deploy-verktøyet ditt.
+const url = new URL(Astro.request.url);
+const isTestSite = url.hostname === "test2.aarrestad.com";
 
-const robotsTxt = `
-User-agent: *
+// 2. Definer produksjons-URL for sitemap
+const prodUrl = "https://www.tennerogtrivsel.no";
+const sitemapUrl = new URL('sitemap-index.xml', prodUrl).href;
+
+// 3. Generer innhold
+let robotsTxt = "";
+
+if (isTestSite) {
+    // Blokker alt på test-domenet
+    robotsTxt = `User-agent: *
+Disallow: /`;
+} else {
+    // Tillat alt på alle andre domener (produksjon)
+    robotsTxt = `User-agent: *
 Allow: /
 
-Sitemap: ${sitemapUrl}
-`.trim();
+Sitemap: ${sitemapUrl}`;
+}
 
-// Vi overstyrer responsen for å tvinge den til å bli ren tekst
-return new Response(robotsTxt, {
+return new Response(robotsTxt.trim(), {
     headers: { 'Content-Type': 'text/plain; charset=utf-8' },
 });
 ---
