@@ -85,7 +85,7 @@ const tjenester = await getCollection('tjenester');
                                             {isCurrent ? (
                                                     <span class="text-sm font-bold text-slate-900">{s.data.title}</span>
                                             ) : (
-                                                    <a href={`/tjenester/${s.id}`} class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                                                    <a href={`/tjenester/${s.slug}`} class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
                                                         {s.data.title}
                                                     </a>
                                             )}
