@@ -1,26 +1,4 @@
 import {defineCollection, z} from 'astro:content';
-import {google} from 'googleapis';
-import matter from 'gray-matter';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-// --- 1. DELT AUTENTISERING (Kjører én gang) ---
-const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-const key = process.env.GOOGLE_PRIVATE_KEY;
-const parentFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-
-const formattedKey = key?.trim().replace(/^['"]|['"]$/g, '').replace(/\\n/g, '\n');
-
-const auth = new google.auth.GoogleAuth({
-    credentials: {client_email: email, private_key: formattedKey},
-    scopes: ['https://www.googleapis.com/auth/drive.readonly'],
-});
-
-const drive = google.drive({version: 'v3', auth});
-
-// ... (samme auth-logikk øverst)
-
 
 const GOOGLE_API_KEY = import.meta.env.PUBLIC_GOOGLE_MAP_KEY;
 const SHEET_ID = '1XTRkjyJpAk7hMNe4tfhhA3nI0BwmOfrR0dzj5iC_Hoo'; // Finn denne i nettleser-URLen til arket
@@ -87,69 +65,12 @@ const innstillinger = defineCollection({
     })
 });
 
-async function fetchDriveContent(folderName: string) {
-    try {
-        const folderRes = await drive.files.list({
-            q: `'${parentFolderId}' in parents and name = '${folderName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
-            fields: 'files(id, name)',
-        });
-
-        const subFolder = folderRes.data.files?.[0];
-        if (!subFolder) throw new Error(`Fant ikke mappen ${folderName}`);
-
-        const res = await drive.files.list({
-            q: `'${subFolder.id}' in parents and name contains '.md' and trashed = false`,
-            fields: 'files(id, name)',
-        });
-
-        const files = res.data.files || [];
-        const results = [];
-
-        console.log("Found", files.length, "files in folder", folderName);
-        for (const file of files) {
-            console.log("Folder:", folderName, "Processing file:", file.name);
-
-            // Inne i loopen i content.config.ts
-            const response = await drive.files.get({fileId: file.id!, alt: 'media'});
-
-            // Tving innholdet til å bli en ren tekststreng uten rart format
-            let rawContent = "";
-            if (typeof response.data === 'string') {
-                rawContent = response.data;
-            } else {
-                // Hvis Google sender det som et objekt/buffer
-                rawContent = response.data.toString('utf-8');
-            }
-
-            const {data, content} = matter(rawContent);
-            const slug = file.name!.replace('.md', '');
-
-
-            results.push({
-                id: slug,
-                ...data,
-                body: content.trim(), // Trim fjerner usynlige tegn i start/slutt
-            });
-            console.log("Folder:", folderName, "Processing complete:", file.name);
-
-        }
-        return results;
-    } catch (e) {
-        console.error(`Feil i loader for ${folderName}:`, e);
-        return [];
-    }
-}
-
 const meldinger = defineCollection({
-    loader: async () => {
-        return await fetchDriveContent('meldinger');
-    },
+    type: 'content', // Dette sier til Astro: "Se i src/content/meldinger/ etter .md filer"
     schema: z.object({
-        id: z.string(),
         title: z.string(),
         startDate: z.coerce.string(),
         endDate: z.coerce.string(),
-        body: z.string(),
     }),
 });
 

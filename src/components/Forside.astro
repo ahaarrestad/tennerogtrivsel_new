@@ -21,13 +21,11 @@ const settings = await getSiteSettings();
             </div>
 
 
-                <div id="forside-message-root" class="bg-slate-900 p-8 rounded-2xl shadow-xl border border-green-100 hidden">
-                        <h3 id="forside-msg-title" class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-600">
-                        </h3>
-                        {/* Vi bruker en 'prose' wrapper for å style Markdown-teksten (hvit tekst på mørk bakgrunn) */}
-                        <div id="forside-msg-content" class="prose prose-invert max-w-none text-slate-300 whitespace-pre-wrap">
-                        </div>
-                    </div>
+            {/* Placeholder for meldingen - starter som skjult */}
+            <div id="dynamic-message-box" class="hidden bg-slate-900 p-8 rounded-2xl shadow-xl border border-slate-700 mt-8 text-left">
+                <h3 id="dynamic-title" class="text-2xl font-bold mb-4 text-blue-400"></h3>
+                <div id="dynamic-content" class="prose prose-invert max-w-none text-slate-300 whitespace-pre-wrap"></div>
+            </div>
 
         </div>
         <div class="flex-1 w-full max-w-md md:max-w-xl lg:max-w-2xl min-w-[350px]">
@@ -38,26 +36,25 @@ const settings = await getSiteSettings();
             </div>
         </div>
         <script>
-            // Bruk relativ sti fra der Forside.astro ligger til scriptet
-            import { getActiveMessage, renderMessageToElement } from '../scripts/messageClient.js';
+            import { getActiveMessage } from '../scripts/messageClient.js';
 
-            async function init() {
+            async function updateHeroMessage() {
                 const active = await getActiveMessage();
+                const box = document.getElementById('dynamic-message-box');
+                const title = document.getElementById('dynamic-title');
+                const content = document.getElementById('dynamic-content');
 
-                if (active) {
-                    renderMessageToElement(
-                        active,
-                        'forside-message-root',
-                        'forside-msg-title',
-                        'forside-msg-content'
-                    );
+                if (active && box && title && content) {
+                    title.textContent = active.title;
+                    content.innerHTML = active.htmlContent; // Bruker den ferdigformaterte HTML-en
+                    box.classList.remove('hidden');
+                } else if (box) {
+                    box.classList.add('hidden');
                 }
             }
 
-            // Astro-spesifikk måte å kjøre script på ved lasting og navigering
-            document.addEventListener('astro:page-load', init);
-            // For sikkerhets skyld hvis du ikke bruker View Transitions:
-            init();
+            document.addEventListener('astro:page-load', updateHeroMessage);
+            updateHeroMessage();
         </script>
     </div>
     <WaveFromWhite />

@@ -7,12 +7,23 @@ import { pipeline } from 'stream/promises';
 // --- KONFIGURASJON ---
 const CONFIG = {
     spreadsheetId: '1XTRkjyJpAk7hMNe4tfhhA3nI0BwmOfrR0dzj5iC_Hoo',
-    tjenesterFolderId: '1h_iXI-fFrIpfDfT1yZvkGpbOZKgbd1n6',
     paths: {
         tannlegerAssets: path.join(process.cwd(), 'src/assets/tannleger'),
         tannlegerData: path.join(process.cwd(), 'src/content/tannleger.json'),
-        tjenesterContent: path.join(process.cwd(), 'src/content/tjenester'),
-    }
+    },
+    // Definer mapper som inneholder .md filer her
+    collections: [
+        {
+            name: 'tjenester',
+            folderId: '1h_iXI-fFrIpfDfT1yZvkGpbOZKgbd1n6',
+            dest: path.join(process.cwd(), 'src/content/tjenester')
+        },
+        {
+            name: 'meldinger',
+            folderId: '1iU57zpLtE27OUHTQcvTTIAp5iYXfL9zd', // <-- Sett inn ID her
+            dest: path.join(process.cwd(), 'src/content/meldinger')
+        }
+    ]
 };
 
 // --- GOOGLE AUTH ---
@@ -21,10 +32,7 @@ const auth = new google.auth.GoogleAuth({
         client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
         private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     },
-    scopes: [
-        'https://www.googleapis.com/auth/spreadsheets.readonly',
-        'https://www.googleapis.com/auth/drive.readonly'
-    ],
+    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly', 'https://www.googleapis.com/auth/drive.readonly'],
 });
 
 const drive = google.drive({ version: 'v3', auth });
@@ -45,8 +53,9 @@ async function findFileIdByName(name) {
     return res.data.files[0]?.id;
 }
 
-// --- HOVEDLOGIKK ---
+// --- SYNKRONISERINGSLOGIKK ---
 
+// Spesialfunksjon for tannleger (kombinerer Sheets og Bilder)
 async function syncTannleger() {
     console.log('🚀 Synkroniserer tannleger...');
     if (!fs.existsSync(CONFIG.paths.tannlegerAssets)) fs.mkdirSync(CONFIG.paths.tannlegerAssets, { recursive: true });
@@ -58,49 +67,38 @@ async function syncTannleger() {
 
     const tannlegeData = [];
     for (const [navn, tittel, beskrivelse, bildeFil, aktiv] of res.data.values || []) {
-        console.log(` 🔄 Behandler tannlege: ${navn}`);
         if (aktiv?.toLowerCase() !== 'ja') continue;
+        console.log(`  🔄 Behandler: ${navn}`);
 
         if (bildeFil) {
             const fileId = await findFileIdByName(bildeFil);
             if (fileId) {
+                console.log(`    ⬇️ Laster ned bilde: ${bildeFil}`);
                 await downloadFile(fileId, path.join(CONFIG.paths.tannlegerAssets, bildeFil));
-                console.log(`  ✅ Bilde: ${bildeFil}`);
             }
         }
         tannlegeData.push({ navn, tittel, beskrivelse, bildeFil });
     }
-
     fs.writeFileSync(CONFIG.paths.tannlegerData, JSON.stringify(tannlegeData, null, 2));
 }
 
-async function syncTjenester() {
-    console.log('🚀 Synkroniserer tjenester (.md)...');
+// Fellesfunksjon for alle Markdown-samlinger (Tjenester, Meldinger, etc.)
+async function syncMarkdownCollection(collection) {
+    console.log(`🚀 Synkroniserer ${collection.name} (.md)...`);
+    if (!fs.existsSync(collection.dest)) fs.mkdirSync(collection.dest, { recursive: true });
 
-    // Sikre at mappen eksisterer
-    if (!fs.existsSync(CONFIG.paths.tjenesterContent)) {
-        fs.mkdirSync(CONFIG.paths.tjenesterContent, { recursive: true });
-    }
-
-    // Vi søker etter ALLE filer i mappen uten mimeType-filter for å være sikre
     const res = await drive.files.list({
-        q: `'${CONFIG.tjenesterFolderId}' in parents and trashed = false`,
-        fields: 'files(id, name, mimeType)',
+        q: `'${collection.folderId}' in parents and trashed = false`,
+        fields: 'files(id, name)',
     });
 
-    if (!res.data.files || res.data.files.length === 0) {
-        console.warn('  ⚠️ Ingen filer funnet! Sjekk tilgang for Service Account og mappe-ID.');
-        return;
-    }
+    const files = res.data.files || [];
+    if (files.length === 0) console.warn(`  ⚠️ Ingen filer funnet i ${collection.name}`);
 
-    for (const file of res.data.files) {
-        // Vi laster kun ned filer som slutter på .md
+    for (const file of files) {
         if (file.name.endsWith('.md')) {
-            const destination = path.join(CONFIG.paths.tjenesterContent, file.name);
-            await downloadFile(file.id, destination);
-            console.log(`  ✅ Dokument: ${file.name}`);
-        } else {
-            console.log(`  ⏩ Hopper over (ikke .md): ${file.name}`);
+            await downloadFile(file.id, path.join(collection.dest, file.name));
+            console.log(`  ✅ ${collection.name}: ${file.name}`);
         }
     }
 }
@@ -109,8 +107,14 @@ async function syncTjenester() {
 
 (async () => {
     try {
+        // 1. Synkroniser tannleger fra ark
         await syncTannleger();
-        await syncTjenester();
+
+        // 2. Synkroniser alle markdown-samlinger fra mapper
+        for (const col of CONFIG.collections) {
+            await syncMarkdownCollection(col);
+        }
+
         console.log('✨ Alt er synkronisert!');
     } catch (err) {
         console.error('❌ Synkronisering feilet:', err.message);
