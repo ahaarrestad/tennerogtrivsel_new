@@ -16,6 +16,9 @@ export async function getStaticPaths() {
 // 2. Hent data for den spesifikke siden
 const { entry } = Astro.props;
 const { Content } = await entry.render();
+
+// --- DENNE LINJEN MANGLER SANNSYNLIGVIS: ---
+const tjenester = await getCollection('tjenester');
 ---
 <Layout title={`${entry.data.title} | Tenner og Trivsel`}>
     {/* 1. Vi fjerner 'flex' fra denne ytre diven for å unngå at den krymper innholdet */}
