@@ -13,16 +13,26 @@ import TelefonKnapp from "../components/TelefonKnapp.astro";
         <div class="container mx-auto px-6 relative z-10">
             <div class="max-w-2xl mx-auto text-center">
 
-                <h1 class="text-6xl md:text-8xl font-black text-slate-900 mb-6 tracking-tighter">
-                    404
-                </h1>
+                {/* Erstatter 404 med et visuelt "hull i smilet" */}
+                <div class="flex justify-center items-center mb-10">
+                    <div class="text-7xl md:text-9xl font-black text-slate-200 flex items-center tracking-widest leading-none select-none">
+                        <span>4</span>
+                        <span class="text-blue-600 animate-bounce">0</span>
+                        <span class="relative">
+                            4
+                            <div class="absolute -top-4 -right-4 w-8 h-8 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center">
+                                <span class="text-2xl md:text-4xl text-blue-500">🦷</span>
+                            </div>
+                        </span>
+                    </div>
+                </div>
 
                 <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-4">
-                    Oops! Her var det et tomrom.
+                    Oops! Her fant vi et hull i smilet.
                 </h2>
 
                 <p class="text-lg text-slate-500 mb-20 max-w-md mx-auto leading-relaxed">
-                    Vi finner ikke siden du leter etter. Den kan ha blitt flyttet eller slettet.
+                    Selv ikke med røntgen kan vi finne siden du leter etter. Den har enten blitt trukket ut, eller så har vi rotfylt feil lenke.
                 </p>
 
                 {/* Knappene ved siden av hverandre */}
