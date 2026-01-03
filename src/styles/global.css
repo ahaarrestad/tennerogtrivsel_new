@@ -1,2 +1,5 @@
 @import "tailwindcss";
 
+/* Legg til denne linjen for å aktivere typography i v4 */
+@plugin "@tailwindcss/typography";
+
