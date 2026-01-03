@@ -1,6 +1,6 @@
 import {defineCollection, z} from 'astro:content';
 
-const GOOGLE_API_KEY = import.meta.env.PUBLIC_GOOGLE_MAP_KEY;
+const GOOGLE_API_KEY = import.meta.env.PUBLIC_GOOGLE_API_KEY;
 const SHEET_ID = '1XTRkjyJpAk7hMNe4tfhhA3nI0BwmOfrR0dzj5iC_Hoo'; // Finn denne i nettleser-URLen til arket
 const RANGE = 'Innstillinger!A:B'; // Navnet på fanen og kolonnene
 
