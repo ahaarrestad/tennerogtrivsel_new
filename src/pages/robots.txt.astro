@@ -1,0 +1,20 @@
+---
+// src/pages/robots.txt.astro
+// Vi fjerner all automatisk layout-wrapping
+export const partial = true;
+
+const siteUrl = Astro.site ? Astro.site.href : 'https://www.tennerogtrivsel.no';
+const sitemapUrl = new URL('sitemap-index.xml', siteUrl).href;
+
+const robotsTxt = `
+User-agent: *
+Allow: /
+
+Sitemap: ${sitemapUrl}
+`.trim();
+
+// Vi overstyrer responsen for å tvinge den til å bli ren tekst
+return new Response(robotsTxt, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+});
+---
