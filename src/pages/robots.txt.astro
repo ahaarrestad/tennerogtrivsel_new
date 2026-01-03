@@ -6,7 +6,7 @@ export const partial = true;
 // Hvis du kjører statisk build, er det tryggere å sjekke en miljøvariabel
 // som settes av deploy-verktøyet ditt.
 const url = new URL(Astro.request.url);
-const isTestSite = url.hostname === "test2.aarrestad.com";
+const isTestSite = url.hostname === "test2.aarrestad.com" || "localhost";
 
 // 2. Definer produksjons-URL for sitemap
 const prodUrl = "https://www.tennerogtrivsel.no";
