@@ -1,8 +1,8 @@
 ---
-import { Image } from 'astro:assets';
+import {Image} from 'astro:assets';
 import tannleger from '../content/tannleger.json';
 import WaveToFooter from './WaveToFooter.astro';
-import { getSiteSettings } from '../scripts/getSettings';
+import {getSiteSettings} from '../scripts/getSettings';
 
 // For å dynamisk importere bilder i Astro
 const images = import.meta.glob('/src/assets/tannleger/*.{jpeg,jpg,png,webp}');
@@ -11,21 +11,32 @@ const settings = await getSiteSettings();
 const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 'nb'));
 ---
 <section id="tannleger" class="scroll-mt-6 relative bg-slate-50 py-24 md:pb-32">
-    <div class="container mx-auto px-4 md:flex-row items-center gap-12">
-        <div class="text-center mb-16">
-            <h2 class="text-3xl font-bold text-slate-900 italic tracking-tight">Våre Tannleger</h2>
-            <p class="text-slate-600">{settings.tannlegerTekst}</p>
+    <div class="container mx-auto px-4">
+
+        {/* Overskrift - Samme sticky-logikk som tjenester */}
+        <div class="sticky top-[var(--nav-total-height,4rem)] z-[100] bg-slate-50 py-8 mb-4 text-center">
+            <h2 class="text-3xl md:text-5xl font-black text-slate-900 italic tracking-tight">
+                Våre Tannleger
+            </h2>
+            <p class="text-slate-600 max-w-2xl mx-auto mt-2">{settings.tannlegerTekst}</p>
             <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {sorterteTannleger.map((t) => {
+        <div class="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {sorterteTannleger.map((t, index) => {
                 const imagePath = `/src/assets/tannleger/${t.bildeFil}`;
                 const hasImage = images[imagePath];
 
                 return (
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center">
-                            <div class="w-48 h-48 mb-6 overflow-hidden rounded-full border-4 border-blue-50">
+                    /* Vi setter variablene her, men bruker dem bare i CSS under */
+
+                        <div
+                                style={`--card-index: ${index};`}
+                                class="stack-card sticky md:relative bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center mb-[10vh] md:mb-0 min-h-[450px] overflow-hidden transition-all duration-300"
+                        >
+                            <div class="absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-bl-full -mr-8 -mt-8"></div>
+
+                            <div class="w-48 h-48 mb-6 overflow-hidden rounded-full border-4 border-blue-50 relative z-10 shrink-0">
                                 {hasImage ? (
                                         <Image
                                                 src={images[imagePath]()}
@@ -40,46 +51,50 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
                                         </div>
                                 )}
                             </div>
-                            <h3 class="text-xl font-bold text-slate-900">{t.navn}</h3>
-                            <p class="text-lg text-slate-500 font-medium italic">{t.tittel}</p>
-                            <p class="text-slate-600 text-center text-sm">{t.beskrivelse}</p>
+
+                            <div class="text-center relative z-10">
+                                <h3 class="text-2xl font-bold text-slate-900">{t.navn}</h3>
+                                <p class="text-lg text-blue-600 font-medium italic mb-4">{t.tittel}</p>
+                                <p class="text-slate-600 text-sm leading-relaxed line-clamp-6">
+                                    {t.beskrivelse}
+                                </p>
+                            </div>
+
+                            <div class="absolute bottom-0 left-0 h-1.5 bg-blue-600 w-0 group-hover:w-full transition-all duration-500"></div>
                         </div>
                 );
             })}
         </div>
-
-<!--
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-7xl mx-auto">
-            {tannleger.map((d) => (
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 hover:border-blue-200 transition-all overflow-hidden w-full max-w-7xl mx-auto mb-8">
-                        <div class="flex flex-col md:flex-row">
-
-                            <div class="w-full md:w-[40%] lg:w-[35%] flex-shrink-0 relative min-h-[300px] md:min-h-[350px] min-w-[200px] mx:min-w-[250px]">
-                                <img
-                                        src={d.image}
-                                        alt={d.name}
-                                        class="absolute inset-0 w-full h-full object-cover object-center"
-                                />
-                                <div class="absolute inset-0 bg-gradient-to-t from-blue-900/20 to-transparent"></div>
-                            </div>
-
-                            <div class="p-8 md:p-12 flex flex-col justify-center flex-1 bg-white justify-start">
-                                <div class="mb-6">
-                                    <h3 class="text-3xl font-extrabold text-slate-900 mb-1">{d.name}</h3>
-                                    <p class="text-lg text-slate-500 font-medium italic">{d.role}</p>
-                                </div>
-
-                                <div class="h-1 w-20 bg-blue-600 rounded-full mb-6"></div>
-
-                                <p class="text-slate-600 leading-relaxed text-base md:text-lg">
-                                    {d.bio}
-                                </p>
-
-                            </div>
-                        </div>
-                    </div>
-            ))}
-        </div>
--->
     </div>
 </section>
+
+
+<style>
+    /* 1. MOBIL-LOGIKK (Standard) */
+    @media (max-width: 767px) {
+        .stack-card {
+            /* Her bruker vi variablene vi satte i Astro-loopen */
+            top: calc(var(--nav-total-height, 4rem) + 180px + (var(--card-index) * 4px));
+            z-index: var(--card-index);
+        }
+    }
+
+    /* 2. DESKTOP-LOGIKK (Reset) */
+    @media (min-width: 768px) {
+        .stack-card {
+            position: relative !important;
+            top: auto !important; /* Dette dytter kortene tilbake på plass */
+            z-index: 1 !important;
+            margin-bottom: 0 !important;
+            min-height: auto !important;
+        }
+
+        /* Sørg for at overskriften ikke er sticky på desktop */
+        .sticky.top-\[var\(--nav-total-height\,4rem\)\] {
+            position: relative !important;
+            top: auto !important;
+            margin-bottom: 4rem !important;
+            background: transparent !important;
+        }
+    }
+</style>
