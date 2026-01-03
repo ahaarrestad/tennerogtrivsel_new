@@ -1,0 +1,15 @@
+name: CI
+on: [push]
+
+jobs:
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm audit --audit-level=high # Stopper hvis det er kritiske hull
+      - run: npm run build # Sjekker at prosjektet faktisk kompilerer
