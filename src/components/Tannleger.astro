@@ -1,8 +1,11 @@
 ---
-import {tannleger} from '../data/tannleger.js';
+import { Image } from 'astro:assets';
+import tannleger from '../content/tannleger.json';
 import WaveToFooter from './WaveToFooter.astro';
 import { getSiteSettings } from '../scripts/getSettings';
 
+// For å dynamisk importere bilder i Astro
+const images = import.meta.glob('/src/assets/tannleger/*.{jpeg,jpg,png,webp}');
 const settings = await getSiteSettings();
 ---
 <section id="tannleger" class="scroll-mt-6 relative bg-slate-50 py-24 md:pb-32">
@@ -12,6 +15,38 @@ const settings = await getSiteSettings();
             <p class="text-slate-600">{settings.tannlegerTekst}</p>
             <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
         </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {tannleger.map((t) => {
+                const imagePath = `/src/assets/tannleger/${t.bildeFil}`;
+                const hasImage = images[imagePath];
+
+                return (
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center">
+                            <div class="w-48 h-48 mb-6 overflow-hidden rounded-full border-4 border-blue-50">
+                                {hasImage ? (
+                                        <Image
+                                                src={images[imagePath]()}
+                                                alt={t.navn}
+                                                width={400}
+                                                height={400}
+                                                class="w-full h-full object-cover"
+                                        />
+                                ) : (
+                                        <div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+                                            Bilde mangler
+                                        </div>
+                                )}
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900">{t.navn}</h3>
+                            <p class="text-blue-600 font-medium mb-4">{t.tittel}</p>
+                            <p class="text-slate-600 text-center text-sm">{t.beskrivelse}</p>
+                        </div>
+                );
+            })}
+        </div>
+
+<!--
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-7xl mx-auto">
             {tannleger.map((d) => (
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 hover:border-blue-200 transition-all overflow-hidden w-full max-w-7xl mx-auto mb-8">
@@ -43,5 +78,6 @@ const settings = await getSiteSettings();
                     </div>
             ))}
         </div>
+-->
     </div>
 </section>

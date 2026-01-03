@@ -22,3 +22,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+/src/assets/tannleger/
+!src/assets/tannleger/.gitkeep
+src/content/tannleger.json
