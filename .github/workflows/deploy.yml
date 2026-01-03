@@ -7,6 +7,12 @@ on:
     types: [google_drive_update] # Sjekk at denne teksten er identisk med event_type i curl
   workflow_dispatch:
 
+# Legg til dette for å fjerne sikkerhetsadvarselen
+permissions:
+  contents: read
+  pages: write      # Legg til denne hvis du bruker GitHub Pages
+  id-token: write   # Trengs ofte for sikker autentisering mot sky-tjenester
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest

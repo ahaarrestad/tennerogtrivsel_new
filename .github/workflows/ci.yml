@@ -1,6 +1,10 @@
 name: CI
 on: [push]
 
+# Dette låser ned sikkerheten for hele workflowen
+permissions:
+  contents: read
+
 jobs:
   security-check:
     runs-on: ubuntu-latest
