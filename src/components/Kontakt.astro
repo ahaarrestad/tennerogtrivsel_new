@@ -9,7 +9,8 @@ const googleApiKey = import.meta.env.PUBLIC_GOOGLE_API_KEY;
 const lat = settings.latitude;
 const lng = settings.longitude;
 const zoom = "17"; // Justert for å matche utsnittet i lenken din
-const maptype = "roadmap";
+
+const headerOffset = "230px";
 
 // Ved å bruke v1/search med koordinater som 'q', blir boksen ofte betydelig mindre
 // enn ved bruk av v1/place.
@@ -27,7 +28,7 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleApiKey}&
         <div class={`grid grid-cols-1 md:grid-cols-2 ${settings.showEmail?.toLowerCase() === "ja" ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-8 mb-24 relative z-10`}>
             {/* Åpningstid-boks */}
             <div
-                    style="--card-index: 0; --header-offset: 200px;"
+                    style={`--card-index: 0; --header-offset: ${headerOffset};`}
                     class="stack-card card-base items-center min-h-[250px] group"
             >
                 {/* Blått hjørne */}
@@ -56,7 +57,7 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleApiKey}&
 
             {/* Adresse boks */}
             <div
-                    style="--card-index: 1; --header-offset: 200px;"
+                    style={`--card-index: 2; --header-offset: ${headerOffset};`}
                     class="stack-card card-base items-center min-h-[250px] group"
             >
                 {/* Blått hjørne */}
@@ -79,7 +80,7 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleApiKey}&
 
             { /* Telefon-boks */}
             <div
-                    style="--card-index: 2; --header-offset: 200px;"
+                    style={`--card-index: 4; --header-offset: ${headerOffset};`}
                     class="stack-card card-base items-center min-h-[250px] group"
             >
                 {/* Blått hjørne */}
@@ -103,7 +104,7 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleApiKey}&
             {/* E-post-boks */}
             {settings.showEmail?.toLowerCase() === "ja" && (
                     <div
-                            style="--card-index: 3; --header-offset: 200px;"
+                            style={`--card-index: 6; --header-offset: ${headerOffset};`}
                             class="stack-card card-base items-center min-h-[250px] group"
                     >
                         {/* Blått hjørne */}
