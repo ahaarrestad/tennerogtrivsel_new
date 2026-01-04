@@ -18,7 +18,7 @@
     /* Overskrifts-gruppen */
     .section-header {
         @apply text-center mb-12 md:mb-20 mx-auto max-w-4xl;
-        @apply mb-16 md:mb-28;
+        @apply mb-16 md:mb-48;
     }
 
     /* Denne klassen gjør headeren sticky kun på mobil */
@@ -44,11 +44,6 @@
     /* Teksten under overskriften */
     .section-intro {
         @apply text-slate-600 max-w-2xl mx-auto mt-2 text-base md:text-lg leading-relaxed;
-    }
-
-    /* Den blå linjen */
-    .heading-accent {
-        @apply w-20 h-1 bg-blue-600 mx-auto mt-4;
     }
 
     /* FELLES KORT-LOGIKK */
