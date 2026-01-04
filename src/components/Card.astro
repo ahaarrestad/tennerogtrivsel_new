@@ -4,18 +4,25 @@ const {
     index,
     title,
     subtitle,
+    href = null,    // Settes til null som standard
     headerOffset = "200px",
-    minHeight = "auto", // Endret til auto som default
+    minHeight = "auto",
     centered = true,
     isStack = true,
-    roundImage = false // Ny prop for tannlege-stilen
+    roundImage = false
 } = Astro.props;
+
+// Her bestemmer vi om vi skal bruke 'a' eller 'div'
+const Tag = href ? 'a' : 'div';
 ---
-<div
+
+<Tag
+        href={href}
         style={`${isStack ? `--card-index: ${index}; --header-offset: ${headerOffset};` : ''} min-height: ${minHeight};`}
         class:list={[
-            "card-base group",
-            isStack ? "stack-card" : "relative h-full",
+            "card-base group no-underline text-inherit",
+            href ? "block cursor-pointer" : "flex flex-col", // block er viktig for at <a> skal fylle hele bredden
+        isStack ? "stack-card" : "relative h-full flex flex-col",
             centered ? "items-center text-center" : "items-start text-left"
         ]}
 >
@@ -41,7 +48,12 @@ const {
     </div>
 
     <div class="relative z-10 w-full flex flex-col flex-grow">
-        <h3 class="card-title text-xl !mb-1">{title}</h3>
+        <h3 class:list={[
+            "card-title text-xl !mb-1 transition-colors",
+            href ? "group-hover:text-blue-600" : ""
+        ]}>
+            {title}
+        </h3>
 
         {subtitle && <p class="card-subtitle !mb-4">{subtitle}</p>}
 
@@ -49,10 +61,16 @@ const {
             <slot />
         </div>
 
-        <div class="mt-6 empty:hidden">
-            <slot name="link" />
-        </div>
+        {href && (
+                <div class="mt-6">
+                    <slot name="link">
+                        <div class="card-link">
+                            Les mer <span class="ml-2 transition-transform group-hover:translate-x-1 inline-block">→</span>
+                        </div>
+                    </slot>
+                </div>
+        )}
     </div>
 
     <div class="card-progress-bar"></div>
-</div>
+</Tag>

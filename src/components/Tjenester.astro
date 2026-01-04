@@ -22,21 +22,15 @@ const sortedServices = allServices.sort((a, b) =>
                     <Card
                             index={index}
                             title={service.data.title}
-                            headerOffset="140px"
+                            headerOffset="150px"
                             minHeight="250px"
                             centered={false}
                             isStack={true}
+                            href={`/tjenester/${service.slug}`}
                     >
                         <p class="card-text line-clamp-3">
                             {service.data.ingress}
                         </p>
-
-                        <div slot="link" class="card-link">
-                            <a href={`/tjenester/${service.slug}`}>
-                                Les mer <span
-                                    class="ml-2 transition-transform group-hover:translate-x-1 inline-block">→</span>
-                            </a>
-                        </div>
                     </Card>
             ))}
         </div>
