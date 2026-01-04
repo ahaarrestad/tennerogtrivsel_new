@@ -50,4 +50,35 @@
     .heading-accent {
         @apply w-20 h-1 bg-blue-600 mx-auto mt-4;
     }
+
+    /* FELLES KORT-LOGIKK */
+    .stack-card {
+        @apply sticky md:relative transition-all duration-300 overflow-hidden;
+        /* Standardverdier for desktop */
+        top: 0;
+        z-index: 1;
+    }
+
+    @media (max-width: 767px) {
+        .stack-card {
+            position: sticky !important;
+            /* Vi bruker en variabel --header-offset som vi kan justere per side hvis nødvendig */
+            top: calc(var(--nav-total-height, 4rem) + var(--header-offset, 150px) + (var(--card-index) * 4px)) !important;
+            z-index: var(--card-index);
+            margin-bottom: 10vh !important;
+        }
+
+        .stack-card:last-child {
+            margin-bottom: 2rem !important;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .stack-card {
+            position: relative !important;
+            top: 0 !important;
+            z-index: 1 !important;
+            margin-bottom: 0 !important;
+        }
+    }
 }

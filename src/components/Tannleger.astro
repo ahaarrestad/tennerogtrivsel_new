@@ -12,8 +12,6 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
 ---
 <section id="tannleger" class="section-container bg-slate-50">
     <div class="section-content">
-
-        {/* Overskrift - Samme sticky-logikk som tjenester */}
         <div class="section-header section-header-sticky bg-slate-50/95 md:bg-transparent">
             <h2 class="section-heading">Våre Tannleger</h2>
             <p class="section-intro">{settings.tannlegerTekst}</p>
@@ -22,15 +20,15 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
 
         <div class="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 gap-10">
             {sorterteTannleger.map((t, index) => {
+                // VIKTIG: Definer disse variablene her inne i map-funksjonen
+
                 const imagePath = `/src/assets/tannleger/${t.bildeFil}`;
                 const hasImage = images[imagePath];
 
                 return (
-                    /* Vi setter variablene her, men bruker dem bare i CSS under */
-
                         <div
-                                style={`--card-index: ${index};`}
-                                class="stack-card sticky md:relative bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center mb-[10vh] md:mb-0 min-h-[450px] overflow-hidden transition-all duration-300"
+                                style={`--card-index: ${index}; --header-offset: 240px;`}
+                                class="stack-card bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center min-h-[450px]"
                         >
                             <div class="absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-bl-full -mr-8 -mt-8"></div>
 
@@ -65,40 +63,3 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
         </div>
     </div>
 </section>
-
-
-<style>
-    @media (max-width: 767px) {
-        .stack-card {
-            position: sticky !important;
-            /* var(--nav-total-height) = navbaren
-               + 220px = Omtrentlig høyde på din overskrift + intro + padding
-               + (var(--card-index) * 4px) = Stacking-forskyvning
-            */
-            top: calc(var(--nav-total-height, 4rem) + 150px + (var(--card-index) * 4px)) !important;
-            z-index: var(--card-index);
-        }
-    }
-
-    @media (min-width: 768px) {
-        /* På desktop skal overskriften IKKE være sticky */
-        .section-header-sticky {
-            position: relative !important;
-            top: 0 !important;
-        }
-
-        .stack-card {
-            position: relative !important;
-            top: 0 !important;
-            z-index: 1 !important;
-            margin-bottom: 0 !important;
-        }
-    }
-
-    @media (max-width: 767px) {
-        /* Fjerner den ekstra marginen på det siste kortet så det ikke dytter footeren unødvendig ned */
-        .stack-card:last-child {
-            margin-bottom: 2rem !important;
-        }
-    }
-</style>
