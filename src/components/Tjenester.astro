@@ -2,6 +2,8 @@
 import {getCollection} from 'astro:content';
 import Layout from '../layouts/Layout.astro';
 import Card from './Card.astro';
+import { getSiteSettings } from '../scripts/getSettings';
+
 // 1. Hent alle filene fra src/content/tjenester/
 const allServices = await getCollection('tjenester');
 
