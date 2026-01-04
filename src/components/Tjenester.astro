@@ -36,7 +36,9 @@ const sortedServices = allServices.sort((a, b) =>
                         </div>
 
                         <div class="card-link">
-                            Les mer <span class="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                            <a href={`/tjenester/${service.slug}`}>
+                                Les mer <span class="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                            </a>
                         </div>
 
                         <div class="card-progress-bar"></div>
