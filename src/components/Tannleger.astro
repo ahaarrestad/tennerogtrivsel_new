@@ -14,7 +14,10 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
     <div class="container mx-auto px-4">
 
         {/* Overskrift - Samme sticky-logikk som tjenester */}
-        <div class="sticky top-[var(--nav-total-height,4rem)] z-[100] bg-slate-50 py-8 mb-4 text-center">
+        <div
+                style="top: var(--nav-total-height, 4rem);"
+                class="sticky md:relative top-auto z-30 bg-slate-50/95 md:bg-transparent py-8 mb-4 text-center"
+        >
             <h2 class="text-3xl md:text-5xl font-black text-slate-900 italic tracking-tight">
                 Våre Tannleger
             </h2>
@@ -70,31 +73,34 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
 
 
 <style>
-    /* 1. MOBIL-LOGIKK (Standard) */
+    /* MOBIL: Aktiver stacking-effekt */
     @media (max-width: 767px) {
         .stack-card {
-            /* Her bruker vi variablene vi satte i Astro-loopen */
-            top: calc(var(--nav-total-height, 4rem) + 180px + (var(--card-index) * 4px));
+            /* Vi må tvinge disse verdiene for å overstyre Tailwind på mobil */
+            position: sticky !important;
+            /* Legg merke til --card-index her */
+            top: calc(var(--nav-total-height, 4rem) + 180px + (var(--card-index) * 4px)) !important;
             z-index: var(--card-index);
         }
     }
 
-    /* 2. DESKTOP-LOGIKK (Reset) */
+    /* DESKTOP: Deaktiver stacking og fix navbar-overlapping */
     @media (min-width: 768px) {
+        /* Hindrer overskriften i å legge seg over navbaren */
+        .sticky {
+            position: relative !important;
+            top: 0 !important;
+            z-index: 10 !important;
+        }
+
+        /* Setter kortene tilbake i vanlig grid-posisjon */
         .stack-card {
             position: relative !important;
-            top: auto !important; /* Dette dytter kortene tilbake på plass */
+            top: 0 !important;
             z-index: 1 !important;
             margin-bottom: 0 !important;
             min-height: auto !important;
-        }
-
-        /* Sørg for at overskriften ikke er sticky på desktop */
-        .sticky.top-\[var\(--nav-total-height\,4rem\)\] {
-            position: relative !important;
-            top: auto !important;
-            margin-bottom: 4rem !important;
-            background: transparent !important;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
         }
     }
 </style>
