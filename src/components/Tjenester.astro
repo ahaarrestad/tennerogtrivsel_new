@@ -24,18 +24,22 @@ const sortedServices = allServices.sort((a, b) =>
                             class="stack-card card-base group min-h-[300px]"
                     >
                         <div class="card-accent-corner"></div>
-                        <h3 class="font-bold text-2xl mb-4 text-slate-900 group-hover:text-blue-600 transition-colors relative z-10">
+
+                        <h3 class="card-title group-hover:text-blue-600">
                             <a href={`/tjenester/${service.slug}`}>{service.data.title}</a>
                         </h3>
-                        <div class="relative z-10 flex-grow">
-                            <p class="text-slate-600 text-sm leading-relaxed line-clamp-3 mb-8">
+
+                        <div class="flex-grow">
+                            <p class="card-text line-clamp-3 mb-8">
                                 {service.data.ingress}
                             </p>
                         </div>
-                        <div class="card-progress-bar"></div>
-                            Les mer <span class="ml-2">→</span>
+
+                        <div class="card-link">
+                            Les mer <span class="ml-2 transition-transform group-hover:translate-x-1">→</span>
                         </div>
-                        <div class="absolute bottom-0 left-0 h-1.5 bg-blue-600 w-0 group-hover:w-full transition-all duration-500"></div>
+
+                        <div class="card-progress-bar"></div>
                     </div>
             ))}
         </div>

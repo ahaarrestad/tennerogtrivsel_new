@@ -106,4 +106,24 @@
     .card-base:hover .card-accent-corner {
         @apply bg-blue-100;
     }
+
+    /* Tittel inni kortet */
+    .card-title {
+        @apply text-2xl font-bold text-slate-900 mb-2 transition-colors relative z-10;
+    }
+
+    /* Undertittel (f.eks. tittel for tannleger eller merkelapper) */
+    .card-subtitle {
+        @apply text-lg text-blue-600 font-semibold italic mb-4 relative z-10;
+    }
+
+    /* Brødtekst / beskrivelse i kortet */
+    .card-text {
+        @apply text-slate-600 text-sm md:text-base leading-relaxed relative z-10;
+    }
+
+    /* Spesifikk styling for "Les mer" eller smådetaljer */
+    .card-link {
+        @apply mt-auto pt-6 flex items-center text-blue-600 font-bold text-xs uppercase tracking-widest relative z-10;
+    }
 }
