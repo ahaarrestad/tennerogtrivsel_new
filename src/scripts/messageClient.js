@@ -13,6 +13,11 @@ export async function getActiveMessage() {
             if (!m.startDate || !m.endDate) return false;
             const start = new Date(m.startDate);
             const slutt = new Date(m.endDate);
+
+            // FIKS: Sett sluttdato til slutten av døgnet (23:59:59)
+            // Dette sikrer at den vises ut hele dagen som er valgt.
+            slutt.setHours(23, 59, 59, 999);
+
             return iDag >= start && iDag <= slutt;
         });
 
