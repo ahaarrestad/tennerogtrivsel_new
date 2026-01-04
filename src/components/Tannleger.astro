@@ -3,6 +3,7 @@ import {Image} from 'astro:assets';
 import tannleger from '../content/tannleger.json';
 import WaveToFooter from './WaveToFooter.astro';
 import {getSiteSettings} from '../scripts/getSettings';
+import Card from "./Card.astro";
 
 // For å dynamisk importere bilder i Astro
 const images = import.meta.glob('/src/assets/tannleger/*.{jpeg,jpg,png,webp}');
@@ -26,38 +27,32 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
                 const hasImage = images[imagePath];
 
                 return (
-                        <div
-                                style={`--card-index: ${index}; --header-offset: 240px;`}
-                                class="stack-card card-base group items-center min-h-[450px]"
+                        <Card
+                                index={index}
+                                title={t.name}
+                                subtitle={t.title}
+                                headerOffset="160px"
+                                isStack={true}
+                                roundImage={true}
+                                minHeight="450px"
                         >
-                            <div class="card-accent-corner"></div>
-
-                            <div class="w-48 h-48 mb-6 overflow-hidden rounded-full border-4 border-blue-50 relative z-10 shrink-0">
-                                {hasImage ? (
-                                        <Image
-                                                src={images[imagePath]()}
-                                                alt={t.navn}
-                                                width={400}
-                                                height={400}
-                                                class="w-full h-full object-cover"
-                                        />
-                                ) : (
-                                        <div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
-                                            Bilde mangler
-                                        </div>
-                                )}
-                            </div>
-
-                            <div class="text-center relative z-10">
-                                <h3 class="card-title">{t.navn}</h3>
-                                <p class="card-subtitle">{t.tittel}</p>
-                                <p class="card-text line-clamp-6">
-                                    {t.beskrivelse}
-                                </p>
-                            </div>
-                            
-                            <div class="card-progress-bar"></div>
-                        </div>
+                            {hasImage ? (
+                                    <Image slot="image"
+                                           src={images[imagePath]()}
+                                           alt={t.navn}
+                                           class="w-full h-full object-cover"
+                                    />
+                            ) : (
+                                    <div slot="image"
+                                         class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+                                        Bilde mangler
+                                    </div>
+                            )}
+                            <p class="card-subtitle">{t.tittel}</p>
+                            <p class="card-text line-clamp-6">
+                                {t.beskrivelse}
+                            </p>
+                        </Card>
                 );
             })}
         </div>

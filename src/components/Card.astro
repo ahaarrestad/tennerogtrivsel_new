@@ -1,0 +1,58 @@
+---
+// src/components/Card.astro
+const {
+    index,
+    title,
+    subtitle,
+    headerOffset = "200px",
+    minHeight = "auto", // Endret til auto som default
+    centered = true,
+    isStack = true,
+    roundImage = false // Ny prop for tannlege-stilen
+} = Astro.props;
+---
+<div
+        style={`${isStack ? `--card-index: ${index}; --header-offset: ${headerOffset};` : ''} min-height: ${minHeight};`}
+        class:list={[
+            "card-base group",
+            isStack ? "stack-card" : "relative h-full",
+            centered ? "items-center text-center" : "items-start text-left"
+        ]}
+>
+    <div class="card-accent-corner"></div>
+
+    <div class:list={[
+        "relative z-10 mb-6 empty:hidden",
+        roundImage ? "w-48 h-48 mx-auto" : "w-full"
+    ]}>
+        {roundImage && (
+                <div class="absolute inset-0 bg-blue-100 rounded-full scale-110 -rotate-6 group-hover:rotate-0 transition-transform duration-500"></div>
+        )}
+        <div class:list={[
+            "relative overflow-hidden z-10 h-full w-full",
+            roundImage ? "rounded-full border-4 border-white shadow-lg" : "rounded-2xl"
+        ]}>
+            <slot name="image" />
+        </div>
+    </div>
+
+    <div class="text-blue-600 mb-6 relative z-10 empty:hidden">
+        <slot name="icon" />
+    </div>
+
+    <div class="relative z-10 w-full flex flex-col flex-grow">
+        <h3 class="card-title text-xl !mb-1">{title}</h3>
+
+        {subtitle && <p class="card-subtitle !mb-4">{subtitle}</p>}
+
+        <div class="card-text space-y-1 flex-grow">
+            <slot />
+        </div>
+
+        <div class="mt-6 empty:hidden">
+            <slot name="link" />
+        </div>
+    </div>
+
+    <div class="card-progress-bar"></div>
+</div>

@@ -1,7 +1,7 @@
 ---
 import {getCollection} from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-
+import Card from './Card.astro';
 // 1. Hent alle filene fra src/content/tjenester/
 const allServices = await getCollection('tjenester');
 
@@ -19,30 +19,25 @@ const sortedServices = allServices.sort((a, b) =>
 
         <div class="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {sortedServices.map((service, index) => (
-                    <div
-                            style={`--card-index: ${index}; --header-offset: 140px;`}
-                            class="stack-card card-base group min-h-[300px]"
+                    <Card
+                            index={index}
+                            title={service.data.title}
+                            headerOffset="140px"
+                            minHeight="250px"
+                            centered={false}
+                            isStack={true}
                     >
-                        <div class="card-accent-corner"></div>
+                        <p class="card-text line-clamp-3">
+                            {service.data.ingress}
+                        </p>
 
-                        <h3 class="card-title group-hover:text-blue-600">
-                            <a href={`/tjenester/${service.slug}`}>{service.data.title}</a>
-                        </h3>
-
-                        <div class="flex-grow">
-                            <p class="card-text line-clamp-3 mb-8">
-                                {service.data.ingress}
-                            </p>
-                        </div>
-
-                        <div class="card-link">
+                        <div slot="link" class="card-link">
                             <a href={`/tjenester/${service.slug}`}>
-                                Les mer <span class="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                                Les mer <span
+                                    class="ml-2 transition-transform group-hover:translate-x-1 inline-block">→</span>
                             </a>
                         </div>
-
-                        <div class="card-progress-bar"></div>
-                    </div>
+                    </Card>
             ))}
         </div>
     </div>

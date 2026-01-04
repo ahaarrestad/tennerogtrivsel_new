@@ -1,6 +1,7 @@
 ---
 import {formatInfoText} from "../scripts/textFormatter";
 import {getSiteSettings} from '../scripts/getSettings';
+import Card from "./Card.astro";
 
 const settings = await getSiteSettings();
 const googleApiKey = import.meta.env.PUBLIC_GOOGLE_API_KEY;
@@ -11,6 +12,7 @@ const lng = settings.longitude;
 const zoom = "17"; // Justert for å matche utsnittet i lenken din
 
 const headerOffset = "230px";
+const minHeight = "250px";
 
 // Ved å bruke v1/search med koordinater som 'q', blir boksen ofte betydelig mindre
 // enn ved bruk av v1/place.
@@ -27,105 +29,41 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleApiKey}&
 
         <div class={`grid grid-cols-1 md:grid-cols-2 ${settings.showEmail?.toLowerCase() === "ja" ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-8 mb-24 relative z-10`}>
             {/* Åpningstid-boks */}
-            <div
-                    style={`--card-index: 0; --header-offset: ${headerOffset};`}
-                    class="stack-card card-base items-center min-h-[250px] group"
-            >
-                {/* Blått hjørne */}
-                <div class="card-accent-corner"></div>
+            <Card index="0" title="Åpningstider" headerOffset={headerOffset} minHeight={minHeight}>
+                <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                {
+                    Object.keys(settings)
+                        .filter(key => key.startsWith('businessHours'))
+                        .sort()
+                        .map(key => settings[key])
+                        .filter(val => val && val.trim().length > 0)
+                        .map(text => <p>{text}</p>)
+                }
+            </Card>
 
-                <div class="text-blue-600 mb-6 relative z-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                </div>
-                <h3 class="card-title text-xl">Åpningstider</h3> {/* Litt mindre tittel her pga grid-plass */}
-                <div class="card-text space-y-1 text-center">
-                    {
-                        Object.keys(settings)
-                            .filter(key => key.startsWith('businessHours'))
-                            .sort()
-                            .map(key => settings[key])
-                            .filter(val => val && val.trim().length > 0)
-                            .map(text => <p>{text}</p>)
-                    }
-                </div>
-                <div class="card-progress-bar"></div>
-            </div>
 
-            {/* Adresse boks */}
-            <div
-                    style={`--card-index: 2; --header-offset: ${headerOffset};`}
-                    class="stack-card card-base items-center min-h-[250px] group"
-            >
-                {/* Blått hjørne */}
-                <div class="card-accent-corner"></div>
+            <Card index="2" title="Besøksadresse" headerOffset={headerOffset} minHeight={minHeight}>
+                <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <p>{settings.adresse1}</p>
+                <p>{settings.adresse2}</p>
+            </Card>
 
-                <div class="text-blue-600 mb-6 relative z-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
-                </div>
-                <h3 class="card-title text-xl">Besøksadresse</h3>
-                <div class="card-text space-y-1 text-center">
-                    <p>{settings.adresse1}</p>
-                    <p>{settings.adresse2}</p>
-                </div>
-                <div class="card-progress-bar"></div>
-            </div>
-
-            { /* Telefon-boks */}
-            <div
-                    style={`--card-index: 4; --header-offset: ${headerOffset};`}
-                    class="stack-card card-base items-center min-h-[250px] group"
-            >
-                {/* Blått hjørne */}
-                <div class="card-accent-corner"></div>
-
-                <div class="text-blue-600 mb-6 relative z-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.21-2.21a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                    </svg>
-                </div>
-                <h3 class="card-title text-xl">Telefon</h3>
-                <div class="card-text space-y-1 text-center"><p>
+            <Card index="4" title="Telefon" headerOffset={headerOffset} minHeight={minHeight}>
+                <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.21-2.21a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                <p>
                     <span set:html={formatInfoText(settings.phone1)}></span> /
-                    <span set:html={formatInfoText(settings.phone2)}></span></p>
+                    <span set:html={formatInfoText(settings.phone2)}></span>
                     <p>{settings.sentralbordTekst}</p>
-                </div>
-                <div class="card-progress-bar"></div>
-            </div>
+                </p>
 
-            {/* E-post-boks */}
+            </Card>
+
+            {/* E-post (hvis aktivert) */}
             {settings.showEmail?.toLowerCase() === "ja" && (
-                    <div
-                            style={`--card-index: 6; --header-offset: ${headerOffset};`}
-                            class="stack-card card-base items-center min-h-[250px] group"
-                    >
-                        {/* Blått hjørne */}
-                        <div class="card-accent-corner"></div>
-
-                        <div class="text-blue-600 mb-6 relative z-10">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                                <polyline points="22,6 12,13 2,6"></polyline>
-                            </svg>
-                        </div>
-                        <h3 class="tcard-title text-xl">E-post</h3>
-                        <div class="card-text space-y-1 text-center">
-                            <p>
-                                <span set:html={formatInfoText(settings.email)}></span>
-                            </p>
-                        </div>
-                        <div class="card-progress-bar"></div>
-                    </div>
+                    <Card index="6" title="E-post" headerOffset={headerOffset} minHeight={minHeight}>
+                        <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        <p><span set:html={formatInfoText(settings.email)}></span></p>
+                    </Card>
             )}
 
         </div>
