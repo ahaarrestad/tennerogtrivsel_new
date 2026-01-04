@@ -9,14 +9,16 @@ const allServices = await getCollection('tjenester');
 const sortedServices = allServices.sort((a, b) =>
     a.data.title.localeCompare(b.data.title, 'nb')
 );
-import WaveFromWhite from "./WaveFromWhite.astro";
 ---
-<section id="tjenester" class="scroll-mt-6 relative bg-white py-16 md:py-24">
-    <div class="container mx-auto px-4">
+<section id="tjenester" class="scroll-mt-6 bg-white py-16 md:py-24 pb-0">
+    <div class="container mx-auto px-4 mb0">
 
         {/* Overskrift - Sticky på mobil, vanlig på desktop */}
-        <div class="sticky top-[var(--nav-total-height,4rem)] z-[100] bg-white py-8 mb-4 text-center">
-            <h2 class="text-3xl md:text-5xl font-black text-slate-900 italic tracking-tight">
+        <div
+                style="top: var(--nav-total-height, 4rem);"
+                class="sticky md:relative top-auto z-30 bg-white/95 md:bg-transparent py-8 mb-12 text-center"
+        >
+            <h2 class="text-4xl md:text-5xl font-black text-slate-900 italic tracking-tight">
                 Våre Tjenester
             </h2>
             <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
@@ -24,9 +26,9 @@ import WaveFromWhite from "./WaveFromWhite.astro";
 
         <div class="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {sortedServices.map((service, index) => (
-                /* overflow-hidden er lagt til her for å fikse hjørnene */
+                /* Vi sender kun index som en variabel, ingen direkte 'top' her */
                     <div
-                            style={`top: calc(var(--nav-total-height, 4rem) + 160px + ${index * 4}px); z-index: ${index};`}
+                            style={`--i: ${index};`}
                             class="stack-card sticky md:relative group bg-white p-8 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-slate-100 flex flex-col mb-[10vh] md:mb-0 min-h-[300px] overflow-hidden transition-all duration-300"
                     >
                         {/* Blå detalj - Nå trygt innenfor overflow-hidden */}
@@ -52,30 +54,39 @@ import WaveFromWhite from "./WaveFromWhite.astro";
             ))}
         </div>
     </div>
-    <WaveFromWhite/>
 </section>
 
 <style>
+    /* MOBIL: Her aktiverer vi stacking-effekten */
+    @media (max-width: 767px) {
+        .stack-card {
+            /* Bruker variabelen --i som vi satte i loopen */
+            top: calc(var(--nav-total-height, 4rem) + 160px + (var(--i) * 4px));
+            z-index: var(--i);
+        }
+    }
+
+    /* DESKTOP: Her tvinger vi alt tilbake på plass */
     @media (min-width: 768px) {
+        /* 1. Fix for at overskriften ikke skal dekke navbaren */
+        .sticky {
+            position: relative !important;
+            top: 0 !important;
+            z-index: 10 !important;
+        }
+
+        /* 2. Fix for kortene i rutenettet */
         .stack-card {
             position: relative !important;
             top: 0 !important;
             z-index: 1 !important;
             margin-bottom: 0 !important;
-            /* Fjern den vertikale stabel-skyggen på desktop */
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
-        }
-
-        .sticky.top-\[var\(--nav-total-height\,4rem\)\] {
-            position: relative !important;
-            margin-bottom: 4rem !important;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
         }
     }
 
-    @media (max-width: 767px) {
-        /* Dette gir en penere "kant-i-kant" følelse når de stables */
-        .stack-card:not(:last-child) {
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        }
+    /* Felles fiks for bølgen */
+    svg {
+        display: block;
     }
 </style>
