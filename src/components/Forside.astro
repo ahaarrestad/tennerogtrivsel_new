@@ -5,7 +5,7 @@ import { getSiteSettings } from '../scripts/getSettings';
 
 const settings = await getSiteSettings();
 ---
-<section id="forside" class="relative bg-white py-25 md:py-28 overflow-hidden md:pb-0">
+<section id="forside" class="section-container bg-white">
     <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12 mb-32">
         <div class="flex-1 space-y-6 text-center md:text-left">
             <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
@@ -18,7 +18,6 @@ const settings = await getSiteSettings();
                 <TelefonKnapp/>
                 <EpostKnapp/>
             </div>
-
 
             {/* Placeholder for meldingen - starter som skjult */}
             <div id="dynamic-message-box" class="hidden bg-slate-900 p-8 rounded-2xl shadow-xl border border-slate-700 mt-8 text-left">

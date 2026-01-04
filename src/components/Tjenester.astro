@@ -10,20 +10,12 @@ const sortedServices = allServices.sort((a, b) =>
     a.data.title.localeCompare(b.data.title, 'nb')
 );
 ---
-<section id="tjenester" class="scroll-mt-6 bg-white py-16 md:py-24 pb-0">
-    <div class="container mx-auto px-4 mb0">
+<section id="tannleger" class="section-container bg-white">
+    <div class="section-content">
 
-        {/* Overskrift - Sticky på mobil, vanlig på desktop */}
-        <div
-                style="top: var(--nav-total-height, 4rem);"
-                class="sticky md:relative top-auto z-30 bg-white/95 md:bg-transparent py-8 mb-12 text-center"
-        >
-            <h2 class="section-heading">
-                Våre Tjenester
-            </h2>
-            <p class="section-intro">
-
-            </p>
+        <div class="section-header bg-slate-50/95 md:bg-transparent">
+            <h2 class="section-heading">Våre Tjenester</h2>
+            <p class="section-intro"></p>
             <div class="heading-accent"></div>
         </div>
 

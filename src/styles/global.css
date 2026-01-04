@@ -5,6 +5,22 @@
 
 
 @layer components {
+    /* Hovedseksjonen - styrer padding i topp og bunn og sikrer lik spacing */
+    .section-container {
+        @apply scroll-mt-6 relative py-16 md:py-24;
+    }
+
+    /* Innholds-wrapperen - sikrer at alt innhold har samme maksimale bredde */
+    .section-content {
+        @apply container mx-auto px-4;
+    }
+
+    /* Overskrifts-gruppen (sticky på mobil, vanlig på desktop) */
+    .section-header {
+        @apply text-center mb-12 md:mb-20 mx-auto max-w-4xl;
+    }
+
+    /* Selve overskriften i seksjonen */
     .section-heading {
         @apply text-3xl md:text-5xl font-black text-slate-900 italic tracking-tight;
     }

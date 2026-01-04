@@ -10,20 +10,13 @@ const settings = await getSiteSettings();
 
 const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 'nb'));
 ---
-<section id="tannleger" class="scroll-mt-6 relative bg-slate-50 pt-24 pb-8 md:pt-32 md:pb-12">
-    <div class="container mx-auto px-4">
+<section id="tannleger" class="section-container bg-slate-50">
+    <div class="section-content">
 
         {/* Overskrift - Samme sticky-logikk som tjenester */}
-        <div
-                style="top: var(--nav-total-height, 4rem);"
-                class="sticky md:relative top-auto z-30 bg-slate-50/95 md:bg-transparent py-8 mb-4 text-center"
-        >
-            <h2 class="section-heading">
-                Våre Tannleger
-            </h2>
-            <p class="section-intro">
-                {settings.tannlegerTekst}
-            </p>
+        <div class="section-header">
+            <h2 class="section-heading">Våre Tannleger</h2>
+            <p class="section-intro">{settings.tannlegerTekst}</p>
             <div class="heading-accent"></div>
         </div>
 
