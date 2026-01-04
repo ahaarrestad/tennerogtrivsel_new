@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import TelefonKnapp from "../../components/TelefonKnapp.astro";
 import EpostKnapp from "../../components/EpostKnapp.astro";
+import KontaktKnapp from "../../components/KontaktKnapp.astro";
 
 // 1. Generer stier for alle tjenestene
 export async function getStaticPaths() {
@@ -36,18 +37,22 @@ const tjenester = await getCollection('tjenester');
                 {/* 2. Flex-oppsett for innhold og boks */}
                 <div class="flex flex-wrap xl:flex-nowrap gap-12 items-start">
 
-                    {/* Venstre side: Bruker flex-1 for å ta all ledig plass */}
-                    <div class="flex-1 prose prose-slate max-w-none">
-                        <header class="mb-12 not-prose"> {/* not-prose hindrer doble marginer fra tailwind typography */}
-                            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight">
+                    {/* Venstre side */}
+                    <div class="flex-1 min-w-0"> {/* min-w-0 hindrer flex-items fra å "eksplodere" i bredden */}
+
+                        <header class="mb-12 not-prose">
+                            <h1 class="section-heading !text-left !mx-0 !text-4xl md:!text-5xl !max-w-none">
                                 {entry.data.title}
                             </h1>
-                            <p class="text-xl text-slate-600 leading-relaxed font-light italic">
+
+                            {/* Fjern alle manuelle størrelser som !text-xl, bruk kun denne: */}
+                            <p class="section-intro !text-left !mx-0 !max-w-none !text-base md:!text-lg italic">
                                 {entry.data.ingress}
                             </p>
                         </header>
 
-                        <div class="markdown-content prose prose-slate prose-lg max-w-none">
+                        {/* Content-delen */}
+                        <div class="markdown-content prose !max-w-none">
                             <Content />
                         </div>
                     </div>
@@ -55,18 +60,15 @@ const tjenester = await getCollection('tjenester');
                     {/* Høyre side: Fast bredde på desktop, full bredde på mobil */}
                     <aside class="w-full lg:w-80 xl:w-96 lg:sticky lg:top-24 min-w-fit">
                         <div class="p-8 bg-blue-50 rounded-2xl border border-blue-100 shadow-sm flex flex-col gap-4">
-                            <h3 class="text-blue-900 font-bold text-lg leading-snug">
+                            <h3 class="card-title !text-lg !mb-0 leading-snug">
                                 Ta kontakt med oss for mer informasjon
                             </h3>
-                            <div class="flex flex-col gap-3">
+                            <div class="flex flex-col gap-3 relative z-10">
                                 <TelefonKnapp/>
                                 <EpostKnapp/>
                             </div>
-                            <hr class="border-blue-200 my-2" />
-                            <a href="/#kontakt"
-                               class="text-center bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition shadow-md">
-                                Gå til kontakt
-                            </a>
+                            <hr class="border-blue-200 relative z-10" />
+                            <KontaktKnapp class="w-full"/>
                         </div>
                     </aside>
                 </div>

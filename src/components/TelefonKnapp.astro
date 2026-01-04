@@ -4,6 +4,6 @@ import { getSiteSettings } from '../scripts/getSettings';
 const settings = await getSiteSettings();
 ---
 <a href={`tel:${settings.phone1.replace(/\s+/g, '')}`}
-   class="bg-blue-600 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-blue-600 transition flex items-center justify-center gap-2 whitespace-nowrap min-w-fit">
+   class="btn-primary">
     <span>📞</span> {settings.phone1}
 </a>

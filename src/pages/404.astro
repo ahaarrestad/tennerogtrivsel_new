@@ -6,49 +6,42 @@ import TelefonKnapp from "../components/TelefonKnapp.astro";
 <Layout title="Siden ble ikke funnet | Tenner og Trivsel">
     <main class="relative min-h-[75vh] flex items-center justify-center overflow-hidden bg-white">
 
-        {/* Myke bakgrunnsdetaljer for å unngå at det blir for flatt */}
+        {/* Myke bakgrunnsdetaljer */}
         <div class="absolute top-1/4 -left-20 w-72 h-72 bg-blue-50/50 rounded-full filter blur-3xl"></div>
         <div class="absolute bottom-1/4 -right-20 w-96 h-96 bg-slate-50 rounded-full filter blur-3xl"></div>
 
-        <div class="container mx-auto px-6 relative z-10">
+        <div class="section-content relative z-10">
             <div class="max-w-2xl mx-auto text-center">
 
-                {/* Erstatter 404 med et visuelt "hull i smilet" */}
+                {/* Visuelt 404-element */}
                 <div class="flex justify-center items-center mb-10">
-                    <div class="text-7xl md:text-9xl font-black text-slate-200 flex items-center tracking-widest leading-none select-none">
+                    <div class="text-7xl md:text-9xl font-black text-slate-100 flex items-center tracking-widest leading-none select-none">
                         <span>4</span>
-                        <span class="text-blue-600 animate-bounce">0</span>
+                        <span class="text-blue-600 animate-pulse">0</span>
                         <span class="relative">
                             4
-                            <div class="absolute -top-4 -right-4 w-8 h-8 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center">
-                                <span class="text-2xl md:text-4xl text-blue-500">🦷</span>
+                            <div class="absolute -top-4 -right-4 w-8 h-8 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                                <span class="text-2xl md:text-4xl">🦷</span>
                             </div>
                         </span>
                     </div>
                 </div>
 
-                <h2 class="text-2xl md:text-4xl font-bold text-slate-800 mb-6 italic">
+                {/* Bruker section-heading og section-intro for samkjøring */}
+                <h2 class="section-heading !text-2xl md:!text-4xl !mb-6">
                     Karies i systemet?
                 </h2>
 
-                <p class="text-lg text-slate-500 mb-20 max-w-md mx-auto leading-relaxed">
+                <p class="section-intro mb-12">
                     Denne siden har dessverre fått et <strong>alvorlig hull</strong>. Vi har prøvd med både sondering og røntgen, men konklusjonen er at lenken må trekkes.
                 </p>
-                {/* Knappene ved siden av hverandre */}
-                <div class="flex flex-col md:flex-row gap-4 justify-center items-center">
 
-                    {/* Vi bruker md:max-w-max for å tvinge containeren til å krympe rundt innholdet */}
-                    <div class="w-full md:w-auto md:max-w-max">
-                        <a href="/"
-                           class="bg-blue-600 text-white w-full md:w-44 py-4 rounded-full font-bold shadow-lg hover:bg-blue-700 transition flex items-center justify-center text-sm whitespace-nowrap">
-                            Til forside
-                        </a>
-                    </div>
-
-                    {/* Samme her for TelefonKnapp */}
-                    <div class="w-full md:w-auto md:max-w-max [&_a]:w-full md:[&_a]:w-44 [&_a]:py-4 [&_a]:rounded-full [&_a]:text-sm [&_a]:flex [&_a]:items-center [&_a]:justify-center [&_a]:shadow-lg">
-                        <TelefonKnapp/>
-                    </div>
+                {/* Knapper med globale klasser */}
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a href="/" class="btn-primary">
+                        Til forside
+                    </a>
+                    <TelefonKnapp />
                 </div>
             </div>
         </div>

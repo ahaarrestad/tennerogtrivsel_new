@@ -126,4 +126,49 @@
     .card-link {
         @apply mt-auto pt-6 flex items-center text-blue-600 font-bold text-xs uppercase tracking-widest relative z-10;
     }
+
+    /* Blå knapp (Primær) */
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 text-white font-bold rounded-2xl
+        shadow-lg transition-all duration-300 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5
+        whitespace-nowrap min-w-fit relative z-10;
+    }
+
+    /* Hvit knapp med blå kant (Sekundær) */
+    .btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border border-blue-200 text-blue-600 font-bold
+        rounded-2xl transition-all duration-300 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md
+        whitespace-nowrap min-w-fit relative z-10;
+    }
+
+    /* Samkjøring av Markdown-innhold */
+    .markdown-content.prose {
+        /* Vi fjerner faste størrelser her og lar Tailwind Typography styre basisen,
+           men vi sikrer fargen og bredden */
+        @apply text-slate-600 leading-relaxed;
+        max-width: none !important;
+    }
+
+    /* Vi tvinger paragrafene til å matche .section-intro sin størrelse (base/lg) */
+    .markdown-content.prose p {
+        @apply text-slate-600 text-base md:text-lg leading-relaxed mb-6;
+        margin-top: 0 !important;
+    }
+
+    /* Overskrifter inni Markdown */
+    .markdown-content.prose h2,
+    .markdown-content.prose h3 {
+        @apply text-slate-900 font-bold mt-12 mb-4 tracking-tight;
+    }
+
+    .markdown-content.prose h2 { @apply text-2xl md:text-3xl; }
+    .markdown-content.prose h3 { @apply text-xl; }
+
+    .markdown-content.prose strong {
+        @apply text-slate-900 font-bold;
+    }
+
+    .markdown-content.prose ul {
+        @apply list-disc list-outside ml-6 space-y-2 text-slate-600;
+    }
 }
