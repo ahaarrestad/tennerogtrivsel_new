@@ -17,6 +17,14 @@ const minHeight = "250px";
 // Ved å bruke v1/search med koordinater som 'q', blir boksen ofte betydelig mindre
 // enn ved bruk av v1/place.
 const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleApiKey}&q=${lat},${lng}&zoom=${zoom}`;
+
+const businessHours = settings
+    ? Object.keys(settings)
+        .filter(key => key.startsWith('businessHours'))
+        .sort()
+        .map(key => settings[key])
+        .filter(val => val && val.trim().length > 0)
+    : ["Ta kontakt for åpningstider"]
 ---
 <section id="kontakt" class="section-container bg-slate-50">
     <div class="section-content">
@@ -31,14 +39,7 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleApiKey}&
             {/* Åpningstid-boks */}
             <Card index="0" title="Åpningstider" headerOffset={headerOffset} minHeight={minHeight}>
                 <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                {
-                    Object.keys(settings)
-                        .filter(key => key.startsWith('businessHours'))
-                        .sort()
-                        .map(key => settings[key])
-                        .filter(val => val && val.trim().length > 0)
-                        .map(text => <p>{text}</p>)
-                }
+                {businessHours.map(text => <p>{text}</p>)}
             </Card>
 
 
@@ -53,8 +54,8 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleApiKey}&
                 <p>
                     <span set:html={formatInfoText(settings.phone1)}></span> /
                     <span set:html={formatInfoText(settings.phone2)}></span>
-                    <p>{settings.sentralbordTekst}</p>
                 </p>
+                <p>{settings.sentralbordTekst}</p>
 
             </Card>
 

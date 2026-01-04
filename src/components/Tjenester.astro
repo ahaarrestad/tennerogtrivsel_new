@@ -9,12 +9,13 @@ const allServices = await getCollection('tjenester');
 const sortedServices = allServices.sort((a, b) =>
     a.data.title.localeCompare(b.data.title, 'nb')
 );
+const settings = await getSiteSettings();
 ---
 <section id="tjenester" class="section-container bg-white">
     <div class="section-content">
         <div class="section-header bg-white/95 section-header-sticky">
             <h2 class="section-heading">Våre Tjenester</h2>
-            <div class="heading-accent"></div>
+            <div class="heading-accent">{settings.tjenesteTekst}</div>
         </div>
 
         <div class="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
