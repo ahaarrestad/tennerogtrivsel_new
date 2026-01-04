@@ -15,9 +15,20 @@
         @apply container mx-auto px-4;
     }
 
-    /* Overskrifts-gruppen (sticky på mobil, vanlig på desktop) */
+    /* Overskrifts-gruppen */
     .section-header {
         @apply text-center mb-12 md:mb-20 mx-auto max-w-4xl;
+        @apply mb-16 md:mb-28;
+    }
+
+    /* Denne klassen gjør headeren sticky kun på mobil */
+    .section-header-sticky {
+        @apply sticky md:relative z-30 py-4 md:py-0;
+        /* Plasseres rett under navbaren */
+        top: var(--nav-total-height, 4rem);
+        /* Bruker bakgrunnsfargen til seksjonen for å skjule kortene bak */
+        background-color: inherit;
+        @apply py-4 md:py-0;
     }
 
     /* Selve overskriften i seksjonen */

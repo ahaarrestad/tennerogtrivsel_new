@@ -14,7 +14,7 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
     <div class="section-content">
 
         {/* Overskrift - Samme sticky-logikk som tjenester */}
-        <div class="section-header">
+        <div class="section-header section-header-sticky bg-slate-50/95 md:bg-transparent">
             <h2 class="section-heading">Våre Tannleger</h2>
             <p class="section-intro">{settings.tannlegerTekst}</p>
             <div class="heading-accent"></div>
@@ -68,34 +68,30 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
 
 
 <style>
-    /* MOBIL: Aktiver stacking-effekt */
     @media (max-width: 767px) {
         .stack-card {
-            /* Vi må tvinge disse verdiene for å overstyre Tailwind på mobil */
             position: sticky !important;
-            /* Legg merke til --card-index her */
-            top: calc(var(--nav-total-height, 4rem) + 180px + (var(--card-index) * 4px)) !important;
+            /* var(--nav-total-height) = navbaren
+               + 220px = Omtrentlig høyde på din overskrift + intro + padding
+               + (var(--card-index) * 4px) = Stacking-forskyvning
+            */
+            top: calc(var(--nav-total-height, 4rem) + 150px + (var(--card-index) * 4px)) !important;
             z-index: var(--card-index);
         }
     }
 
-    /* DESKTOP: Deaktiver stacking og fix navbar-overlapping */
     @media (min-width: 768px) {
-        /* Hindrer overskriften i å legge seg over navbaren */
-        .sticky {
+        /* På desktop skal overskriften IKKE være sticky */
+        .section-header-sticky {
             position: relative !important;
             top: 0 !important;
-            z-index: 10 !important;
         }
 
-        /* Setter kortene tilbake i vanlig grid-posisjon */
         .stack-card {
             position: relative !important;
             top: 0 !important;
             z-index: 1 !important;
             margin-bottom: 0 !important;
-            min-height: auto !important;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
         }
     }
 

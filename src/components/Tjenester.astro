@@ -13,7 +13,7 @@ const sortedServices = allServices.sort((a, b) =>
 <section id="tannleger" class="section-container bg-white">
     <div class="section-content">
 
-        <div class="section-header bg-slate-50/95 md:bg-transparent">
+        <div class="section-header bg-white/95 section-header-sticky">
             <h2 class="section-heading">Våre Tjenester</h2>
             <p class="section-intro"></p>
             <div class="heading-accent"></div>
@@ -23,7 +23,7 @@ const sortedServices = allServices.sort((a, b) =>
             {sortedServices.map((service, index) => (
                 /* Vi sender kun index som en variabel, ingen direkte 'top' her */
                     <div
-                            style={`--i: ${index};`}
+                            style={`--card-index: ${index};`}
                             class="stack-card sticky md:relative group bg-white p-8 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-slate-100 flex flex-col mb-[10vh] md:mb-0 min-h-[300px] overflow-hidden transition-all duration-300"
                     >
                         {/* Blå detalj - Nå trygt innenfor overflow-hidden */}
@@ -52,36 +52,30 @@ const sortedServices = allServices.sort((a, b) =>
 </section>
 
 <style>
-    /* MOBIL: Her aktiverer vi stacking-effekten */
     @media (max-width: 767px) {
         .stack-card {
-            /* Bruker variabelen --i som vi satte i loopen */
-            top: calc(var(--nav-total-height, 4rem) + 160px + (var(--i) * 4px));
-            z-index: var(--i);
+            position: sticky !important;
+            /* var(--nav-total-height) = navbaren
+               + 220px = Omtrentlig høyde på din overskrift + intro + padding
+               + (var(--card-index) * 4px) = Stacking-forskyvning
+            */
+            top: calc(var(--nav-total-height, 4rem) + 150px + (var(--card-index) * 4px)) !important;
+            z-index: var(--card-index);
         }
     }
 
-    /* DESKTOP: Her tvinger vi alt tilbake på plass */
     @media (min-width: 768px) {
-        /* 1. Fix for at overskriften ikke skal dekke navbaren */
-        .sticky {
+        /* På desktop skal overskriften IKKE være sticky */
+        .section-header-sticky {
             position: relative !important;
             top: 0 !important;
-            z-index: 10 !important;
         }
 
-        /* 2. Fix for kortene i rutenettet */
         .stack-card {
             position: relative !important;
             top: 0 !important;
             z-index: 1 !important;
             margin-bottom: 0 !important;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
         }
-    }
-
-    /* Felles fiks for bølgen */
-    svg {
-        display: block;
     }
 </style>
