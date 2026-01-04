@@ -1,6 +1,6 @@
 ---
 import {formatInfoText} from "../scripts/textFormatter";
-import { getSiteSettings } from '../scripts/getSettings';
+import {getSiteSettings} from '../scripts/getSettings';
 
 const settings = await getSiteSettings();
 const googleApiKey = import.meta.env.PUBLIC_GOOGLE_API_KEY;
@@ -27,9 +27,12 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleApiKey}&
         <div class={`grid grid-cols-1 md:grid-cols-2 ${settings.showEmail?.toLowerCase() === "ja" ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-8 mb-24 relative z-10`}>
 
             {/* Åpningstid-boks */}
-            <div style="--card-index: 0; --header-offset: 200px;" class="stack-card bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center min-h-[350px] relative overflow-hidden">
+            <div
+                    style="--card-index: 0; --header-offset: 200px;"
+                    class="stack-card card-base items-center min-h-[250px] group"
+            >
                 {/* Blått hjørne */}
-                <div class="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full -mr-6 -mt-6"></div>
+                <div class="card-accent-corner"></div>
 
                 <div class="text-blue-600 mb-6 relative z-10">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
@@ -49,12 +52,16 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleApiKey}&
                             .map(text => <p>{text}</p>)
                     }
                 </div>
+                <div class="card-progress-bar"></div>
             </div>
 
             {/* Adresse boks */}
-            <div style="--card-index: 0; --header-offset: 200px;" class="stack-card bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center min-h-[350px] relative overflow-hidden">
+            <div
+                    style="--card-index: 1; --header-offset: 200px;"
+                    class="stack-card card-base items-center min-h-[250px] group"
+            >
                 {/* Blått hjørne */}
-                <div class="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full -mr-6 -mt-6"></div>
+                <div class="card-accent-corner"></div>
 
                 <div class="text-blue-600 mb-6 relative z-10">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
@@ -68,12 +75,16 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleApiKey}&
                     <p>{settings.adresse1}</p>
                     <p>{settings.adresse2}</p>
                 </div>
+                <div class="card-progress-bar"></div>
             </div>
 
             { /* Telefon-boks */}
-            <div style="--card-index: 0; --header-offset: 200px;" class="stack-card bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center min-h-[350px] relative overflow-hidden">
+            <div
+                    style="--card-index: 2; --header-offset: 200px;"
+                    class="stack-card card-base items-center min-h-[250px] group"
+            >
                 {/* Blått hjørne */}
-                <div class="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full -mr-6 -mt-6"></div>
+                <div class="card-accent-corner"></div>
 
                 <div class="text-blue-600 mb-6 relative z-10">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
@@ -87,16 +98,21 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleApiKey}&
                     <span set:html={formatInfoText(settings.phone2)}></span></p>
                 </div>
                 <p class="text-xs text-gray-500 italic">{settings.sentralbordTekst}</p>
+                <div class="card-progress-bar"></div>
             </div>
 
             {/* E-post-boks */}
             {settings.showEmail?.toLowerCase() === "ja" && (
-                    <div style="--card-index: 0; --header-offset: 200px;" class="stack-card bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center min-h-[350px] relative overflow-hidden">
+                    <div
+                            style="--card-index: 3; --header-offset: 200px;"
+                            class="stack-card card-base items-center min-h-[250px] group"
+                    >
                         {/* Blått hjørne */}
-                        <div class="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full -mr-6 -mt-6"></div>
+                        <div class="card-accent-corner"></div>
 
                         <div class="text-blue-600 mb-6 relative z-10">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                                 fill="none"
                                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                                 <polyline points="22,6 12,13 2,6"></polyline>
@@ -108,6 +124,7 @@ const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googleApiKey}&
                                 <span set:html={formatInfoText(settings.email)}></span>
                             </p>
                         </div>
+                        <div class="card-progress-bar"></div>
                     </div>
             )}
 

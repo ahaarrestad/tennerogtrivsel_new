@@ -21,9 +21,9 @@ const sortedServices = allServices.sort((a, b) =>
             {sortedServices.map((service, index) => (
                     <div
                             style={`--card-index: ${index}; --header-offset: 140px;`}
-                            class="stack-card group bg-white p-8 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-slate-100 flex flex-col min-h-[300px]"
+                            class="stack-card card-base group min-h-[300px]"
                     >
-                        <div class="absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-bl-full -mr-8 -mt-8 transition-colors group-hover:bg-blue-100"></div>
+                        <div class="card-accent-corner"></div>
                         <h3 class="font-bold text-2xl mb-4 text-slate-900 group-hover:text-blue-600 transition-colors relative z-10">
                             <a href={`/tjenester/${service.slug}`}>{service.data.title}</a>
                         </h3>
@@ -32,7 +32,7 @@ const sortedServices = allServices.sort((a, b) =>
                                 {service.data.ingress}
                             </p>
                         </div>
-                        <div class="mt-auto relative z-10 flex items-center text-blue-600 font-bold text-xs uppercase tracking-widest">
+                        <div class="card-progress-bar"></div>
                             Les mer <span class="ml-2">→</span>
                         </div>
                         <div class="absolute bottom-0 left-0 h-1.5 bg-blue-600 w-0 group-hover:w-full transition-all duration-500"></div>

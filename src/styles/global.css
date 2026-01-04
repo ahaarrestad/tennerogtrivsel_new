@@ -81,4 +81,29 @@
             margin-bottom: 0 !important;
         }
     }
+
+    /* FELLES DESIGN FOR ALLE KORT */
+    .card-base {
+        @apply bg-white p-8 rounded-3xl border border-slate-100 shadow-sm;
+        @apply flex flex-col relative overflow-hidden transition-all duration-300;
+    }
+
+    /* Den blå sirkel-detaljen i hjørnet (valgfri å bruke) */
+    .card-accent-corner {
+        @apply absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-bl-full -mr-8 -mt-8 transition-colors;
+    }
+
+    /* Den blå linjen som animeres i bunnen ved hover */
+    .card-progress-bar {
+        @apply absolute bottom-0 left-0 h-1.5 bg-blue-600 w-0 transition-all duration-500;
+    }
+
+    /* Hover-effekt på selve kortet */
+    .card-base:hover .card-progress-bar {
+        @apply w-full;
+    }
+
+    .card-base:hover .card-accent-corner {
+        @apply bg-blue-100;
+    }
 }
