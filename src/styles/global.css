@@ -3,3 +3,24 @@
 /* Legg til denne linjen for å aktivere typography i v4 */
 @plugin "@tailwindcss/typography";
 
+
+@layer components {
+    .section-heading {
+        @apply text-3xl md:text-5xl font-black text-slate-900 italic tracking-tight;
+    }
+
+    /* Du kan også legge til den blå streken som en gjenbrukbar klasse hvis du vil */
+    .heading-accent {
+        @apply w-20 h-1 bg-blue-600 mx-auto mt-4;
+    }
+
+    /* Teksten under overskriften */
+    .section-intro {
+        @apply text-slate-600 max-w-2xl mx-auto mt-2 text-base md:text-lg leading-relaxed;
+    }
+
+    /* Den blå linjen */
+    .heading-accent {
+        @apply w-20 h-1 bg-blue-600 mx-auto mt-4;
+    }
+}

@@ -10,7 +10,7 @@ const settings = await getSiteSettings();
 
 const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 'nb'));
 ---
-<section id="tannleger" class="scroll-mt-6 relative bg-slate-50 py-24 md:pb-32">
+<section id="tannleger" class="scroll-mt-6 relative bg-slate-50 pt-24 pb-8 md:pt-32 md:pb-12">
     <div class="container mx-auto px-4">
 
         {/* Overskrift - Samme sticky-logikk som tjenester */}
@@ -18,11 +18,13 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
                 style="top: var(--nav-total-height, 4rem);"
                 class="sticky md:relative top-auto z-30 bg-slate-50/95 md:bg-transparent py-8 mb-4 text-center"
         >
-            <h2 class="text-3xl md:text-5xl font-black text-slate-900 italic tracking-tight">
+            <h2 class="section-heading">
                 Våre Tannleger
             </h2>
-            <p class="text-slate-600 max-w-2xl mx-auto mt-2">{settings.tannlegerTekst}</p>
-            <div class="w-20 h-1 bg-blue-600 mx-auto mt-4"></div>
+            <p class="section-intro">
+                {settings.tannlegerTekst}
+            </p>
+            <div class="heading-accent"></div>
         </div>
 
         <div class="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -101,6 +103,13 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
             margin-bottom: 0 !important;
             min-height: auto !important;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+        }
+    }
+
+    @media (max-width: 767px) {
+        /* Fjerner den ekstra marginen på det siste kortet så det ikke dytter footeren unødvendig ned */
+        .stack-card:last-child {
+            margin-bottom: 2rem !important;
         }
     }
 </style>
