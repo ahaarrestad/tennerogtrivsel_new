@@ -12,7 +12,7 @@
   "dependencies": {
     "@astrojs/sitemap": "^3.6.0",
     "@tailwindcss/vite": "^4.1.18",
-    "astro": "^5.16.6",
+    "astro": "^5.16.7",
     "dotenv": "^17.2.3",
     "googleapis": "^169.0.0",
     "gray-matter": "^4.0.3",
