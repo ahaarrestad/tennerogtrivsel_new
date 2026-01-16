@@ -3,6 +3,8 @@ name: Deploy Tenner og Trivsel
 on:
   push:
     branches: [ main ]
+  pull_request: # Gjør at Dependabot-PRs trigger build-sjekken
+    branches: [ main ]
   repository_dispatch:
     types: [google_drive_update] # Sjekk at denne teksten er identisk med event_type i curl
   workflow_dispatch:
@@ -14,7 +16,7 @@ permissions:
   id-token: write   # Trengs ofte for sikker autentisering mot sky-tjenester
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,6 +39,26 @@ jobs:
           GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
           GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
           PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
+
+
+      # Vi lagrer "dist"-mappen midlertidig slik at deploy-jobben kan bruke den
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+  deploy:
+    needs: build
+    # Denne jobben kjører KUN på push til main, Google Drive-oppdatering eller manuelt
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -48,8 +70,8 @@ jobs:
         run: |
           aws s3 sync dist/ s3://test2.aarrestad.com --acl public-read --delete
 
-#      - name: Invalidate CloudFront Cache
-#        run: |
-#          aws cloudfront create-invalidation \
-#            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-#            --paths "/*"
+#        - name: Invalidate CloudFront Cache
+#          run: |
+#            aws cloudfront create-invalidation \
+#              --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+#              --paths "/*"
