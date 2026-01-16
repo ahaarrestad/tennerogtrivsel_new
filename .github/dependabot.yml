@@ -9,3 +9,9 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 10 # Øk grensen slik at den ikke stopper opp
+    rebase-strategy: "auto" # Sørger for at PR-er alltid er oppdatert mot main
+    groups:
+      dependencies:
+        patterns:
+          - "*" # Grupperer oppdateringer (valgfritt, men ryddig)
