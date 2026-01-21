@@ -1,4 +1,4 @@
-name: Deploy Tenner og Trivsel
+name: Build and Deploy Tenner og Trivsel
 
 on:
   push:
