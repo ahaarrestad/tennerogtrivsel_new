@@ -1,10 +1,10 @@
 ---
 import TelefonKnapp from "./TelefonKnapp.astro";
 const navLinks = [
-    {name: 'Forside', href: '/#forside'},
-    {name: 'Kontakt', href: '/#kontakt'},
-    {name: 'Tjenester', href: '/#tjenester'},
-    {name: 'Om oss', href: '/#tannleger'},
+    { name: 'Forside', href: '/', mobileHref: '/' },
+    { name: 'Kontakt', href: '/#kontakt', mobileHref: '/#kontakt' },
+    { name: 'Tjenester', href: '/#tjenester', mobileHref: '/tjenester' },
+    { name: 'Om oss', href: '/#tannleger', mobileHref: '/tannleger' },
 ];
 
 import {Image} from "astro:assets";
@@ -19,7 +19,6 @@ import logoImage from "../assets/logo.png";
                         src={logoImage}
                         alt="Tenner og Trivsel"
                         width={256}
-                        height={256}
                         class="h-16 w-auto object-contain"
                         loading="eager"
                 />
@@ -53,14 +52,13 @@ import logoImage from "../assets/logo.png";
         </div>
     </div>
 
-    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-50 absolute w-full left-0 shadow-xl">
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-50 absolute w-full left-0 shadow-xl z-50">
         <div class="flex flex-col p-6 gap-4">
             {navLinks.map(link => (
-                    <a href={link.href} class="text-lg font-medium text-brand hover:text-brand-hover py-2 mobile-link">
-                        {link.name}
+                    <a href={link.mobileHref} class="text-lg font-medium text-brand hover:text-brand-hover py-2 mobile-link border-b border-slate-50 last:border-0">                        {link.name}
                     </a>
             ))}
-            <TelefonKnapp/>
+            <TelefonKnapp class="w-full"/>
         </div>
     </div>
 </nav>

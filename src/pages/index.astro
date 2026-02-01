@@ -10,7 +10,9 @@ import Tannleger from '../components/Tannleger.astro';
     <main>
         <Forside/>
         <Kontakt/>
-        <Tjenester/>
-        <Tannleger/>
+        <div class="hidden md:block">
+            <Tjenester/>
+            <Tannleger/>
+        </div>
     </main>
 </Layout>
