@@ -29,11 +29,10 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
                 return (
                         <Card
                                 index={index}
-                                title={t.name}
-                                subtitle={t.title}
+                                title={t.navn}
                                 headerOffset="160px"
                                 isStack={true}
-                                roundImage={true}
+                                image={true}
                                 minHeight="450px"
                         >
                             {hasImage ? (

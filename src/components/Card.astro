@@ -3,13 +3,12 @@
 const {
     index,
     title,
-    subtitle,
     href = null,    // Settes til null som standard
     headerOffset = "200px",
     minHeight = "auto",
     centered = true,
     isStack = true,
-    roundImage = false
+    image = false
 } = Astro.props;
 
 // Her bestemmer vi om vi skal bruke 'a' eller 'div'
@@ -30,14 +29,13 @@ const Tag = href ? 'a' : 'div';
 
     <div class:list={[
         "relative z-10 mb-6 empty:hidden",
-        roundImage ? "w-48 h-48 mx-auto" : "w-full"
+        image ? "w-48 h-48 mx-auto" : "w-full"
     ]}>
-        {roundImage && (
-                <div class="absolute inset-0 bg-blue-100 rounded-full scale-110 -rotate-6 group-hover:rotate-0 transition-transform duration-500"></div>
-        )}
+        {/* Den blå ramma er fjernet herfra */}
+
         <div class:list={[
             "relative overflow-hidden z-10 h-full w-full",
-            roundImage ? "rounded-full border-4 border-white shadow-lg" : "rounded-2xl"
+            image ? "rounded-2xl border-4 border-white shadow-md" : "rounded-2xl"
         ]}>
             <slot name="image" />
         </div>
@@ -54,8 +52,6 @@ const Tag = href ? 'a' : 'div';
         ]}>
             {title}
         </h3>
-
-        {subtitle && <p class="card-subtitle !mb-4">{subtitle}</p>}
 
         <div class="card-text space-y-1 flex-grow">
             <slot />
