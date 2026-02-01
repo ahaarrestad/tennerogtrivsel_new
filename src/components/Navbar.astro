@@ -15,10 +15,10 @@ const navLinks = [
                 <img src="/logo.png" alt="Tenner og Trivsel" class="h-16 w-auto"/>
 
                 <div class="flex flex-col justify-center leading-none">
-                    <span class="text-2xl font-black uppercase tracking-tighter text-slate-900">
+                    <span class="text-2xl font-black uppercase tracking-tighter text-slate-800">
                         Tenner
                     </span>
-                    <span class="text-2xl font-black uppercase tracking-tighter text-slate-900">
+                    <span class="text-2xl font-black uppercase tracking-tighter text-slate-800">
                         & Trivsel
                     </span>
                 </div>
@@ -28,7 +28,7 @@ const navLinks = [
                 {navLinks.map(link => (
                         <a href={link.href}
                            data-nav-link
-                           class="text-slate-600 hover:text-blue-600 font-medium transition-colors">
+                           class="text-slate-600 hover:text-slate-400 font-medium transition-colors">
                             {link.name}
                         </a>
                 ))}
@@ -36,9 +36,9 @@ const navLinks = [
             </div>
 
             <button id="menu-btn" class="md:hidden flex flex-col gap-1.5 p-2" aria-label="Meny">
-                <span class="w-6 h-0.5 bg-slate-900 transition-all duration-300 origin-center"></span>
-                <span class="w-6 h-0.5 bg-slate-900 transition-all duration-300"></span>
-                <span class="w-6 h-0.5 bg-slate-900 transition-all duration-300 origin-center"></span>
+                <span class="w-6 h-0.5 bg-slate-800 transition-all duration-300 origin-center"></span>
+                <span class="w-6 h-0.5 bg-slate-800 transition-all duration-300"></span>
+                <span class="w-6 h-0.5 bg-slate-800 transition-all duration-300 origin-center"></span>
             </button>
         </div>
     </div>
@@ -46,14 +46,11 @@ const navLinks = [
     <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-50 absolute w-full left-0 shadow-xl">
         <div class="flex flex-col p-6 gap-4">
             {navLinks.map(link => (
-                    <a href={link.href} class="text-lg font-medium text-slate-700 hover:text-blue-600 py-2 mobile-link">
+                    <a href={link.href} class="text-lg font-medium text-slate-700 hover:text-slate-600 py-2 mobile-link">
                         {link.name}
                     </a>
             ))}
-            <a href="tel:51529618"
-               class="bg-blue-600 text-white text-center py-4 rounded-xl font-bold mt-2 mobile-link">
-                <span>📞</span> 51&nbsp;52&nbsp;96&nbsp;18
-            </a>
+            <TelefonKnapp/>
         </div>
     </div>
 </nav>

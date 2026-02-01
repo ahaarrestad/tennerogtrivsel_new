@@ -33,12 +33,12 @@
 
     /* Selve overskriften i seksjonen */
     .section-heading {
-        @apply text-3xl md:text-5xl font-black text-slate-900 italic tracking-tight;
+        @apply text-3xl md:text-5xl font-black text-slate-800 italic tracking-tight;
     }
 
     /* Du kan også legge til den blå streken som en gjenbrukbar klasse hvis du vil */
     .heading-accent {
-        @apply w-20 h-1 bg-blue-600 mx-auto mt-4;
+        @apply w-20 h-1 bg-slate-800 mx-auto mt-4;
     }
 
     /* Teksten under overskriften */
@@ -85,12 +85,12 @@
 
     /* Den blå sirkel-detaljen i hjørnet (valgfri å bruke) */
     .card-accent-corner {
-        @apply absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-bl-full -mr-8 -mt-8 transition-colors;
+        @apply absolute top-0 right-0 w-20 h-20 bg-slate-200 rounded-bl-full -mr-8 -mt-8 transition-colors;
     }
 
     /* Den blå linjen som animeres i bunnen ved hover */
     .card-progress-bar {
-        @apply absolute bottom-0 left-0 h-1.5 bg-blue-600 w-0 transition-all duration-500;
+        @apply absolute bottom-0 left-0 h-1.5 bg-slate-800 w-0 transition-all duration-500;
     }
 
     /* Hover-effekt på selve kortet */
@@ -99,17 +99,17 @@
     }
 
     .card-base:hover .card-accent-corner {
-        @apply bg-blue-100;
+        @apply bg-slate-100;
     }
 
     /* Tittel inni kortet */
     .card-title {
-        @apply text-2xl font-bold text-slate-900 mb-2 transition-colors relative z-10;
+        @apply text-2xl font-bold text-slate-800 mb-2 transition-colors relative z-10;
     }
 
     /* Undertittel (f.eks. tittel for tannleger eller merkelapper) */
     .card-subtitle {
-        @apply text-lg text-blue-600 font-semibold italic mb-4 relative z-10;
+        @apply text-lg text-slate-800 font-semibold italic mb-4 relative z-10;
     }
 
     /* Brødtekst / beskrivelse i kortet */
@@ -119,20 +119,13 @@
 
     /* Spesifikk styling for "Les mer" eller smådetaljer */
     .card-link {
-        @apply mt-auto pt-6 flex items-center text-blue-600 font-bold text-xs uppercase tracking-widest relative z-10;
+        @apply mt-auto pt-6 flex items-center text-slate-600 font-bold text-xs uppercase tracking-widest relative z-10;
     }
 
     /* Blå knapp (Primær) */
     .btn-primary {
-        @apply inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 text-white font-bold rounded-2xl
-        shadow-lg transition-all duration-300 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5
-        whitespace-nowrap min-w-fit relative z-10;
-    }
-
-    /* Hvit knapp med blå kant (Sekundær) */
-    .btn-secondary {
-        @apply inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border border-blue-200 text-blue-600 font-bold
-        rounded-2xl transition-all duration-300 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md
+        @apply inline-flex items-center justify-center gap-2 px-8 py-4 border border-slate-800 text-slate-800 font-bold rounded-2xl
+        shadow-lg transition-all duration-300 hover:bg-slate-300 hover:shadow-xl hover:-translate-y-0.5
         whitespace-nowrap min-w-fit relative z-10;
     }
 
@@ -153,14 +146,14 @@
     /* Overskrifter inni Markdown */
     .markdown-content.prose h2,
     .markdown-content.prose h3 {
-        @apply text-slate-900 font-bold mt-12 mb-4 tracking-tight;
+        @apply text-slate-800 font-bold mt-12 mb-4 tracking-tight;
     }
 
     .markdown-content.prose h2 { @apply text-2xl md:text-3xl; }
     .markdown-content.prose h3 { @apply text-xl; }
 
     .markdown-content.prose strong {
-        @apply text-slate-900 font-bold;
+        @apply text-slate-800 font-bold;
     }
 
     .markdown-content.prose ul {

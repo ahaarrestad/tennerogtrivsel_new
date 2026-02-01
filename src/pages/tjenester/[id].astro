@@ -28,10 +28,10 @@ const tjenester = await getCollection('tjenester');
         <section class="pt-12 md:pt-20 pb-0">
             <div class="container mx-auto px-4 w-full">
                 {/* 1. Nav */}
-                <nav class="mb-8 text-sm text-gray-500">
-                    <a href="/" class="hover:text-blue-600">Forside</a>
+                <nav class="mb-8 text-sm text-slate-600">
+                    <a href="/" class="hover:text-slate-800">Forside</a>
                     <span class="mx-2">/</span>
-                    <span class="text-gray-900">{entry.data.title}</span>
+                    <span class="text-slate-800">{entry.data.title}</span>
                 </nav>
 
                 {/* 2. Flex-oppsett for innhold og boks */}
@@ -59,7 +59,7 @@ const tjenester = await getCollection('tjenester');
 
                     {/* Høyre side: Fast bredde på desktop, full bredde på mobil */}
                     <aside class="w-full lg:w-80 xl:w-96 lg:sticky lg:top-24 min-w-fit">
-                        <div class="p-8 bg-blue-50 rounded-2xl border border-blue-100 shadow-sm flex flex-col gap-4">
+                        <div class="p-8 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-4">
                             <h3 class="card-title !text-lg !mb-0 leading-snug">
                                 Ta kontakt med oss for mer informasjon
                             </h3>
@@ -67,7 +67,6 @@ const tjenester = await getCollection('tjenester');
                                 <TelefonKnapp/>
                                 <EpostKnapp/>
                             </div>
-                            <hr class="border-blue-200 relative z-10"/>
                             <KontaktKnapp class="w-full"/>
                         </div>
                     </aside>
@@ -75,7 +74,7 @@ const tjenester = await getCollection('tjenester');
 
                 {/* Sorterte tjenester */}
                 <div class="mt-20 mb-24 border-t pt-10">
-                    <h4 class="font-bold mb-6 text-slate-900 text-lg uppercase tracking-wide text-sm opacity-50">Våre
+                    <h4 class="font-bold mb-6 text-slate-800 text-lg uppercase tracking-wide text-sm opacity-50">Våre
                         tjenester</h4>
                     <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-3">
                         {tjenester
@@ -84,12 +83,12 @@ const tjenester = await getCollection('tjenester');
                                 const isCurrent = s.id === entry.id;
                                 return (
                                         <li class="flex items-center gap-2 py-1">
-                                            <span class={isCurrent ? "text-blue-600 font-bold" : "text-slate-300"}>→</span>
+                                            <span class={isCurrent ? "text-slate-600 font-bold" : "text-slate-300"}>→</span>
                                             {isCurrent ? (
-                                                    <span class="text-sm font-bold text-slate-900">{s.data.title}</span>
+                                                    <span class="text-sm font-bold text-slate-800">{s.data.title}</span>
                                             ) : (
                                                     <a href={`/tjenester/${s.slug}`}
-                                                       class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                                                       class="text-sm font-medium text-slate-600 hover:text-slate-800 hover:no-underline">
                                                         {s.data.title}
                                                     </a>
                                             )}

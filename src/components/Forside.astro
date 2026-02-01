@@ -16,7 +16,7 @@ const settings = await getSiteSettings();
             <div class="space-y-8 order-1">
                 <h1 class="section-heading text-center lg:text-left text-4xl! md:text-6xl! mx-0!">
                     {settings.velkomstTittel1}<br/>
-                    <span class="text-blue-600">{settings.velkomstTittel2}</span>
+                    <span class="text-slate-800">{settings.velkomstTittel2}</span>
                 </h1>
 
                 <p class="section-intro text-center lg:text-left mx-0! max-w-2xl lg:ml-0">
@@ -49,10 +49,10 @@ const settings = await getSiteSettings();
             </div>
 
             <div id="dynamic-message-box"
-                 class="hidden card-base bg-slate-900! border-none shadow-xl mt-8 order-4 lg:col-span-2">
-                <h3 id="dynamic-title" class="card-title text-blue-400! mb-4"></h3>
+                 class="hidden card-base bg-slate-300! border-none shadow-xl mt-8 order-4 lg:col-span-2">
+                <h3 id="dynamic-title" class="card-title text-slate-800! mb-4"></h3>
                 <div id="dynamic-content"
-                     class="card-text text-slate-300! whitespace-pre-wrap prose prose-invert max-w-none">
+                     class="card-text text-slate-800! whitespace-pre-wrap prose prose-invert max-w-none">
                 </div>
             </div>
         </div>
