@@ -1,5 +1,5 @@
 ---
-import { getCollection } from 'astro:content';
+import {getCollection} from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import TelefonKnapp from "../../components/TelefonKnapp.astro";
 import EpostKnapp from "../../components/EpostKnapp.astro";
@@ -9,14 +9,14 @@ import KontaktKnapp from "../../components/KontaktKnapp.astro";
 export async function getStaticPaths() {
     const tjenesteEntries = await getCollection('tjenester');
     return tjenesteEntries.map(entry => ({
-        params: { id: entry.slug },
-        props: { entry },
+        params: {id: entry.slug},
+        props: {entry},
     }));
 }
 
 // 2. Hent data for den spesifikke siden
-const { entry } = Astro.props;
-const { Content } = await entry.render();
+const {entry} = Astro.props;
+const {Content} = await entry.render();
 
 // --- DENNE LINJEN MANGLER SANNSYNLIGVIS: ---
 const tjenester = await getCollection('tjenester');
@@ -53,7 +53,7 @@ const tjenester = await getCollection('tjenester');
 
                         {/* Content-delen */}
                         <div class="markdown-content prose !max-w-none">
-                            <Content />
+                            <Content/>
                         </div>
                     </div>
 
@@ -67,7 +67,7 @@ const tjenester = await getCollection('tjenester');
                                 <TelefonKnapp/>
                                 <EpostKnapp/>
                             </div>
-                            <hr class="border-blue-200 relative z-10" />
+                            <hr class="border-blue-200 relative z-10"/>
                             <KontaktKnapp class="w-full"/>
                         </div>
                     </aside>
@@ -75,7 +75,8 @@ const tjenester = await getCollection('tjenester');
 
                 {/* Sorterte tjenester */}
                 <div class="mt-20 mb-24 border-t pt-10">
-                    <h4 class="font-bold mb-6 text-slate-900 text-lg uppercase tracking-wide text-sm opacity-50">Våre tjenester</h4>
+                    <h4 class="font-bold mb-6 text-slate-900 text-lg uppercase tracking-wide text-sm opacity-50">Våre
+                        tjenester</h4>
                     <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-3">
                         {tjenester
                             .sort((a, b) => a.data.title.localeCompare(b.data.title, 'nb'))
@@ -87,7 +88,8 @@ const tjenester = await getCollection('tjenester');
                                             {isCurrent ? (
                                                     <span class="text-sm font-bold text-slate-900">{s.data.title}</span>
                                             ) : (
-                                                    <a href={`/tjenester/${s.slug}`} class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                                                    <a href={`/tjenester/${s.slug}`}
+                                                       class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
                                                         {s.data.title}
                                                     </a>
                                             )}

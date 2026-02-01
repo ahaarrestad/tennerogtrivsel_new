@@ -1,6 +1,6 @@
 ---
 import {formatInfoText} from '../scripts/textFormatter.js';
-import { getSiteSettings } from '../scripts/getSettings';
+import {getSiteSettings} from '../scripts/getSettings';
 
 const settings = await getSiteSettings();
 ---
@@ -11,7 +11,7 @@ const settings = await getSiteSettings();
             <span set:html={formatInfoText(settings.phone1)}></span> -
             <span set:html={formatInfoText(settings.phone2)}></span>
             {settings.showEmail === "ja" && (
-                <span set:html={"- " + formatInfoText(settings.email)}></span>
+                    <span set:html={"- " + formatInfoText(settings.email)}></span>
             )}
         </p>
     </div>
