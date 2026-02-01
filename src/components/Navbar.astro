@@ -28,7 +28,7 @@ const navLinks = [
                 {navLinks.map(link => (
                         <a href={link.href}
                            data-nav-link
-                           class="text-slate-600 hover:text-slate-400 font-medium transition-colors">
+                           class="text-slate-800 hover:text-slate-600 font-medium transition-colors">
                             {link.name}
                         </a>
                 ))}
@@ -46,7 +46,7 @@ const navLinks = [
     <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-50 absolute w-full left-0 shadow-xl">
         <div class="flex flex-col p-6 gap-4">
             {navLinks.map(link => (
-                    <a href={link.href} class="text-lg font-medium text-slate-700 hover:text-slate-600 py-2 mobile-link">
+                    <a href={link.href} class="text-lg font-medium text-slate-800 hover:text-slate-600 py-2 mobile-link">
                         {link.name}
                     </a>
             ))}
