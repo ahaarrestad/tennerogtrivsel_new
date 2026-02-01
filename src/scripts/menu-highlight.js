@@ -27,7 +27,7 @@ export function initMenuHighlight() {
         };
 
         // 1. Sjekk undersider (Slug)
-        if (path.includes('/tjenester/')) {
+        if (path.includes('/tjenester')) {
             clearLinks();
             navLinks.forEach(link => {
                 if (link.getAttribute('href').includes('tjenester')) {
