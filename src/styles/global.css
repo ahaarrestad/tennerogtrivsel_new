@@ -136,7 +136,7 @@
     /* Blå knapp (Primær) */
     .btn-primary {
         @apply inline-flex items-center justify-center gap-2 px-8 py-4 border border-brand text-brand font-bold rounded-2xl
-        shadow-lg transition-all duration-300 hover:text-brand-hover hover:bg-slate-100 hover:shadow-xl hover:-translate-y-0.5
+        shadow-lg transition-all duration-300 hover:text-brand hover:bg-slate-100 hover:shadow-xl hover:-translate-y-0.5
         whitespace-nowrap min-w-fit relative z-10;
     }
 
