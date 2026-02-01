@@ -12,11 +12,18 @@ export function initMenuHighlight() {
 
         console.log("Scriptet kjører nå på:", path);
 
+        const clearLink = (link) => {
+            link.classList.remove('text-brand-hover', 'font-bold');
+            link.classList.add('text-brand');
+        }
+
+        const addLink = (link) => {
+            link.classList.add('text-brand-hover', 'font-bold');
+            link.classList.remove('text-brand');
+        }
+
         const clearLinks = () => {
-            navLinks.forEach(link => {
-                link.classList.remove('text-brand-hover', 'font-bold');
-                link.classList.add('text-brand');
-            });
+            navLinks.forEach(link => clearLink(link));
         };
 
         // 1. Sjekk undersider (Slug)
@@ -24,13 +31,11 @@ export function initMenuHighlight() {
             clearLinks();
             navLinks.forEach(link => {
                 if (link.getAttribute('href').includes('tjenester')) {
-                    link.classList.add('text-brand-hover', 'font-bold');
-                    link.classList.remove('text-brand');
+                    addLink(link);
                 }
             });
             return;
         }
-
 
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -41,16 +46,16 @@ export function initMenuHighlight() {
 
                     // Logikk for å finne ut om denne lenken matcher seksjonen vi ser på
                     const isHome = href === '/' && (visibleId === 'hero' || visibleId === 'forside');
-                    const isSection = href.replace('/#', '') === visibleId || href.replace('#', '') === visibleId;
+                    const isSection =
+                        href.replace('/#', '') === visibleId
+                        || href.replace('#', '') === visibleId;
 
                     if (isHome || isSection) {
-                        link.classList.add('text-brand-hover', 'font-bold');
-                        link.classList.remove('text-brand');
+                        addLink(link);
                     } else {
                         // Vi fjerner bare hvis vi er i gang med å sjekke en match
                         // Men for å unngå at alle blinker, gjør vi det kun på de som ikke matcher
-                        link.classList.remove('text-brand-hover', 'font-bold');
-                        link.classList.add('text-brand');
+                        clearLink(link);
                     }
                 });
             }
@@ -59,7 +64,7 @@ export function initMenuHighlight() {
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
 
-// Start overvåking av alle seksjoner
+    // Start overvåking av alle seksjoner
     const sections = document.querySelectorAll('section[id]');
     if (sections.length > 0) {
         sections.forEach(section => observer.observe(section));
