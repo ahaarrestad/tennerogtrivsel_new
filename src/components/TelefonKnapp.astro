@@ -4,7 +4,7 @@ const settings = await getSiteSettings();
 const phone = settings.phone1;
 const cleanPhone = phone.replace(/\s+/g, '');
 ---
-<a href={`tel:${cleanPhone}`} class="btn-primary inline-flex items-center gap-2 whitespace-nowrap">
+<a href={`tel:${cleanPhone}`} class="btn-primary inline-flex items-center gap-2 whitespace-nowrap lg:pointer-events-none lg:cursor-default">
     <svg xmlns="http://www.w3.org/2000/svg"
          width="20"
          height="20"
