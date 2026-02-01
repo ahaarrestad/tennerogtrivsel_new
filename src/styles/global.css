@@ -11,6 +11,8 @@
     --color-brand-active: var(--color-slate-100);
     --color-brand-border: var(--color-slate-100);
     --color-brand-light: var(--color-slate-50);
+    --color-brand-message-box: var(--color-slate-300);
+    --color-brand-message-banner: var(--color-slate-400);
 }
 
 @layer components {
