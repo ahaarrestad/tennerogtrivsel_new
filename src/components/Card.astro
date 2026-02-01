@@ -45,15 +45,15 @@ const Tag = href ? 'a' : 'div';
         <slot name="icon" />
     </div>
 
-    <div class="relative z-10 w-full flex flex-col flex-grow">
+    <div class="relative z-10 w-full flex flex-col grow">
         <h3 class:list={[
-            "card-title text-xl !mb-1 transition-colors",
+            "card-title text-xl mb-1! transition-colors",
             href ? "group-hover:text-blue-600" : ""
         ]}>
             {title}
         </h3>
 
-        <div class="card-text space-y-1 flex-grow">
+        <div class="card-text space-y-1 grow">
             <slot />
         </div>
 
