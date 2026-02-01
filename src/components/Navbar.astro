@@ -11,7 +11,7 @@ import {Image} from "astro:assets";
 import logoImage from "../assets/logo.png";
 ---
 
-<nav class="bg-slate-50 border-b border-slate-100">
+<nav class="bg-brand-light border-b border-slate-100">
     <div class="container mx-auto px-4">
         <div class="flex justify-between items-center h-20">
             <a href="/" class="flex items-center gap-4 no-underline">
@@ -52,10 +52,10 @@ import logoImage from "../assets/logo.png";
         </div>
     </div>
 
-    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-50 absolute w-full left-0 shadow-xl z-50">
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-brand-light absolute w-full left-0 shadow-xl z-50">
         <div class="flex flex-col p-6 gap-4">
             {navLinks.map(link => (
-                    <a href={link.mobileHref} class="text-lg font-medium text-brand hover:text-brand-hover py-2 mobile-link border-b border-slate-50 last:border-0">                        {link.name}
+                    <a href={link.mobileHref} class="text-lg font-medium text-brand hover:text-brand-hover py-2 mobile-link border-b border-brand-light last:border-0">                        {link.name}
                     </a>
             ))}
             <TelefonKnapp class="w-full"/>
