@@ -28,10 +28,10 @@ const tjenester = await getCollection('tjenester');
         <section class="pt-12 md:pt-20 pb-0">
             <div class="container mx-auto px-4 w-full">
                 {/* 1. Nav */}
-                <nav class="mb-8 text-sm text-slate-600">
-                    <a href="/" class="hover:text-slate-800">Forside</a>
+                <nav class="mb-8 text-sm text-brand">
+                    <a href="/" class="hover:text-brand-hover">Forside</a>
                     <span class="mx-2">/</span>
-                    <span class="text-slate-800">{entry.data.title}</span>
+                    <span class="text-brand">{entry.data.title}</span>
                 </nav>
 
                 {/* 2. Flex-oppsett for innhold og boks */}
@@ -74,7 +74,7 @@ const tjenester = await getCollection('tjenester');
 
                 {/* Sorterte tjenester */}
                 <div class="mt-20 mb-24 border-t pt-10">
-                    <h4 class="font-bold mb-6 text-slate-800 text-lg uppercase tracking-wide text-sm opacity-50">Våre
+                    <h4 class="font-bold mb-6 text-brand text-lg uppercase tracking-wide text-sm opacity-50">Våre
                         tjenester</h4>
                     <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-3">
                         {tjenester
@@ -85,10 +85,10 @@ const tjenester = await getCollection('tjenester');
                                         <li class="flex items-center gap-2 py-1">
                                             <span class={isCurrent ? "text-slate-600 font-bold" : "text-slate-300"}>→</span>
                                             {isCurrent ? (
-                                                    <span class="text-sm font-bold text-slate-800">{s.data.title}</span>
+                                                    <span class="text-sm font-bold text-brand">{s.data.title}</span>
                                             ) : (
                                                     <a href={`/tjenester/${s.slug}`}
-                                                       class="text-sm font-medium text-slate-600 hover:text-slate-800 hover:no-underline">
+                                                       class="text-sm font-medium text-slate-600 hover:text-brand-hover hover:no-underline">
                                                         {s.data.title}
                                                     </a>
                                             )}

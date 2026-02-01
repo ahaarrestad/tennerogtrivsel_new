@@ -13,7 +13,7 @@ export function initMenuHighlight() {
         console.log("Scriptet kjører nå på:", path);
 
         const clearLinks = () => {
-            navLinks.forEach(link => link.classList.remove('text-blue-600', 'font-bold'));
+            navLinks.forEach(link => link.classList.remove('text-brand-hover', 'font-bold'));
         };
 
         // 1. Sjekk undersider (Slug)
@@ -21,7 +21,7 @@ export function initMenuHighlight() {
             clearLinks();
             navLinks.forEach(link => {
                 if (link.getAttribute('href').includes('tjenester')) {
-                    link.classList.add('text-slate-400', 'font-bold');
+                    link.classList.add('text-brand', 'font-bold');
                 }
             });
             return;
@@ -37,11 +37,11 @@ export function initMenuHighlight() {
                     const id = link.getAttribute('href').replace('/#', '');
                     console.log("Ser nå seksjonen:", id);
                     if (id === entry.target.id) {
-                        link.classList.add('text-slate-300', 'font-bold');
-                        link.classList.remove('text-slate-600');
+                        link.classList.add('text-brand-hover', 'font-bold');
+                        link.classList.remove('text-brand');
                     } else {
-                        link.classList.remove('text-slate-300', 'font-bold');
-                        link.classList.add('text-slate-600');
+                        link.classList.remove('text-brand-hover', 'font-bold');
+                        link.classList.add('text-brand');
                     }
                 });
             }

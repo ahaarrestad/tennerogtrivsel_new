@@ -6,19 +6,29 @@ const navLinks = [
     {name: 'Tjenester', href: '/#tjenester'},
     {name: 'Om oss', href: '/#tannleger'},
 ];
+
+import {Image} from "astro:assets";
+import logoImage from "../assets/logo.png";
 ---
 
 <nav class="bg-slate-50 border-b border-slate-100">
     <div class="container mx-auto px-4">
         <div class="flex justify-between items-center h-20">
             <a href="/" class="flex items-center gap-4 no-underline">
-                <img src="/logo.png" alt="Tenner og Trivsel" class="h-16 w-auto"/>
+                <Image
+                        src={logoImage}
+                        alt="Tenner og Trivsel"
+                        width={256}
+                        height={256}
+                        class="h-16 w-auto object-contain"
+                        loading="eager"
+                />
 
                 <div class="flex flex-col justify-center leading-none whitespace-nowrap">
-                    <span class="text-2xl font-black uppercase tracking-tighter text-slate-800">
+                    <span class="text-2xl font-black uppercase tracking-tighter text-brand">
                         Tenner
                     </span>
-                    <span class="text-2xl font-black uppercase tracking-tighter text-slate-800">
+                    <span class="text-2xl font-black uppercase tracking-tighter text-brand">
                         & Trivsel
                     </span>
                 </div>
@@ -28,7 +38,7 @@ const navLinks = [
                 {navLinks.map(link => (
                         <a href={link.href}
                            data-nav-link
-                           class="text-slate-800 hover:text-slate-600 font-medium transition-colors">
+                           class="text-brand hover:text-brand-hover font-medium transition-colors">
                             {link.name}
                         </a>
                 ))}
@@ -36,9 +46,9 @@ const navLinks = [
             </div>
 
             <button id="menu-btn" class="md:hidden flex flex-col gap-1.5 p-2" aria-label="Meny">
-                <span class="w-6 h-0.5 bg-slate-800 transition-all duration-300 origin-center"></span>
-                <span class="w-6 h-0.5 bg-slate-800 transition-all duration-300"></span>
-                <span class="w-6 h-0.5 bg-slate-800 transition-all duration-300 origin-center"></span>
+                <span class="w-6 h-0.5 bg-brand-dark transition-all duration-300 origin-center"></span>
+                <span class="w-6 h-0.5 bg-brand-dark transition-all duration-300"></span>
+                <span class="w-6 h-0.5 bg-brand-dark transition-all duration-300 origin-center"></span>
             </button>
         </div>
     </div>
@@ -46,7 +56,7 @@ const navLinks = [
     <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-50 absolute w-full left-0 shadow-xl">
         <div class="flex flex-col p-6 gap-4">
             {navLinks.map(link => (
-                    <a href={link.href} class="text-lg font-medium text-slate-800 hover:text-slate-600 py-2 mobile-link">
+                    <a href={link.href} class="text-lg font-medium text-brand hover:text-brand-hover py-2 mobile-link">
                         {link.name}
                     </a>
             ))}

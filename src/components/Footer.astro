@@ -4,10 +4,10 @@ import {getSiteSettings} from '../scripts/getSettings';
 
 const settings = await getSiteSettings();
 ---
-<footer class="bg-slate-50 text-slate-800 py-4">
+<footer class="bg-slate-50 text-brand py-4">
     <div class="container mx-auto px-4 text-center">
-        <p class="font-bold text-slate-800 mb-2">Tenner og Trivsel -
-            <span>{settings.adresse1} - {settings.adresse2}</span> -
+        <p class="font-bold text-brand mb-2">
+            <span class="whitespace-nowrap">{settings.adresse1} - {settings.adresse2}</span> -
             <span set:html={formatInfoText(settings.phone1)}></span> -
             <span set:html={formatInfoText(settings.phone2)}></span>
             {settings.showEmail === "ja" && (

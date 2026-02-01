@@ -3,8 +3,18 @@
 /* Legg til denne linjen for å aktivere typography i v4 */
 @plugin "@tailwindcss/typography";
 
+@theme {
+    /* Dette lager klassen 'text-brand' og 'bg-brand' */
+    --color-brand: var(--color-slate-800);
+    --color-brand-dark: var(--color-slate-800);
+    --color-brand-hover: var(--color-slate-400);
+}
 
 @layer components {
+    .brand-text {
+        color: var(--color-brand);
+    }
+
     /* Hovedseksjonen - styrer padding i topp og bunn og sikrer lik spacing */
     .section-container {
         @apply scroll-mt-6 relative py-16 md:py-24;
@@ -33,12 +43,12 @@
 
     /* Selve overskriften i seksjonen */
     .section-heading {
-        @apply text-3xl md:text-5xl font-black text-slate-800 italic tracking-tight;
+        @apply text-3xl md:text-5xl font-black text-brand tracking-tight;
     }
 
     /* Du kan også legge til den blå streken som en gjenbrukbar klasse hvis du vil */
     .heading-accent {
-        @apply w-20 h-1 bg-slate-800 mx-auto mt-4;
+        @apply w-20 h-1 bg-brand-dark mx-auto mt-4;
     }
 
     /* Teksten under overskriften */
@@ -90,7 +100,7 @@
 
     /* Den blå linjen som animeres i bunnen ved hover */
     .card-progress-bar {
-        @apply absolute bottom-0 left-0 h-1.5 bg-slate-800 w-0 transition-all duration-500;
+        @apply absolute bottom-0 left-0 h-1.5 bg-brand-dark w-0 transition-all duration-500;
     }
 
     /* Hover-effekt på selve kortet */
@@ -104,12 +114,12 @@
 
     /* Tittel inni kortet */
     .card-title {
-        @apply text-2xl font-bold text-slate-800 mb-2 transition-colors relative z-10;
+        @apply text-2xl font-bold text-brand mb-2 transition-colors relative z-10;
     }
 
     /* Undertittel (f.eks. tittel for tannleger eller merkelapper) */
     .card-subtitle {
-        @apply text-lg text-slate-800 font-semibold italic mb-4 relative z-10;
+        @apply text-lg text-brand font-semibold italic mb-4 relative z-10;
     }
 
     /* Brødtekst / beskrivelse i kortet */
@@ -124,8 +134,8 @@
 
     /* Blå knapp (Primær) */
     .btn-primary {
-        @apply inline-flex items-center justify-center gap-2 px-8 py-4 border border-slate-800 text-slate-800 font-bold rounded-2xl
-        shadow-lg transition-all duration-300 hover:bg-slate-300 hover:shadow-xl hover:-translate-y-0.5
+        @apply inline-flex items-center justify-center gap-2 px-8 py-4 border border-slate-800 text-brand font-bold rounded-2xl
+        shadow-lg transition-all duration-300 hover:text-brand-hover hover:shadow-xl hover:-translate-y-0.5
         whitespace-nowrap min-w-fit relative z-10;
     }
 
@@ -146,14 +156,14 @@
     /* Overskrifter inni Markdown */
     .markdown-content.prose h2,
     .markdown-content.prose h3 {
-        @apply text-slate-800 font-bold mt-12 mb-4 tracking-tight;
+        @apply text-brand font-bold mt-12 mb-4 tracking-tight;
     }
 
     .markdown-content.prose h2 { @apply text-2xl md:text-3xl; }
     .markdown-content.prose h3 { @apply text-xl; }
 
     .markdown-content.prose strong {
-        @apply text-slate-800 font-bold;
+        @apply text-brand font-bold;
     }
 
     .markdown-content.prose ul {
