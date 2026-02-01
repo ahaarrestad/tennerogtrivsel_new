@@ -21,6 +21,6 @@ export function formatInfoText(rawText) {
         .replace(phoneRegex, (match) => {
             // match er det fulle nummeret med mellomrom, f.eks. "51 42 33 33"
             const cleanNumber = match.replace(/\s+/g, '');
-            return `<a href="tel:${cleanNumber}" class="text-blue-600">${match}</a>`;
+            return `<a href="tel:${cleanNumber}" class="text-blue-600 lg:pointer-events-none lg:cursor-default lg:text-inherit lg:no-underline">${match}</a>`;
         }); // linkify telefon
 }
