@@ -83,12 +83,12 @@ const tjenester = await getCollection('tjenester');
                                 const isCurrent = s.id === entry.id;
                                 return (
                                         <li class="flex items-center gap-2 py-1">
-                                            <span class={isCurrent ? "text-slate-600 font-bold" : "text-slate-300"}>→</span>
+                                            <span class={isCurrent ? "text-brand-hover font-bold" : "text-brand"}>→</span>
                                             {isCurrent ? (
-                                                    <span class="text-sm font-bold text-brand">{s.data.title}</span>
+                                                    <span class="text-sm font-bold text-brand-hover">{s.data.title}</span>
                                             ) : (
                                                     <a href={`/tjenester/${s.slug}`}
-                                                       class="text-sm font-medium text-slate-600 hover:text-brand-hover hover:no-underline">
+                                                       class="text-sm font-medium text-brand hover:text-brand-hover hover:no-underline">
                                                         {s.data.title}
                                                     </a>
                                             )}
