@@ -8,7 +8,8 @@ const {
     minHeight = "auto",
     centered = true,
     isStack = true,
-    image = false
+    image = false,
+    external = false // added external prop to determine if the link should open in a new tab
 } = Astro.props;
 
 // Her bestemmer vi om vi skal bruke 'a' eller 'div'
@@ -17,12 +18,14 @@ const Tag = href ? 'a' : 'div';
 
 <Tag
         href={href}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noopener noreferrer" : undefined}
         style={`${isStack ? `--card-index: ${index}; --header-offset: ${headerOffset};` : ''} min-height: ${minHeight};`}
         class:list={[
-            "card-base group no-underline text-inherit",
-            href ? "block cursor-pointer" : "flex flex-col", // block er viktig for at <a> skal fylle hele bredden
-        isStack ? "stack-card" : "relative h-full flex flex-col",
-            centered ? "items-center text-center" : "items-start text-left"
+            "card-base group no-underline text-inherit flex flex-col w-full", // Flex er nå alltid på
+            href ? "cursor-pointer" : "",
+            isStack ? "stack-card" : "relative h-full",
+            centered ? "items-center text-center justify-center" : "items-start text-left"
         ]}
 >
     <div class="card-accent-corner"></div>
@@ -41,8 +44,11 @@ const Tag = href ? 'a' : 'div';
         </div>
     </div>
 
-    <div class="text-brand mb-6 relative z-10 empty:hidden">
-        <slot name="icon" />
+    <div class:list={[
+        "text-brand mb-6 relative z-10 empty:hidden",
+        centered ? "flex justify-center" : ""
+    ]}>
+        <slot name="icon"/>
     </div>
 
     <div class="relative z-10 w-full flex flex-col grow">
