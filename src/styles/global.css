@@ -105,7 +105,7 @@
 
     /* Den blå linjen som animeres i bunnen ved hover */
     .card-progress-bar {
-        @apply absolute bottom-0 left-0 h-1.5 bg-brand-dark w-0 transition-all duration-500;
+        @apply absolute bottom-0 left-0 h-1.5 bg-brand-dark w-0 transition-all duration-500 hidden md:block;
     }
 
     /* Hover-effekt på selve kortet */
