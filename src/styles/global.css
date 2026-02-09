@@ -32,18 +32,26 @@
 
     /* Overskrifts-gruppen */
     .section-header {
-        @apply text-center mb-12 md:mb-20 mx-auto max-w-4xl;
+        /* Layout: Sentrerer tekst og begrenser bredden for bedre lesbarhet */
+        @apply text-center mx-auto max-w-4xl;
+
+        /* Avstand: Stor bunnmarg for å gi luft til innholdet under */
         @apply mb-16 md:mb-48;
     }
 
     /* Denne klassen gjør headeren sticky kun på mobil */
     .section-header-sticky {
-        @apply sticky md:relative z-30 py-4 md:py-0;
-        /* Plasseres rett under navbaren */
-        top: var(--nav-total-height, 4rem);
-        /* Bruker bakgrunnsfargen til seksjonen for å skjule kortene bak */
-        background-color: inherit;
+        /* Posisjonering: Sticky på mobil for å beholde kontekst, statisk på desktop */
+        @apply sticky md:relative z-30;
+
+        /* Avstand: Legger på vertikal padding på mobil for luft, fjerner den på desktop */
         @apply py-4 md:py-0;
+
+        /* Sticky-plassering: Dynamisk høyde basert på navbar (faller tilbake til 4rem) */
+        top: var(--nav-total-height, 4rem);
+
+        /* Lagdeling: Arver bakgrunnsfarge fra forelderen for å dekke over elementer som scrolles bak */
+        background-color: inherit;
     }
 
     /* Selve overskriften i seksjonen */
@@ -94,26 +102,59 @@
 
     /* FELLES DESIGN FOR ALLE KORT */
     .card-base {
-        @apply bg-white p-8 rounded-3xl border border-brand-border shadow-sm;
-        @apply flex flex-col relative overflow-hidden transition-all duration-300;
+        /* Grunnleggende utseende: Hvit bakgrunn, mye luft (p-8) og avrundede hjørner */
+        @apply bg-white p-8 rounded-3xl;
+
+        /* Ramme og dybde: En tynn kantlinje og en subtil skygge */
+        @apply border border-brand-border shadow-sm;
+
+        /* Layout: Flex-kolonne sørger for at innholdet stables vertikalt */
+        /* Overflow-hidden er viktig for at 'card-progress-bar' ikke skal stikke ut */
+        @apply flex flex-col relative overflow-hidden;
+
+        /* Interaksjon: Definerer farten på alle hover-effekter (skygge, farge, etc.) */
+        @apply transition-all duration-300;
     }
 
     /* Den blå sirkel-detaljen i hjørnet (valgfri å bruke) */
     .card-accent-corner {
-        @apply absolute top-0 right-0 w-20 h-20 bg-slate-200 rounded-bl-full -mr-8 -mt-8 transition-colors;
+        /* Posisjonering: Låst til øverste høyre hjørne */
+        @apply absolute top-0 right-0;
+
+        /* Form og størrelse: Lager en stor boks med full avrunding nede til venstre (kvart sirkel) */
+        @apply w-20 h-20 rounded-bl-full;
+
+        /* Plassering: Drar sirkelen ut av kortets ramme (-8) for en subtil "cut-off" effekt */
+        @apply -mr-8 -mt-8;
+
+        /* Utseende: Lys grå farge som standard, og klargjort for fargebytte ved hover */
+        @apply bg-slate-200 transition-colors;
     }
 
-    /* Den blå linjen som animeres i bunnen ved hover */
+    /* Progress-linjen som animeres i bunnen ved hover på kortet */
     .card-progress-bar {
-        @apply absolute bottom-0 left-0 h-1.5 bg-brand-dark w-0 transition-all duration-500 hidden md:block;
+        /* Posisjonering: Ligger helt i bunn og dekker hele bredden (når w er full) */
+        @apply absolute bottom-0 left-0 h-1.5;
+
+        /* Utseende: Bruker mørk merkevarefarge, starter med 0 bredde */
+        @apply bg-brand-dark w-0;
+
+        /* Animasjon: Jevn overgang når bredden endres (styres av hover i global.css) */
+        @apply transition-all duration-500;
+
+        /* Responsivitet: Skjult på mobil, vises kun fra 768px (md) og oppover */
+        @apply hidden md:block;
     }
 
-    /* Hover-effekt på selve kortet */
+    /* Interaksjon: Animerer fremdriftslinjen i bunnen når kortet hovres */
     .card-base:hover .card-progress-bar {
+        /* Ekspanderer linjen fra 0 til 100% bredde */
         @apply w-full;
     }
 
+    /* Interaksjon: Endrer farge på hjørne-detaljen når hele kortet blir hovret */
     .card-base:hover .card-accent-corner {
+        /* Skifter til en mørkere/aktiv merkevarefarge ved hover */
         @apply bg-brand-active;
     }
 
@@ -139,16 +180,31 @@
 
     /* Blå knapp (Primær) */
     .btn-primary {
-        @apply inline-flex items-center justify-center gap-2 px-8 py-4 border border-brand text-brand font-bold rounded-2xl
-        shadow-lg transition-all duration-300 hover:text-brand hover:bg-brand-active hover:shadow-xl hover:-translate-y-0.5
-        whitespace-nowrap min-w-fit relative z-10;
+        /* Layout: Sørger for at tekst og ikoner står på linje og har riktig luft */
+        @apply inline-flex items-center justify-center gap-2;
+
+        /* Form og størrelse: Definerer avrunding, padding og at knappen ikke skal knekke tekst */
+        @apply px-8 py-4 rounded-2xl whitespace-nowrap min-w-fit;
+
+        /* Typografi og kantlinjer: Setter skrifttype og den tynne rammen rundt */
+        @apply border border-brand text-brand font-bold;
+
+        /* Effekt og Lagdeling: Skygge og z-index for å ligge over andre elementer */
+        @apply shadow-lg relative z-10;
+
+        /* Animasjon: Definerer farten på alle overganger (farge, posisjon, skygge) */
+        @apply transition-all duration-300;
+
+        /* Hover-tilstand: Endrer bakgrunn, flytter knappen litt opp og øker skyggen */
+        @apply hover:text-brand hover:bg-brand-active hover:shadow-xl hover:-translate-y-0.5;
     }
 
     /* Samkjøring av Markdown-innhold */
     .markdown-content.prose {
-        /* Vi fjerner faste størrelser her og lar Tailwind Typography styre basisen,
-           men vi sikrer fargen og bredden */
+        /* Typografi: Setter farge og linjeavstand for bedre lesbarhet */
         @apply text-slate-600 leading-relaxed;
+
+        /* Layout-overstyring: Sørger for at innholdet fyller hele bredden av containeren */
         max-width: none !important;
     }
 
