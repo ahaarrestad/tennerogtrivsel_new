@@ -1,3 +1,7 @@
-<a href="/#kontakt" class="btn-primary">
+---
+import Button from "./Button.astro";
+const { class: className } = Astro.props;
+---
+<Button href="/#kontakt" class={className}>
     Kontakt oss
-</a>
+</Button>
