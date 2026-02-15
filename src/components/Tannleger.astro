@@ -1,15 +1,17 @@
 ---
 import {Image} from 'astro:assets';
-import tannleger from '../content/tannleger.json';
-import WaveToFooter from './WaveToFooter.astro';
+import {getCollection} from 'astro:content';
 import {getSiteSettings} from '../scripts/getSettings';
 import Card from "./Card.astro";
 
-// For å dynamisk importere bilder i Astro
-const images = import.meta.glob('/src/assets/tannleger/*.{jpeg,jpg,png,webp}');
+// Hent alle tannleger fra den nye collectionen
+const tannleger = await getCollection('tannleger');
 const settings = await getSiteSettings();
 
-const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 'nb'));
+// For å dynamisk importere bilder i Astro
+const images = import.meta.glob('/src/assets/tannleger/*.{jpeg,jpg,png,webp}');
+
+const sorterteTannleger = tannleger.sort((a, b) => a.data.name.localeCompare(b.data.name, 'nb'));
 ---
 <section id="tannleger" class="section-container bg-brand-light">
     <div class="section-content">
@@ -21,15 +23,14 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
 
         <div class="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 gap-10">
             {sorterteTannleger.map((t, index) => {
-                // VIKTIG: Definer disse variablene her inne i map-funksjonen
-
-                const imagePath = `/src/assets/tannleger/${t.bildeFil}`;
-                const hasImage = images[imagePath];
+                const tannlegeData = t.data;
+                const imagePath = `/src/assets/tannleger/${tannlegeData.image}`;
+                const hasImage = tannlegeData.image && images[imagePath];
 
                 return (
                         <Card
                                 index={index}
-                                title={t.navn}
+                                title={tannlegeData.name}
                                 headerOffset="160px"
                                 isStack={true}
                                 image={true}
@@ -38,7 +39,7 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
                             {hasImage ? (
                                     <Image slot="image"
                                            src={images[imagePath]()}
-                                           alt={t.navn}
+                                           alt={tannlegeData.name}
                                            class="w-full h-full object-cover"
                                     />
                             ) : (
@@ -47,9 +48,9 @@ const sorterteTannleger = tannleger.sort((a, b) => a.navn.localeCompare(b.navn, 
                                         Bilde mangler
                                     </div>
                             )}
-                            <p class="card-subtitle">{t.tittel}</p>
+                            <p class="card-subtitle">{tannlegeData.title}</p>
                             <p class="card-text line-clamp-6">
-                                {t.beskrivelse}
+                                {tannlegeData.description}
                             </p>
                         </Card>
                 );

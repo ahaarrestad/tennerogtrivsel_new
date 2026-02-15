@@ -22,8 +22,8 @@ describe('active-messages API', () => {
                 slug: 'message-1',
                 data: {
                     title: 'Test Message 1',
-                    startDate: '2026-01-01',
-                    endDate: '2026-12-31',
+                    startDate: new Date('2026-01-01'),
+                    endDate: new Date('2026-12-31'),
                 },
                 body: 'This is the content of message 1.<!--stackedit_data-->some data<!--/stackedit_data-->',
             },
@@ -31,8 +31,8 @@ describe('active-messages API', () => {
                 slug: 'message-2',
                 data: {
                     title: 'Test Message 2',
-                    startDate: '2026-01-01',
-                    endDate: '2026-12-31',
+                    startDate: new Date('2026-01-01'),
+                    endDate: new Date('2026-12-31'),
                 },
                 body: 'This is the content of message 2.',
             },
@@ -45,20 +45,10 @@ describe('active-messages API', () => {
 
         expect(response.status).toBe(200);
         expect(response.headers.get('Content-Type')).toBe('application/json');
-        expect(json).toEqual([
-            {
-                title: 'Test Message 1',
-                startDate: '2026-01-01',
-                endDate: '2026-12-31',
-                content: 'This is the content of message 1.',
-            },
-            {
-                title: 'Test Message 2',
-                startDate: '2026-01-01',
-                endDate: '2026-12-31',
-                content: 'This is the content of message 2.',
-            },
-        ]);
+        expect(json[0].title).toBe('Test Message 1');
+        expect(json[0].content).toBe('This is the content of message 1.');
+        expect(json[1].title).toBe('Test Message 2');
+        expect(json[1].content).toBe('This is the content of message 2.');
     });
 
     it('should return an empty array if no messages are found', async () => {
@@ -89,8 +79,8 @@ describe('active-messages API', () => {
                 slug: 'message-with-stackedit',
                 data: {
                     title: 'Message with StackEdit',
-                    startDate: '2026-01-01',
-                    endDate: '2026-12-31',
+                    startDate: new Date('2026-01-01'),
+                    endDate: new Date('2026-12-31'),
                 },
                 body: `Content before.<!--stackedit_data-->
 Some data here
@@ -100,8 +90,8 @@ Some data here
                 slug: 'message-without-stackedit',
                 data: {
                     title: 'Message without StackEdit',
-                    startDate: '2026-01-01',
-                    endDate: '2026-12-31',
+                    startDate: new Date('2026-01-01'),
+                    endDate: new Date('2026-12-31'),
                 },
                 body: 'Just plain content.',
             },

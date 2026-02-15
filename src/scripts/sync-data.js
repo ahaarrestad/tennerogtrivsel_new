@@ -6,21 +6,20 @@ import { pipeline } from 'stream/promises';
 
 // --- KONFIGURASJON ---
 const CONFIG = {
-    spreadsheetId: '1XTRkjyJpAk7hMNe4tfhhA3nI0BwmOfrR0dzj5iC_Hoo',
+    spreadsheetId: process.env.GOOGLE_SHEET_ID,
     paths: {
         tannlegerAssets: path.join(process.cwd(), 'src/assets/tannleger'),
         tannlegerData: path.join(process.cwd(), 'src/content/tannleger.json'),
     },
-    // Definer mapper som inneholder .md filer her
     collections: [
         {
             name: 'tjenester',
-            folderId: '1h_iXI-fFrIpfDfT1yZvkGpbOZKgbd1n6',
+            folderId: process.env.GOOGLE_DRIVE_TJENESTER_FOLDER_ID,
             dest: path.join(process.cwd(), 'src/content/tjenester')
         },
         {
             name: 'meldinger',
-            folderId: '1iU57zpLtE27OUHTQcvTTIAp5iYXfL9zd', // <-- Sett inn ID her
+            folderId: process.env.GOOGLE_DRIVE_MELDINGER_FOLDER_ID,
             dest: path.join(process.cwd(), 'src/content/meldinger')
         }
     ]
@@ -60,26 +59,47 @@ async function syncTannleger() {
     console.log('🚀 Synkroniserer tannleger...');
     if (!fs.existsSync(CONFIG.paths.tannlegerAssets)) fs.mkdirSync(CONFIG.paths.tannlegerAssets, { recursive: true });
 
-    const res = await sheets.spreadsheets.values.get({
-        spreadsheetId: CONFIG.spreadsheetId,
-        range: 'tannleger!A2:E',
-    });
+    try {
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: CONFIG.spreadsheetId,
+            range: 'tannleger!A2:E',
+        });
 
-    const tannlegeData = [];
-    for (const [navn, tittel, beskrivelse, bildeFil, aktiv] of res.data.values || []) {
-        if (aktiv?.toLowerCase() !== 'ja') continue;
-        console.log(`  🔄 Behandler: ${navn}`);
+        const tannlegeData = [];
+        const rows = res.data.values || [];
+        
+        for (const [navn, tittel, beskrivelse, bildeFil, aktiv] of rows) {
+            if (aktiv?.toLowerCase() !== 'ja') continue;
+            console.log(`  🔄 Behandler: ${navn}`);
 
-        if (bildeFil) {
-            const fileId = await findFileIdByName(bildeFil);
-            if (fileId) {
-                console.log(`    ⬇️ Laster ned bilde: ${bildeFil}`);
-                await downloadFile(fileId, path.join(CONFIG.paths.tannlegerAssets, bildeFil));
+            if (bildeFil) {
+                try {
+                    const fileId = await findFileIdByName(bildeFil);
+                    if (fileId) {
+                        console.log(`    ⬇️ Laster ned bilde: ${bildeFil}`);
+                        await downloadFile(fileId, path.join(CONFIG.paths.tannlegerAssets, bildeFil));
+                    } else {
+                        console.warn(`    ⚠️ Bilde ikke funnet i Drive: ${bildeFil}`);
+                    }
+                } catch (imgErr) {
+                    console.error(`    ❌ Feil ved nedlasting av bilde ${bildeFil}:`, imgErr.message);
+                }
             }
+            
+            tannlegeData.push({
+                id: navn.toLowerCase().replace(/\s+/g, '-'), // Enkel ID-generering
+                name: navn,
+                title: tittel,
+                description: beskrivelse,
+                image: bildeFil
+            });
         }
-        tannlegeData.push({ navn, tittel, beskrivelse, bildeFil });
+        fs.writeFileSync(CONFIG.paths.tannlegerData, JSON.stringify(tannlegeData, null, 2));
+        console.log(`  ✅ Synkroniserte ${tannlegeData.length} tannleger.`);
+    } catch (err) {
+        console.error('❌ Feil under synkronisering av tannleger:', err.message);
+        throw err;
     }
-    fs.writeFileSync(CONFIG.paths.tannlegerData, JSON.stringify(tannlegeData, null, 2));
 }
 
 // Fellesfunksjon for alle Markdown-samlinger (Tjenester, Meldinger, etc.)

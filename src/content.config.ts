@@ -1,7 +1,9 @@
 import {defineCollection, z} from 'astro:content';
+import fs from 'fs';
+import path from 'path';
 
 const GOOGLE_API_KEY = import.meta.env.PUBLIC_GOOGLE_API_KEY;
-const SHEET_ID = '1XTRkjyJpAk7hMNe4tfhhA3nI0BwmOfrR0dzj5iC_Hoo'; // Finn denne i nettleser-URLen til arket
+const SHEET_ID = import.meta.env.GOOGLE_SHEET_ID;
 const RANGE = 'Innstillinger!A:B'; // Navnet på fanen og kolonnene
 
 const innstillinger = defineCollection({
@@ -65,12 +67,32 @@ const innstillinger = defineCollection({
     })
 });
 
+const tannleger = defineCollection({
+    loader: async () => {
+        const filePath = path.join(process.cwd(), 'src/content/tannleger.json');
+        if (!fs.existsSync(filePath)) return [];
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const data = JSON.parse(content);
+        return data.map((t: any, index: number) => ({
+            id: t.id || `tannlege-${index}`,
+            ...t
+        }));
+    },
+    schema: z.object({
+        id: z.string(),
+        name: z.string(),
+        title: z.string(),
+        description: z.string(),
+        image: z.string().optional(),
+    }),
+});
+
 const meldinger = defineCollection({
     type: 'content', // Dette sier til Astro: "Se i src/content/meldinger/ etter .md filer"
     schema: z.object({
         title: z.string(),
-        startDate: z.coerce.string(),
-        endDate: z.coerce.string(),
+        startDate: z.coerce.date(),
+        endDate: z.coerce.date(),
     }),
 });
 
@@ -84,4 +106,4 @@ const tjenester = defineCollection({
 });
 
 // --- 4. EKSPORT ---
-export const collections = {tjenester, meldinger, innstillinger};
+export const collections = {tjenester, meldinger, innstillinger, tannleger};

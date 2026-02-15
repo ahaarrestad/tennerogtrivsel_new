@@ -7,19 +7,9 @@ export async function getActiveMessage() {
         if (!response.ok) return null;
 
         const meldinger = await response.json();
-        const iDag = new Date();
-
-        const aktiv = meldinger.find((m) => {
-            if (!m.startDate || !m.endDate) return false;
-            const start = new Date(m.startDate);
-            const slutt = new Date(m.endDate);
-
-            // FIKS: Sett sluttdato til slutten av døgnet (23:59:59)
-            // Dette sikrer at den vises ut hele dagen som er valgt.
-            slutt.setHours(23, 59, 59, 999);
-
-            return iDag >= start && iDag <= slutt;
-        });
+        
+        // Siden API-et allerede filtrerer og sorterer, tar vi den første aktive meldingen
+        const aktiv = meldinger[0];
 
         if (aktiv) {
             // Vi vasker og formaterer her, så slipper vi å gjøre det i hver komponent
