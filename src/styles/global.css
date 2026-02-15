@@ -237,14 +237,14 @@
     }
 
     #menu-btn[data-state="open"] span:nth-child(1) {
-        @apply transform translate-y-2.5 rotate-45;
+        @apply translate-y-[8px] rotate-45;
     }
 
     #menu-btn[data-state="open"] span:nth-child(2) {
-        @apply opacity-0;
+        @apply opacity-0 scale-x-0;
     }
 
     #menu-btn[data-state="open"] span:nth-child(3) {
-        @apply transform -translate-y-2.5 -rotate-45;
+        @apply -translate-y-[8px] -rotate-45;
     }
 }
