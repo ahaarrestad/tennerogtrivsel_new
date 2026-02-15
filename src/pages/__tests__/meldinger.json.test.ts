@@ -1,10 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { GET } from '../meldinger.json.ts';
 import { getCollection } from 'astro:content';
 
 vi.mock('astro:content', () => ({
     getCollection: vi.fn(),
 }));
+
+const getCollectionMock = getCollection as Mock;
 
 describe('meldinger.json API', () => {
     beforeEach(() => {
@@ -23,7 +25,7 @@ describe('meldinger.json API', () => {
             }
         ];
 
-        (getCollection as any).mockResolvedValue(mockMessages);
+        getCollectionMock.mockResolvedValue(mockMessages);
 
         const response = await GET();
         const json = await response.json();

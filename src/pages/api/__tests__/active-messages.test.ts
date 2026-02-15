@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GET } from '../active-messages.json';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { GET } from '../active-messages.json.ts';
 import { getCollection } from 'astro:content';
 
 // Mock the getCollection function from astro:content
@@ -10,6 +10,8 @@ vi.mock('astro:content', async (importOriginal) => {
         getCollection: vi.fn(), // Mock getCollection
     };
 });
+
+const getCollectionMock = getCollection as Mock;
 
 describe('active-messages API', () => {
     beforeEach(() => {
@@ -38,7 +40,7 @@ describe('active-messages API', () => {
             },
         ];
 
-        (getCollection as vi.Mock).mockResolvedValueOnce(mockMessages);
+        getCollectionMock.mockResolvedValueOnce(mockMessages);
 
         const response = await GET();
         const json = await response.json();
@@ -52,7 +54,7 @@ describe('active-messages API', () => {
     });
 
     it('should return an empty array if no messages are found', async () => {
-        (getCollection as vi.Mock).mockResolvedValueOnce([]);
+        getCollectionMock.mockResolvedValueOnce([]);
 
         const response = await GET();
         const json = await response.json();
@@ -63,7 +65,7 @@ describe('active-messages API', () => {
     });
 
     it('should return a 500 status if getCollection throws an error', async () => {
-        (getCollection as vi.Mock).mockRejectedValueOnce(new Error('Database error'));
+        getCollectionMock.mockRejectedValueOnce(new Error('Database error'));
 
         const response = await GET();
         const json = await response.json();
@@ -106,7 +108,7 @@ Some data here
             },
         ];
 
-        (getCollection as vi.Mock).mockResolvedValueOnce(mockMessages);
+        getCollectionMock.mockResolvedValueOnce(mockMessages);
 
         const response = await GET();
         const json = await response.json();
@@ -153,7 +155,7 @@ Some data here
             },
         ];
 
-        (getCollection as vi.Mock).mockResolvedValueOnce(mockMessages);
+        getCollectionMock.mockResolvedValueOnce(mockMessages);
 
         const response = await GET();
         const json = await response.json();
