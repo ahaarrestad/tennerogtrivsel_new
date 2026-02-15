@@ -64,6 +64,8 @@ Deployment is automated via GitHub Actions, configured in `.github/workflows/dep
 
 *   **Workflow Trigger:** The deployment process is initiated by pushes to `main`, pull requests, or `repository_dispatch` from Google Drive updates.
 *   **Optimization:** The CI/CD pipeline uses caching for Playwright browsers and the `.astro` build cache to minimize execution time. It utilizes `npm ci` for reliable dependency installation.
+*   **Security Scanning (CodeQL):** Automated security analysis is performed via `.github/workflows/codeql.yml`.
+    *   **Maintenance:** This workflow MUST be updated if the project structure changes (e.g., adding new directories that should be ignored) or if new programming languages are introduced to the codebase.
 *   **Build Process:**
     *   The Astro site is built using `npm run build` (which includes the `sync-data.js` script).
     *   Google API related secrets (`GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`, `GOOGLE_SHEET_ID`, `GOOGLE_DRIVE_TJENESTER_FOLDER_ID`, `GOOGLE_DRIVE_MELDINGER_FOLDER_ID`, `PUBLIC_GOOGLE_API_KEY`) are securely passed as environment variables during the build.
