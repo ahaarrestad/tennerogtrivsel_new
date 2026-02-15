@@ -46,9 +46,10 @@ jobs:
         env:
           GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
           GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
-          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-          GOOGLE_DRIVE_TJENESTER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TJENESTER_FOLDER_ID }}
-          GOOGLE_DRIVE_MELDINGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_MELDINGER_FOLDER_ID }}
+          PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.PUBLIC_GOOGLE_CLIENT_ID }}
+          PUBLIC_GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TJENESTER_FOLDER_ID }}
+          PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_MELDINGER_FOLDER_ID }}
           PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
 
       - run: npm audit --audit-level=high # Stopper hvis det er kritiske hull

@@ -98,3 +98,15 @@ To ensure high-quality, maintainable, and idiomatic code within this project, pl
         *   **SEO:** Verification of sidetitles, meta descriptions, and OpenGraph tags.
         *   **Link Crawler:** Automatic detection of broken internal and external links.
     *   Tests are integrated into the CI/CD pipeline and MUST pass before deployment. Environment variables must be provisioned for all test steps.
+
+### 5. Admin Panel (Phase 1)
+
+The project includes a browser-based admin panel at `/admin` for content management. It uses Google OAuth 2.0 for authentication and relies on Google Drive permissions for access control.
+
+*   **Setup Requirements:**
+    1.  Create an **OAuth 2.0 Client ID** in [Google Cloud Console](https://console.cloud.google.com/).
+    2.  Add `http://localhost:4321` (dev) and your production URL to **Authorized JavaScript origins**.
+    3.  Set the generated Client ID as `PUBLIC_GOOGLE_CLIENT_ID` in your `.env` and GitHub Secrets.
+    4.  Ensure `PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID` and other folder IDs are set correctly.
+*   **Access Control:** Access is automatically granted to any user who has at least "Reader" access to the Google Drive folder specified in the configuration. If a user logs in but lacks access, an "Ingen tilgang" message is shown.
+*   **Security:** The admin panel runs entirely in the user's browser using their own credentials. No sensitive server-side keys are exposed to the frontend.

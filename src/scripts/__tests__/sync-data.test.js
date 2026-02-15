@@ -71,9 +71,9 @@ describe('sync-data.js', () => {
 
     beforeEach(() => {
         vi.resetAllMocks();
-        process.env.GOOGLE_SHEET_ID = 'test-sheet-id';
-        process.env.GOOGLE_DRIVE_TJENESTER_FOLDER_ID = 'test-folder-id';
-        process.env.GOOGLE_DRIVE_MELDINGER_FOLDER_ID = 'test-folder-id';
+        process.env.PUBLIC_GOOGLE_SHEET_ID = 'test-sheet-id';
+        process.env.PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID = 'test-folder-id';
+        process.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID = 'test-folder-id';
         process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL = 'test@example.com';
         process.env.GOOGLE_PRIVATE_KEY = 'test-key';
         process.env.NODE_ENV = 'test';
@@ -232,19 +232,19 @@ describe('sync-data.js', () => {
         });
 
         it('bør håndtere manglende miljøvariabler', async () => {
-            const originalEnvValue = process.env.GOOGLE_SHEET_ID;
-            delete process.env.GOOGLE_SHEET_ID;
+            const originalEnvValue = process.env.PUBLIC_GOOGLE_SHEET_ID;
+            delete process.env.PUBLIC_GOOGLE_SHEET_ID;
             
             await runSync();
 
             expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Manglende miljøvariabler'));
             
-            process.env.GOOGLE_SHEET_ID = originalEnvValue;
+            process.env.PUBLIC_GOOGLE_SHEET_ID = originalEnvValue;
         });
 
         it('bør simulere Dependabot oppførsel ved manglende secrets', async () => {
-            const originalEnvValue = process.env.GOOGLE_SHEET_ID;
-            delete process.env.GOOGLE_SHEET_ID;
+            const originalEnvValue = process.env.PUBLIC_GOOGLE_SHEET_ID;
+            delete process.env.PUBLIC_GOOGLE_SHEET_ID;
             process.env.GITHUB_ACTIONS = 'true';
             
             const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {});
@@ -255,14 +255,14 @@ describe('sync-data.js', () => {
             expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Dependabot-bygg'));
             
             exitSpy.mockRestore();
-            process.env.GOOGLE_SHEET_ID = originalEnvValue;
+            process.env.PUBLIC_GOOGLE_SHEET_ID = originalEnvValue;
             delete process.env.GITHUB_ACTIONS;
         });
 
         it('bør avslutte med feilkode ved manglende variabler utenfor test/CI', async () => {
-            const originalEnvValue = process.env.GOOGLE_SHEET_ID;
+            const originalEnvValue = process.env.PUBLIC_GOOGLE_SHEET_ID;
             const originalNodeEnv = process.env.NODE_ENV;
-            delete process.env.GOOGLE_SHEET_ID;
+            delete process.env.PUBLIC_GOOGLE_SHEET_ID;
             process.env.NODE_ENV = 'production';
             
             const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {});
@@ -272,7 +272,7 @@ describe('sync-data.js', () => {
             expect(exitSpy).toHaveBeenCalledWith(1);
             
             exitSpy.mockRestore();
-            process.env.GOOGLE_SHEET_ID = originalEnvValue;
+            process.env.PUBLIC_GOOGLE_SHEET_ID = originalEnvValue;
             process.env.NODE_ENV = originalNodeEnv;
         });
 

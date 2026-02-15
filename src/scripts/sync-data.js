@@ -8,7 +8,7 @@ import crypto from 'crypto';
 // --- KONFIGURASJON ---
 function getConfig() {
     return {
-        spreadsheetId: process.env.GOOGLE_SHEET_ID,
+        spreadsheetId: process.env.PUBLIC_GOOGLE_SHEET_ID,
         paths: {
             tannlegerAssets: path.join(process.cwd(), 'src/assets/tannleger'),
             tannlegerData: path.join(process.cwd(), 'src/content/tannleger.json'),
@@ -16,12 +16,12 @@ function getConfig() {
         collections: [
             {
                 name: 'tjenester',
-                folderId: process.env.GOOGLE_DRIVE_TJENESTER_FOLDER_ID,
+                folderId: process.env.PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID,
                 dest: path.join(process.cwd(), 'src/content/tjenester')
             },
             {
                 name: 'meldinger',
-                folderId: process.env.GOOGLE_DRIVE_MELDINGER_FOLDER_ID,
+                folderId: process.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID,
                 dest: path.join(process.cwd(), 'src/content/meldinger')
             }
         ]
@@ -194,9 +194,9 @@ async function runSync() {
     const requiredEnv = [
         'GOOGLE_SERVICE_ACCOUNT_EMAIL',
         'GOOGLE_PRIVATE_KEY',
-        'GOOGLE_SHEET_ID',
-        'GOOGLE_DRIVE_TJENESTER_FOLDER_ID',
-        'GOOGLE_DRIVE_MELDINGER_FOLDER_ID'
+        'PUBLIC_GOOGLE_SHEET_ID',
+        'PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID',
+        'PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID'
     ];
 
     const missing = requiredEnv.filter(key => !process.env[key]);

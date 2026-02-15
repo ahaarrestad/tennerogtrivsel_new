@@ -7,7 +7,7 @@ const RANGE = 'Innstillinger!A:B';
 
 const innstillinger = defineCollection({
     loader: async () => {
-        const SHEET_ID = import.meta.env.GOOGLE_SHEET_ID;
+        const SHEET_ID = import.meta.env.PUBLIC_GOOGLE_SHEET_ID;
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${GOOGLE_API_KEY}`;
 
         try {
