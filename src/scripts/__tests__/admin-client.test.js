@@ -18,6 +18,10 @@ describe('admin-client.js', () => {
         vi.stubEnv('PUBLIC_GOOGLE_API_KEY', 'test-api-key');
         vi.stubEnv('PUBLIC_GOOGLE_CLIENT_ID', 'test-client-id');
 
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            json: vi.fn().mockResolvedValue({ name: 'Test User', email: 'test@example.com' })
+        }));
+
         vi.stubGlobal('gapi', {
             load: vi.fn((name, callback) => callback()),
             client: {
@@ -79,11 +83,24 @@ describe('admin-client.js', () => {
     });
 
     describe('Session Management', () => {
-        it('tryRestoreSession skal returnere false hvis ingenting er lagret', () => {
-            expect(tryRestoreSession()).toBe(false);
+        it('tryRestoreSession skal returnere null hvis ingenting er lagret', () => {
+            expect(tryRestoreSession()).toBeNull();
         });
 
-        it('tryRestoreSession skal returnere true hvis gyldig token finnes', () => {
+        it('tryRestoreSession skal returnere brukerinfo hvis gyldig token finnes', () => {
+            const future = Date.now() + 3600000;
+            const mockUser = { name: 'Ola', email: 'ola@example.com' };
+            localStorage.setItem('admin_google_token', JSON.stringify({
+                access_token: 'test-token',
+                expiry: future,
+                user: mockUser
+            }));
+
+            expect(tryRestoreSession()).toEqual(mockUser);
+            expect(gapi.client.setToken).toHaveBeenCalledWith({ access_token: 'test-token' });
+        });
+
+        it('tryRestoreSession skal returnere true hvis token finnes men brukerinfo mangler (legacy)', () => {
             const future = Date.now() + 3600000;
             localStorage.setItem('admin_google_token', JSON.stringify({
                 access_token: 'test-token',
@@ -91,17 +108,16 @@ describe('admin-client.js', () => {
             }));
 
             expect(tryRestoreSession()).toBe(true);
-            expect(gapi.client.setToken).toHaveBeenCalledWith({ access_token: 'test-token' });
         });
 
-        it('tryRestoreSession skal returnere false og rense opp hvis token er utløpt', () => {
+        it('tryRestoreSession skal returnere null og rense opp hvis token er utløpt', () => {
             const past = Date.now() - 1000;
             localStorage.setItem('admin_google_token', JSON.stringify({
                 access_token: 'old-token',
                 expiry: past
             }));
 
-            expect(tryRestoreSession()).toBe(false);
+            expect(tryRestoreSession()).toBeNull();
             expect(localStorage.getItem('admin_google_token')).toBeNull();
         });
 
@@ -142,7 +158,7 @@ describe('admin-client.js', () => {
             await expect(initGapi()).rejects.toThrow('PUBLIC_GOOGLE_API_KEY mangler');
         });
 
-        it('initGis callback skal lagre token i localStorage', () => {
+        it('initGis callback skal lagre token i localStorage', async () => {
             let capturedCallback;
             google.accounts.oauth2.initTokenClient.mockImplementation(({ callback }) => {
                 capturedCallback = callback;
@@ -150,7 +166,7 @@ describe('admin-client.js', () => {
             });
 
             initGis(() => {});
-            capturedCallback({ access_token: 'new-token', expires_in: 3600 });
+            await capturedCallback({ access_token: 'new-token', expires_in: 3600 });
 
             const stored = JSON.parse(localStorage.getItem('admin_google_token'));
             expect(stored.access_token).toBe('new-token');
@@ -187,6 +203,21 @@ describe('admin-client.js', () => {
             gapi.client.drive.files.get.mockRejectedValue(new Error('Generic Error'));
             const result = await checkAccess('123');
             expect(result).toBe(false);
+        });
+
+        it('fetchUserInfo skal håndtere nettverksfeil', async () => {
+            global.fetch.mockRejectedValueOnce(new Error('Network error'));
+            let capturedCallback;
+            google.accounts.oauth2.initTokenClient.mockImplementation(({ callback }) => {
+                capturedCallback = callback;
+                return { requestAccessToken: vi.fn() };
+            });
+
+            initGis(() => {});
+            await capturedCallback({ access_token: 'token', expires_in: 3600 });
+            
+            const stored = JSON.parse(localStorage.getItem('admin_google_token'));
+            expect(stored.user).toBeNull();
         });
     });
 });

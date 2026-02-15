@@ -155,7 +155,7 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
             document.getElementById('module-container').classList.add('hidden');
         }
 
-        async function handleAuth() {
+        async function handleAuth(userInfo = null) {
             console.log("[Admin] Auth callback mottatt, sjekker tilgang...");
             const hasAccess = await checkAccess(TJENESTER_FOLDER);
             
@@ -164,7 +164,13 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
                 document.getElementById('login-container').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
                 document.getElementById('no-access').classList.add('hidden');
-                document.getElementById('user-info').textContent = "Du er logget inn med tilgang til Google Disk.";
+                
+                const userDisplay = document.getElementById('user-info');
+                if (userInfo && userInfo.name) {
+                    userDisplay.innerHTML = `Logget inn som <strong>${userInfo.name}</strong> (${userInfo.email})`;
+                } else {
+                    userDisplay.textContent = "Du er logget inn med tilgang til Google Disk.";
+                }
             } else {
                 console.warn("[Admin] Pålogget, men mangler tilgang til mappen.");
                 document.getElementById('login-container').classList.add('hidden');
@@ -180,9 +186,10 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
                 initGis(handleAuth);
                 
                 // 1. Sjekk om vi har en aktiv sesjon i localStorage
-                if (tryRestoreSession()) {
+                const savedUser = tryRestoreSession();
+                if (savedUser) {
                     console.log("[Admin] Sesjon gjenopprettet fra lager.");
-                    await handleAuth();
+                    await handleAuth(savedUser === true ? null : savedUser);
                 } 
                 // 2. Hvis ikke, prøv "Silent Login" (hvis pålogget Google i nettleser)
                 else {

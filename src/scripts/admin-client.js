@@ -4,7 +4,22 @@ let tokenClient;
 let gapiInited = false;
 let gisInited = false;
 
-const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
+const SCOPES = 'openid profile email https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
+
+/**
+ * Henter brukerinfo fra Google
+ */
+async function fetchUserInfo(accessToken) {
+    try {
+        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        return await response.json();
+    } catch (err) {
+        console.error("[Admin] Kunne ikke hente brukerinfo:", err);
+        return null;
+    }
+}
 
 /**
  * Initialiserer GAPI (Google API Client)
@@ -56,11 +71,15 @@ export function initGis(callback) {
                 return;
             }
             
+            // Hent full brukerinfo når vi får nytt token
+            const userInfo = await fetchUserInfo(resp.access_token);
+
             // Lagre token og utløpstidspunkt (nå + expires_in sekunder)
             const expiry = Date.now() + (resp.expires_in * 1000);
             localStorage.setItem('admin_google_token', JSON.stringify({
                 access_token: resp.access_token,
-                expiry: expiry
+                expiry: expiry,
+                user: userInfo
             }));
 
             callback(resp);
@@ -75,16 +94,16 @@ export function initGis(callback) {
  */
 export function tryRestoreSession() {
     const stored = localStorage.getItem('admin_google_token');
-    if (!stored) return false;
+    if (!stored) return null;
 
     try {
-        const { access_token, expiry } = JSON.parse(stored);
+        const { access_token, expiry, user } = JSON.parse(stored);
         
         // Sjekk om tokenet fortsatt er gyldig (med 1 minutts margin)
         if (Date.now() < (expiry - 60000)) {
             console.log("[Admin] Gjenoppretter sesjon fra localStorage");
             gapi.client.setToken({ access_token });
-            return true;
+            return user || true; // Returner brukerinfo hvis den finnes
         } else {
             console.log("[Admin] Lagret token er utløpt");
             localStorage.removeItem('admin_google_token');
@@ -93,7 +112,7 @@ export function tryRestoreSession() {
         console.error("[Admin] Feil ved lesing av lagret sesjon:", e);
         localStorage.removeItem('admin_google_token');
     }
-    return false;
+    return null;
 }
 
 /**
