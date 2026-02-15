@@ -1,8 +1,29 @@
-export function initMenuHighlight() {
+/**
+ * Logikk for å avgjøre om en menylenke skal utheves
+ */
+function shouldHighlight(href, currentPath, visibleSectionId) {
+    if (!href) return false;
 
+    // Spesialhåndtering for undersider (f.eks. /tjenester/bleking)
+    if (currentPath.includes('/tjenester') && href.includes('tjenester')) {
+        return true;
+    }
+
+    // Normal seksjons-matching på forsiden
+    if (visibleSectionId) {
+        const isHome = href === '/' && (visibleSectionId === 'hero' || visibleSectionId === 'forside');
+        const isSection = href.replace('/#', '') === visibleSectionId || href.replace('#', '') === visibleSectionId;
+        
+        return isHome || isSection;
+    }
+
+    return false;
+}
+
+export function initMenuHighlight() {
     const observerOptions = {
         root: null,
-        rootMargin: '-20% 0px -70% 0px', // Trigger når seksjonen er i øvre del av skjermen
+        rootMargin: '-20% 0px -70% 0px',
         threshold: 0
     };
 
@@ -10,64 +31,33 @@ export function initMenuHighlight() {
         const navLinks = document.querySelectorAll('[data-nav-link]');
         const path = window.location.pathname;
 
-        console.log("Scriptet kjører nå på:", path);
-
-        const clearLink = (link) => {
-            link.classList.remove('text-brand-hover', 'font-bold');
-            link.classList.add('text-brand');
+        const setLinkState = (link, active) => {
+            if (active) {
+                link.classList.add('text-brand-hover', 'font-bold');
+                link.classList.remove('text-brand');
+            } else {
+                link.classList.remove('text-brand-hover', 'font-bold');
+                link.classList.add('text-brand');
+            }
         }
 
-        const addLink = (link) => {
-            link.classList.add('text-brand-hover', 'font-bold');
-            link.classList.remove('text-brand');
-        }
-
-        const clearLinks = () => {
-            navLinks.forEach(link => clearLink(link));
-        };
-
-        // 1. Sjekk undersider (Slug)
+        // Håndter undersider umiddelbart hvis vi er der
         if (path.includes('/tjenester')) {
-            clearLinks();
-            navLinks.forEach(link => {
-                const href = link.getAttribute('href');
-                if (href && href.includes('tjenester')) {
-                    addLink(link);
-                }
-            });
+            navLinks.forEach(link => setLinkState(link, shouldHighlight(link.getAttribute('href'), path)));
             return;
         }
 
+        // Håndter seksjoner på forsiden via observer
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const visibleId = entry.target.id;
-
-                navLinks.forEach(link => {
-                    const href = link.getAttribute('href'); 
-
-                    if (!href) return;
-
-                    // Logikk for å finne ut om denne lenken matcher seksjonen vi ser på
-                    const isHome = href === '/' && (visibleId === 'hero' || visibleId === 'forside');
-                    const isSection =
-                        href.replace('/#', '') === visibleId
-                        || href.replace('#', '') === visibleId;
-
-                    if (isHome || isSection) {
-                        addLink(link);
-                    } else {
-                        // Vi fjerner bare hvis vi er i gang med å sjekke en match
-                        // Men for å unngå at alle blinker, gjør vi det kun på de som ikke matcher
-                        clearLink(link);
-                    }
-                });
+                navLinks.forEach(link => setLinkState(link, shouldHighlight(link.getAttribute('href'), path, visibleId)));
             }
         });
     };
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
 
-    // Start overvåking av alle seksjoner
     const sections = document.querySelectorAll('section[id]');
     if (sections.length > 0) {
         sections.forEach(section => observer.observe(section));
