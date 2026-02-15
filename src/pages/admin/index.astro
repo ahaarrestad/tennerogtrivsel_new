@@ -1,6 +1,8 @@
 ---
 // src/pages/admin/index.astro
 import '../../styles/global.css';
+import { Image } from "astro:assets";
+import logoImage from "../../assets/logo.png";
 
 const TJENESTER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID;
 const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID;
@@ -14,78 +16,121 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
     <script src="https://apis.google.com/js/api.js" async defer></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
-<body class="h-full flex flex-col items-center justify-center p-4">
+<body class="h-full flex flex-col">
 
-    <div id="login-container" class="bg-white p-8 rounded-3xl shadow-xl border border-brand-border max-w-md w-full text-center space-y-6">
-        <h1 class="h2">Admin-panel</h1>
-        <p class="text-slate-600">Logg inn med din Google-konto for å administrere innholdet på nettsiden.</p>
-        <button id="login-btn" class="btn-primary w-full py-4 flex items-center justify-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
-                <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
-                <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
-                <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
-                <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
-            </svg>
-            Logg inn med Google
-        </button>
-    </div>
+    <!-- ADMIN NAVIGASJON -->
+    <nav class="bg-white border-b border-brand-border sticky top-0 z-[100]">
+        <div class="layout-container">
+            <div class="flex justify-between items-center h-20">
+                <a href="/" class="flex items-center gap-4 no-underline group">
+                    <Image
+                            src={logoImage}
+                            alt="Tenner og Trivsel"
+                            width={128}
+                            class="h-12 w-auto object-contain transition-transform group-hover:scale-105"
+                            loading="eager"
+                    />
+                    <div class="flex flex-col justify-center leading-none whitespace-nowrap">
+                        <span class="text-xl font-black uppercase tracking-tighter text-brand">Admin</span>
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Tenner & Trivsel</span>
+                    </div>
+                </a>
 
-    <div id="dashboard" class="hidden layout-container space-y-12 py-12">
-        <header class="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-brand-border">
-            <div>
-                <h1 class="h2">Dashboard</h1>
-                <p id="user-info" class="text-slate-600">Laster...</p>
-            </div>
-            <button id="logout-btn" class="btn-primary bg-slate-100 text-brand border-slate-200 shadow-none hover:bg-slate-200">Logg ut</button>
-        </header>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border flex flex-col">
-                <h2 class="h3 mb-4">Innstillinger</h2>
-                <p class="text-slate-600 mb-6 grow">Administrer telefonnumre, åpningstider og nettsidetitler.</p>
-                <button id="btn-open-settings" class="btn-primary w-full mt-auto">Åpne editor</button>
-            </div>
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border flex flex-col">
-                <h2 class="h3 mb-4">Tjenester</h2>
-                <p class="text-slate-600 mb-6 grow">Rediger tekst og innhold for alle tannhelsetjenester.</p>
-                <button id="btn-open-tjenester" class="btn-primary w-full mt-auto">Administrer</button>
-            </div>
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border flex flex-col">
-                <h2 class="h3 mb-4">Meldinger</h2>
-                <p class="text-slate-600 mb-6 grow">Lag og administrer aktive meldinger og infobannere.</p>
-                <button id="btn-open-meldinger" class="btn-primary w-full mt-auto">Vis meldinger</button>
-            </div>
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border flex flex-col">
-                <h2 class="h3 mb-4">Tannleger</h2>
-                <p class="text-slate-600 mb-6 grow">Oppdater informasjon om ansatte og last opp nye portretter.</p>
-                <button id="btn-open-tannleger" class="btn-primary w-full mt-auto">Åpne editor</button>
+                <a href="/" class="text-brand font-bold flex items-center gap-2 hover:text-brand-hover transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    Til nettsiden
+                </a>
             </div>
         </div>
-    </div>
+    </nav>
 
-    <!-- MODUL-SEKSJONER (Skjult som standard) -->
-    <div id="module-container" class="hidden layout-container py-12 space-y-8">
-        <button id="back-to-dashboard" class="text-brand font-bold flex items-center gap-2 hover:text-brand-hover transition-colors">
-            ← Tilbake til dashbord
-        </button>
-        
-        <div id="module-content" class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border min-h-[400px]">
-            <!-- Innholdet i modulen lastes her -->
-            <h2 id="module-title" class="h2 mb-8">Modulnavn</h2>
-            <div id="module-inner">
-                Laster innhold...
+    <main class="flex-grow flex flex-col items-center justify-center p-4">
+        <!-- LOGIN CONTAINER -->
+        <div id="login-container" class="bg-white p-10 rounded-3xl shadow-xl border border-brand-border max-w-md w-full text-center space-y-8">
+            <div class="space-y-4">
+                <div class="w-20 h-20 bg-brand-light rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <Image src={logoImage} alt="" width={64} class="w-12 h-12 object-contain" />
+                </div>
+                <h1 class="h2">Velkommen</h1>
+                <p class="text-slate-600">Logg inn for å administrere innholdet på nettsiden.</p>
+            </div>
+            
+            <button id="login-btn" class="btn-primary w-full py-4 flex items-center justify-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
+                    <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+                    <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+                    <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+                    <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+                </svg>
+                Logg inn med Google
+            </button>
+        </div>
+
+        <!-- DASHBOARD CONTAINER -->
+        <div id="dashboard" class="hidden layout-container space-y-12 py-12 w-full">
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-3xl shadow-sm border border-brand-border">
+                <div>
+                    <h1 class="h2">Dashboard</h1>
+                    <p id="user-info" class="text-slate-600 italic">Autentiserer...</p>
+                </div>
+                <button id="logout-btn" class="btn-primary bg-slate-100 text-brand border-slate-200 shadow-none hover:bg-slate-200">Logg ut fra admin</button>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border flex flex-col hover:shadow-md transition-shadow group">
+                    <h2 class="h3 mb-4 group-hover:text-brand-hover transition-colors">Innstillinger</h2>
+                    <p class="text-slate-600 mb-6 grow">Administrer telefonnumre, åpningstider og nettsidetitler.</p>
+                    <button id="btn-open-settings" class="btn-primary w-full mt-auto">Åpne editor</button>
+                </div>
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border flex flex-col hover:shadow-md transition-shadow group">
+                    <h2 class="h3 mb-4 group-hover:text-brand-hover transition-colors">Tjenester</h2>
+                    <p class="text-slate-600 mb-6 grow">Rediger tekst og innhold for alle tannhelsetjenester.</p>
+                    <button id="btn-open-tjenester" class="btn-primary w-full mt-auto">Administrer</button>
+                </div>
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border flex flex-col hover:shadow-md transition-shadow group">
+                    <h2 class="h3 mb-4 group-hover:text-brand-hover transition-colors">Meldinger</h2>
+                    <p class="text-slate-600 mb-6 grow">Lag og administrer aktive meldinger og infobannere.</p>
+                    <button id="btn-open-meldinger" class="btn-primary w-full mt-auto">Vis meldinger</button>
+                </div>
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border flex flex-col hover:shadow-md transition-shadow group">
+                    <h2 class="h3 mb-4 group-hover:text-brand-hover transition-colors">Tannleger</h2>
+                    <p class="text-slate-600 mb-6 grow">Oppdater informasjon om ansatte og last opp nye portretter.</p>
+                    <button id="btn-open-tannleger" class="btn-primary w-full mt-auto">Åpne editor</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="no-access" class="hidden bg-white p-8 rounded-3xl shadow-xl border border-red-100 max-w-md w-full text-center space-y-6">
-        <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <!-- MODUL-SEKSJONER -->
+        <div id="module-container" class="hidden layout-container py-12 space-y-8 w-full">
+            <button id="back-to-dashboard" class="text-brand font-bold flex items-center gap-2 hover:text-brand-hover transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" cy1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Tilbake til dashbord
+            </button>
+            
+            <div id="module-content" class="bg-white p-10 rounded-3xl shadow-sm border border-brand-border min-h-[500px]">
+                <h2 id="module-title" class="h2 mb-8 border-b border-brand-light pb-6 text-brand-hover">Modulnavn</h2>
+                <div id="module-inner">
+                    <div class="flex items-center gap-3 text-slate-500">
+                        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Laster innhold...
+                    </div>
+                </div>
+            </div>
         </div>
-        <h1 class="h3 text-red-600">Ingen tilgang</h1>
-        <p class="text-slate-600">Du har ikke tilgang til å redigere innholdet i denne Google Disk-mappen. Vennligst kontakt administratoren.</p>
-        <button id="retry-btn" class="btn-primary w-full">Prøv igjen</button>
-    </div>
+
+        <!-- NO ACCESS CONTAINER -->
+        <div id="no-access" class="hidden bg-white p-10 rounded-3xl shadow-xl border border-red-100 max-w-md w-full text-center space-y-6">
+            <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            </div>
+            <h1 class="h2 text-red-600">Ingen tilgang</h1>
+            <p class="text-slate-600 leading-relaxed">Din Google-konto har ikke tilgang til å redigere innholdet i denne mappen. Vennligst be administratoren om tilgang til Google Disk-mappen.</p>
+            <div class="flex flex-col gap-3 pt-4">
+                <button id="retry-btn" class="btn-primary w-full">Prøv med en annen konto</button>
+                <a href="/" class="text-slate-500 hover:text-brand transition-colors text-sm font-bold">Tilbake til nettsiden</a>
+            </div>
+        </div>
+    </main>
 
     <div id="admin-config" 
          data-tjenester-folder={TJENESTER_FOLDER} 

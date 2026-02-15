@@ -157,15 +157,24 @@ describe('admin-client.js', () => {
             expect(stored.expiry).toBeGreaterThan(Date.now());
         });
 
-        it('initGis callback skal kaste feil hvis resp inneholder error', async () => {
+        it('initGis callback skal logge advarsel men ikke kaste feil hvis resp inneholder error', async () => {
             let capturedCallback;
+            const successCallback = vi.fn();
             google.accounts.oauth2.initTokenClient.mockImplementation(({ callback }) => {
                 capturedCallback = callback;
                 return { requestAccessToken: vi.fn() };
             });
 
-            initGis(() => {});
-            await expect(capturedCallback({ error: 'access_denied' })).rejects.toEqual({ error: 'access_denied' });
+            initGis(successCallback);
+            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            
+            await capturedCallback({ error: 'access_denied' });
+
+            expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Autorisasjonsfeil'), 'access_denied');
+            expect(successCallback).not.toHaveBeenCalled();
+            expect(localStorage.getItem('admin_google_token')).toBeNull();
+            
+            consoleSpy.mockRestore();
         });
 
         it('logout skal ikke krasje hvis token er null', () => {

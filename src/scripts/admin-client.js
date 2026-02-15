@@ -50,9 +50,10 @@ export function initGis(callback) {
         client_id: import.meta.env.PUBLIC_GOOGLE_CLIENT_ID,
         scope: SCOPES,
         callback: async (resp) => {
-            console.log("[GIS] Token mottatt");
+            console.log("[GIS] Callback mottatt", resp);
             if (resp.error !== undefined) {
-                throw resp;
+                console.warn("[GIS] Autorisasjonsfeil:", resp.error);
+                return;
             }
             
             // Lagre token og utløpstidspunkt (nå + expires_in sekunder)
@@ -99,14 +100,23 @@ export function tryRestoreSession() {
  * Prøver å hente token uten popup hvis brukeren allerede er autentisert
  */
 export function silentLogin() {
-    if (!tokenClient) return;
-    tokenClient.requestAccessToken({ prompt: '' }); // Tom prompt prøver å gjenbruke sesjon
+    if (!tokenClient) {
+        console.warn("[Admin] silentLogin avbrutt: tokenClient ikke klar.");
+        return;
+    }
+    console.log("[Admin] Forsøker silent login...");
+    tokenClient.requestAccessToken({ prompt: '' });
 }
 
 /**
  * Trigger pålogging med popup
  */
 export function login() {
+    if (!tokenClient) {
+        console.error("[Admin] login feilet: tokenClient er ikke initialisert.");
+        return;
+    }
+    console.log("[Admin] Åpner login-popup...");
     tokenClient.requestAccessToken({ prompt: 'select_account' });
 }
 
