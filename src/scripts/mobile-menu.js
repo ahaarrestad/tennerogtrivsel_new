@@ -7,20 +7,16 @@ export function initMobileMenu() {
     const menuBtn = document.getElementById('menu-btn');
     const mobileMenu = document.getElementById('mobile-menu');
     const mobileLinks = document.querySelectorAll('.mobile-link');
-    const spans = menuBtn?.querySelectorAll('span');
 
     function toggleMenu() {
-        mobileMenu?.classList.toggle('hidden');
-
-        // Animerer hamburger-ikonet til et "X"
-        if (spans && spans.length >= 3 && !mobileMenu?.classList.contains('hidden')) {
-            spans[0].style.transform = 'rotate(45deg) translate(5px, 6px)';
-            spans[1].style.opacity = '0';
-            spans[2].style.transform = 'rotate(-45deg) translate(5px, -6px)';
-        } else if (spans && spans.length >= 3) {
-            spans[0].style.transform = 'none';
-            spans[1].style.opacity = '1';
-            spans[2].style.transform = 'none';
+        const isOpen = menuBtn?.getAttribute('data-state') === 'open';
+        
+        if (isOpen) {
+            menuBtn?.setAttribute('data-state', 'closed');
+            mobileMenu?.classList.add('hidden');
+        } else {
+            menuBtn?.setAttribute('data-state', 'open');
+            mobileMenu?.classList.remove('hidden');
         }
     }
 
@@ -29,12 +25,8 @@ export function initMobileMenu() {
     // Lukk menyen når man trykker på en lenke
     mobileLinks.forEach(link => {
         link.addEventListener('click', () => {
+            menuBtn?.setAttribute('data-state', 'closed');
             mobileMenu?.classList.add('hidden');
-            if (spans && spans.length >= 3) {
-                spans[0].style.transform = 'none';
-                spans[1].style.opacity = '1';
-                spans[2].style.transform = 'none';
-            }
         });
     });
 }

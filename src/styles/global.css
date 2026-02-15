@@ -230,4 +230,21 @@
     .markdown-content.prose ul {
         @apply list-disc list-outside ml-6 space-y-2 text-slate-600;
     }
+
+    /* HAMBURGER MENY ANIMASJON */
+    #menu-btn span {
+        @apply transition-all duration-300 ease-in-out origin-center;
+    }
+
+    #menu-btn[data-state="open"] span:nth-child(1) {
+        @apply transform translate-y-2.5 rotate-45;
+    }
+
+    #menu-btn[data-state="open"] span:nth-child(2) {
+        @apply opacity-0;
+    }
+
+    #menu-btn[data-state="open"] span:nth-child(3) {
+        @apply transform -translate-y-2.5 -rotate-45;
+    }
 }

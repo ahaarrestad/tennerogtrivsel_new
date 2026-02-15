@@ -23,14 +23,12 @@ describe('mobile-menu.js', () => {
     it('skal vise menyen når man trykker på menyknappen', () => {
         const menuBtn = document.getElementById('menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
-        const spans = menuBtn.querySelectorAll('span');
 
         // Trykk på knappen
         menuBtn.click();
 
         expect(mobileMenu.classList.contains('hidden')).toBe(false);
-        expect(spans[0].style.transform).toContain('rotate(45deg)');
-        expect(spans[1].style.opacity).toBe('0');
+        expect(menuBtn.getAttribute('data-state')).toBe('open');
     });
 
     it('skal skjule menyen igjen når man trykker to ganger', () => {
@@ -38,9 +36,12 @@ describe('mobile-menu.js', () => {
         const mobileMenu = document.getElementById('mobile-menu');
 
         menuBtn.click(); // Åpne
+        expect(menuBtn.getAttribute('data-state')).toBe('open');
+        
         menuBtn.click(); // Lukke
 
         expect(mobileMenu.classList.contains('hidden')).toBe(true);
+        expect(menuBtn.getAttribute('data-state')).toBe('closed');
     });
 
     it('skal lukke menyen når man trykker på en mobil-lenke', () => {
@@ -54,6 +55,7 @@ describe('mobile-menu.js', () => {
         mobileLink.click(); // Trykk på lenke
 
         expect(mobileMenu.classList.contains('hidden')).toBe(true);
+        expect(menuBtn.getAttribute('data-state')).toBe('closed');
     });
 
     it('skal håndtere at elementer mangler i DOM', () => {
@@ -72,9 +74,11 @@ describe('mobile-menu.js', () => {
 
         menuBtn.click();
         expect(mobileMenu.classList.contains('hidden')).toBe(false);
+        expect(menuBtn.getAttribute('data-state')).toBe('open');
         
         menuBtn.click();
         expect(mobileMenu.classList.contains('hidden')).toBe(true);
+        expect(menuBtn.getAttribute('data-state')).toBe('closed');
     });
 
     it('skal fungere selv om mobile-menu mangler', () => {
@@ -83,11 +87,9 @@ describe('mobile-menu.js', () => {
         `;
         initMobileMenu();
         const menuBtn = document.getElementById('menu-btn');
-        const spans = menuBtn.querySelectorAll('span');
 
         menuBtn.click();
-        // Sjekker bare at det ikke krasjer og at ikon-animasjon skjer (siden spans finnes)
-        expect(spans[0].style.transform).not.toBe('');
+        expect(menuBtn.getAttribute('data-state')).toBe('open');
     });
 
     it('skal håndtere klikk på lenke når spans mangler', () => {
