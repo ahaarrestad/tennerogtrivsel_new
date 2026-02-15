@@ -20,33 +20,36 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
 
     <!-- ADMIN NAVIGASJON -->
     <nav class="bg-white border-b border-brand-border sticky top-0 z-[100]">
-        <div class="layout-container">
-            <div class="flex justify-between items-center h-20">
-                <a href="/" class="flex items-center gap-4 no-underline group">
+        <div class="layout-container px-2 sm:px-4">
+            <div class="flex justify-between items-center h-20 gap-2 sm:gap-4 overflow-hidden">
+                <!-- VENSTRE: Logo & Admin-tittel -->
+                <a href="/" class="flex items-center gap-2 sm:gap-3 no-underline group shrink min-w-0">
                     <Image
                             src={logoImage}
                             alt="Tenner og Trivsel"
                             width={128}
-                            class="h-12 w-auto object-contain transition-transform group-hover:scale-105"
+                            class="h-10 sm:h-12 w-auto object-contain shrink-0"
                             loading="eager"
                     />
-                    <div class="flex flex-col justify-center leading-none whitespace-nowrap">
-                        <span class="text-xl font-black uppercase tracking-tighter text-brand">Admin</span>
-                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Tenner & Trivsel</span>
+                    <div class="flex flex-col justify-center leading-none whitespace-nowrap overflow-hidden">
+                        <span class="text-base sm:text-xl font-black uppercase tracking-tighter text-brand">Admin</span>
+                        <span class="hidden xs:inline text-[9px] font-bold text-slate-500 uppercase tracking-widest truncate">Tenner & Trivsel</span>
                     </div>
                 </a>
 
-                <div class="flex items-center gap-2 sm:gap-6">
+                <!-- HØYRE: Bruker-info & Hjem-link -->
+                <div class="flex items-center gap-2 sm:gap-6 shrink-0">
                     <button id="user-pill" 
                             title="Klikk for å logge ut"
-                            class="hidden sm:flex items-center flex-nowrap gap-2 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-slate-200 transition-colors group cursor-pointer whitespace-nowrap">
-                        <span id="nav-user-info" class="text-xs sm:text-sm font-bold text-brand truncate max-w-[80px] xs:max-w-[120px] sm:max-w-none min-w-0"></span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 group-hover:text-brand shrink-0"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                            style="display: none; flex-direction: row; flex-wrap: nowrap; align-items: center;"
+                            class="bg-slate-100 hover:bg-slate-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-slate-200 transition-colors group cursor-pointer whitespace-nowrap shrink-0">
+                        <span id="nav-user-info" class="text-[10px] sm:text-sm font-bold text-brand truncate max-w-[60px] xs:max-w-[100px] sm:max-w-none min-w-0 pointer-events-none"></span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 group-hover:text-brand shrink-0 pointer-events-none ml-1"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                     </button>
                     
-                    <a href="/" class="text-brand font-black flex items-center gap-2 hover:text-brand-hover transition-colors text-[10px] sm:text-sm whitespace-nowrap shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                        <span class="hidden sm:inline uppercase tracking-wider">Hjem til nettsiden</span>
+                    <a href="/" class="text-brand font-black flex flex-row flex-nowrap items-center gap-1 hover:text-brand-hover transition-colors text-[10px] sm:text-sm shrink-0 whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                        <span class="hidden sm:inline uppercase tracking-wider">Hjem</span>
                     </a>
                 </div>
             </div>
@@ -60,7 +63,7 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
                 <div class="w-20 h-20 bg-brand-light rounded-2xl flex items-center justify-center mx-auto mb-6">
                     <Image src={logoImage} alt="" width={64} class="w-12 h-12 object-contain" />
                 </div>
-                <h1 class="h2">Velkommen</h1>
+                <h1 class="h2 text-brand font-black uppercase">Velkommen</h1>
                 <p class="text-slate-600">Logg inn for å administrere innholdet på nettsiden.</p>
             </div>
             
@@ -78,7 +81,7 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
         <!-- DASHBOARD CONTAINER -->
         <div id="dashboard" class="hidden layout-container space-y-12 py-12 w-full">
             <header class="bg-white p-10 rounded-3xl shadow-sm border border-brand-border text-center">
-                <h1 class="h2 text-brand">Admin Dashboard</h1>
+                <h1 class="h2 text-brand font-black uppercase tracking-tight">Admin Dashboard</h1>
                 <p class="text-slate-600 italic mt-2">Velkommen tilbake. Velg en modul nedenfor for å gjøre endringer.</p>
             </header>
 
@@ -108,15 +111,15 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
 
         <!-- MODUL-SEKSJONER -->
         <div id="module-container" class="hidden layout-container py-12 space-y-8 w-full">
-            <button id="back-to-dashboard" class="text-brand font-bold flex items-center gap-2 hover:text-brand-hover transition-colors">
+            <button id="back-to-dashboard" class="text-brand font-bold flex items-center gap-2 hover:text-brand-hover transition-colors uppercase tracking-wider text-xs">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" cy1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 Tilbake til dashbord
             </button>
             
-            <div id="module-content" class="bg-white p-10 rounded-3xl shadow-sm border border-brand-border min-h-[500px]">
-                <h2 id="module-title" class="h2 mb-8 border-b border-brand-light pb-6 text-brand-hover">Modulnavn</h2>
+            <div id="module-content" class="bg-white p-6 sm:p-10 rounded-3xl shadow-sm border border-brand-border min-h-[500px]">
+                <h2 id="module-title" class="h2 mb-8 border-b border-brand-light pb-6 text-brand font-black uppercase tracking-tight">Modulnavn</h2>
                 <div id="module-inner">
-                    <div class="flex items-center gap-3 text-slate-500">
+                    <div class="flex items-center gap-3 text-slate-500 text-sm italic">
                         <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         Laster innhold...
                     </div>
@@ -129,11 +132,11 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
             <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto">
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
             </div>
-            <h1 class="h2 text-red-600">Ingen tilgang</h1>
+            <h1 class="h2 text-red-600 uppercase font-black">Ingen tilgang</h1>
             <p class="text-slate-600 leading-relaxed">Din Google-konto har ikke tilgang til å redigere innholdet i denne mappen. Vennligst be administratoren om tilgang til Google Disk-mappen.</p>
             <div class="flex flex-col gap-3 pt-4">
                 <button id="retry-btn" class="btn-primary w-full">Prøv med en annen konto</button>
-                <a href="/" class="text-slate-500 hover:text-brand transition-colors text-sm font-bold">Tilbake til nettsiden</a>
+                <a href="/" class="text-slate-500 hover:text-brand transition-colors text-sm font-bold uppercase tracking-wider underline">Tilbake til nettsiden</a>
             </div>
         </div>
     </main>
@@ -157,13 +160,19 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
             if (!user) return;
             document.getElementById('login-container').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('no-access').classList.add('hidden');
             
             const pill = document.getElementById('user-pill');
             const info = document.getElementById('nav-user-info');
             if (pill && info) {
-                pill.classList.remove('hidden');
+                pill.style.display = 'flex';
                 info.textContent = user.name || user.email;
             }
+        }
+
+        function autoResizeTextarea(el) {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
         }
 
         async function saveSingleSetting(index, inputEl) {
@@ -176,44 +185,33 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
             statusEl.innerHTML = '<svg class="animate-spin h-4 w-4 text-slate-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
 
             try {
-                // Vi oppdaterer kun denne spesifikke raden i Sheets
                 const updatedSetting = { ...currentSettings[index], value: newValue };
-                
-                // Vi bruker updateSettings men sender kun én rad (eller hele listen, 
-                // men vi holder det enkelt og sender hele listen for nå pga API-struktur)
                 const updatedList = [...currentSettings];
                 updatedList[index] = updatedSetting;
 
                 await updateSettings(SHEET_ID, updatedList);
-                currentSettings[index].value = newValue; // Oppdater lokal cache
+                currentSettings[index].value = newValue;
 
-                statusEl.innerHTML = '<span class="text-green-600 text-xs font-bold flex items-center gap-1 animate-in fade-in zoom-in">✅ Lagret</span>';
+                statusEl.innerHTML = '<span class="text-green-600 text-[10px] font-bold flex items-center gap-1 animate-in fade-in zoom-in">✅</span>';
                 setTimeout(() => {
-                    if (statusEl.innerHTML.includes('Lagret')) {
-                        statusEl.innerHTML = '';
-                    }
+                    if (statusEl.innerHTML.includes('✅')) statusEl.innerHTML = '';
                 }, 3000);
             } catch (e) {
                 console.error("Auto-save feilet:", e);
-                statusEl.innerHTML = '<span class="text-red-500 text-xs font-bold" title="Lagring feilet">❌ Feil</span>';
+                statusEl.innerHTML = '<span class="text-red-500 text-[10px] font-bold" title="Lagring feilet">❌</span>';
             }
-        }
-
-        function autoResizeTextarea(el) {
-            el.style.height = 'auto';
-            el.style.height = el.scrollHeight + 'px';
         }
 
         async function loadSettingsModule() {
             const inner = document.getElementById('module-inner');
-            inner.innerHTML = '<div class="flex items-center gap-3 text-slate-500 animate-pulse"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Henter data fra Google Sheets...</div>';
+            inner.innerHTML = '<div class="flex items-center gap-3 text-slate-500 animate-pulse text-sm italic"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Henter data fra Google Sheets...</div>';
 
             try {
                 currentSettings = await getSettingsWithNotes(SHEET_ID);
                 
                 let html = `
                     <div class="space-y-8 max-w-4xl">
-                        <p class="text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 italic text-sm">
+                        <p class="text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 italic text-xs sm:text-sm leading-relaxed">
                             Endringer lagres automatisk når du klikker utenfor et felt. Det tar ca. 5-10 minutter før endringene blir synlige på nettsiden.
                         </p>
                         <div class="space-y-4">
@@ -225,13 +223,13 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
                     const isLong = (setting.value && setting.value.length > 60) || setting.id.toLowerCase().includes('tekst') || setting.id.toLowerCase().includes('description');
 
                     html += `
-                        <div class="flex flex-col gap-1.5 p-5 rounded-2xl border border-brand-light hover:border-brand-active transition-colors bg-white">
+                        <div class="flex flex-col gap-1.5 p-4 sm:p-5 rounded-2xl border border-brand-light hover:border-brand-active transition-colors bg-white">
                             <div class="flex justify-between items-start gap-4">
                                 <div class="flex flex-col gap-0.5 min-w-0">
-                                    <label class="font-bold text-brand text-sm break-words">
+                                    <label class="font-bold text-brand text-xs sm:text-sm break-words">
                                         ${label}
                                     </label>
-                                    ${technicalId ? `<p class="text-[10px] text-slate-400 uppercase tracking-wider font-mono break-all">ID: ${technicalId}</p>` : ''}
+                                    ${technicalId ? `<p class="text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-wider font-mono break-all">ID: ${technicalId}</p>` : ''}
                                 </div>
                                 <div id="status-${i}" class="h-5 flex items-center shrink-0"></div>
                             </div>
@@ -258,29 +256,20 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
 
                 inner.innerHTML = html;
                 
-                // Legg til event listeners og initialiser textareas
                 document.querySelectorAll('.setting-field').forEach(input => {
                     if (input.tagName === 'TEXTAREA') {
                         autoResizeTextarea(input);
                         input.addEventListener('input', (e) => autoResizeTextarea(e.target));
                     }
-
-                    input.addEventListener('blur', (e) => {
-                        saveSingleSetting(e.target.dataset.index, e.target);
-                    });
-                    
+                    input.addEventListener('blur', (e) => saveSingleSetting(e.target.dataset.index, e.target));
                     if (input.tagName === 'INPUT') {
-                        input.addEventListener('keypress', (e) => {
-                            if (e.key === 'Enter') e.target.blur();
-                        });
+                        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') e.target.blur(); });
                     }
                 });
 
             } catch (e) {
                 console.error("Modul-lasting feilet:", e);
-                inner.innerHTML = `<div class="text-red-500 font-bold p-4 bg-red-50 rounded-2xl border border-red-100">
-                    ❌ Kunne ikke laste innstillinger.
-                </div>`;
+                inner.innerHTML = `<div class="text-red-500 font-bold p-4 bg-red-50 rounded-2xl border border-red-100 uppercase tracking-tighter">❌ Kunne ikke laste innstillinger.</div>`;
             }
         }
 
@@ -288,7 +277,6 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
             document.getElementById('dashboard').classList.add('hidden');
             document.getElementById('module-container').classList.remove('hidden');
             document.getElementById('module-title').textContent = title;
-            
             if (id === 'settings') loadSettingsModule();
             else document.getElementById('module-inner').innerHTML = `<p class="text-slate-600">Her kommer editoren for <strong>${title}</strong> (Fase 3-4).</p>`;
         }
@@ -299,14 +287,10 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
         }
 
         async function handleAuth(userInfo = null) {
-            console.log("[Admin] Auth callback mottatt.");
             const user = userInfo || getStoredUser();
             if (user) updateUIWithUser(user);
-
-            // Sjekk tilgang i bakgrunnen uten å blokkere UI
             checkAccess(TJENESTER_FOLDER).then(hasAccess => {
                 if (!hasAccess && user) {
-                    console.warn("[Admin] Ingen tilgang til Drive-mappen.");
                     document.getElementById('dashboard').classList.add('hidden');
                     document.getElementById('no-access').classList.remove('hidden');
                 }
@@ -317,20 +301,12 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
             console.log("[Admin] Starter oppsett...");
             try {
                 initGis(handleAuth);
-
                 const user = getStoredUser();
                 if (user) {
-                    console.log("[Admin] Fant lagret bruker, viser UI.");
+                    console.log("[Admin] Viser UI for lagret bruker.");
                     updateUIWithUser(user);
                 }
-
-                initGapi().then(success => {
-                    if (success) {
-                        console.log("[Admin] Google APIer klare.");
-                        tryRestoreSession();
-                    }
-                });
-
+                initGapi().then(success => { if (success) tryRestoreSession(); });
                 if (!user) silentLogin();
 
                 document.getElementById('login-btn').onclick = login;
@@ -342,12 +318,10 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
                 };
                 document.getElementById('retry-btn').onclick = () => { logout(); location.reload(); };
                 document.getElementById('back-to-dashboard').onclick = closeModule;
-
                 document.getElementById('btn-open-settings').onclick = () => openModule('settings', 'Innstillinger');
                 document.getElementById('btn-open-tjenester').onclick = () => openModule('tjenester', 'Tjenester');
                 document.getElementById('btn-open-meldinger').onclick = () => openModule('meldinger', 'Meldinger');
                 document.getElementById('btn-open-tannleger').onclick = () => openModule('tannleger', 'Tannleger');
-                
             } catch (err) {
                 console.error("[Admin] Kritisk feil under oppsett:", err);
             }
