@@ -1,31 +1,55 @@
 ---
 // src/components/Card.astro
+interface Props {
+    title: string;
+    index?: number | string;
+    href?: string | null;
+    headerOffset?: string;
+    minHeight?: string;
+    centered?: boolean;
+    isStack?: boolean;
+    image?: boolean;
+    external?: boolean;
+}
+
 const {
-    index,
+    index = 0,
     title,
-    href = null,    // Settes til null som standard
+    href = null,
     headerOffset = "200px",
     minHeight = "auto",
     centered = true,
     isStack = true,
     image = false,
-    external = false // added external prop to determine if the link should open in a new tab
+    external = false
 } = Astro.props;
 
-// Her bestemmer vi om vi skal bruke 'a' eller 'div'
 const Tag = href ? 'a' : 'div';
+
+// Samle alle inline-stiler på ett sted for en renere mal
+const cardStyles = {
+    minHeight,
+    ...(isStack && {
+        '--card-index': index,
+        '--header-offset': headerOffset
+    })
+};
 ---
 
 <Tag
         href={href}
         target={external ? "_blank" : undefined}
         rel={external ? "noopener noreferrer" : undefined}
-        style={`${isStack ? `--card-index: ${index}; --header-offset: ${headerOffset};` : ''} min-height: ${minHeight};`}
+        style={cardStyles}
         class:list={[
-            "card-base group no-underline text-inherit flex flex-col w-full", // Flex er nå alltid på
-            href ? "cursor-pointer" : "",
-            isStack ? "stack-card" : "relative h-full",
-            centered ? "items-center text-center justify-center" : "items-start text-left"
+            "card-base group no-underline text-inherit flex flex-col w-full",
+            {
+                "cursor-pointer": href,
+                "stack-card": isStack,
+                "relative h-full": !isStack,
+                "items-center text-center justify-center": centered,
+                "items-start text-left": !centered
+            }
         ]}
 >
     <div class="card-accent-corner"></div>
@@ -34,8 +58,6 @@ const Tag = href ? 'a' : 'div';
         "relative z-10 mb-6 empty:hidden",
         image ? "w-48 h-48 mx-auto" : "w-full"
     ]}>
-        {/* Den blå ramma er fjernet herfra */}
-
         <div class:list={[
             "relative overflow-hidden z-10 h-full w-full",
             image ? "rounded-2xl border-4 border-white shadow-md" : "rounded-2xl"
@@ -46,7 +68,7 @@ const Tag = href ? 'a' : 'div';
 
     <div class:list={[
         "text-brand mb-6 relative z-10 empty:hidden",
-        centered ? "flex justify-center" : ""
+        { "flex justify-center": centered }
     ]}>
         <slot name="icon"/>
     </div>
@@ -54,7 +76,7 @@ const Tag = href ? 'a' : 'div';
     <div class="relative z-10 w-full flex flex-col grow">
         <h3 class:list={[
             "h3 mb-1 transition-colors",
-            href ? "group-hover:text-brand-hover" : ""
+            { "group-hover:text-brand-hover": href }
         ]}>
             {title}
         </h3>
