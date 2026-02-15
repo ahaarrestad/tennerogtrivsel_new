@@ -30,7 +30,8 @@ export function initMenuHighlight() {
         if (path.includes('/tjenester')) {
             clearLinks();
             navLinks.forEach(link => {
-                if (link.getAttribute('href').includes('tjenester')) {
+                const href = link.getAttribute('href');
+                if (href && href.includes('tjenester')) {
                     addLink(link);
                 }
             });
@@ -42,7 +43,9 @@ export function initMenuHighlight() {
                 const visibleId = entry.target.id;
 
                 navLinks.forEach(link => {
-                    const href = link.getAttribute('href'); // Definert INNE i loopen
+                    const href = link.getAttribute('href'); 
+
+                    if (!href) return;
 
                     // Logikk for å finne ut om denne lenken matcher seksjonen vi ser på
                     const isHome = href === '/' && (visibleId === 'hero' || visibleId === 'forside');

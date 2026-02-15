@@ -65,11 +65,13 @@ describe('menu-highlight.js', () => {
         initMenuHighlight();
         
         // Simuler et tilfeldig kall (skal overstyres av path-sjekken i starten av callback)
-        // Men i koden din skjer sjekken INNI observerCallback
         observerCallback([]);
 
         const tjenesterLink = document.querySelector('a[href="/#tjenester"]');
+        const hjemLink = document.querySelector('a[href="/"]');
+        
         expect(tjenesterLink.classList.contains('font-bold')).toBe(true);
+        expect(hjemLink.classList.contains('font-bold')).toBe(false);
     });
 
     it('skal highlighte hjem-lenken når forside er synlig', () => {
@@ -84,6 +86,60 @@ describe('menu-highlight.js', () => {
 
         const hjemLink = document.querySelector('a[href="/"]');
         expect(hjemLink.classList.contains('font-bold')).toBe(true);
+    });
+
+    it('skal highlighte hjem-lenken når hero er synlig', () => {
+        initMenuHighlight();
+
+        observerCallback([
+            {
+                isIntersecting: true,
+                target: { id: 'hero' }
+            }
+        ]);
+
+        const hjemLink = document.querySelector('a[href="/"]');
+        expect(hjemLink.classList.contains('font-bold')).toBe(true);
+    });
+
+    it('skal håndtere lenker uten leading slash', () => {
+        document.body.innerHTML = `
+            <nav>
+                <a href="#kontakt" data-nav-link>Kontakt</a>
+                <a data-nav-link>Ingen href</a>
+            </nav>
+            <section id="kontakt"></section>
+        `;
+        initMenuHighlight();
+
+        observerCallback([
+            {
+                isIntersecting: true,
+                target: { id: 'kontakt' }
+            }
+        ]);
+
+        const kontaktLink = document.querySelector('a[href="#kontakt"]');
+        expect(kontaktLink.classList.contains('font-bold')).toBe(true);
+    });
+
+    it('skal fjerne highlighting når en seksjon ikke lenger er synlig', () => {
+        initMenuHighlight();
+
+        // Først highlight den
+        observerCallback([{ isIntersecting: true, target: { id: 'tjenester' } }]);
+        const tjenesterLink = document.querySelector('a[href="/#tjenester"]');
+        expect(tjenesterLink.classList.contains('font-bold')).toBe(true);
+
+        // Så skjul den (og en annen seksjon blir synlig)
+        observerCallback([
+            { isIntersecting: false, target: { id: 'tjenester' } },
+            { isIntersecting: true, target: { id: 'kontakt' } }
+        ]);
+
+        expect(tjenesterLink.classList.contains('font-bold')).toBe(false);
+        const kontaktLink = document.querySelector('a[href="/#kontakt"]');
+        expect(kontaktLink.classList.contains('font-bold')).toBe(true);
     });
 
     it('skal logge advarsel hvis ingen seksjoner finnes', () => {
