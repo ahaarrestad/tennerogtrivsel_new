@@ -36,14 +36,17 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
                     </div>
                 </a>
 
-                <div class="flex items-center gap-3 sm:gap-6">
-                    <div id="user-pill" class="hidden sm:flex items-center gap-3 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
-                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0"></div>
-                        <span id="nav-user-info" class="text-xs sm:text-sm font-medium text-brand truncate max-w-[100px] sm:max-w-none"></span>
-                    </div>
-                    <a href="/" class="text-brand font-bold flex items-center gap-2 hover:text-brand-hover transition-colors text-xs sm:text-sm whitespace-nowrap">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                        <span class="hidden xs:inline">Til nettsiden</span>
+                <div class="flex items-center gap-2 sm:gap-6">
+                    <button id="user-pill" 
+                            title="Klikk for å logge ut"
+                            class="hidden sm:flex items-center flex-nowrap gap-2 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-slate-200 transition-colors group cursor-pointer whitespace-nowrap">
+                        <span id="nav-user-info" class="text-xs sm:text-sm font-bold text-brand truncate max-w-[80px] xs:max-w-[120px] sm:max-w-none min-w-0"></span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 group-hover:text-brand shrink-0"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </button>
+                    
+                    <a href="/" class="text-brand font-black flex items-center gap-2 hover:text-brand-hover transition-colors text-[10px] sm:text-sm whitespace-nowrap shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                        <span class="hidden sm:inline uppercase tracking-wider">Hjem til nettsiden</span>
                     </a>
                 </div>
             </div>
@@ -74,12 +77,9 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
 
         <!-- DASHBOARD CONTAINER -->
         <div id="dashboard" class="hidden layout-container space-y-12 py-12 w-full">
-            <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-3xl shadow-sm border border-brand-border">
-                <div>
-                    <h1 class="h2">Dashboard</h1>
-                    <p class="text-slate-600 italic">Administrer nettsidens innhold herfra.</p>
-                </div>
-                <button id="logout-btn" class="btn-primary bg-slate-100 text-brand border-slate-200 shadow-none hover:bg-slate-200">Logg ut fra admin</button>
+            <header class="bg-white p-10 rounded-3xl shadow-sm border border-brand-border text-center">
+                <h1 class="h2 text-brand">Admin Dashboard</h1>
+                <p class="text-slate-600 italic mt-2">Velkommen tilbake. Velg en modul nedenfor for å gjøre endringer.</p>
             </header>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -334,7 +334,12 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
                 if (!user) silentLogin();
 
                 document.getElementById('login-btn').onclick = login;
-                document.getElementById('logout-btn').onclick = () => { logout(); location.reload(); };
+                document.getElementById('user-pill').onclick = () => {
+                    if (confirm("Vil du logge ut fra admin-panelet?")) {
+                        logout();
+                        location.reload();
+                    }
+                };
                 document.getElementById('retry-btn').onclick = () => { logout(); location.reload(); };
                 document.getElementById('back-to-dashboard').onclick = closeModule;
 
