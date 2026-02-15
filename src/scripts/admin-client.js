@@ -96,10 +96,18 @@ export function tryRestoreSession() {
 }
 
 /**
- * Trigger pålogging
+ * Prøver å hente token uten popup hvis brukeren allerede er autentisert
+ */
+export function silentLogin() {
+    if (!tokenClient) return;
+    tokenClient.requestAccessToken({ prompt: '' }); // Tom prompt prøver å gjenbruke sesjon
+}
+
+/**
+ * Trigger pålogging med popup
  */
 export function login() {
-    tokenClient.requestAccessToken({ prompt: 'consent' });
+    tokenClient.requestAccessToken({ prompt: 'select_account' });
 }
 
 /**

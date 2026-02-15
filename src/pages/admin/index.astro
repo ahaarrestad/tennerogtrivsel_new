@@ -98,9 +98,15 @@ const TJENESTER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID
                 await initGapi();
                 initGis(handleAuth);
                 
-                // Sjekk om vi har en aktiv sesjon allerede
+                // 1. Sjekk om vi har en aktiv sesjon i localStorage
                 if (tryRestoreSession()) {
+                    console.log("[Admin] Sesjon gjenopprettet fra lager.");
                     await handleAuth();
+                } 
+                // 2. Hvis ikke, prøv "Silent Login" (hvis pålogget Google i nettleser)
+                else {
+                    console.log("[Admin] Ingen lokal sesjon, prøver silent login...");
+                    silentLogin();
                 }
 
                 console.log("[Admin] Initialisering ferdig.");
