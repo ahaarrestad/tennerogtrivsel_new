@@ -240,8 +240,8 @@
 
     /* Samkjøring av Markdown-innhold */
     .markdown-content.prose {
-        /* Typografi: Setter farge og linjeavstand for bedre lesbarhet */
-        @apply text-slate-600 leading-relaxed;
+        /* Typografi: Linjeavstand for bedre lesbarhet. Farge arves fra forelder eller settes av p/ul */
+        @apply leading-relaxed;
 
         /* Layout-overstyring: Sørger for at innholdet fyller hele bredden av containeren */
         max-width: none !important;
@@ -249,7 +249,8 @@
 
     /* Vi tvinger paragrafene til å matche .section-intro sin størrelse (base/lg) */
     .markdown-content.prose p {
-        @apply text-slate-600 text-base md:text-lg leading-relaxed mb-6;
+        @apply text-base md:text-lg leading-relaxed mb-6;
+        color: inherit;
         margin-top: 0 !important;
     }
 
@@ -267,7 +268,26 @@
     }
 
     .markdown-content.prose ul {
-        @apply list-disc list-outside ml-6 space-y-2 text-slate-600;
+        @apply list-disc list-inside ml-1 space-y-2 mb-6;
+        color: inherit;
+    }
+
+    .markdown-content.prose li {
+        /* Sørger for at hvert element faktisk oppfører seg som et listeelement */
+        display: list-item;
+        @apply pl-1;
+        color: inherit;
+    }
+
+    /* Sørger for at kulepunktene (markers) har nøyaktig samme farge som teksten */
+    .markdown-content.prose li::marker {
+        color: inherit !important;
+    }
+    
+    /* Hvis det er en numerisk liste */
+    .markdown-content.prose ol {
+        @apply list-decimal list-inside ml-1 space-y-2 mb-6;
+        color: inherit;
     }
 
     /* HAMBURGER MENY ANIMASJON */

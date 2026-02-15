@@ -146,6 +146,18 @@ async function syncTannleger() {
                                     };
                                 }));
                         
+                                // Rydding: Slett bilder som ikke lenger er i bruk
+                                const localAssets = fs.readdirSync(config.paths.tannlegerAssets);
+                                const activeImages = new Set(tannlegeData.map(t => t.image).filter(Boolean));
+
+                                localAssets.forEach(file => {
+                                    if (file !== '.gitkeep' && !activeImages.has(file)) {
+                                        const pathToDelete = path.join(config.paths.tannlegerAssets, file);
+                                        console.log(`  🗑️ Sletter ubrukt bilde: ${file}`);
+                                        fs.unlinkSync(pathToDelete);
+                                    }
+                                });
+
                                 fs.writeFileSync(config.paths.tannlegerData, JSON.stringify(tannlegeData, null, 2));
                                 console.log(`  ✅ Synkroniserte ${tannlegeData.length} tannleger.`);
                             } catch (err) {
@@ -167,6 +179,19 @@ async function syncTannleger() {
                             });
                         
                             const files = (res.data.files || []).filter(f => f.name.endsWith('.md'));
+                            
+                            // Rydding: Slett lokale filer som ikke lenger finnes i Drive
+                            const localFiles = fs.readdirSync(collection.dest);
+                            const remoteFileNames = new Set(files.map(f => f.name));
+
+                            localFiles.forEach(localFile => {
+                                if (localFile.endsWith('.md') && !remoteFileNames.has(localFile)) {
+                                    const pathToDelete = path.join(collection.dest, localFile);
+                                    console.log(`  🗑️ Sletter utgått fil: ${collection.name}/${localFile}`);
+                                    fs.unlinkSync(pathToDelete);
+                                }
+                            });
+
                             if (files.length === 0) {
                                 logWarning('Empty Collection', `Ingen filer funnet i samlingen "${collection.name}"`);
                                 return;

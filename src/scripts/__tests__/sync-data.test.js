@@ -40,7 +40,8 @@ vi.mock('fs', () => ({
         mkdirSync: vi.fn(),
         writeFileSync: vi.fn(),
         readFileSync: vi.fn(),
-        readdirSync: vi.fn(),
+        readdirSync: vi.fn().mockReturnValue([]),
+        unlinkSync: vi.fn(),
         createWriteStream: vi.fn().mockReturnValue({
             on: vi.fn((event, cb) => {
                 if (event === 'finish') cb();
@@ -51,7 +52,8 @@ vi.mock('fs', () => ({
     mkdirSync: vi.fn(),
     writeFileSync: vi.fn(),
     readFileSync: vi.fn(),
-    readdirSync: vi.fn(),
+    readdirSync: vi.fn().mockReturnValue([]),
+    unlinkSync: vi.fn(),
     createWriteStream: vi.fn().mockReturnValue({
         on: vi.fn((event, cb) => {
             if (event === 'finish') cb();
@@ -82,6 +84,7 @@ describe('sync-data.js', () => {
         // Default mock behaviors
         fs.existsSync.mockReturnValue(true);
         fs.readFileSync.mockReturnValue(Buffer.from('dummy'));
+        fs.readdirSync.mockReturnValue([]);
         
         logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
         vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -170,6 +173,25 @@ describe('sync-data.js', () => {
             mockSheets.spreadsheets.values.get.mockRejectedValue(new Error('API Error'));
             await expect(syncTannleger()).rejects.toThrow('API Error');
         });
+
+        it('bør slette bilder som ikke lenger er i bruk', async () => {
+            const mockData = {
+                data: {
+                    values: [['Ola', 'T', 'B', 'brukt.jpg', 'ja']],
+                },
+            };
+            mockSheets.spreadsheets.values.get.mockResolvedValue(mockData);
+            mockDrive.files.list.mockResolvedValue({ data: { files: [{ id: '1', name: 'brukt.jpg' }] } });
+            mockDrive.files.get.mockResolvedValue({ data: { on: vi.fn() } });
+            
+            fs.readdirSync.mockReturnValue(['brukt.jpg', 'ubrukt.jpg', '.gitkeep']);
+
+            await syncTannleger();
+
+            expect(fs.unlinkSync).toHaveBeenCalledWith(expect.stringMatching(/[\/\\]ubrukt\.jpg$/));
+            expect(fs.unlinkSync).not.toHaveBeenCalledWith(expect.stringContaining('.gitkeep'));
+            expect(fs.unlinkSync).not.toHaveBeenCalledWith(expect.stringMatching(/[\/\\]brukt\.jpg$/));
+        });
     });
 
     describe('syncMarkdownCollection', () => {
@@ -215,6 +237,21 @@ describe('sync-data.js', () => {
             mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
             await syncMarkdownCollection({ name: 'tom', folderId: '123', dest: '/tmp' });
             expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Ingen filer funnet'));
+        });
+
+        it('bør slette lokale filer som ikke finnes i Drive', async () => {
+            mockDrive.files.list.mockResolvedValue({ data: { files: [{ id: '1', name: 'eksisterer.md' }] } });
+            mockDrive.files.get.mockResolvedValue({ data: { on: vi.fn() } });
+            fs.readdirSync.mockReturnValue(['eksisterer.md', 'skal-slettes.md', '.gitkeep']);
+            
+            await syncMarkdownCollection({ name: 'test', folderId: '123', dest: '/tmp' });
+
+            expect(fs.unlinkSync).toHaveBeenCalledWith(expect.stringContaining('skal-slettes.md'));
+            expect(fs.unlinkSync).not.toHaveBeenCalledWith(expect.stringContaining('.gitkeep'));
+            // Use regex to avoid "eksisterer.md" matching something else if needed, 
+            // but here it's "eksisterer.md" vs "skal-slettes.md" so it's fine.
+            // Actually the previous error was "ubrukt.jpg" matching "brukt.jpg".
+            expect(fs.unlinkSync).not.toHaveBeenCalledWith(expect.stringMatching(/[\/\\]eksisterer\.md$/));
         });
     });
 

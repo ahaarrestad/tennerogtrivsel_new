@@ -1,4 +1,5 @@
 import {defineCollection, z} from 'astro:content';
+import { glob } from 'astro/loaders';
 import fs from 'fs';
 import path from 'path';
 
@@ -88,7 +89,7 @@ const tannleger = defineCollection({
 });
 
 const meldinger = defineCollection({
-    type: 'content', // Dette sier til Astro: "Se i src/content/meldinger/ etter .md filer"
+    loader: glob({ pattern: '**/[^_]*.{md,mdoc}', base: './src/content/meldinger' }),
     schema: z.object({
         title: z.string(),
         startDate: z.coerce.date(),
@@ -97,7 +98,7 @@ const meldinger = defineCollection({
 });
 
 const tjenester = defineCollection({
-    type: 'content', // Viktig: Dette sier at det er .md-filer
+    loader: glob({ pattern: '**/[^_]*.{md,mdoc}', base: './src/content/tjenester' }),
     schema: z.object({
         id: z.string(),
         title: z.string(),

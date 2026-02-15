@@ -15,7 +15,7 @@ export async function getActiveMessage() {
             // Vi vasker og formaterer her, så slipper vi å gjøre det i hver komponent
             return {
                 ...aktiv,
-                htmlContent: snarkdown(aktiv.content.replace(/\n/g, '<br />'))
+                htmlContent: snarkdown(aktiv.content)
             };
         }
         return null;

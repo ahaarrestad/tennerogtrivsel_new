@@ -37,3 +37,101 @@ export function formatInfoText(rawText) {
 
     return formattedText;
 }
+
+/**
+ * Formaterer en dato til "15. feb. 2026" formatet (norsk).
+ * @param {Date|string} dateInput - Dato som skal formateres.
+ * @returns {string} - Formatert dato-streng.
+ */
+export function formatDate(dateInput) {
+    if (!dateInput) return "";
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return String(dateInput);
+    
+    return new Intl.DateTimeFormat('no-NO', { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric' 
+    }).format(date);
+}
+
+/**
+ * fjerner <!--stackedit_data: ... --> fra markdown innhold.
+ * @param {string} content 
+ * @returns {string}
+ */
+export function stripStackEditData(content) {
+    if (!content) return "";
+    return content.replace(/<!--stackedit_data:[\s\S]*?-->/g, "").trim();
+}
+
+/**
+ * Sorterer meldinger basert på status og dato.
+ * Logikk: 
+ * 1. Aktive meldinger (nåværende dato mellom start og slutt) sortert etter sluttdato (nærst først).
+ * 2. Planlagte meldinger (startdato i fremtiden) sortert etter startdato (nærst først).
+ * 3. Utløpte meldinger (sluttdato i fortiden) sortert etter sluttdato (nyeste utløpt først).
+ * 
+ * @param {Array} messages - Liste med meldinger fra parseMarkdown
+ * @returns {Array} - Sortert liste
+ */
+export function sortMessages(messages) {
+    if (!messages || !Array.isArray(messages)) return [];
+    
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const getStatus = (msg) => {
+        const start = new Date(msg.startDate);
+        const end = new Date(msg.endDate);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) return 3; // Ukjent/Feil -> nederst
+        
+        if (now >= start && now <= end) return 0; // Aktiv
+        if (now < start) return 1; // Planlagt
+        return 2; // Utløpt
+    };
+
+    return [...messages].sort((a, b) => {
+        const statusA = getStatus(a);
+        const statusB = getStatus(b);
+
+        if (statusA !== statusB) {
+            return statusA - statusB;
+        }
+
+        // Samme status, sorter på dato
+        const startA = new Date(a.startDate).getTime();
+        const startB = new Date(b.startDate).getTime();
+        const endA = new Date(a.endDate).getTime();
+        const endB = new Date(b.endDate).getTime();
+
+        if (statusA === 0) { // Aktiv: Sorter etter sluttdato (den som går ut først øverst)
+            return endA - endB;
+        }
+        if (statusA === 1) { // Planlagt: Sorter etter startdato (den som starter først øverst)
+            return startA - startB;
+        }
+        if (statusA === 2) { // Utløpt: Sorter etter sluttdato (den som utløp sist øverst)
+            return endB - endA;
+        }
+        return 0;
+    });
+}
+
+/**
+ * Lager en URL-vennlig og filnavn-vennlig tekst.
+ * @param {string} text 
+ * @returns {string}
+ */
+export function slugify(text) {
+    if (!text) return "";
+    return text.toString().toLowerCase().trim()
+        .replace(/\s+/g, '-')           // Bytt ut mellomrom med -
+        .replace(/[æ]/g, 'ae')          // Håndter norske tegn
+        .replace(/[ø]/g, 'oe')
+        .replace(/[å]/g, 'aa')
+        .replace(/[^\w\-]+/g, '')       // Fjern alt som ikke er ord eller -
+        .replace(/\-\-+/g, '-')         // Bytt ut flere - med en enkel -
+        .replace(/^-+/, '')             // Fjern - fra start
+        .replace(/-+$/, '');            // Fjern - fra slutt
+}

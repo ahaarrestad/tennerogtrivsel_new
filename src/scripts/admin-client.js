@@ -4,7 +4,145 @@ let tokenClient;
 let gapiInited = false;
 let gisInited = false;
 
-const SCOPES = 'openid profile email https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
+const SCOPES = 'openid profile email https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets';
+
+/**
+ * Lister alle .md filer i en mappe
+ */
+export async function listFiles(folderId) {
+    try {
+        const response = await gapi.client.drive.files.list({
+            q: `'${folderId}' in parents and trashed = false and name contains '.md'`,
+            fields: 'files(id, name, modifiedTime)',
+            orderBy: 'name'
+        });
+        return response.result.files || [];
+    } catch (err) {
+        console.error("[Admin] Kunne ikke liste filer:", err);
+        throw err;
+    }
+}
+
+/**
+ * Henter innholdet i en spesifikk fil
+ */
+export async function getFileContent(fileId) {
+    try {
+        const response = await gapi.client.drive.files.get({
+            fileId: fileId,
+            alt: 'media'
+        });
+        return response.body;
+    } catch (err) {
+        console.error("[Admin] Kunne ikke hente filinnhold:", err);
+        throw err;
+    }
+}
+
+/**
+ * Lagrer/Oppdaterer en fil på Drive
+ */
+export async function saveFile(fileId, name, content) {
+    try {
+        // 1. Oppdater metadata (navn) hvis nødvendig
+        await gapi.client.drive.files.update({
+            fileId: fileId,
+            resource: { name: name }
+        });
+
+        // 2. Oppdater selve innholdet
+        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+            method: 'PATCH',
+            headers: {
+                Authorization: `Bearer ${gapi.client.getToken().access_token}`,
+                'Content-Type': 'text/markdown'
+            },
+            body: content
+        });
+
+        console.log("[Admin] Fil lagret:", name);
+        return true;
+    } catch (err) {
+        console.error("[Admin] Lagring av fil feilet:", err);
+        throw err;
+    }
+}
+
+/**
+ * Oppretter en ny Markdown-fil
+ */
+export async function createFile(folderId, name, content) {
+    try {
+        const metadata = {
+            name: name,
+            mimeType: 'text/markdown',
+            parents: [folderId]
+        };
+
+        const response = await gapi.client.drive.files.create({
+            resource: metadata,
+            fields: 'id'
+        });
+
+        const fileId = response.result.id;
+        await saveFile(fileId, name, content);
+        return fileId;
+    } catch (err) {
+        console.error("[Admin] Kunne ikke opprette fil:", err);
+        throw err;
+    }
+}
+
+/**
+ * Sletter (legger i søppelkurven) en fil
+ */
+export async function deleteFile(fileId) {
+    try {
+        await gapi.client.drive.files.update({
+            fileId: fileId,
+            resource: { trashed: true }
+        });
+        return true;
+    } catch (err) {
+        console.error("[Admin] Kunne ikke slette fil:", err);
+        throw err;
+    }
+}
+
+/**
+ * Enkel parser for YAML frontmatter
+ */
+export function parseMarkdown(content) {
+    const regex = /^---\s*([\s\S]*?)\s*---\s*([\s\S]*)$/;
+    const match = content.match(regex);
+    
+    if (!match) return { data: {}, body: content };
+
+    const yaml = match[1];
+    const body = match[2].trim();
+    const data = {};
+
+    yaml.split('\n').forEach(line => {
+        const [key, ...val] = line.split(':');
+        if (key && val.length) {
+            data[key.trim()] = val.join(':').trim().replace(/^["']|["']$/g, '');
+        }
+    });
+
+    return { data, body };
+}
+
+/**
+ * Lager en Markdown-streng med frontmatter
+ */
+export function stringifyMarkdown(data, body) {
+    let yaml = '---\n';
+    for (const [key, val] of Object.entries(data)) {
+        yaml += `${key}: ${val}\n`;
+    }
+    yaml += '---\n';
+    return yaml + (body || '');
+}
 
 /**
  * Henter brukerinfo fra Google

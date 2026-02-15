@@ -36,8 +36,8 @@ describe('messageClient.js', () => {
         expect(mockFetch).toHaveBeenCalledWith('/api/active-messages.json');
         expect(result).not.toBeNull();
         expect(result.title).toBe('Viktig melding');
-        // Sjekk at \n er byttet ut med <br /> før snarkdown
-        expect(result.htmlContent).toContain('<html>Dette er linje 1<br />Linje 2</html>');
+        // Sjekk at \n beholdes for snarkdown
+        expect(result.htmlContent).toContain('<html>Dette er linje 1\nLinje 2</html>');
     });
 
     it('skal returnere null hvis ingen meldinger finnes i API-svaret', async () => {

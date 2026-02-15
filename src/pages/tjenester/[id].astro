@@ -1,5 +1,5 @@
 ---
-import {getCollection} from 'astro:content';
+import {getCollection, render} from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import TelefonKnapp from "../../components/TelefonKnapp.astro";
 import EpostKnapp from "../../components/EpostKnapp.astro";
@@ -9,14 +9,14 @@ import KontaktKnapp from "../../components/KontaktKnapp.astro";
 export async function getStaticPaths() {
     const tjenesteEntries = await getCollection('tjenester');
     return tjenesteEntries.map(entry => ({
-        params: {id: entry.slug},
+        params: {id: entry.id},
         props: {entry},
     }));
 }
 
 // 2. Hent data for den spesifikke siden
 const {entry} = Astro.props;
-const {Content} = await entry.render();
+const {Content} = await render(entry);
 
 // --- DENNE LINJEN MANGLER SANNSYNLIGVIS: ---
 const tjenester = await getCollection('tjenester');
@@ -87,7 +87,7 @@ const tjenester = await getCollection('tjenester');
                                             {isCurrent ? (
                                                     <span class="text-sm font-bold text-brand-hover">{s.data.title}</span>
                                             ) : (
-                                                    <a href={`/tjenester/${s.slug}`}
+                                                    <a href={`/tjenester/${s.id}`}
                                                        class="text-sm font-medium text-brand hover:text-brand-hover hover:no-underline">
                                                         {s.data.title}
                                                     </a>
