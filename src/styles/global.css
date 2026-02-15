@@ -63,7 +63,7 @@
     }
 
     .section-content {
-        @apply layout-container;
+        @apply container mx-auto px-4;
     }
 
     /* Beholder disse for bakoverkompatibilitet, men fjerner tvungen layout */
