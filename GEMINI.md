@@ -82,12 +82,15 @@ To ensure high-quality, maintainable, and idiomatic code within this project, pl
 
 *   **Atomic Commits:** Changes should be granular and focused. Each commit should address a single logical change, feature, or bug fix.
 *   **Centralized Configuration:** All site-wide settings (titles, descriptions, contact info) MUST be managed via `src/scripts/getSettings.ts` and are overrideable via the `innstillinger` collection. Avoid hardcoding strings directly in layout or components. This data-driven approach is the preferred method for updates.
+    *   **CI Visibility:** Warnings about missing settings or sync errors are reported via GitHub Actions Annotations (`::warning::`). Developers should check the "Summary" tab of a build if any warnings are indicated.
 *   **Framework Best Practices (Tailwind 4):** Since this project uses Tailwind CSS v4, avoid using `@apply` on custom classes defined within the same CSS file, as this can cause build failures in CI. Prefer standard Tailwind utility classes or global design tokens defined in `@theme`.
+*   **Component Architecture:**
+    *   **Base Components:** Use shared base components (e.g., `src/components/Button.astro`) for consistent styling and behavior. Avoid creating specialized components that replicate base logic.
+    *   **UI Animations:** Prefer a declarative approach for UI states. Use `data-state` attributes (e.g., `data-state="open"`) and CSS transitions in `global.css` instead of manipulating `element.style` directly in JavaScript.
 *   **Code Structure and Readability:**
     *   Maintain consistent code formatting.
     *   Use **English** keys for all content schemas (e.g., `title`, `description`) to ensure framework compatibility, even if content is Norwegian.
-    *   Break down complex logic into smaller, testable units.
-*   **Testing Strategy:** This project utilizes a multi-layered testing approach:
+    *   Break down complex logic into smaller, testable units. Move complex Browser/DOM logic to testable helper scripts where possible.
     *   **Unit/Integration (Vitest):** Tests logic, API endpoints, and content loaders. Located in `__tests__` subdirectories. Run with `npm test`.
     *   **End-to-End (Playwright):** Verifies the full user experience in real browsers. Located in `tests/`. Run with `npm run test:e2e`.
     *   **Specific E2E Categories:**
