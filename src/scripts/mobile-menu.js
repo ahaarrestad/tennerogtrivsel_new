@@ -13,11 +13,11 @@ export function initMobileMenu() {
         mobileMenu?.classList.toggle('hidden');
 
         // Animerer hamburger-ikonet til et "X"
-        if (spans && !mobileMenu?.classList.contains('hidden')) {
+        if (spans && spans.length >= 3 && !mobileMenu?.classList.contains('hidden')) {
             spans[0].style.transform = 'rotate(45deg) translate(5px, 6px)';
             spans[1].style.opacity = '0';
             spans[2].style.transform = 'rotate(-45deg) translate(5px, -6px)';
-        } else if (spans) {
+        } else if (spans && spans.length >= 3) {
             spans[0].style.transform = 'none';
             spans[1].style.opacity = '1';
             spans[2].style.transform = 'none';
@@ -30,7 +30,7 @@ export function initMobileMenu() {
     mobileLinks.forEach(link => {
         link.addEventListener('click', () => {
             mobileMenu?.classList.add('hidden');
-            if (spans) {
+            if (spans && spans.length >= 3) {
                 spans[0].style.transform = 'none';
                 spans[1].style.opacity = '1';
                 spans[2].style.transform = 'none';

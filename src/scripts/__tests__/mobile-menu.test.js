@@ -60,4 +60,49 @@ describe('mobile-menu.js', () => {
         document.body.innerHTML = '';
         expect(() => initMobileMenu()).not.toThrow();
     });
+
+    it('skal fungere selv om spans mangler inni knappen', () => {
+        document.body.innerHTML = `
+            <button id="menu-btn"></button>
+            <div id="mobile-menu" class="hidden"></div>
+        `;
+        initMobileMenu();
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        menuBtn.click();
+        expect(mobileMenu.classList.contains('hidden')).toBe(false);
+        
+        menuBtn.click();
+        expect(mobileMenu.classList.contains('hidden')).toBe(true);
+    });
+
+    it('skal fungere selv om mobile-menu mangler', () => {
+        document.body.innerHTML = `
+            <button id="menu-btn"><span></span><span></span><span></span></button>
+        `;
+        initMobileMenu();
+        const menuBtn = document.getElementById('menu-btn');
+        const spans = menuBtn.querySelectorAll('span');
+
+        menuBtn.click();
+        // Sjekker bare at det ikke krasjer og at ikon-animasjon skjer (siden spans finnes)
+        expect(spans[0].style.transform).not.toBe('');
+    });
+
+    it('skal håndtere klikk på lenke når spans mangler', () => {
+        document.body.innerHTML = `
+            <div id="mobile-menu" class="hidden">
+                <a href="#test" class="mobile-link">Lenke</a>
+            </div>
+        `;
+        initMobileMenu();
+        const mobileLink = document.querySelector('.mobile-link');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenu.classList.remove('hidden');
+        mobileLink.click();
+        
+        expect(mobileMenu.classList.contains('hidden')).toBe(true);
+    });
 });
