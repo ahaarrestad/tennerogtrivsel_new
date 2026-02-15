@@ -109,4 +109,5 @@ The project includes a browser-based admin panel at `/admin` for content managem
     3.  Set the generated Client ID as `PUBLIC_GOOGLE_CLIENT_ID` in your `.env` and GitHub Secrets.
     4.  Ensure `PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID` and other folder IDs are set correctly.
 *   **Access Control:** Access is automatically granted to any user who has at least "Reader" access to the Google Drive folder specified in the configuration. If a user logs in but lacks access, an "Ingen tilgang" message is shown.
+*   **Session Persistence:** To improve user experience, the admin panel stores the Google OAuth access token in the browser's `localStorage` (`admin_google_token`). This allows the user to remain logged in across page refreshes until the token expires (typically 1 hour) or they manually log out.
 *   **Security:** The admin panel runs entirely in the user's browser using their own credentials. No sensitive server-side keys are exposed to the frontend.

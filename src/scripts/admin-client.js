@@ -54,11 +54,45 @@ export function initGis(callback) {
             if (resp.error !== undefined) {
                 throw resp;
             }
+            
+            // Lagre token og utløpstidspunkt (nå + expires_in sekunder)
+            const expiry = Date.now() + (resp.expires_in * 1000);
+            localStorage.setItem('admin_google_token', JSON.stringify({
+                access_token: resp.access_token,
+                expiry: expiry
+            }));
+
             callback(resp);
         },
     });
     gisInited = true;
     console.log("[GIS] Initialisert");
+}
+
+/**
+ * Prøver å gjenopprette pålogging fra localStorage
+ */
+export function tryRestoreSession() {
+    const stored = localStorage.getItem('admin_google_token');
+    if (!stored) return false;
+
+    try {
+        const { access_token, expiry } = JSON.parse(stored);
+        
+        // Sjekk om tokenet fortsatt er gyldig (med 1 minutts margin)
+        if (Date.now() < (expiry - 60000)) {
+            console.log("[Admin] Gjenoppretter sesjon fra localStorage");
+            gapi.client.setToken({ access_token });
+            return true;
+        } else {
+            console.log("[Admin] Lagret token er utløpt");
+            localStorage.removeItem('admin_google_token');
+        }
+    } catch (e) {
+        console.error("[Admin] Feil ved lesing av lagret sesjon:", e);
+        localStorage.removeItem('admin_google_token');
+    }
+    return false;
 }
 
 /**
@@ -77,6 +111,7 @@ export function logout() {
         google.accounts.oauth2.revoke(token.access_token);
         gapi.client.setToken('');
     }
+    localStorage.removeItem('admin_google_token');
 }
 
 /**
