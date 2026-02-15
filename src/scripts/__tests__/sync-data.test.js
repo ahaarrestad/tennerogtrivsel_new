@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import fs from 'fs';
 import { google } from 'googleapis';
+import crypto from 'crypto';
 
 // Mocks
 const mockSheets = {
@@ -35,18 +36,22 @@ vi.mock('googleapis', () => {
 
 vi.mock('fs', () => ({
     default: {
-        existsSync: vi.fn().mockReturnValue(true),
+        existsSync: vi.fn(),
         mkdirSync: vi.fn(),
         writeFileSync: vi.fn(),
+        readFileSync: vi.fn(),
+        readdirSync: vi.fn(),
         createWriteStream: vi.fn().mockReturnValue({
             on: vi.fn((event, cb) => {
                 if (event === 'finish') cb();
             }),
         }),
     },
-    existsSync: vi.fn().mockReturnValue(true),
+    existsSync: vi.fn(),
     mkdirSync: vi.fn(),
     writeFileSync: vi.fn(),
+    readFileSync: vi.fn(),
+    readdirSync: vi.fn(),
     createWriteStream: vi.fn().mockReturnValue({
         on: vi.fn((event, cb) => {
             if (event === 'finish') cb();
@@ -62,6 +67,8 @@ vi.mock('stream/promises', () => ({
 const { syncTannleger, syncMarkdownCollection, runSync } = await import('../sync-data.js');
 
 describe('sync-data.js', () => {
+    let logSpy;
+
     beforeEach(() => {
         vi.resetAllMocks();
         process.env.GOOGLE_SHEET_ID = 'test-sheet-id';
@@ -72,12 +79,14 @@ describe('sync-data.js', () => {
         process.env.NODE_ENV = 'test';
         delete process.env.GITHUB_ACTIONS;
         
-        // Mock console methods to keep test output clean
-        vi.spyOn(console, 'log').mockImplementation(() => {});
+        // Default mock behaviors
+        fs.existsSync.mockReturnValue(true);
+        fs.readFileSync.mockReturnValue(Buffer.from('dummy'));
+        
+        logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
         
-        // Default mocks
         mockSheets.spreadsheets.values.get.mockResolvedValue({ data: { values: [] } });
         mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
     });
@@ -95,7 +104,7 @@ describe('sync-data.js', () => {
             };
 
             mockSheets.spreadsheets.values.get.mockResolvedValue(mockData);
-            mockDrive.files.list.mockResolvedValue({ data: { files: [{ id: 'file-id-123' }] } });
+            mockDrive.files.list.mockResolvedValue({ data: { files: [{ id: 'file-id-123', md5Checksum: 'different' }] } });
             mockDrive.files.get.mockResolvedValue({ data: { on: vi.fn() } });
 
             await syncTannleger();
@@ -132,10 +141,10 @@ describe('sync-data.js', () => {
 
             await syncTannleger();
 
-            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Feil ved nedlasting av bilde'), expect.any(String));
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Feil ved behandling av bilde'), expect.any(String));
         });
 
-        it('bør hoppe over nedlasting hvis bilde allerede finnes', async () => {
+        it('bør hoppe over nedlasting hvis bilde allerede finnes og er uendret', async () => {
             const mockData = {
                 data: {
                     values: [['Ola', 'T', 'B', 'eksisterer.jpg', 'ja']],
@@ -143,13 +152,18 @@ describe('sync-data.js', () => {
             };
             mockSheets.spreadsheets.values.get.mockResolvedValue(mockData);
             
-            // Simuler at filen finnes
+            const dummyHash = crypto.createHash('md5').update(Buffer.from('dummy')).digest('hex');
+            mockDrive.files.list.mockResolvedValue({
+                data: { files: [{ id: '123', md5Checksum: dummyHash }] }
+            });
+
             fs.existsSync.mockImplementation((path) => path.includes('eksisterer.jpg'));
 
             await syncTannleger();
 
-            expect(mockDrive.files.list).not.toHaveBeenCalled();
-            expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Gjenbruker eksisterende bilde'));
+            expect(mockDrive.files.get).not.toHaveBeenCalled();
+            const logs = logSpy.mock.calls.map(c => c[0]);
+            expect(logs.some(l => l.includes('Skip: eksisterer.jpg er uendret'))).toBe(true);
         });
 
         it('bør kaste feil hvis Sheets API feiler', async () => {
@@ -163,7 +177,7 @@ describe('sync-data.js', () => {
             const mockFiles = {
                 data: {
                     files: [
-                        { id: 'file-1', name: 'tjeneste1.md' },
+                        { id: 'file-1', name: 'tjeneste1.md', md5Checksum: 'different' },
                         { id: 'file-2', name: 'bilde.png' },
                     ],
                 },
@@ -177,6 +191,26 @@ describe('sync-data.js', () => {
             expect(mockDrive.files.get).toHaveBeenCalledTimes(1);
         });
 
+        it('bør hoppe over .md filer som er uendret', async () => {
+            const dummyHash = crypto.createHash('md5').update(Buffer.from('dummy')).digest('hex');
+            const mockFiles = {
+                data: {
+                    files: [
+                        { id: 'file-1', name: 'uendret.md', md5Checksum: dummyHash },
+                    ],
+                },
+            };
+
+            mockDrive.files.list.mockResolvedValue(mockFiles);
+            fs.existsSync.mockImplementation((path) => path.includes('uendret.md'));
+
+            await syncMarkdownCollection({ name: 'test', folderId: '123', dest: '/tmp' });
+
+            expect(mockDrive.files.get).not.toHaveBeenCalled();
+            const logs = logSpy.mock.calls.map(c => c[0]);
+            expect(logs.some(l => l.includes('Skip: test/uendret.md er uendret'))).toBe(true);
+        });
+
         it('bør advare hvis ingen filer blir funnet', async () => {
             mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
             await syncMarkdownCollection({ name: 'tom', folderId: '123', dest: '/tmp' });
@@ -187,7 +221,8 @@ describe('sync-data.js', () => {
     describe('runSync', () => {
         it('bør kjøre alle synkroniseringer suksessfullt', async () => {
             await runSync();
-            expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Alt er synkronisert'));
+            const logs = logSpy.mock.calls.map(c => c[0]);
+            expect(logs.some(l => l.includes('Alt er synkronisert'))).toBe(true);
         });
 
         it('bør logge feil hvis en synkronisering feiler', async () => {

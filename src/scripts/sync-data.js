@@ -3,6 +3,7 @@ import { google } from 'googleapis';
 import fs from 'fs';
 import path from 'path';
 import { pipeline } from 'stream/promises';
+import crypto from 'crypto';
 
 // --- KONFIGURASJON ---
 function getConfig() {
@@ -48,19 +49,39 @@ function getSheets() {
 
 // --- HJELPEFUNKSJONER ---
 
+/**
+ * Beregner MD5-hash for en lokal fil
+ */
+function getLocalHash(filePath) {
+    if (!fs.existsSync(filePath)) return null;
+    const fileBuffer = fs.readFileSync(filePath);
+    return crypto.createHash('md5').update(fileBuffer).digest('hex');
+}
+
+/**
+ * Sjekker om en fil må lastes ned (mangler eller endret)
+ */
+async function shouldDownload(driveFile, localPath) {
+    if (!fs.existsSync(localPath)) return true;
+    if (!driveFile.md5Checksum) return true; // Hvis Drive ikke gir hash, last ned for sikkerhets skyld
+    
+    const localHash = getLocalHash(localPath);
+    return localHash !== driveFile.md5Checksum;
+}
+
 async function downloadFile(fileId, destinationPath) {
     const drive = getDrive();
     const res = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' });
     await pipeline(res.data, fs.createWriteStream(destinationPath));
 }
 
-async function findFileIdByName(name) {
+async function findFileMetadataByName(name) {
     const drive = getDrive();
     const res = await drive.files.list({
         q: `name = '${name}' and trashed = false`,
-        fields: 'files(id)',
+        fields: 'files(id, name, md5Checksum)',
     });
-    return res.data.files[0]?.id;
+    return res.data.files[0];
 }
 
 // --- SYNKRONISERINGSLOGIKK ---
@@ -82,30 +103,26 @@ async function syncTannleger() {
         const rows = res.data.values || [];
         const activeRows = rows.filter(([navn, tittel, beskrivelse, bildeFil, aktiv]) => aktiv?.toLowerCase() === 'ja');
         
-        // Optimalisering: Hvis vi hadde en bilde-mappe-ID kunne vi brukt getFileMapInFolder her.
-        // Siden vi ikke har det ennå, kjører vi søk og nedlasting i kontrollerte grupper eller parallelt.
-        
         const tannlegeData = await Promise.all(activeRows.map(async ([navn, tittel, beskrivelse, bildeFil]) => {
             console.log(`  🔄 Behandler: ${navn}`);
             
             if (bildeFil) {
                 try {
                     const destinationPath = path.join(config.paths.tannlegerAssets, bildeFil);
-                    
-                    // Optimalisering: Sjekk om filen allerede finnes
-                    if (fs.existsSync(destinationPath)) {
-                        console.log(`    ⏭️ Gjenbruker eksisterende bilde: ${bildeFil}`);
-                    } else {
-                        const fileId = await findFileIdByName(bildeFil);
-                        if (fileId) {
+                    const driveFile = await findFileMetadataByName(bildeFil);
+
+                    if (driveFile) {
+                        if (await shouldDownload(driveFile, destinationPath)) {
                             console.log(`    ⬇️ Laster ned bilde: ${bildeFil}`);
-                            await downloadFile(fileId, destinationPath);
+                            await downloadFile(driveFile.id, destinationPath);
                         } else {
-                            console.warn(`    ⚠️ Bilde ikke funnet i Drive: ${bildeFil}`);
+                            console.log(`    Skip: ${bildeFil} er uendret`);
                         }
+                    } else {
+                        console.warn(`    ⚠️ Bilde ikke funnet i Drive: ${bildeFil}`);
                     }
                 } catch (imgErr) {
-                    console.error(`    ❌ Feil ved nedlasting av bilde ${bildeFil}:`, imgErr.message);
+                    console.error(`    ❌ Feil ved behandling av bilde ${bildeFil}:`, imgErr.message);
                 }
             }
 
@@ -135,7 +152,7 @@ async function syncMarkdownCollection(collection) {
 
     const res = await drive.files.list({
         q: `'${collection.folderId}' in parents and trashed = false`,
-        fields: 'files(id, name)',
+        fields: 'files(id, name, md5Checksum)',
     });
 
     const files = (res.data.files || []).filter(f => f.name.endsWith('.md'));
@@ -146,8 +163,14 @@ async function syncMarkdownCollection(collection) {
 
     // Last ned alle filer i denne samlingen i parallell
     await Promise.all(files.map(async (file) => {
-        await downloadFile(file.id, path.join(collection.dest, file.name));
-        console.log(`  ✅ ${collection.name}: ${file.name}`);
+        const destinationPath = path.join(collection.dest, file.name);
+        
+        if (await shouldDownload(file, destinationPath)) {
+            await downloadFile(file.id, destinationPath);
+            console.log(`  ✅ ${collection.name}: ${file.name} (lastet ned)`);
+        } else {
+            console.log(`  Skip: ${collection.name}/${file.name} er uendret`);
+        }
     }));
 }
 
@@ -207,4 +230,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 /* v8 ignore stop */
 
-export { syncTannleger, syncMarkdownCollection, runSync, getConfig };
+export { syncTannleger, syncMarkdownCollection, runSync, getConfig, getLocalHash, shouldDownload };
