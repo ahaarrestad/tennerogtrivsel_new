@@ -163,7 +163,7 @@ describe('sync-data.js', () => {
 
             expect(mockDrive.files.get).not.toHaveBeenCalled();
             const logs = logSpy.mock.calls.map(c => c[0]);
-            expect(logs.some(l => l.includes('Skip: eksisterer.jpg er uendret'))).toBe(true);
+            expect(logs.some(l => l.includes('⏭️ Skip: eksisterer.jpg er uendret'))).toBe(true);
         });
 
         it('bør kaste feil hvis Sheets API feiler', async () => {
@@ -208,7 +208,7 @@ describe('sync-data.js', () => {
 
             expect(mockDrive.files.get).not.toHaveBeenCalled();
             const logs = logSpy.mock.calls.map(c => c[0]);
-            expect(logs.some(l => l.includes('Skip: test/uendret.md er uendret'))).toBe(true);
+            expect(logs.some(l => l.includes('⏭️ Skip: test/uendret.md er uendret'))).toBe(true);
         });
 
         it('bør advare hvis ingen filer blir funnet', async () => {

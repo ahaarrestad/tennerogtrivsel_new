@@ -123,67 +123,67 @@ async function syncTannleger() {
                     const driveFile = await findFileMetadataByName(bildeFil);
 
                     if (driveFile) {
-                        if (await shouldDownload(driveFile, destinationPath)) {
-                            console.log(`    ⬇️ Laster ned bilde: ${bildeFil}`);
-                            await downloadFile(driveFile.id, destinationPath);
-                        } else {
-                            console.log(`    Skip: ${bildeFil} er uendret`);
+                                                if (await shouldDownload(driveFile, destinationPath)) {
+                                                    console.log(`    ⬇️ Laster ned bilde: ${bildeFil}`);
+                                                    await downloadFile(driveFile.id, destinationPath);
+                                                } else {
+                                                    console.log(`    ⏭️ Skip: ${bildeFil} er uendret`);
+                                                }
+                                            } else {
+                                                logWarning('Missing Asset', `Bilde ikke funnet i Drive: ${bildeFil}`);
+                                            }
+                                        } catch (imgErr) {
+                                            logWarning('Download Error', `Feil ved behandling av bilde ${bildeFil}: ${imgErr.message}`);
+                                        }
+                                    }
+                        
+                                    return {
+                                        id: navn.toLowerCase().replace(/\s+/g, '-'),
+                                        name: navn,
+                                        title: tittel,
+                                        description: beskrivelse,
+                                        image: bildeFil
+                                    };
+                                }));
+                        
+                                fs.writeFileSync(config.paths.tannlegerData, JSON.stringify(tannlegeData, null, 2));
+                                console.log(`  ✅ Synkroniserte ${tannlegeData.length} tannleger.`);
+                            } catch (err) {
+                                console.error('❌ Feil under synkronisering av tannleger:', err.message);
+                                throw err;
+                            }
                         }
-                    } else {
-                        logWarning('Missing Asset', `Bilde ikke funnet i Drive: ${bildeFil}`);
-                    }
-                } catch (imgErr) {
-                    logWarning('Download Error', `Feil ved behandling av bilde ${bildeFil}: ${imgErr.message}`);
-                }
-            }
-
-            return {
-                id: navn.toLowerCase().replace(/\s+/g, '-'),
-                name: navn,
-                title: tittel,
-                description: beskrivelse,
-                image: bildeFil
-            };
-        }));
-
-        fs.writeFileSync(config.paths.tannlegerData, JSON.stringify(tannlegeData, null, 2));
-        console.log(`  ✅ Synkroniserte ${tannlegeData.length} tannleger.`);
-    } catch (err) {
-        console.error('❌ Feil under synkronisering av tannleger:', err.message);
-        throw err;
-    }
-}
-
-// Fellesfunksjon for alle Markdown-samlinger (Tjenester, Meldinger, etc.)
-async function syncMarkdownCollection(collection) {
-    const drive = getDrive();
-
-    console.log(`🚀 Synkroniserer ${collection.name} (.md)...`);
-    if (!fs.existsSync(collection.dest)) fs.mkdirSync(collection.dest, { recursive: true });
-
-    const res = await drive.files.list({
-        q: `'${collection.folderId}' in parents and trashed = false`,
-        fields: 'files(id, name, md5Checksum)',
-    });
-
-    const files = (res.data.files || []).filter(f => f.name.endsWith('.md'));
-    if (files.length === 0) {
-        logWarning('Empty Collection', `Ingen filer funnet i samlingen "${collection.name}"`);
-        return;
-    }
-
-    // Last ned alle filer i denne samlingen i parallell
-    await Promise.all(files.map(async (file) => {
-        const destinationPath = path.join(collection.dest, file.name);
-        
-        if (await shouldDownload(file, destinationPath)) {
-            await downloadFile(file.id, destinationPath);
-            console.log(`  ✅ ${collection.name}: ${file.name} (lastet ned)`);
-        } else {
-            console.log(`  Skip: ${collection.name}/${file.name} er uendret`);
-        }
-    }));
-}
+                        
+                        // Fellesfunksjon for alle Markdown-samlinger (Tjenester, Meldinger, etc.)
+                        async function syncMarkdownCollection(collection) {
+                            const drive = getDrive();
+                        
+                            console.log(`🚀 Synkroniserer ${collection.name} (.md)...`);
+                            if (!fs.existsSync(collection.dest)) fs.mkdirSync(collection.dest, { recursive: true });
+                        
+                            const res = await drive.files.list({
+                                q: `'${collection.folderId}' in parents and trashed = false`,
+                                fields: 'files(id, name, md5Checksum)',
+                            });
+                        
+                            const files = (res.data.files || []).filter(f => f.name.endsWith('.md'));
+                            if (files.length === 0) {
+                                logWarning('Empty Collection', `Ingen filer funnet i samlingen "${collection.name}"`);
+                                return;
+                            }
+                        
+                            // Last ned alle filer i denne samlingen i parallell
+                            await Promise.all(files.map(async (file) => {
+                                const destinationPath = path.join(collection.dest, file.name);
+                                
+                                if (await shouldDownload(file, destinationPath)) {
+                                    await downloadFile(file.id, destinationPath);
+                                    console.log(`  ✅ ${collection.name}: ${file.name} (lastet ned)`);
+                                } else {
+                                    console.log(`    ⏭️ Skip: ${collection.name}/${file.name} er uendret`);
+                                }
+                            }));
+                        }
 
 // --- KJØRER ALT ---
 
