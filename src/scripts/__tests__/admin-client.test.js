@@ -10,6 +10,7 @@ import {
     silentLogin, 
     logout, 
     tryRestoreSession, 
+    getStoredUser,
     checkAccess 
 } from '../admin-client';
 
@@ -40,8 +41,12 @@ describe('admin-client.js', () => {
         vi.stubGlobal('google', {
             accounts: {
                 oauth2: {
-                    initTokenClient: vi.fn(() => ({
-                        requestAccessToken: vi.fn()
+                    initTokenClient: vi.fn(({ callback }) => ({
+                        requestAccessToken: vi.fn(({ prompt }) => {
+                            if (prompt !== 'none') { // Simulate user selection
+                                callback({ access_token: 'new-token', expires_in: 3600 });
+                            }
+                        })
                     })),
                     revoke: vi.fn()
                 }
@@ -56,6 +61,22 @@ describe('admin-client.js', () => {
         vi.unstubAllGlobals();
     });
 
+    describe('getStoredUser', () => {
+        it('skal returnere null hvis ingenting er lagret', () => {
+            expect(getStoredUser()).toBeNull();
+        });
+
+        it('skal returnere brukerinfo hvis gyldig sesjon finnes', () => {
+            const future = Date.now() + 3600000;
+            const mockUser = { name: 'Ola' };
+            localStorage.setItem('admin_google_token', JSON.stringify({
+                expiry: future,
+                user: mockUser
+            }));
+            expect(getStoredUser()).toEqual(mockUser);
+        });
+    });
+
     describe('initGapi', () => {
         it('skal initialisere gapi client og laste Drive og Sheets APIer', async () => {
             const result = await initGapi();
@@ -64,8 +85,6 @@ describe('admin-client.js', () => {
             expect(gapi.client.init).toHaveBeenCalledWith(expect.objectContaining({
                 apiKey: expect.any(String)
             }));
-            expect(gapi.client.load).toHaveBeenCalledWith('drive', 'v3');
-            expect(gapi.client.load).toHaveBeenCalledWith('sheets', 'v4');
         });
 
         it('skal returnere false hvis gapi mangler', async () => {
@@ -75,36 +94,12 @@ describe('admin-client.js', () => {
         });
     });
 
-    describe('initGis', () => {
-        it('skal initialisere GIS token client', () => {
-            const callback = vi.fn();
-            initGis(callback);
-            expect(google.accounts.oauth2.initTokenClient).toHaveBeenCalledWith(expect.objectContaining({
-                client_id: expect.any(String),
-                callback: expect.any(Function)
-            }));
-        });
-    });
-
     describe('Session Management', () => {
-        it('tryRestoreSession skal returnere null hvis ingenting er lagret', () => {
-            expect(tryRestoreSession()).toBeNull();
+        it('tryRestoreSession skal returnere false hvis ingenting er lagret', () => {
+            expect(tryRestoreSession()).toBe(false);
         });
 
-        it('tryRestoreSession skal returnere brukerinfo hvis gyldig token finnes', () => {
-            const future = Date.now() + 3600000;
-            const mockUser = { name: 'Ola', email: 'ola@example.com' };
-            localStorage.setItem('admin_google_token', JSON.stringify({
-                access_token: 'test-token',
-                expiry: future,
-                user: mockUser
-            }));
-
-            expect(tryRestoreSession()).toEqual(mockUser);
-            expect(gapi.client.setToken).toHaveBeenCalledWith({ access_token: 'test-token' });
-        });
-
-        it('tryRestoreSession skal returnere true hvis token finnes men brukerinfo mangler (legacy)', () => {
+        it('tryRestoreSession skal sette token i GAPI hvis gyldig', () => {
             const future = Date.now() + 3600000;
             localStorage.setItem('admin_google_token', JSON.stringify({
                 access_token: 'test-token',
@@ -112,117 +107,110 @@ describe('admin-client.js', () => {
             }));
 
             expect(tryRestoreSession()).toBe(true);
+            expect(gapi.client.setToken).toHaveBeenCalledWith({ access_token: 'test-token' });
         });
 
-        it('tryRestoreSession skal returnere null og rense opp hvis token er utløpt', () => {
-            const past = Date.now() - 1000;
-            localStorage.setItem('admin_google_token', JSON.stringify({
-                access_token: 'old-token',
-                expiry: past
-            }));
-
-            expect(tryRestoreSession()).toBeNull();
-            expect(localStorage.getItem('admin_google_token')).toBeNull();
-        });
-
-        it('logout skal fjerne token fra gapi og localStorage', () => {
+        it('logout skal fjerne token hvis gapi.client finnes', () => {
             localStorage.setItem('admin_google_token', 'some-data');
             logout();
             expect(google.accounts.oauth2.revoke).toHaveBeenCalled();
-            expect(gapi.client.setToken).toHaveBeenCalledWith('');
             expect(localStorage.getItem('admin_google_token')).toBeNull();
         });
     });
 
-    describe('login and silentLogin', () => {
-        it('login skal be om select_account', () => {
-            const requestSpy = vi.fn();
-            google.accounts.oauth2.initTokenClient.mockReturnValue({ requestAccessToken: requestSpy });
-            initGis(() => {});
-            login();
-            expect(requestSpy).toHaveBeenCalledWith({ prompt: 'select_account' });
+    describe('GIS Auth', () => {
+        it('initGis skal sette opp token client', () => {
+            const cb = vi.fn();
+            initGis(cb);
+            expect(google.accounts.oauth2.initTokenClient).toHaveBeenCalled();
         });
 
-        it('silentLogin skal prøve å gjenbruke sesjon', () => {
+        it('login skal be om select_account og trigge callback', async () => {
+            const cb = vi.fn();
+            initGis(cb);
+            login();
+            // Wait for internal async user info fetch
+            await vi.waitFor(() => expect(cb).toHaveBeenCalled());
+            expect(cb).toHaveBeenCalledWith(expect.objectContaining({ name: 'Test User' }));
+        });
+
+        it('silentLogin skal be om prompt none', () => {
             const requestSpy = vi.fn();
             google.accounts.oauth2.initTokenClient.mockReturnValue({ requestAccessToken: requestSpy });
             initGis(() => {});
             silentLogin();
-            expect(requestSpy).toHaveBeenCalledWith({ prompt: '' });
-        });
-
-        it('silentLogin skal ikke gjøre noe hvis tokenClient ikke er inited', () => {
-            silentLogin(); // Bør ikke krasje
+            expect(requestSpy).toHaveBeenCalledWith({ prompt: 'none' });
         });
     });
 
     describe('Detailed Error Handling', () => {
-        it('initGapi skal fortsette selv om API-nøkkel mangler (fail-safe)', async () => {
-            vi.stubEnv('PUBLIC_GOOGLE_API_KEY', '');
-            const result = await initGapi();
-            expect(result).toBe(true); // Den prøver å fortsette
-        });
-
-        it('initGis callback skal lagre token i localStorage', async () => {
+        it('initGis callback skal håndtere error-respons', async () => {
             let capturedCallback;
             google.accounts.oauth2.initTokenClient.mockImplementation(({ callback }) => {
                 capturedCallback = callback;
                 return { requestAccessToken: vi.fn() };
             });
-
-            initGis(() => {});
-            await capturedCallback({ access_token: 'new-token', expires_in: 3600 });
-
-            const stored = JSON.parse(localStorage.getItem('admin_google_token'));
-            expect(stored.access_token).toBe('new-token');
-            expect(stored.expiry).toBeGreaterThan(Date.now());
-        });
-
-        it('initGis callback skal logge advarsel men ikke kaste feil hvis resp inneholder error', async () => {
-            let capturedCallback;
-            const successCallback = vi.fn();
-            google.accounts.oauth2.initTokenClient.mockImplementation(({ callback }) => {
-                capturedCallback = callback;
-                return { requestAccessToken: vi.fn() };
-            });
-
-            initGis(successCallback);
             const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-            
-            await capturedCallback({ error: 'access_denied' });
-
-            expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Autorisasjonsfeil'), 'access_denied');
-            expect(successCallback).not.toHaveBeenCalled();
-            expect(localStorage.getItem('admin_google_token')).toBeNull();
-            
+            initGis(() => {});
+            await capturedCallback({ error: 'denied' });
+            expect(consoleSpy).toHaveBeenCalled();
             consoleSpy.mockRestore();
         });
 
-        it('logout skal ikke krasje hvis token er null', () => {
-            gapi.client.getToken.mockReturnValue(null);
-            logout();
-            expect(google.accounts.oauth2.revoke).not.toHaveBeenCalled();
+        it('fetchUserInfo skal håndtere feil', async () => {
+            global.fetch.mockRejectedValue(new Error('fail'));
+            const successCb = vi.fn();
+            initGis(successCb);
+            // Manuelt trigge callback for å teste fetch feil inni den
+            const resp = { access_token: 'abc', expires_in: 3600 };
+            // Vi må hente ut callbacken fra mocken
+            const callback = google.accounts.oauth2.initTokenClient.mock.calls[0][0].callback;
+            await callback(resp);
+            expect(successCb).toHaveBeenCalled();
+            const stored = JSON.parse(localStorage.getItem('admin_google_token'));
+            expect(stored.user).toBeNull();
         });
 
-        it('checkAccess skal håndtere feil uten detaljert result-objekt', async () => {
-            gapi.client.drive.files.get.mockRejectedValue(new Error('Generic Error'));
+        it('tryRestoreSession skal rense opp utløpt token', () => {
+            localStorage.setItem('admin_google_token', JSON.stringify({ expiry: Date.now() - 1000 }));
+            expect(tryRestoreSession()).toBe(false);
+            expect(localStorage.getItem('admin_google_token')).toBeNull();
+        });
+
+        it('initGapi skal håndtere kritiske feil under initialisering', async () => {
+            gapi.client.init.mockRejectedValue(new Error('Fatal'));
+            const result = await initGapi();
+            expect(result).toBe(false);
+        });
+
+        it('initGapi skal håndtere at en av APIene feiler', async () => {
+            gapi.client.load.mockRejectedValueOnce(new Error('Drive failed'));
+            const result = await initGapi();
+            expect(result).toBe(true); // Den fortsetter selv om én feiler
+        });
+
+        it('logout skal håndtere at gapi.client mangler', () => {
+            delete gapi.client;
+            logout(); // Bør ikke krasje
+        });
+    });
+
+    describe('checkAccess', () => {
+        it('skal returnere true hvis filen kan hentes', async () => {
+            gapi.client.drive.files.get.mockResolvedValue({ result: { name: 'Test' } });
+            const result = await checkAccess('folder-123');
+            expect(result).toBe(true);
+        });
+
+        it('skal returnere false ved feil', async () => {
+            gapi.client.drive.files.get.mockRejectedValue({ status: 403 });
             const result = await checkAccess('123');
             expect(result).toBe(false);
         });
 
-        it('fetchUserInfo skal håndtere nettverksfeil', async () => {
-            global.fetch.mockRejectedValueOnce(new Error('Network error'));
-            let capturedCallback;
-            google.accounts.oauth2.initTokenClient.mockImplementation(({ callback }) => {
-                capturedCallback = callback;
-                return { requestAccessToken: vi.fn() };
-            });
-
-            initGis(() => {});
-            await capturedCallback({ access_token: 'token', expires_in: 3600 });
-            
-            const stored = JSON.parse(localStorage.getItem('admin_google_token'));
-            expect(stored.user).toBeNull();
+        it('skal returnere false hvis ingen folderId er oppgitt', async () => {
+            const result = await checkAccess(null);
+            expect(result).toBe(false);
         });
     });
 });

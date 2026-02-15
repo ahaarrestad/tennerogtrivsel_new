@@ -138,7 +138,7 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
          class="hidden"></div>
 
     <script>
-        import { initGapi, initGis, login, logout, checkAccess, tryRestoreSession, silentLogin } from '../../scripts/admin-client.js';
+        import { initGapi, initGis, login, logout, checkAccess, tryRestoreSession, silentLogin, getStoredUser } from '../../scripts/admin-client.js';
 
         const configEl = document.getElementById('admin-config');
         const TJENESTER_FOLDER = configEl?.dataset.tjenesterFolder;
@@ -182,24 +182,34 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
         const setup = async () => {
             console.log("[Admin] Starter oppsett...");
             try {
-                // 1. Initialiser pålogging (GIS) først - denne er uavhengig av 400-feilen
+                // 1. Initialiser pålogging (GIS) først
                 initGis(handleAuth);
 
-                // 2. Sjekk for eksisterende sesjon umiddelbart
-                const savedUser = tryRestoreSession();
-                if (savedUser) {
-                    console.log("[Admin] Sesjon gjenopprettet, oppdaterer UI...");
-                    handleAuth(savedUser === true ? null : savedUser);
-                } else {
+                // 2. Vis brukerinfo fra lager MED EN GANG hvis vi har det
+                const user = getStoredUser();
+                if (user) {
+                    console.log("[Admin] Fant lagret bruker, oppdaterer UI...");
+                    document.getElementById('login-container').classList.add('hidden');
+                    document.getElementById('dashboard').classList.remove('hidden');
+                    const userDisplay = document.getElementById('user-info');
+                    userDisplay.innerHTML = `Logget inn som <strong>${user.name}</strong> (${user.email})`;
+                }
+
+                // 3. Initialiser GAPI i bakgrunnen
+                initGapi().then(success => {
+                    if (success) {
+                        console.log("[Admin] Google APIer klare.");
+                        tryRestoreSession(); // Sett token i GAPI hvis vi har det
+                    } else {
+                        console.warn("[Admin] Kunne ikke laste alle APIer.");
+                    }
+                });
+
+                // 4. Hvis ingen bruker i lager, prøv silent login
+                if (!user) {
                     console.log("[Admin] Ingen lokal sesjon, prøver silent login...");
                     silentLogin();
                 }
-
-                // 3. Initialiser GAPI-klienten i bakgrunnen (ikke blokker UI)
-                initGapi().then(success => {
-                    if (success) console.log("[Admin] Google APIer klare.");
-                    else console.warn("[Admin] Google APIer kunne ikke lastes fullstendig.");
-                });
 
                 // Event listeners for knapper
                 document.getElementById('login-btn').onclick = login;

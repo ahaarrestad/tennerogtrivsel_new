@@ -101,20 +101,39 @@ export function initGis(callback) {
 }
 
 /**
- * Prøver å gjenopprette pålogging fra localStorage
+ * Henter lagret brukerinfo fra localStorage uten å røre GAPI
+ */
+export function getStoredUser() {
+    const stored = localStorage.getItem('admin_google_token');
+    if (!stored) return null;
+    try {
+        const { expiry, user } = JSON.parse(stored);
+        if (Date.now() < (expiry - 60000)) return user;
+    } catch (e) {
+        localStorage.removeItem('admin_google_token');
+    }
+    return null;
+}
+
+/**
+ * Prøver å gjenopprette pålogging fra localStorage inn i GAPI
  */
 export function tryRestoreSession() {
     const stored = localStorage.getItem('admin_google_token');
-    if (!stored) return null;
+    if (!stored) return false;
 
     try {
-        const { access_token, expiry, user } = JSON.parse(stored);
+        const { access_token, expiry } = JSON.parse(stored);
         
         // Sjekk om tokenet fortsatt er gyldig (med 1 minutts margin)
         if (Date.now() < (expiry - 60000)) {
-            console.log("[Admin] Gjenoppretter sesjon fra localStorage");
-            gapi.client.setToken({ access_token });
-            return user || true; // Returner brukerinfo hvis den finnes
+            console.log("[Admin] Gjenoppretter sesjon i GAPI");
+            if (gapi.client) {
+                gapi.client.setToken({ access_token });
+                return true;
+            } else {
+                console.warn("[Admin] gapi.client ikke klar for setToken");
+            }
         } else {
             console.log("[Admin] Lagret token er utløpt");
             localStorage.removeItem('admin_google_token');
@@ -123,7 +142,7 @@ export function tryRestoreSession() {
         console.error("[Admin] Feil ved lesing av lagret sesjon:", e);
         localStorage.removeItem('admin_google_token');
     }
-    return null;
+    return false;
 }
 
 /**
@@ -135,7 +154,8 @@ export function silentLogin() {
         return;
     }
     console.log("[Admin] Forsøker silent login...");
-    tokenClient.requestAccessToken({ prompt: '' });
+    // Bruk 'prompt: none' for ekte silent auth, men det krever at vi håndterer feil hvis sesjon mangler
+    tokenClient.requestAccessToken({ prompt: 'none' });
 }
 
 /**
@@ -154,10 +174,12 @@ export function login() {
  * Logg ut
  */
 export function logout() {
-    const token = gapi.client.getToken();
-    if (token !== null) {
-        google.accounts.oauth2.revoke(token.access_token);
-        gapi.client.setToken('');
+    if (typeof gapi !== 'undefined' && gapi.client) {
+        const token = gapi.client.getToken();
+        if (token !== null) {
+            google.accounts.oauth2.revoke(token.access_token);
+            gapi.client.setToken('');
+        }
     }
     localStorage.removeItem('admin_google_token');
 }
