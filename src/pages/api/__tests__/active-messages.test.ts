@@ -95,6 +95,15 @@ Some data here
                 },
                 body: 'Just plain content.',
             },
+            {
+                slug: 'message-without-body',
+                data: {
+                    title: 'Message without body',
+                    startDate: new Date('2026-01-01'),
+                    endDate: new Date('2026-12-31'),
+                },
+                body: undefined, // Test the branch where body is missing
+            },
         ];
 
         (getCollection as vi.Mock).mockResolvedValueOnce(mockMessages);
@@ -104,5 +113,52 @@ Some data here
 
         expect(json[0].content).toBe('Content before.Content after.');
         expect(json[1].content).toBe('Just plain content.');
+        expect(json[2].content).toBe('');
+    });
+
+    it('should filter out messages that are not active', async () => {
+        const now = new Date();
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+        const tomorrow = new Date(now);
+        tomorrow.setDate(now.getDate() + 1);
+
+        const mockMessages = [
+            {
+                slug: 'expired',
+                data: {
+                    title: 'Expired',
+                    startDate: new Date('2020-01-01'),
+                    endDate: yesterday,
+                },
+                body: 'Expired',
+            },
+            {
+                slug: 'upcoming',
+                data: {
+                    title: 'Upcoming',
+                    startDate: tomorrow,
+                    endDate: new Date('2030-01-01'),
+                },
+                body: 'Upcoming',
+            },
+            {
+                slug: 'active',
+                data: {
+                    title: 'Active',
+                    startDate: yesterday,
+                    endDate: tomorrow,
+                },
+                body: 'Active',
+            },
+        ];
+
+        (getCollection as vi.Mock).mockResolvedValueOnce(mockMessages);
+
+        const response = await GET();
+        const json = await response.json();
+
+        expect(json).toHaveLength(1);
+        expect(json[0].title).toBe('Active');
     });
 });
