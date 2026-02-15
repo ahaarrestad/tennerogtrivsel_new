@@ -1,6 +1,7 @@
 ---
 export interface Props {
-    title?: string
+    title?: string;
+    description?: string;
 }
 import Footer from '../components/Footer.astro';
 import '../styles/global.css';
@@ -8,7 +9,10 @@ import '../styles/global.css';
 import InfoBanner from '../components/InfoBanner.astro';
 import Navbar from '../components/Navbar.astro';
 
-const {title} = Astro.props;
+const {
+    title = 'Tenner og Trivsel | Din Tannlege i Stavanger',
+    description = 'Tenner og Trivsel tilbyr moderne tannbehandling i trygge rammer like ved Stavanger Universitetssykehus. Vi har fokus på din komfort og tannhelse.'
+} = Astro.props;
 ---
 <!doctype html>
 <html lang="no" class="scroll-smooth h-full">
@@ -21,7 +25,16 @@ const {title} = Astro.props;
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png">
-    <title>{title ?? 'Tenner og Trivsel'}</title>
+    
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    
+    <!-- OpenGraph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={Astro.url} />
+    <meta property="og:image" content={new URL('/hovedbilde.png', Astro.url)} />
 </head>
 
 <body class="text-brand flex flex-col min-h-full">
