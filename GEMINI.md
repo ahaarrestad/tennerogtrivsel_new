@@ -55,54 +55,41 @@ This project uses a hybrid approach for content and configuration management:
 
 *   **Data Synchronization (`src/scripts/sync-data.js`):**
     *   This script is crucial for synchronizing external content, including `tannleger` data from Google Sheets and Markdown content/image assets from Google Drive, writing them to `src/content/`.
-    *   It executes before `astro dev` and `astro build`. For enhanced testability, its core logic is now encapsulated within an `export async function runSync({ ... })` and utilizes dependency injection for external services like `googleapis`, `fs`, and `path`.
+    *   **Optimization:** It uses MD5 checksum validation to only download files that have actually changed on Google Drive, significantly reducing build times.
+    *   It executes before `astro dev` and `astro build`. For enhanced testability, its core logic is encapsulated within a `runSync()` function and utilizes dependency injection/mocks for external services.
 
-### 3. Deployment
+### 3. Deployment and CI/CD
 
 Deployment is automated via GitHub Actions, configured in `.github/workflows/deploy.yml`.
 
-*   **Workflow Trigger:** The deployment process is initiated by:
-    *   Pushes to the `main` branch.
-    *   Pull requests to `main` (for build checks only, not deployment).
-    *   `repository_dispatch` event with type `google_drive_update` (suggesting integration with external Google Drive changes).
-    *   Manual `workflow_dispatch`.
-
-*   **Build Process (GitHub Actions `build` job):**
+*   **Workflow Trigger:** The deployment process is initiated by pushes to `main`, pull requests, or `repository_dispatch` from Google Drive updates.
+*   **Optimization:** The CI/CD pipeline uses caching for Playwright browsers and the `.astro` build cache to minimize execution time. It utilizes `npm ci` for reliable dependency installation.
+*   **Build Process:**
     *   The Astro site is built using `npm run build` (which includes the `sync-data.js` script).
     *   Google API related secrets (`GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`, `GOOGLE_SHEET_ID`, `GOOGLE_DRIVE_TJENESTER_FOLDER_ID`, `GOOGLE_DRIVE_MELDINGER_FOLDER_ID`, `PUBLIC_GOOGLE_API_KEY`) are securely passed as environment variables during the build.
     *   **Note on Dependabot:** For Dependabot PRs to build successfully, these same secrets must also be added to **Dependabot secrets** (`Settings > Secrets and variables > Dependabot`) in the GitHub repository.
-    *   The generated static assets are output to the `dist/` directory and uploaded as a build artifact.
-
-*   **Deployment Process (GitHub Actions `deploy` job):**
-    *   This job runs only for actual deployments (pushes to `main`, `google_drive_update`, manual trigger).
-    *   It downloads the `dist/` build artifact.
-    *   **AWS S3 Deployment:** The built site is deployed to an AWS S3 bucket (`s3://test2.aarrestad.com`) using `aws s3 sync`. AWS credentials (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `aws-region: eu-west-1`) are configured via GitHub secrets.
-    *   CloudFront cache invalidation is present but currently commented out in the workflow.
 
 ## Project-Specific Information (Original)
 
 *   **Current Working Directory:** `/home/asbjorn/IdeaProjects/tennerogtrivsel2/`
 *   **Operating System:** `linux`
-*   **Temporary Directory:** `/home/asbjorn/.gemini/tmp/eb92de5597d0ec9fbb0ef2b47f951157c048944e30ce79644e00a2cb6304cb5b`
-*   **Project Structure:** (Refer to the initial folder structure provided at the start of the chat for current context.)
 
 ### 4. Coding and Development Practices
 
 To ensure high-quality, maintainable, and idiomatic code within this project, please adhere to the following guidelines:
 
-*   **Atomic Commits:** Changes should be granular and focused. Each commit should address a single logical change, feature, or bug fix. This promotes clear history, easier reverts, and better code review.
-*   **Centralized Configuration:** Where possible, configuration values should be centralized. Components and modules should consume configuration from a single, well-defined source (e.g., a shared settings object, a configuration file, or environment variables). Values like site titles, descriptions, and contact info should be managed via `src/scripts/getSettings.ts` and preferably overrideable via the `innstillinger` collection (Google Sheets). **This data-driven approach is the preferred method for making updates to site-wide content and configuration.**
-*   **Framework Best Practices:** Always strive to follow the "best practices" and idiomatic patterns prescribed by Astro, Tailwind CSS, and other utilized frameworks and libraries. This ensures maintainability, takes advantage of framework optimizations, and keeps the codebase modern and aligned with community standards. Consult official documentation when in doubt.
+*   **Atomic Commits:** Changes should be granular and focused. Each commit should address a single logical change, feature, or bug fix.
+*   **Centralized Configuration:** All site-wide settings (titles, descriptions, contact info) MUST be managed via `src/scripts/getSettings.ts` and are overrideable via the `innstillinger` collection. Avoid hardcoding strings directly in layout or components. This data-driven approach is the preferred method for updates.
+*   **Framework Best Practices (Tailwind 4):** Since this project uses Tailwind CSS v4, avoid using `@apply` on custom classes defined within the same CSS file, as this can cause build failures in CI. Prefer standard Tailwind utility classes or global design tokens defined in `@theme`.
 *   **Code Structure and Readability:**
-    *   Maintain consistent code formatting and style.
-    *   Use clear and descriptive naming for variables, functions, and components.
+    *   Maintain consistent code formatting.
+    *   Use **English** keys for all content schemas (e.g., `title`, `description`) to ensure framework compatibility, even if content is Norwegian.
     *   Break down complex logic into smaller, testable units.
-*   **Testing (where applicable):** This project utilizes **Vitest** for unit/integration testing and **Playwright** for end-to-end (E2E) testing.
-    *   **Unit/Integration Tests:** Test files are organized into `__tests__` subdirectories alongside their respective source modules (e.g., `src/scripts/__tests__/my-script.test.js`). Run using `npm test`.
-    *   **E2E Tests:** Organized in the `tests/` directory. These tests run against a live browser to verify UI and interaction. Run using `npm run test:e2e`.
-    *   Tests are integrated into the CI/CD pipeline (via `.github/workflows/ci.yml` and `.github/workflows/deploy.yml`) and run automatically during build processes.
-    *   Environment variables (e.g., `PUBLIC_GOOGLE_API_KEY`) must be correctly provisioned for test steps in CI.
-
-*   **Content Schema Naming:** To follow framework best practices, all keys in content schemas (defined in `src/content.config.ts`) should use **English** names (e.g., `title`, `name`, `description`, `image`), even if the actual content remains in Norwegian.
-
-By following these instructions, the Gemini CLI agent will provide optimal assistance for this project.
+*   **Testing Strategy:** This project utilizes a multi-layered testing approach:
+    *   **Unit/Integration (Vitest):** Tests logic, API endpoints, and content loaders. Located in `__tests__` subdirectories. Run with `npm test`.
+    *   **End-to-End (Playwright):** Verifies the full user experience in real browsers. Located in `tests/`. Run with `npm run test:e2e`.
+    *   **Specific E2E Categories:**
+        *   **Accessibility (UU):** Automated WCAG compliance scans using `axe-core`.
+        *   **SEO:** Verification of sidetitles, meta descriptions, and OpenGraph tags.
+        *   **Link Crawler:** Automatic detection of broken internal and external links.
+    *   Tests are integrated into the CI/CD pipeline and MUST pass before deployment. Environment variables must be provisioned for all test steps.
