@@ -54,7 +54,8 @@ This project uses a hybrid approach for content and configuration management:
     *   Astro provides API routes (e.g., `src/pages/meldinger.json.ts`, `src/pages/api/active-messages.json.ts`) to expose content collections as JSON endpoints. These are used to fetch and serve dynamic data, such as messages, to the frontend.
 
 *   **Data Synchronization (`src/scripts/sync-data.js`):**
-    *   The `sync-data.js` script is executed before `astro dev` and `astro build`. While its exact content isn't detailed here, its placement suggests it's responsible for fetching and preparing external data sources (potentially beyond just Google Sheets, or ensuring local copies) before the Astro build process begins.
+    *   This script is crucial for synchronizing external content, including `tannleger` data from Google Sheets and Markdown content/image assets from Google Drive, writing them to `src/content/`.
+    *   It executes before `astro dev` and `astro build`. For enhanced testability, its core logic is now encapsulated within an `export async function runSync({ ... })` and utilizes dependency injection for external services like `googleapis`, `fs`, and `path`.
 
 ### 3. Deployment
 
@@ -95,6 +96,9 @@ To ensure high-quality, maintainable, and idiomatic code within this project, pl
     *   Maintain consistent code formatting and style.
     *   Use clear and descriptive naming for variables, functions, and components.
     *   Break down complex logic into smaller, testable units.
-*   **Testing (where applicable):** For new features or bug fixes, consider adding appropriate tests to ensure functionality and prevent regressions.
+*   **Testing (where applicable):** This project utilizes **Vitest** for unit and integration testing.
+    *   Test files are organized into `__tests__` subdirectories alongside their respective source modules (e.g., `src/scripts/__tests__/my-script.test.ts`).
+    *   Tests are integrated into the CI/CD pipeline (via `.github/workflows/ci.yml` and `.github/workflows/deploy.yml`) and run automatically during build processes.
+    *   When executed locally via `npm test`, Vitest runs all tests once and exits, providing a `--run` flag to prevent watch mode. Environment variables (e.g., `PUBLIC_GOOGLE_API_KEY`) are correctly provisioned for test steps in CI.
 
 By following these instructions, the Gemini CLI agent will provide optimal assistance for this project.
