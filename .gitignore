@@ -22,7 +22,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
-coverage/ # Test coverage reports
 /src/assets/tannleger/
 !src/assets/tannleger/.gitkeep
 src/content/tannleger.json
@@ -30,3 +29,6 @@ src/content/tannleger.json
 !/src/content/tjenester/.gitkeep
 /src/content/meldinger/
 !/src/content/meldinger/.gitkeep
+
+# Test coverage reports
+coverage/
