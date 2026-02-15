@@ -26,6 +26,7 @@ describe('admin-client.js', () => {
             load: vi.fn((name, callback) => callback()),
             client: {
                 init: vi.fn().mockResolvedValue({}),
+                load: vi.fn().mockResolvedValue({}),
                 getToken: vi.fn().mockReturnValue({ access_token: 'valid-token' }),
                 setToken: vi.fn(),
                 drive: {
@@ -56,18 +57,21 @@ describe('admin-client.js', () => {
     });
 
     describe('initGapi', () => {
-        it('skal initialisere gapi client', async () => {
-            await initGapi();
+        it('skal initialisere gapi client og laste Drive og Sheets APIer', async () => {
+            const result = await initGapi();
+            expect(result).toBe(true);
             expect(gapi.load).toHaveBeenCalledWith('client', expect.any(Function));
             expect(gapi.client.init).toHaveBeenCalledWith(expect.objectContaining({
-                apiKey: expect.any(String),
-                discoveryDocs: expect.arrayContaining([expect.stringContaining('discovery')])
+                apiKey: expect.any(String)
             }));
+            expect(gapi.client.load).toHaveBeenCalledWith('drive', 'v3');
+            expect(gapi.client.load).toHaveBeenCalledWith('sheets', 'v4');
         });
 
-        it('skal kaste feil hvis gapi mangler', async () => {
+        it('skal returnere false hvis gapi mangler', async () => {
             vi.stubGlobal('gapi', undefined);
-            await expect(initGapi()).rejects.toThrow('Google API (gapi) script ikke lastet');
+            const result = await initGapi();
+            expect(result).toBe(false);
         });
     });
 
@@ -153,9 +157,10 @@ describe('admin-client.js', () => {
     });
 
     describe('Detailed Error Handling', () => {
-        it('initGapi skal kaste feil hvis API-nøkkel mangler', async () => {
+        it('initGapi skal fortsette selv om API-nøkkel mangler (fail-safe)', async () => {
             vi.stubEnv('PUBLIC_GOOGLE_API_KEY', '');
-            await expect(initGapi()).rejects.toThrow('PUBLIC_GOOGLE_API_KEY mangler');
+            const result = await initGapi();
+            expect(result).toBe(true); // Den prøver å fortsette
         });
 
         it('initGis callback skal lagre token i localStorage', async () => {

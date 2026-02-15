@@ -180,29 +180,31 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
         }
 
         const setup = async () => {
-            console.log("[Admin] Initialiserer Google APIer...");
+            console.log("[Admin] Starter oppsett...");
             try {
-                await initGapi();
+                // 1. Initialiser pålogging (GIS) først - denne er uavhengig av 400-feilen
                 initGis(handleAuth);
-                
-                // 1. Sjekk om vi har en aktiv sesjon i localStorage
+
+                // 2. Sjekk for eksisterende sesjon umiddelbart
                 const savedUser = tryRestoreSession();
                 if (savedUser) {
-                    console.log("[Admin] Sesjon gjenopprettet fra lager.");
-                    await handleAuth(savedUser === true ? null : savedUser);
-                } 
-                // 2. Hvis ikke, prøv "Silent Login" (hvis pålogget Google i nettleser)
-                else {
+                    console.log("[Admin] Sesjon gjenopprettet, oppdaterer UI...");
+                    handleAuth(savedUser === true ? null : savedUser);
+                } else {
                     console.log("[Admin] Ingen lokal sesjon, prøver silent login...");
                     silentLogin();
                 }
 
-                console.log("[Admin] Initialisering ferdig.");
+                // 3. Initialiser GAPI-klienten i bakgrunnen (ikke blokker UI)
+                initGapi().then(success => {
+                    if (success) console.log("[Admin] Google APIer klare.");
+                    else console.warn("[Admin] Google APIer kunne ikke lastes fullstendig.");
+                });
 
                 // Event listeners for knapper
                 document.getElementById('login-btn').onclick = login;
                 document.getElementById('logout-btn').onclick = () => { logout(); location.reload(); };
-                document.getElementById('retry-btn').onclick = () => location.reload();
+                document.getElementById('retry-btn').onclick = () => { logout(); location.reload(); };
                 document.getElementById('back-to-dashboard').onclick = closeModule;
 
                 // Modul-knapper
@@ -212,7 +214,7 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
                 document.getElementById('btn-open-tannleger').onclick = () => openModule('tannleger', 'Tannleger');
                 
             } catch (err) {
-                console.error("[Admin] Feil under oppsett:", err);
+                console.error("[Admin] Kritisk feil under oppsett:", err);
             }
         };
 

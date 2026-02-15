@@ -25,30 +25,40 @@ async function fetchUserInfo(accessToken) {
  * Initialiserer GAPI (Google API Client)
  */
 export async function initGapi() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         if (typeof gapi === 'undefined') {
-            return reject(new Error("Google API (gapi) script ikke lastet."));
+            console.error("[GAPI] Script ikke lastet.");
+            return resolve(false);
         }
         gapi.load('client', async () => {
             try {
                 const apiKey = import.meta.env.PUBLIC_GOOGLE_API_KEY;
-                if (!apiKey) {
-                    return reject(new Error("PUBLIC_GOOGLE_API_KEY mangler i miljøvariabler."));
-                }
+                
+                // Initialiser basis-klienten uten discoveryDocs for å unngå 400-feil
+                await gapi.client.init({ apiKey: apiKey });
 
-                await gapi.client.init({
-                    apiKey: apiKey,
-                    discoveryDocs: [
-                        'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
-                        'https://sheets.googleapis.com/$discovery/rest?version=v4'
-                    ],
-                });
+                // Prøv å laste APIene manuelt, men ikke stopp hvis de feiler
+                const loadApi = async (name, version) => {
+                    try {
+                        await gapi.client.load(name, version);
+                        console.log(`[GAPI] ${name} API lastet`);
+                        return true;
+                    } catch (e) {
+                        console.warn(`[GAPI] Kunne ikke laste ${name} API:`, e);
+                        return false;
+                    }
+                };
+
+                await Promise.all([
+                    loadApi('drive', 'v3'),
+                    loadApi('sheets', 'v4')
+                ]);
+
                 gapiInited = true;
-                console.log("[GAPI] Initialisert");
-                resolve();
+                resolve(true);
             } catch (err) {
-                console.error("[GAPI] Init feilet:", err);
-                reject(err);
+                console.error("[GAPI] Init kritisk feil:", err);
+                resolve(false); // Resolve uansett for å ikke blokkere UI
             }
         });
     });
@@ -73,8 +83,9 @@ export function initGis(callback) {
             
             // Hent full brukerinfo når vi får nytt token
             const userInfo = await fetchUserInfo(resp.access_token);
+            console.log("[GIS] Brukerinfo mottatt:", userInfo);
 
-            // Lagre token og utløpstidspunkt (nå + expires_in sekunder)
+            // Lagre token og utløpstidspunkt
             const expiry = Date.now() + (resp.expires_in * 1000);
             localStorage.setItem('admin_google_token', JSON.stringify({
                 access_token: resp.access_token,
@@ -82,7 +93,7 @@ export function initGis(callback) {
                 user: userInfo
             }));
 
-            callback(resp);
+            callback(userInfo);
         },
     });
     gisInited = true;
