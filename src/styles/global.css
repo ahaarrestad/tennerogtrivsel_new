@@ -13,6 +13,12 @@
     --color-brand-light: var(--color-slate-50);
     --color-brand-message-box: var(--color-slate-300);
     --color-brand-message-banner: var(--color-slate-400);
+
+    /* SPACING TOKENS */
+    --spacing-section-py: calc(var(--spacing) * 16);
+    --spacing-section-py-md: calc(var(--spacing) * 24);
+    --spacing-header-mb: calc(var(--spacing) * 16);
+    --spacing-header-mb-md: calc(var(--spacing) * 48);
 }
 
 @layer components {
@@ -40,7 +46,16 @@
 
     /* SEKSJONS-LAYOUT */
     .section-container {
-        @apply scroll-mt-6 relative py-16 md:py-24;
+        padding-top: var(--spacing-section-py);
+        padding-bottom: var(--spacing-section-py);
+        @apply scroll-mt-6 relative;
+    }
+
+    @media (min-width: 768px) {
+        .section-container {
+            padding-top: var(--spacing-section-py-md);
+            padding-bottom: var(--spacing-section-py-md);
+        }
     }
 
     .section-content {
@@ -49,7 +64,13 @@
 
     /* Beholder disse for bakoverkompatibilitet, men fjerner tvungen layout */
     .section-header {
-        @apply mb-16 md:mb-48;
+        margin-bottom: var(--spacing-header-mb);
+    }
+
+    @media (min-width: 768px) {
+        .section-header {
+            margin-bottom: var(--spacing-header-mb-md);
+        }
     }
 
     .section-header-centered {
@@ -69,6 +90,19 @@
     }
 
     /* Denne klassen gjør headeren sticky kun på mobil */
+    .section-header-sticky {
+        /* Posisjonering: Sticky på mobil for å beholde kontekst, statisk på desktop */
+        @apply sticky md:relative z-30;
+
+        /* Avstand: Legger på vertikal padding på mobil for luft, fjerner den på desktop */
+        @apply py-4 md:py-0;
+
+        /* Sticky-plassering: Dynamisk høyde basert på navbar (faller tilbake til 4rem) */
+        top: var(--nav-total-height, 4rem);
+
+        /* Lagdeling: Arver bakgrunnsfarge fra forelderen for å dekke over elementer som scrolles bak */
+        background-color: inherit;
+    }
 
     /* FELLES KORT-LOGIKK */
     .stack-card {
