@@ -8,10 +8,13 @@ import '../styles/global.css';
 
 import InfoBanner from '../components/InfoBanner.astro';
 import Navbar from '../components/Navbar.astro';
+import { getSiteSettings } from '../scripts/getSettings';
+
+const settings = await getSiteSettings();
 
 const {
-    title = 'Tenner og Trivsel | Din Tannlege i Stavanger',
-    description = 'Tenner og Trivsel tilbyr moderne tannbehandling i trygge rammer like ved Stavanger Universitetssykehus. Vi har fokus på din komfort og tannhelse.'
+    title = settings.siteTitle,
+    description = settings.siteDescription
 } = Astro.props;
 ---
 <!doctype html>

@@ -13,6 +13,8 @@ export const HARD_DEFAULTS: Record<string, string> = {
     sentralbordTekst: "Sentralbordet er åpent 07:45 - 15:15 (Stengt 11:15 - 12:15)",
     latitude: "58.95426193582862",
     longitude: "5.734568467856621",
+    siteTitle: "Tenner og Trivsel | Din Tannlege i Stavanger",
+    siteDescription: "Tenner og Trivsel tilbyr moderne tannbehandling i trygge rammer like ved Stavanger Universitetssykehus. Vi har fokus på din komfort og tannhelse.",
     velkomstTekst: "Velkommen til Tenner og Trivsel. Vi tilbyr moderne behandling med fokus på din komfort.",
     kontaktTekst: "Vi holder til like ved Stavanger Universitetssykehus på Våland og har gratis parkering rett ufenfor kontoret. I tillegg er det 2 timer gratis parkering i Folke Bernadottes vei og Overlege Cappelens gate.",
     tannlegerTekst: "Et varmt og erfarent team som setter pasienten i sentrum og tilbyr skreddersydd behandling.",
