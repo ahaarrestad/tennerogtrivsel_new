@@ -79,13 +79,15 @@ async function syncTannleger() {
             range: 'tannleger!A2:E',
         });
 
-        const tannlegeData = [];
         const rows = res.data.values || [];
+        const activeRows = rows.filter(([navn, tittel, beskrivelse, bildeFil, aktiv]) => aktiv?.toLowerCase() === 'ja');
         
-        for (const [navn, tittel, beskrivelse, bildeFil, aktiv] of rows) {
-            if (aktiv?.toLowerCase() !== 'ja') continue;
+        // Optimalisering: Hvis vi hadde en bilde-mappe-ID kunne vi brukt getFileMapInFolder her.
+        // Siden vi ikke har det ennå, kjører vi søk og nedlasting i kontrollerte grupper eller parallelt.
+        
+        const tannlegeData = await Promise.all(activeRows.map(async ([navn, tittel, beskrivelse, bildeFil]) => {
             console.log(`  🔄 Behandler: ${navn}`);
-
+            
             if (bildeFil) {
                 try {
                     const fileId = await findFileIdByName(bildeFil);
@@ -99,15 +101,16 @@ async function syncTannleger() {
                     console.error(`    ❌ Feil ved nedlasting av bilde ${bildeFil}:`, imgErr.message);
                 }
             }
-            
-            tannlegeData.push({
-                id: navn.toLowerCase().replace(/\s+/g, '-'), // Enkel ID-generering
+
+            return {
+                id: navn.toLowerCase().replace(/\s+/g, '-'),
                 name: navn,
                 title: tittel,
                 description: beskrivelse,
                 image: bildeFil
-            });
-        }
+            };
+        }));
+
         fs.writeFileSync(config.paths.tannlegerData, JSON.stringify(tannlegeData, null, 2));
         console.log(`  ✅ Synkroniserte ${tannlegeData.length} tannleger.`);
     } catch (err) {
@@ -128,15 +131,17 @@ async function syncMarkdownCollection(collection) {
         fields: 'files(id, name)',
     });
 
-    const files = res.data.files || [];
-    if (files.length === 0) console.warn(`  ⚠️ Ingen filer funnet i ${collection.name}`);
-
-    for (const file of files) {
-        if (file.name.endsWith('.md')) {
-            await downloadFile(file.id, path.join(collection.dest, file.name));
-            console.log(`  ✅ ${collection.name}: ${file.name}`);
-        }
+    const files = (res.data.files || []).filter(f => f.name.endsWith('.md'));
+    if (files.length === 0) {
+        console.warn(`  ⚠️ Ingen filer funnet i ${collection.name}`);
+        return;
     }
+
+    // Last ned alle filer i denne samlingen i parallell
+    await Promise.all(files.map(async (file) => {
+        await downloadFile(file.id, path.join(collection.dest, file.name));
+        console.log(`  ✅ ${collection.name}: ${file.name}`);
+    }));
 }
 
 // --- KJØRER ALT ---
@@ -187,11 +192,12 @@ async function runSync() {
     }
 }
 
-// Kjør IIFE bare hvis skriptet kjøres direkte (ikke under test)
+/* v8 ignore start */
 if (process.env.NODE_ENV !== 'test') {
     (async () => {
         await runSync();
     })();
 }
+/* v8 ignore stop */
 
 export { syncTannleger, syncMarkdownCollection, runSync, getConfig };
