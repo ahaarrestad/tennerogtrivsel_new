@@ -135,6 +135,23 @@ describe('sync-data.js', () => {
             expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Feil ved nedlasting av bilde'), expect.any(String));
         });
 
+        it('bør hoppe over nedlasting hvis bilde allerede finnes', async () => {
+            const mockData = {
+                data: {
+                    values: [['Ola', 'T', 'B', 'eksisterer.jpg', 'ja']],
+                },
+            };
+            mockSheets.spreadsheets.values.get.mockResolvedValue(mockData);
+            
+            // Simuler at filen finnes
+            fs.existsSync.mockImplementation((path) => path.includes('eksisterer.jpg'));
+
+            await syncTannleger();
+
+            expect(mockDrive.files.list).not.toHaveBeenCalled();
+            expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Gjenbruker eksisterende bilde'));
+        });
+
         it('bør kaste feil hvis Sheets API feiler', async () => {
             mockSheets.spreadsheets.values.get.mockRejectedValue(new Error('API Error'));
             await expect(syncTannleger()).rejects.toThrow('API Error');

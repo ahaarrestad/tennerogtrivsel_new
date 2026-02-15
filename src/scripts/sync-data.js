@@ -90,12 +90,19 @@ async function syncTannleger() {
             
             if (bildeFil) {
                 try {
-                    const fileId = await findFileIdByName(bildeFil);
-                    if (fileId) {
-                        console.log(`    ⬇️ Laster ned bilde: ${bildeFil}`);
-                        await downloadFile(fileId, path.join(config.paths.tannlegerAssets, bildeFil));
+                    const destinationPath = path.join(config.paths.tannlegerAssets, bildeFil);
+                    
+                    // Optimalisering: Sjekk om filen allerede finnes
+                    if (fs.existsSync(destinationPath)) {
+                        console.log(`    ⏭️ Gjenbruker eksisterende bilde: ${bildeFil}`);
                     } else {
-                        console.warn(`    ⚠️ Bilde ikke funnet i Drive: ${bildeFil}`);
+                        const fileId = await findFileIdByName(bildeFil);
+                        if (fileId) {
+                            console.log(`    ⬇️ Laster ned bilde: ${bildeFil}`);
+                            await downloadFile(fileId, destinationPath);
+                        } else {
+                            console.warn(`    ⚠️ Bilde ikke funnet i Drive: ${bildeFil}`);
+                        }
                     }
                 } catch (imgErr) {
                     console.error(`    ❌ Feil ved nedlasting av bilde ${bildeFil}:`, imgErr.message);
