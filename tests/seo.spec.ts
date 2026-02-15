@@ -23,7 +23,7 @@ test.describe('SEO og Metadata', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     
     const tjenesteKort = page.locator('#tjenester .card-base').first();
-    const tittel = await tjenesteKort.locator('.card-title').innerText();
+    const tittel = await tjenesteKort.locator('.h3').innerText();
     
     await tjenesteKort.click();
     

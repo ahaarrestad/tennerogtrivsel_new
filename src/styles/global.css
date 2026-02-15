@@ -16,58 +16,59 @@
 }
 
 @layer components {
+    /* TYPOGRAFI BASE-KLASSER */
+    /* Kun stil, ingen marginer eller layout */
+    .h1 {
+        @apply text-4xl md:text-6xl font-black text-brand tracking-tight leading-tight;
+    }
+
+    .h2 {
+        @apply text-3xl md:text-5xl font-black text-brand tracking-tight leading-tight;
+    }
+
+    .h3 {
+        @apply text-2xl md:text-3xl font-bold text-brand leading-snug;
+    }
+
+    .h4 {
+        @apply text-lg font-bold text-brand uppercase tracking-wide;
+    }
+
     .brand-text {
         color: var(--color-brand);
     }
 
-    /* Hovedseksjonen - styrer padding i topp og bunn og sikrer lik spacing */
+    /* SEKSJONS-LAYOUT */
     .section-container {
         @apply scroll-mt-6 relative py-16 md:py-24;
     }
 
-    /* Innholds-wrapperen - sikrer at alt innhold har samme maksimale bredde */
     .section-content {
         @apply container mx-auto px-4;
     }
 
-    /* Overskrifts-gruppen */
+    /* Beholder disse for bakoverkompatibilitet, men fjerner tvungen layout */
     .section-header {
-        /* Layout: Sentrerer tekst og begrenser bredden for bedre lesbarhet */
-        @apply text-center mx-auto max-w-4xl;
-
-        /* Avstand: Stor bunnmarg for å gi luft til innholdet under */
         @apply mb-16 md:mb-48;
     }
 
-    /* Denne klassen gjør headeren sticky kun på mobil */
-    .section-header-sticky {
-        /* Posisjonering: Sticky på mobil for å beholde kontekst, statisk på desktop */
-        @apply sticky md:relative z-30;
-
-        /* Avstand: Legger på vertikal padding på mobil for luft, fjerner den på desktop */
-        @apply py-4 md:py-0;
-
-        /* Sticky-plassering: Dynamisk høyde basert på navbar (faller tilbake til 4rem) */
-        top: var(--nav-total-height, 4rem);
-
-        /* Lagdeling: Arver bakgrunnsfarge fra forelderen for å dekke over elementer som scrolles bak */
-        background-color: inherit;
+    .section-header-centered {
+        @apply text-center mx-auto max-w-4xl;
     }
 
-    /* Selve overskriften i seksjonen */
     .section-heading {
-        @apply text-3xl md:text-5xl font-black text-brand tracking-tight;
+        @apply text-3xl md:text-5xl font-black text-brand tracking-tight leading-tight;
     }
 
-    /* Du kan også legge til den blå streken som en gjenbrukbar klasse hvis du vil */
+    .section-intro {
+        @apply text-slate-600 max-w-2xl mx-auto mt-2 text-base md:text-lg leading-relaxed;
+    }
+
     .heading-accent {
         @apply w-20 h-1 bg-brand-dark mx-auto mt-4;
     }
 
-    /* Teksten under overskriften */
-    .section-intro {
-        @apply text-slate-600 max-w-2xl mx-auto mt-2 text-base md:text-lg leading-relaxed;
-    }
+    /* Denne klassen gjør headeren sticky kun på mobil */
 
     /* FELLES KORT-LOGIKK */
     .stack-card {

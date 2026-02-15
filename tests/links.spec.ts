@@ -34,9 +34,8 @@ test.describe('Link Crawler', () => {
     );
 
     for (const link of tjenesteLinks) {
-      await page.goto(link);
-      const response = await page.waitForResponse(r => r.url() === link || r.status() === 200);
-      expect(response.status()).toBe(200);
+      const response = await page.goto(link);
+      expect(response?.status()).toBe(200);
       
       // Sjekk at nav-lenkene på denne siden også fungerer (f.eks. "Våre tjenester" nederst)
       const subLinks = await page.locator('.container a').evaluateAll(links => 
