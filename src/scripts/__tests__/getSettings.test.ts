@@ -77,4 +77,22 @@ describe('getSiteSettings', () => {
         expect(settings.phone1).toBe(''); // Expect empty string
         expect(settings.email).toBe('new@example.com');
     });
+
+    it('should log warning in GitHub Actions format when GITHUB_ACTIONS is set', async () => {
+        const originalEnv = process.env.GITHUB_ACTIONS;
+        process.env.GITHUB_ACTIONS = 'true';
+        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+        
+        const collectionData = [
+            { id: 'ukjentNøkkel', data: { value: 'verdi' } },
+        ];
+        (getCollection as vi.Mock).mockResolvedValueOnce(collectionData);
+
+        await getSiteSettings();
+
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('::warning'));
+        
+        consoleLogSpy.mockRestore();
+        process.env.GITHUB_ACTIONS = originalEnv;
+    });
 });
