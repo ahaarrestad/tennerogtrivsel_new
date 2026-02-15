@@ -215,15 +215,18 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
                 `;
 
                 currentSettings.forEach((setting, i) => {
+                    const label = setting.description || setting.id;
+                    const technicalId = setting.description ? setting.id : '';
+
                     html += `
                         <div class="flex flex-col gap-1.5 p-5 rounded-2xl border border-brand-light hover:border-brand-active transition-colors bg-white">
                             <div class="flex justify-between items-center">
                                 <label class="font-bold text-brand text-sm flex items-center gap-2">
-                                    ${setting.id}
+                                    ${label}
                                 </label>
                                 <div id="status-${i}" class="h-5 flex items-center"></div>
                             </div>
-                            ${setting.description ? `<p class="text-[11px] text-slate-500 leading-tight mb-1">${setting.description}</p>` : ''}
+                            ${technicalId ? `<p class="text-[10px] text-slate-400 uppercase tracking-wider font-mono mb-1">ID: ${technicalId}</p>` : ''}
                             <input type="text" id="setting-input-${i}" value="${setting.value}" 
                                    data-index="${i}"
                                    class="setting-field w-full p-2.5 rounded-xl border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/10 outline-none transition-all text-sm">
