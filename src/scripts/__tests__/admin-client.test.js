@@ -11,6 +11,8 @@ import {
     logout, 
     tryRestoreSession, 
     getStoredUser,
+    getSettingsWithNotes,
+    updateSettings,
     checkAccess 
 } from '../admin-client';
 
@@ -30,6 +32,14 @@ describe('admin-client.js', () => {
                 load: vi.fn().mockResolvedValue({}),
                 getToken: vi.fn().mockReturnValue({ access_token: 'valid-token' }),
                 setToken: vi.fn(),
+                sheets: {
+                    spreadsheets: {
+                        get: vi.fn(),
+                        values: {
+                            update: vi.fn()
+                        }
+                    }
+                },
                 drive: {
                     files: {
                         get: vi.fn()
@@ -85,6 +95,8 @@ describe('admin-client.js', () => {
             expect(gapi.client.init).toHaveBeenCalledWith(expect.objectContaining({
                 apiKey: expect.any(String)
             }));
+            expect(gapi.client.load).toHaveBeenCalledWith('drive', 'v3');
+            expect(gapi.client.load).toHaveBeenCalledWith('sheets', 'v4');
         });
 
         it('skal returnere false hvis gapi mangler', async () => {
@@ -129,7 +141,6 @@ describe('admin-client.js', () => {
             const cb = vi.fn();
             initGis(cb);
             login();
-            // Wait for internal async user info fetch
             await vi.waitFor(() => expect(cb).toHaveBeenCalled());
             expect(cb).toHaveBeenCalledWith(expect.objectContaining({ name: 'Test User' }));
         });
@@ -140,6 +151,60 @@ describe('admin-client.js', () => {
             initGis(() => {});
             silentLogin();
             expect(requestSpy).toHaveBeenCalledWith({ prompt: 'none' });
+        });
+    });
+
+    describe('Google Sheets Module', () => {
+        it('getSettingsWithNotes skal mappe rader og noter korrekt', async () => {
+            const mockResponse = {
+                result: {
+                    sheets: [{
+                        data: [{
+                            rowData: [
+                                {}, // Header
+                                {
+                                    values: [
+                                        { formattedValue: 'tel', note: 'Forklaring' },
+                                        { formattedValue: '123' }
+                                    ]
+                                }
+                            ]
+                        }]
+                    }]
+                }
+            };
+            gapi.client.sheets.spreadsheets.get.mockResolvedValue(mockResponse);
+
+            const settings = await getSettingsWithNotes('sheet-123');
+            expect(settings).toHaveLength(1);
+            expect(settings[0]).toEqual({
+                row: 2,
+                id: 'tel',
+                value: '123',
+                description: 'Forklaring'
+            });
+        });
+
+        it('updateSettings skal sende korrekte verdier til APIet', async () => {
+            const settings = [{ value: 'new-val' }];
+            gapi.client.sheets.spreadsheets.values.update.mockResolvedValue({ result: {} });
+
+            await updateSettings('sheet-123', settings);
+
+            expect(gapi.client.sheets.spreadsheets.values.update).toHaveBeenCalledWith(expect.objectContaining({
+                range: 'Innstillinger!B2:B2',
+                resource: { values: [['new-val']] }
+            }));
+        });
+
+        it('getSettingsWithNotes skal håndtere API-feil', async () => {
+            gapi.client.sheets.spreadsheets.get.mockRejectedValue(new Error('fail'));
+            await expect(getSettingsWithNotes('123')).rejects.toThrow('fail');
+        });
+
+        it('updateSettings skal håndtere API-feil', async () => {
+            gapi.client.sheets.spreadsheets.values.update.mockRejectedValue(new Error('fail'));
+            await expect(updateSettings('123', [])).rejects.toThrow('fail');
         });
     });
 
@@ -161,11 +226,8 @@ describe('admin-client.js', () => {
             global.fetch.mockRejectedValue(new Error('fail'));
             const successCb = vi.fn();
             initGis(successCb);
-            // Manuelt trigge callback for å teste fetch feil inni den
-            const resp = { access_token: 'abc', expires_in: 3600 };
-            // Vi må hente ut callbacken fra mocken
             const callback = google.accounts.oauth2.initTokenClient.mock.calls[0][0].callback;
-            await callback(resp);
+            await callback({ access_token: 'abc', expires_in: 3600 });
             expect(successCb).toHaveBeenCalled();
             const stored = JSON.parse(localStorage.getItem('admin_google_token'));
             expect(stored.user).toBeNull();
@@ -186,12 +248,12 @@ describe('admin-client.js', () => {
         it('initGapi skal håndtere at en av APIene feiler', async () => {
             gapi.client.load.mockRejectedValueOnce(new Error('Drive failed'));
             const result = await initGapi();
-            expect(result).toBe(true); // Den fortsetter selv om én feiler
+            expect(result).toBe(true);
         });
 
         it('logout skal håndtere at gapi.client mangler', () => {
             delete gapi.client;
-            logout(); // Bør ikke krasje
+            logout();
         });
     });
 

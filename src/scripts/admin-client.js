@@ -185,6 +185,65 @@ export function logout() {
 }
 
 /**
+ * Henter innstillinger fra Google Sheets, inkludert noter fra kolonne A som forklaring.
+ */
+export async function getSettingsWithNotes(spreadsheetId) {
+    try {
+        const response = await gapi.client.sheets.spreadsheets.get({
+            spreadsheetId: spreadsheetId,
+            ranges: ['Innstillinger!A:B'],
+            includeGridData: true,
+            fields: 'sheets.data.rowData.values(formattedValue,note)'
+        });
+
+        const rows = response.result.sheets[0].data[0].rowData;
+        if (!rows) return [];
+
+        // Vi hopper over header-raden (indeks 0)
+        return rows.slice(1).map((row, index) => {
+            const cells = row.values || [];
+            const keyCell = cells[0] || {};
+            const valueCell = cells[1] || {};
+
+            return {
+                row: index + 2, // Excel/Sheets radnummer
+                id: keyCell.formattedValue || '',
+                value: valueCell.formattedValue || '',
+                description: keyCell.note || '' // Bruker noten fra kolonne A som forklaring
+            };
+        }).filter(item => item.id); // Fjern tomme rader
+
+    } catch (err) {
+        console.error("[Admin] Kunne ikke hente innstillinger:", err);
+        throw err;
+    }
+}
+
+/**
+ * Oppdaterer innstillinger i Google Sheets (kun kolonne B).
+ */
+export async function updateSettings(spreadsheetId, settings) {
+    try {
+        // Vi må mappe verdiene tilbake til riktig rad i kolonne B
+        // Her antar vi at rekkefølgen i 'settings' matcher radene i arket
+        const values = settings.map(s => [s.value]);
+        
+        await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId: spreadsheetId,
+            range: `Innstillinger!B2:B${settings.length + 1}`,
+            valueInputOption: 'RAW',
+            resource: { values }
+        });
+        
+        console.log("[Admin] Innstillinger lagret!");
+        return true;
+    } catch (err) {
+        console.error("[Admin] Lagring av innstillinger feilet:", err);
+        throw err;
+    }
+}
+
+/**
  * Sjekker om brukeren har tilgang ved å prøve å hente info om en mappe
  */
 export async function checkAccess(folderId) {

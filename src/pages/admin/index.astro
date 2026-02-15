@@ -141,13 +141,17 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
     <div id="admin-config" 
          data-tjenester-folder={TJENESTER_FOLDER} 
          data-tannleger-folder={TANNLEGER_FOLDER} 
+         data-sheet-id={import.meta.env.PUBLIC_GOOGLE_SHEET_ID}
          class="hidden"></div>
 
     <script>
-        import { initGapi, initGis, login, logout, checkAccess, tryRestoreSession, silentLogin, getStoredUser } from '../../scripts/admin-client.js';
+        import { initGapi, initGis, login, logout, checkAccess, tryRestoreSession, silentLogin, getStoredUser, getSettingsWithNotes, updateSettings } from '../../scripts/admin-client.js';
 
         const configEl = document.getElementById('admin-config');
         const TJENESTER_FOLDER = configEl?.dataset.tjenesterFolder;
+        const SHEET_ID = configEl?.dataset.sheetId;
+
+        let currentSettings = [];
 
         function updateUIWithUser(user) {
             if (!user) return;
@@ -162,11 +166,89 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
             }
         }
 
-        function openModule(name, title) {
+        async function saveSettings() {
+            const btn = document.getElementById('btn-save-settings');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = "Lagrer...";
+
+            try {
+                // Hent verdier fra alle inputs
+                const updated = currentSettings.map((s, i) => ({
+                    ...s,
+                    value: document.getElementById(`setting-input-${i}`).value
+                }));
+
+                await updateSettings(SHEET_ID, updated);
+                btn.classList.replace('btn-primary', 'bg-green-600');
+                btn.textContent = "✅ Lagret!";
+                setTimeout(() => {
+                    btn.classList.replace('bg-green-600', 'btn-primary');
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            } catch (e) {
+                console.error("Lagring feilet:", e);
+                alert("Lagring feilet. Se konsollen for detaljer.");
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        async function loadSettingsModule() {
+            const inner = document.getElementById('module-inner');
+            inner.innerHTML = '<div class="flex items-center gap-3 text-slate-500 animate-pulse"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Henter data fra Google Sheets...</div>';
+
+            try {
+                currentSettings = await getSettingsWithNotes(SHEET_ID);
+                
+                let html = `
+                    <div class="space-y-8 max-w-4xl">
+                        <p class="text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 italic">
+                            Her kan du endre globale innstillinger. Endringene vil bli synlige på nettsiden etter neste automatiske bygg (ca. 1-2 minutter).
+                        </p>
+                        <div class="space-y-6">
+                `;
+
+                currentSettings.forEach((setting, i) => {
+                    html += `
+                        <div class="flex flex-col gap-2 p-6 rounded-2xl border border-brand-light hover:border-brand-active transition-colors">
+                            <label class="font-bold text-brand flex items-center gap-2">
+                                ${setting.id}
+                                ${setting.description ? `<span class="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md" title="${setting.description}">i</span>` : ''}
+                            </label>
+                            ${setting.description ? `<p class="text-xs text-slate-500 mb-1">${setting.description}</p>` : ''}
+                            <input type="text" id="setting-input-${i}" value="${setting.value}" 
+                                   class="w-full p-3 rounded-xl border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/10 outline-none transition-all">
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                        <div class="sticky bottom-8 pt-8 bg-white/80 backdrop-blur-sm">
+                            <button id="btn-save-settings" class="btn-primary w-full py-4 shadow-xl">Lagre alle endringer</button>
+                        </div>
+                    </div>
+                `;
+
+                inner.innerHTML = html;
+                document.getElementById('btn-save-settings').onclick = saveSettings;
+
+            } catch (e) {
+                inner.innerHTML = `<div class="text-red-500 font-bold p-4 bg-red-50 rounded-2xl border border-red-100">
+                    ❌ Kunne ikke laste innstillinger. Sjekk at du har tilgang til Google Sheets og at Client ID er riktig konfigurert.
+                </div>`;
+            }
+        }
+
+        function openModule(id, title) {
             document.getElementById('dashboard').classList.add('hidden');
             document.getElementById('module-container').classList.remove('hidden');
             document.getElementById('module-title').textContent = title;
-            document.getElementById('module-inner').innerHTML = `<p class="text-slate-600">Her kommer editoren for <strong>${title}</strong> (Fase 2-4).</p>`;
+            
+            if (id === 'settings') loadSettingsModule();
+            else document.getElementById('module-inner').innerHTML = `<p class="text-slate-600">Her kommer editoren for <strong>${title}</strong> (Fase 3-4).</p>`;
         }
 
         function closeModule() {
