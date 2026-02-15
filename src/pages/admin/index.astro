@@ -3,6 +3,7 @@
 import '../../styles/global.css';
 
 const TJENESTER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID;
+const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID;
 ---
 <!doctype html>
 <html lang="no" class="h-full bg-slate-50">
@@ -38,21 +39,41 @@ const TJENESTER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID
             <button id="logout-btn" class="btn-primary bg-slate-100 text-brand border-slate-200 shadow-none hover:bg-slate-200">Logg ut</button>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border flex flex-col">
                 <h2 class="h3 mb-4">Innstillinger</h2>
-                <p class="text-slate-600 mb-6">Administrer telefonnumre, åpningstider og nettsidetitler.</p>
-                <button class="btn-primary w-full">Åpne editor</button>
+                <p class="text-slate-600 mb-6 grow">Administrer telefonnumre, åpningstider og nettsidetitler.</p>
+                <button id="btn-open-settings" class="btn-primary w-full mt-auto">Åpne editor</button>
             </div>
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border">
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border flex flex-col">
                 <h2 class="h3 mb-4">Tjenester</h2>
-                <p class="text-slate-600 mb-6">Rediger tekst og innhold for alle tannhelsetjenester.</p>
-                <button class="btn-primary w-full">Administrer</button>
+                <p class="text-slate-600 mb-6 grow">Rediger tekst og innhold for alle tannhelsetjenester.</p>
+                <button id="btn-open-tjenester" class="btn-primary w-full mt-auto">Administrer</button>
             </div>
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border">
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border flex flex-col">
                 <h2 class="h3 mb-4">Meldinger</h2>
-                <p class="text-slate-600 mb-6">Lag og administrer aktive meldinger og infobannere.</p>
-                <button class="btn-primary w-full">Vis meldinger</button>
+                <p class="text-slate-600 mb-6 grow">Lag og administrer aktive meldinger og infobannere.</p>
+                <button id="btn-open-meldinger" class="btn-primary w-full mt-auto">Vis meldinger</button>
+            </div>
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border flex flex-col">
+                <h2 class="h3 mb-4">Tannleger</h2>
+                <p class="text-slate-600 mb-6 grow">Oppdater informasjon om ansatte og last opp nye portretter.</p>
+                <button id="btn-open-tannleger" class="btn-primary w-full mt-auto">Åpne editor</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODUL-SEKSJONER (Skjult som standard) -->
+    <div id="module-container" class="hidden layout-container py-12 space-y-8">
+        <button id="back-to-dashboard" class="text-brand font-bold flex items-center gap-2 hover:text-brand-hover transition-colors">
+            ← Tilbake til dashbord
+        </button>
+        
+        <div id="module-content" class="bg-white p-8 rounded-3xl shadow-sm border border-brand-border min-h-[400px]">
+            <!-- Innholdet i modulen lastes her -->
+            <h2 id="module-title" class="h2 mb-8">Modulnavn</h2>
+            <div id="module-inner">
+                Laster innhold...
             </div>
         </div>
     </div>
@@ -66,17 +87,32 @@ const TJENESTER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID
         <button id="retry-btn" class="btn-primary w-full">Prøv igjen</button>
     </div>
 
-    <div id="admin-config" data-tjenester-folder={TJENESTER_FOLDER} class="hidden"></div>
+    <div id="admin-config" 
+         data-tjenester-folder={TJENESTER_FOLDER} 
+         data-tannleger-folder={TANNLEGER_FOLDER} 
+         class="hidden"></div>
 
     <script>
-        import { initGapi, initGis, login, logout, checkAccess, tryRestoreSession } from '../../scripts/admin-client.js';
+        import { initGapi, initGis, login, logout, checkAccess, tryRestoreSession, silentLogin } from '../../scripts/admin-client.js';
+
+        const configEl = document.getElementById('admin-config');
+        const TJENESTER_FOLDER = configEl?.dataset.tjenesterFolder;
+
+        function openModule(name, title) {
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('module-container').classList.remove('hidden');
+            document.getElementById('module-title').textContent = title;
+            document.getElementById('module-inner').innerHTML = `<p class="text-slate-600">Her kommer editoren for <strong>${title}</strong> (Fase 2-4).</p>`;
+        }
+
+        function closeModule() {
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('module-container').classList.add('hidden');
+        }
 
         async function handleAuth() {
             console.log("[Admin] Auth callback mottatt, sjekker tilgang...");
-            const configEl = document.getElementById('admin-config');
-            const folderId = configEl?.dataset.tjenesterFolder;
-            
-            const hasAccess = await checkAccess(folderId);
+            const hasAccess = await checkAccess(TJENESTER_FOLDER);
             
             if (hasAccess) {
                 console.log("[Admin] Tilgang bekreftet!");
@@ -111,36 +147,25 @@ const TJENESTER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID
 
                 console.log("[Admin] Initialisering ferdig.");
 
-                const loginBtn = document.getElementById('login-btn');
-                if (loginBtn) {
-                    loginBtn.onclick = () => {
-                        console.log("[Admin] Login-knapp trykket");
-                        login();
-                    };
-                }
-                
-                const logoutBtn = document.getElementById('logout-btn');
-                if (logoutBtn) {
-                    logoutBtn.onclick = () => {
-                        logout();
-                        location.reload();
-                    };
-                }
+                // Event listeners for knapper
+                document.getElementById('login-btn').onclick = login;
+                document.getElementById('logout-btn').onclick = () => { logout(); location.reload(); };
+                document.getElementById('retry-btn').onclick = () => location.reload();
+                document.getElementById('back-to-dashboard').onclick = closeModule;
 
-                const retryBtn = document.getElementById('retry-btn');
-                if (retryBtn) retryBtn.onclick = () => location.reload();
+                // Modul-knapper
+                document.getElementById('btn-open-settings').onclick = () => openModule('settings', 'Innstillinger');
+                document.getElementById('btn-open-tjenester').onclick = () => openModule('tjenester', 'Tjenester');
+                document.getElementById('btn-open-meldinger').onclick = () => openModule('meldinger', 'Meldinger');
+                document.getElementById('btn-open-tannleger').onclick = () => openModule('tannleger', 'Tannleger');
                 
             } catch (err) {
                 console.error("[Admin] Feil under oppsett:", err);
             }
         };
 
-        // Kjør setup når DOM er klar
-        if (document.readyState === 'complete') {
-            setup();
-        } else {
-            window.addEventListener('load', setup);
-        }
+        if (document.readyState === 'complete') setup();
+        else window.addEventListener('load', setup);
     </script>
 </body>
 </html>
