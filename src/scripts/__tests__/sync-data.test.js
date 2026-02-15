@@ -141,7 +141,7 @@ describe('sync-data.js', () => {
 
             await syncTannleger();
 
-            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Feil ved behandling av bilde'), expect.any(String));
+            expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Download Error: Feil ved behandling av bilde'));
         });
 
         it('bør hoppe over nedlasting hvis bilde allerede finnes og er uendret', async () => {

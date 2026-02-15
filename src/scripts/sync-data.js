@@ -50,6 +50,17 @@ function getSheets() {
 // --- HJELPEFUNKSJONER ---
 
 /**
+ * Logger en advarsel som vises som en annotering på GitHub hvis vi kjører i CI
+ */
+function logWarning(title, message) {
+    if (process.env.GITHUB_ACTIONS) {
+        console.log(`::warning title=${title}::${message}`);
+    } else {
+        console.warn(`${title}: ${message}`);
+    }
+}
+
+/**
  * Beregner MD5-hash for en lokal fil
  */
 function getLocalHash(filePath) {
@@ -119,10 +130,10 @@ async function syncTannleger() {
                             console.log(`    Skip: ${bildeFil} er uendret`);
                         }
                     } else {
-                        console.warn(`    ⚠️ Bilde ikke funnet i Drive: ${bildeFil}`);
+                        logWarning('Missing Asset', `Bilde ikke funnet i Drive: ${bildeFil}`);
                     }
                 } catch (imgErr) {
-                    console.error(`    ❌ Feil ved behandling av bilde ${bildeFil}:`, imgErr.message);
+                    logWarning('Download Error', `Feil ved behandling av bilde ${bildeFil}: ${imgErr.message}`);
                 }
             }
 
@@ -157,7 +168,7 @@ async function syncMarkdownCollection(collection) {
 
     const files = (res.data.files || []).filter(f => f.name.endsWith('.md'));
     if (files.length === 0) {
-        console.warn(`  ⚠️ Ingen filer funnet i ${collection.name}`);
+        logWarning('Empty Collection', `Ingen filer funnet i samlingen "${collection.name}"`);
         return;
     }
 
