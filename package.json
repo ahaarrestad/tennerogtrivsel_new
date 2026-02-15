@@ -7,7 +7,8 @@
     "sync": "node src/scripts/sync-data.js",
     "build": "node src/scripts/sync-data.js && astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "vitest --coverage"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.0",
@@ -19,6 +20,9 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
-    "@tailwindcss/typography": "^0.5.19"
+    "@tailwindcss/typography": "^0.5.19",
+    "@vitest/coverage-v8": "^4.0.18",
+    "jsdom": "^28.1.0",
+    "vitest": "^4.0.18"
   }
 }

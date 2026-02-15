@@ -1,7 +1,7 @@
 // src/lib/getSettings.ts
 import {getCollection} from 'astro:content';
 
-const HARD_DEFAULTS: Record<string, string> = {
+export const HARD_DEFAULTS: Record<string, string> = {
     phone1: "51 52 96 18",
     phone2: "51 53 64 21",
     email: "resepsjon@tennerogtrivsel.no",

@@ -15,4 +15,5 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
+      - run: npm test # Add this line to run tests
       - run: npm audit --audit-level=high # Stopper hvis det er kritiske hull
