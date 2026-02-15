@@ -166,32 +166,36 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
             }
         }
 
-        async function saveSettings() {
-            const btn = document.getElementById('btn-save-settings');
-            const originalText = btn.textContent;
-            btn.disabled = true;
-            btn.textContent = "Lagrer...";
+        async function saveSingleSetting(index, inputEl) {
+            const statusEl = document.getElementById(`status-${index}`);
+            const originalValue = currentSettings[index].value;
+            const newValue = inputEl.value;
+
+            if (newValue === originalValue) return;
+
+            statusEl.innerHTML = '<svg class="animate-spin h-4 w-4 text-slate-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
 
             try {
-                // Hent verdier fra alle inputs
-                const updated = currentSettings.map((s, i) => ({
-                    ...s,
-                    value: document.getElementById(`setting-input-${i}`).value
-                }));
+                // Vi oppdaterer kun denne spesifikke raden i Sheets
+                const updatedSetting = { ...currentSettings[index], value: newValue };
+                
+                // Vi bruker updateSettings men sender kun én rad (eller hele listen, 
+                // men vi holder det enkelt og sender hele listen for nå pga API-struktur)
+                const updatedList = [...currentSettings];
+                updatedList[index] = updatedSetting;
 
-                await updateSettings(SHEET_ID, updated);
-                btn.classList.replace('btn-primary', 'bg-green-600');
-                btn.textContent = "✅ Lagret!";
+                await updateSettings(SHEET_ID, updatedList);
+                currentSettings[index].value = newValue; // Oppdater lokal cache
+
+                statusEl.innerHTML = '<span class="text-green-600 text-xs font-bold flex items-center gap-1 animate-in fade-in zoom-in">✅ Lagret</span>';
                 setTimeout(() => {
-                    btn.classList.replace('bg-green-600', 'btn-primary');
-                    btn.textContent = originalText;
-                    btn.disabled = false;
-                }, 2000);
+                    if (statusEl.innerHTML.includes('Lagret')) {
+                        statusEl.innerHTML = '';
+                    }
+                }, 3000);
             } catch (e) {
-                console.error("Lagring feilet:", e);
-                alert("Lagring feilet. Se konsollen for detaljer.");
-                btn.disabled = false;
-                btn.textContent = originalText;
+                console.error("Auto-save feilet:", e);
+                statusEl.innerHTML = '<span class="text-red-500 text-xs font-bold" title="Lagring feilet">❌ Feil</span>';
             }
         }
 
@@ -204,40 +208,50 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
                 
                 let html = `
                     <div class="space-y-8 max-w-4xl">
-                        <p class="text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 italic">
-                            Her kan du endre globale innstillinger. Endringene vil bli synlige på nettsiden etter neste automatiske bygg (ca. 1-2 minutter).
+                        <p class="text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 italic text-sm">
+                            Endringer lagres automatisk når du klikker utenfor et felt. Det tar ca. 5-10 minutter før endringene blir synlige på nettsiden.
                         </p>
-                        <div class="space-y-6">
+                        <div class="space-y-4">
                 `;
 
                 currentSettings.forEach((setting, i) => {
                     html += `
-                        <div class="flex flex-col gap-2 p-6 rounded-2xl border border-brand-light hover:border-brand-active transition-colors">
-                            <label class="font-bold text-brand flex items-center gap-2">
-                                ${setting.id}
-                                ${setting.description ? `<span class="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md" title="${setting.description}">i</span>` : ''}
-                            </label>
-                            ${setting.description ? `<p class="text-xs text-slate-500 mb-1">${setting.description}</p>` : ''}
+                        <div class="flex flex-col gap-1.5 p-5 rounded-2xl border border-brand-light hover:border-brand-active transition-colors bg-white">
+                            <div class="flex justify-between items-center">
+                                <label class="font-bold text-brand text-sm flex items-center gap-2">
+                                    ${setting.id}
+                                </label>
+                                <div id="status-${i}" class="h-5 flex items-center"></div>
+                            </div>
+                            ${setting.description ? `<p class="text-[11px] text-slate-500 leading-tight mb-1">${setting.description}</p>` : ''}
                             <input type="text" id="setting-input-${i}" value="${setting.value}" 
-                                   class="w-full p-3 rounded-xl border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/10 outline-none transition-all">
+                                   data-index="${i}"
+                                   class="setting-field w-full p-2.5 rounded-xl border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/10 outline-none transition-all text-sm">
                         </div>
                     `;
                 });
 
                 html += `
                         </div>
-                        <div class="sticky bottom-8 pt-8 bg-white/80 backdrop-blur-sm">
-                            <button id="btn-save-settings" class="btn-primary w-full py-4 shadow-xl">Lagre alle endringer</button>
-                        </div>
                     </div>
                 `;
 
                 inner.innerHTML = html;
-                document.getElementById('btn-save-settings').onclick = saveSettings;
+                
+                // Legg til event listeners på alle feltene
+                document.querySelectorAll('.setting-field').forEach(input => {
+                    input.addEventListener('blur', (e) => {
+                        saveSingleSetting(e.target.dataset.index, e.target);
+                    });
+                    // Lagre også hvis man trykker Enter
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') e.target.blur();
+                    });
+                });
 
             } catch (e) {
                 inner.innerHTML = `<div class="text-red-500 font-bold p-4 bg-red-50 rounded-2xl border border-red-100">
-                    ❌ Kunne ikke laste innstillinger. Sjekk at du har tilgang til Google Sheets og at Client ID er riktig konfigurert.
+                    ❌ Kunne ikke laste innstillinger.
                 </div>`;
             }
         }
