@@ -6,7 +6,7 @@ export const GET = async () => {
 
         const data = alleMeldinger.map((m) => {
             // Vasker innholdet for StackEdit-data/kommentarer
-            const cleanBody = m.body.split('<!--stackedit_data')[0].trim();
+            const cleanBody = m.body.replace(/<!--stackedit_data-->.*?<!--\/stackedit_data-->/gs, '').trim();
 
             return {
                 title: m.data.title,
