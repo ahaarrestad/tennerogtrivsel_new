@@ -70,6 +70,7 @@ Deployment is automated via GitHub Actions, configured in `.github/workflows/dep
 *   **Build Process (GitHub Actions `build` job):**
     *   The Astro site is built using `npm run build` (which includes the `sync-data.js` script).
     *   Google API related secrets (`GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`, `GOOGLE_SHEET_ID`, `GOOGLE_DRIVE_TJENESTER_FOLDER_ID`, `GOOGLE_DRIVE_MELDINGER_FOLDER_ID`, `PUBLIC_GOOGLE_API_KEY`) are securely passed as environment variables during the build.
+    *   **Note on Dependabot:** For Dependabot PRs to build successfully, these same secrets must also be added to **Dependabot secrets** (`Settings > Secrets and variables > Dependabot`) in the GitHub repository.
     *   The generated static assets are output to the `dist/` directory and uploaded as a build artifact.
 
 *   **Deployment Process (GitHub Actions `deploy` job):**
