@@ -8,7 +8,7 @@
     "build": "node src/scripts/sync-data.js && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "vitest --coverage"
+    "test": "vitest --run --coverage"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.0",
