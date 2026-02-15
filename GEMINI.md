@@ -97,9 +97,12 @@ To ensure high-quality, maintainable, and idiomatic code within this project, pl
     *   Maintain consistent code formatting and style.
     *   Use clear and descriptive naming for variables, functions, and components.
     *   Break down complex logic into smaller, testable units.
-*   **Testing (where applicable):** This project utilizes **Vitest** for unit and integration testing.
-    *   Test files are organized into `__tests__` subdirectories alongside their respective source modules (e.g., `src/scripts/__tests__/my-script.test.ts`).
+*   **Testing (where applicable):** This project utilizes **Vitest** for unit/integration testing and **Playwright** for end-to-end (E2E) testing.
+    *   **Unit/Integration Tests:** Test files are organized into `__tests__` subdirectories alongside their respective source modules (e.g., `src/scripts/__tests__/my-script.test.js`). Run using `npm test`.
+    *   **E2E Tests:** Organized in the `tests/` directory. These tests run against a live browser to verify UI and interaction. Run using `npm run test:e2e`.
     *   Tests are integrated into the CI/CD pipeline (via `.github/workflows/ci.yml` and `.github/workflows/deploy.yml`) and run automatically during build processes.
-    *   When executed locally via `npm test`, Vitest runs all tests once and exits, providing a `--run` flag to prevent watch mode. Environment variables (e.g., `PUBLIC_GOOGLE_API_KEY`) are correctly provisioned for test steps in CI.
+    *   Environment variables (e.g., `PUBLIC_GOOGLE_API_KEY`) must be correctly provisioned for test steps in CI.
+
+*   **Content Schema Naming:** To follow framework best practices, all keys in content schemas (defined in `src/content.config.ts`) should use **English** names (e.g., `title`, `name`, `description`, `image`), even if the actual content remains in Norwegian.
 
 By following these instructions, the Gemini CLI agent will provide optimal assistance for this project.
