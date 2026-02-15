@@ -34,6 +34,8 @@ jobs:
 
       - name: Run tests
         run: npm test
+        env:
+          PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
 
       - name: Build Astro site
         run: npm run build

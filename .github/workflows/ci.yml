@@ -15,5 +15,8 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - run: npm test # Add this line to run tests
+      - name: Run tests
+        run: npm test
+        env: # Add environment variables here
+          PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
       - run: npm audit --audit-level=high # Stopper hvis det er kritiske hull

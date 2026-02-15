@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getSiteSettings, HARD_DEFAULTS } from './getSettings';
 // The actual getCollection is mocked via vitest.config.ts alias,
 // but we need to import it here to be able to mock its behavior dynamically per test.
@@ -14,9 +14,16 @@ vi.mock('astro:content', async (importOriginal) => {
 });
 
 describe('getSiteSettings', () => {
-    // Reset mocks before each test
+    // Suppress console.error output for tests that expect errors
+    let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+
     beforeEach(() => {
         vi.clearAllMocks();
+        consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        consoleErrorSpy.mockRestore(); // Restore original console.error after each test
     });
 
 
