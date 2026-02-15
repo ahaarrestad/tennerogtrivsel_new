@@ -67,26 +67,11 @@ import logoImage from "../assets/logo.png";
     import {initMobileMenu} from '../scripts/mobile-menu.js';
     import {initMenuHighlight} from '../scripts/menu-highlight.js';
 
-    initMobileMenu();
-    initMenuHighlight();
-</script>
-
-<script is:inline>
-    function updateHeaderHeight() {
-        // Vi måler avstanden fra toppen av main til toppen av viewporten
-        // for å vite nøyaktig hvor mye plass headeren tar.
-        const main = document.querySelector('main');
-        if (main) {
-            const headerHeight = main.offsetTop;
-            document.documentElement.style.setProperty('--nav-total-height', headerHeight + 'px');
-        }
+    function init() {
+        initMobileMenu();
+        initMenuHighlight();
     }
 
-    // Kjør ved oppstart og når vinduet endrer størrelse
-    window.addEventListener('resize', updateHeaderHeight);
-    window.addEventListener('load', updateHeaderHeight);
-
-    // Siden du har en "melding" som kan forsvinne, observerer vi endringer i dokumentet
-    const observer = new MutationObserver(updateHeaderHeight);
-    observer.observe(document.body, {childList: true, subtree: true});
+    document.addEventListener('astro:page-load', init);
+    init();
 </script>

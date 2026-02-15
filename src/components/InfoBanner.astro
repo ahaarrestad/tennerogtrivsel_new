@@ -20,12 +20,8 @@
                 // Sett tittel og vis
                 titleEl.textContent = active.title;
                 root.classList.remove('hidden');
-
-                // Juster navbar (40px er ca høyden på banneret)
-                if (navWrapper) navWrapper.style.top = root.offsetHeight + 'px';
                 } else {
                 if (root) root.classList.add('hidden');
-                if (navWrapper) navWrapper.style.top = '0px';
                 }
             }
 

@@ -55,6 +55,13 @@ const {
 
 <Footer/>
 
+<script>
+    import { initLayoutHelper } from '../scripts/layout-helper.js';
+    
+    document.addEventListener('astro:page-load', initLayoutHelper);
+    initLayoutHelper();
+</script>
+
 </body>
 </html>
 
