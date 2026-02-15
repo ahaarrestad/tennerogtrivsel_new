@@ -185,33 +185,30 @@ export function logout() {
 }
 
 /**
- * Henter innstillinger fra Google Sheets, inkludert noter fra kolonne A som forklaring.
+ * Henter innstillinger fra Google Sheets.
+ * Kolonne A: Teknisk ID
+ * Kolonne B: Verdi
+ * Kolonne C: Beskrivelse (vises som tittel i Admin)
  */
 export async function getSettingsWithNotes(spreadsheetId) {
     try {
-        const response = await gapi.client.sheets.spreadsheets.get({
+        const response = await gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId: spreadsheetId,
-            ranges: ['Innstillinger!A:B'],
-            includeGridData: true,
-            fields: 'sheets.data.rowData.values(formattedValue,note)'
+            range: 'Innstillinger!A:C',
         });
 
-        const rows = response.result.sheets[0].data[0].rowData;
-        if (!rows) return [];
+        const rows = response.result.values;
+        if (!rows || rows.length <= 1) return [];
 
         // Vi hopper over header-raden (indeks 0)
         return rows.slice(1).map((row, index) => {
-            const cells = row.values || [];
-            const keyCell = cells[0] || {};
-            const valueCell = cells[1] || {};
-
             return {
-                row: index + 2, // Excel/Sheets radnummer
-                id: keyCell.formattedValue || '',
-                value: valueCell.formattedValue || '',
-                description: keyCell.note || '' // Bruker noten fra kolonne A som forklaring
+                row: index + 2,
+                id: row[0] || '',
+                value: row[1] || '',
+                description: row[2] || '' // Bruker kolonne C som forklaring/tittel
             };
-        }).filter(item => item.id); // Fjern tomme rader
+        }).filter(item => item.id);
 
     } catch (err) {
         console.error("[Admin] Kunne ikke hente innstillinger:", err);

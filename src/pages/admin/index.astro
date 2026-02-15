@@ -199,6 +199,11 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
             }
         }
 
+        function autoResizeTextarea(el) {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+        }
+
         async function loadSettingsModule() {
             const inner = document.getElementById('module-inner');
             inner.innerHTML = '<div class="flex items-center gap-3 text-slate-500 animate-pulse"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Henter data fra Google Sheets...</div>';
@@ -217,19 +222,31 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
                 currentSettings.forEach((setting, i) => {
                     const label = setting.description || setting.id;
                     const technicalId = setting.description ? setting.id : '';
+                    const isLong = (setting.value && setting.value.length > 60) || setting.id.toLowerCase().includes('tekst') || setting.id.toLowerCase().includes('description');
 
                     html += `
                         <div class="flex flex-col gap-1.5 p-5 rounded-2xl border border-brand-light hover:border-brand-active transition-colors bg-white">
-                            <div class="flex justify-between items-center">
-                                <label class="font-bold text-brand text-sm flex items-center gap-2">
-                                    ${label}
-                                </label>
-                                <div id="status-${i}" class="h-5 flex items-center"></div>
+                            <div class="flex justify-between items-start gap-4">
+                                <div class="flex flex-col gap-0.5 min-w-0">
+                                    <label class="font-bold text-brand text-sm break-words">
+                                        ${label}
+                                    </label>
+                                    ${technicalId ? `<p class="text-[10px] text-slate-400 uppercase tracking-wider font-mono break-all">ID: ${technicalId}</p>` : ''}
+                                </div>
+                                <div id="status-${i}" class="h-5 flex items-center shrink-0"></div>
                             </div>
-                            ${technicalId ? `<p class="text-[10px] text-slate-400 uppercase tracking-wider font-mono mb-1">ID: ${technicalId}</p>` : ''}
-                            <input type="text" id="setting-input-${i}" value="${setting.value}" 
-                                   data-index="${i}"
-                                   class="setting-field w-full p-2.5 rounded-xl border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/10 outline-none transition-all text-sm">
+                            
+                            ${isLong ? `
+                                <textarea id="setting-input-${i}" 
+                                          data-index="${i}"
+                                          rows="1"
+                                          class="setting-field w-full p-2.5 rounded-xl border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/10 outline-none transition-all text-sm resize-none overflow-hidden"
+                                >${setting.value}</textarea>
+                            ` : `
+                                <input type="text" id="setting-input-${i}" value="${setting.value}" 
+                                       data-index="${i}"
+                                       class="setting-field w-full p-2.5 rounded-xl border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/10 outline-none transition-all text-sm">
+                            `}
                         </div>
                     `;
                 });
@@ -241,18 +258,26 @@ const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID
 
                 inner.innerHTML = html;
                 
-                // Legg til event listeners på alle feltene
+                // Legg til event listeners og initialiser textareas
                 document.querySelectorAll('.setting-field').forEach(input => {
+                    if (input.tagName === 'TEXTAREA') {
+                        autoResizeTextarea(input);
+                        input.addEventListener('input', (e) => autoResizeTextarea(e.target));
+                    }
+
                     input.addEventListener('blur', (e) => {
                         saveSingleSetting(e.target.dataset.index, e.target);
                     });
-                    // Lagre også hvis man trykker Enter
-                    input.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') e.target.blur();
-                    });
+                    
+                    if (input.tagName === 'INPUT') {
+                        input.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') e.target.blur();
+                        });
+                    }
                 });
 
             } catch (e) {
+                console.error("Modul-lasting feilet:", e);
                 inner.innerHTML = `<div class="text-red-500 font-bold p-4 bg-red-50 rounded-2xl border border-red-100">
                     ❌ Kunne ikke laste innstillinger.
                 </div>`;

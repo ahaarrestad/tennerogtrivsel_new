@@ -36,6 +36,7 @@ describe('admin-client.js', () => {
                     spreadsheets: {
                         get: vi.fn(),
                         values: {
+                            get: vi.fn(),
                             update: vi.fn()
                         }
                     }
@@ -155,25 +156,14 @@ describe('admin-client.js', () => {
     });
 
     describe('Google Sheets Module', () => {
-        it('getSettingsWithNotes skal mappe rader og noter korrekt', async () => {
-            const mockResponse = {
-                result: {
-                    sheets: [{
-                        data: [{
-                            rowData: [
-                                {}, // Header
-                                {
-                                    values: [
-                                        { formattedValue: 'tel', note: 'Forklaring' },
-                                        { formattedValue: '123' }
-                                    ]
-                                }
-                            ]
-                        }]
-                    }]
-                }
-            };
-            gapi.client.sheets.spreadsheets.get.mockResolvedValue(mockResponse);
+        it('getSettingsWithNotes skal mappe rader fra A, B og C korrekt', async () => {
+            const mockValues = [
+                ['ID', 'Verdi', 'Beskrivelse'], // Header
+                ['tel', '123', 'Telefonnummer']
+            ];
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
+                result: { values: mockValues }
+            });
 
             const settings = await getSettingsWithNotes('sheet-123');
             expect(settings).toHaveLength(1);
@@ -181,7 +171,7 @@ describe('admin-client.js', () => {
                 row: 2,
                 id: 'tel',
                 value: '123',
-                description: 'Forklaring'
+                description: 'Telefonnummer'
             });
         });
 
@@ -198,7 +188,7 @@ describe('admin-client.js', () => {
         });
 
         it('getSettingsWithNotes skal håndtere API-feil', async () => {
-            gapi.client.sheets.spreadsheets.get.mockRejectedValue(new Error('fail'));
+            gapi.client.sheets.spreadsheets.values.get.mockRejectedValue(new Error('fail'));
             await expect(getSettingsWithNotes('123')).rejects.toThrow('fail');
         });
 
