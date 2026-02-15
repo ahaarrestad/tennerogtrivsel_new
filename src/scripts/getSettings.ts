@@ -25,8 +25,24 @@ export const HARD_DEFAULTS: Record<string, string> = {
 export async function getSiteSettings() {
     try {
         const entries = await getCollection('innstillinger');
-        // Gjør om [ {id: "tel", verdi: "123"}, ... ] til { tel: "123", ... }
-        let collectionEntries = Object.fromEntries(entries.map(entry => [entry.id, entry.data.value]));
+        const collectionEntries = Object.fromEntries(entries.map(entry => [entry.id, entry.data.value]));
+
+        const defaultKeys = Object.keys(HARD_DEFAULTS);
+        const sheetKeys = Object.keys(collectionEntries);
+
+        // 1. Sjekk for nøkler i Sheets som ikke finnes i defaults (ukjente innstillinger)
+        sheetKeys.forEach(key => {
+            if (!HARD_DEFAULTS.hasOwnProperty(key)) {
+                console.warn(`[Settings] ⚠️ Ukjent nøkkel funnet i Google Sheets: "${key}". Denne blir ignorert av systemet.`);
+            }
+        });
+
+        // 2. Sjekk for defaults som IKKE overstyres (bruker fallback)
+        defaultKeys.forEach(key => {
+            if (!collectionEntries.hasOwnProperty(key)) {
+                console.info(`[Settings] ℹ️ Bruker hardkodet standardverdi for "${key}" (mangler i Google Sheets).`);
+            }
+        });
 
         // Slå sammen hardkodede defaults med de fra innstillinger-collection
         return {
