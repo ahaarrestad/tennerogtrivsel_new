@@ -5,46 +5,57 @@ import path from 'path';
 import { pipeline } from 'stream/promises';
 
 // --- KONFIGURASJON ---
-const CONFIG = {
-    spreadsheetId: process.env.GOOGLE_SHEET_ID,
-    paths: {
-        tannlegerAssets: path.join(process.cwd(), 'src/assets/tannleger'),
-        tannlegerData: path.join(process.cwd(), 'src/content/tannleger.json'),
-    },
-    collections: [
-        {
-            name: 'tjenester',
-            folderId: process.env.GOOGLE_DRIVE_TJENESTER_FOLDER_ID,
-            dest: path.join(process.cwd(), 'src/content/tjenester')
+function getConfig() {
+    return {
+        spreadsheetId: process.env.GOOGLE_SHEET_ID,
+        paths: {
+            tannlegerAssets: path.join(process.cwd(), 'src/assets/tannleger'),
+            tannlegerData: path.join(process.cwd(), 'src/content/tannleger.json'),
         },
-        {
-            name: 'meldinger',
-            folderId: process.env.GOOGLE_DRIVE_MELDINGER_FOLDER_ID,
-            dest: path.join(process.cwd(), 'src/content/meldinger')
-        }
-    ]
-};
+        collections: [
+            {
+                name: 'tjenester',
+                folderId: process.env.GOOGLE_DRIVE_TJENESTER_FOLDER_ID,
+                dest: path.join(process.cwd(), 'src/content/tjenester')
+            },
+            {
+                name: 'meldinger',
+                folderId: process.env.GOOGLE_DRIVE_MELDINGER_FOLDER_ID,
+                dest: path.join(process.cwd(), 'src/content/meldinger')
+            }
+        ]
+    };
+}
 
 // --- GOOGLE AUTH ---
-const auth = new google.auth.GoogleAuth({
-    credentials: {
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    },
-    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly', 'https://www.googleapis.com/auth/drive.readonly'],
-});
+function getAuth() {
+    return new google.auth.GoogleAuth({
+        credentials: {
+            client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+            private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        },
+        scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly', 'https://www.googleapis.com/auth/drive.readonly'],
+    });
+}
 
-const drive = google.drive({ version: 'v3', auth });
-const sheets = google.sheets({ version: 'v4', auth });
+function getDrive() {
+    return google.drive({ version: 'v3', auth: getAuth() });
+}
+
+function getSheets() {
+    return google.sheets({ version: 'v4', auth: getAuth() });
+}
 
 // --- HJELPEFUNKSJONER ---
 
 async function downloadFile(fileId, destinationPath) {
+    const drive = getDrive();
     const res = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' });
     await pipeline(res.data, fs.createWriteStream(destinationPath));
 }
 
 async function findFileIdByName(name) {
+    const drive = getDrive();
     const res = await drive.files.list({
         q: `name = '${name}' and trashed = false`,
         fields: 'files(id)',
@@ -56,12 +67,15 @@ async function findFileIdByName(name) {
 
 // Spesialfunksjon for tannleger (kombinerer Sheets og Bilder)
 async function syncTannleger() {
+    const config = getConfig();
+    const sheets = getSheets();
+
     console.log('🚀 Synkroniserer tannleger...');
-    if (!fs.existsSync(CONFIG.paths.tannlegerAssets)) fs.mkdirSync(CONFIG.paths.tannlegerAssets, { recursive: true });
+    if (!fs.existsSync(config.paths.tannlegerAssets)) fs.mkdirSync(config.paths.tannlegerAssets, { recursive: true });
 
     try {
         const res = await sheets.spreadsheets.values.get({
-            spreadsheetId: CONFIG.spreadsheetId,
+            spreadsheetId: config.spreadsheetId,
             range: 'tannleger!A2:E',
         });
 
@@ -77,7 +91,7 @@ async function syncTannleger() {
                     const fileId = await findFileIdByName(bildeFil);
                     if (fileId) {
                         console.log(`    ⬇️ Laster ned bilde: ${bildeFil}`);
-                        await downloadFile(fileId, path.join(CONFIG.paths.tannlegerAssets, bildeFil));
+                        await downloadFile(fileId, path.join(config.paths.tannlegerAssets, bildeFil));
                     } else {
                         console.warn(`    ⚠️ Bilde ikke funnet i Drive: ${bildeFil}`);
                     }
@@ -94,7 +108,7 @@ async function syncTannleger() {
                 image: bildeFil
             });
         }
-        fs.writeFileSync(CONFIG.paths.tannlegerData, JSON.stringify(tannlegeData, null, 2));
+        fs.writeFileSync(config.paths.tannlegerData, JSON.stringify(tannlegeData, null, 2));
         console.log(`  ✅ Synkroniserte ${tannlegeData.length} tannleger.`);
     } catch (err) {
         console.error('❌ Feil under synkronisering av tannleger:', err.message);
@@ -104,6 +118,8 @@ async function syncTannleger() {
 
 // Fellesfunksjon for alle Markdown-samlinger (Tjenester, Meldinger, etc.)
 async function syncMarkdownCollection(collection) {
+    const drive = getDrive();
+
     console.log(`🚀 Synkroniserer ${collection.name} (.md)...`);
     if (!fs.existsSync(collection.dest)) fs.mkdirSync(collection.dest, { recursive: true });
 
@@ -125,7 +141,9 @@ async function syncMarkdownCollection(collection) {
 
 // --- KJØRER ALT ---
 
-(async () => {
+async function runSync() {
+    const config = getConfig();
+
     // Sjekk for påkrevde miljøvariabler
     const requiredEnv = [
         'GOOGLE_SERVICE_ACCOUNT_EMAIL',
@@ -143,12 +161,11 @@ async function syncMarkdownCollection(collection) {
         
         if (process.env.GITHUB_ACTIONS) {
             console.error('   💡 Hvis dette er et Dependabot-bygg, må du legge til disse i "Dependabot secrets".');
-            // Vi avslutter med 0 her for å la selve bygget prøve å fortsette hvis det finnes cachede filer,
-            // men Astro vil sannsynligvis feile senere hvis mappen er helt tom.
-            // Hvis du vil at bygget SKAL feile her, bruk process.exit(1).
             process.exit(0); 
         }
-        process.exit(1);
+        if (process.env.NODE_ENV !== 'test') {
+            process.exit(1);
+        }
     }
 
     try {
@@ -156,13 +173,25 @@ async function syncMarkdownCollection(collection) {
         await syncTannleger();
 
         // 2. Synkroniser alle markdown-samlinger fra mapper
-        for (const col of CONFIG.collections) {
+        for (const col of config.collections) {
             await syncMarkdownCollection(col);
         }
 
         console.log('✨ Alt er synkronisert!');
     } catch (err) {
         console.error('❌ Synkronisering feilet:', err.message);
-        process.exit(1);
+        if (process.env.NODE_ENV !== 'test') {
+            process.exit(1);
+        }
+        throw err;
     }
-})();
+}
+
+// Kjør IIFE bare hvis skriptet kjøres direkte (ikke under test)
+if (process.env.NODE_ENV !== 'test') {
+    (async () => {
+        await runSync();
+    })();
+}
+
+export { syncTannleger, syncMarkdownCollection, runSync, getConfig };
