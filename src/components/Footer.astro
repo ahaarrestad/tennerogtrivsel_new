@@ -5,7 +5,7 @@ import {getSiteSettings} from '../scripts/getSettings';
 const settings = await getSiteSettings();
 ---
 <footer class="bg-brand-light text-brand py-4">
-    <div class="container mx-auto px-4 text-center">
+    <div class="layout-container text-center">
         <p class="font-bold text-brand mb-2">
             <span class="whitespace-nowrap">{settings.adresse1} - {settings.adresse2}</span> -
             <span set:html={formatInfoText(settings.phone1)}></span> -

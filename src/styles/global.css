@@ -45,21 +45,25 @@
     }
 
     /* SEKSJONS-LAYOUT */
+    .layout-container {
+        @apply container mx-auto px-4;
+    }
+
     .section-container {
-        padding-top: var(--spacing-section-py);
-        padding-bottom: var(--spacing-section-py);
+        --section-py: var(--spacing-section-py);
+        padding-top: var(--section-py);
+        padding-bottom: var(--section-py);
         @apply scroll-mt-6 relative;
     }
 
     @media (min-width: 768px) {
         .section-container {
-            padding-top: var(--spacing-section-py-md);
-            padding-bottom: var(--spacing-section-py-md);
+            --section-py: var(--spacing-section-py-md);
         }
     }
 
     .section-content {
-        @apply container mx-auto px-4;
+        @apply layout-container;
     }
 
     /* Beholder disse for bakoverkompatibilitet, men fjerner tvungen layout */
@@ -219,7 +223,7 @@
         @apply inline-flex items-center justify-center gap-2;
 
         /* Form og størrelse: Definerer avrunding, padding og at knappen ikke skal knekke tekst */
-        @apply px-8 py-4 rounded-2xl whitespace-nowrap min-w-fit;
+        @apply px-6 py-3.5 rounded-2xl whitespace-nowrap min-w-fit;
 
         /* Typografi og kantlinjer: Setter skrifttype og den tynne rammen rundt */
         @apply border border-brand text-brand font-bold;
