@@ -126,6 +126,31 @@ async function syncMarkdownCollection(collection) {
 // --- KJØRER ALT ---
 
 (async () => {
+    // Sjekk for påkrevde miljøvariabler
+    const requiredEnv = [
+        'GOOGLE_SERVICE_ACCOUNT_EMAIL',
+        'GOOGLE_PRIVATE_KEY',
+        'GOOGLE_SHEET_ID',
+        'GOOGLE_DRIVE_TJENESTER_FOLDER_ID',
+        'GOOGLE_DRIVE_MELDINGER_FOLDER_ID'
+    ];
+
+    const missing = requiredEnv.filter(key => !process.env[key]);
+
+    if (missing.length > 0) {
+        console.error('⚠️  Manglende miljøvariabler for synkronisering:');
+        missing.forEach(key => console.error(`   - ${key}`));
+        
+        if (process.env.GITHUB_ACTIONS) {
+            console.error('   💡 Hvis dette er et Dependabot-bygg, må du legge til disse i "Dependabot secrets".');
+            // Vi avslutter med 0 her for å la selve bygget prøve å fortsette hvis det finnes cachede filer,
+            // men Astro vil sannsynligvis feile senere hvis mappen er helt tom.
+            // Hvis du vil at bygget SKAL feile her, bruk process.exit(1).
+            process.exit(0); 
+        }
+        process.exit(1);
+    }
+
     try {
         // 1. Synkroniser tannleger fra ark
         await syncTannleger();
