@@ -8,8 +8,7 @@ export async function GET() {
             title: m.data.title,
             startDate: m.data.startDate,
             endDate: m.data.endDate,
-            // Siden vi manuelt la teksten i 'body' i config.ts loaderen:
-            body: m.data.body
+            body: m.body
         };
     });
 
