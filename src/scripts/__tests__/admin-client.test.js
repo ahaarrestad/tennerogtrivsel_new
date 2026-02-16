@@ -25,7 +25,10 @@ import {
     getTannlegerRaw,
     updateTannlegeRow,
     addTannlegeRow,
-    deleteTannlegeRow
+    deleteTannlegeRow,
+    findFileByName,
+    listImages,
+    uploadImage
 } from '../admin-client';
 
 describe('admin-client.js', () => {
