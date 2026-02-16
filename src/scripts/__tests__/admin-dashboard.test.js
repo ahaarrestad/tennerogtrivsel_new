@@ -135,6 +135,51 @@ describe('admin-dashboard.js', () => {
 
             expect(document.getElementById('module-inner').textContent).toContain('Ingen meldinger funnet');
         });
+
+        it('should handle API errors gracefully', async () => {
+            document.body.innerHTML = `
+                <div id="module-inner"></div>
+                <div id="module-actions"></div>
+            `;
+            adminClient.listFiles.mockRejectedValue(new Error('Fail'));
+            await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
+            expect(document.getElementById('module-inner').textContent).toContain('Kunne ikke laste meldinger');
+        });
+
+        it('should categorize messages into groups', async () => {
+            // Lås tiden for å unngå race conditions
+            vi.setSystemTime(new Date('2026-02-16T12:00:00Z'));
+            
+            document.body.innerHTML = `
+                <div id="module-inner"></div>
+                <div id="module-actions"></div>
+            `;
+            
+            adminClient.listFiles.mockResolvedValue([
+                { id: '1', name: 'active.md' },
+                { id: '2', name: 'planned.md' },
+                { id: '3', name: 'expired.md' }
+            ]);
+            
+            adminClient.getFileContent.mockImplementation(async (id) => {
+                if (id === '1') return '---\nstartDate: 2026-02-10\nendDate: 2026-02-20\ntitle: Active\n---';
+                if (id === '2') return '---\nstartDate: 2026-03-01\nendDate: 2026-03-10\ntitle: Planned\n---';
+                return '---\nstartDate: 2026-01-01\nendDate: 2026-01-10\ntitle: Expired\n---';
+            });
+            adminClient.parseMarkdown.mockImplementation((raw) => {
+                if (raw.includes('Active')) return { data: { startDate: '2026-02-10', endDate: '2026-02-20', title: 'Active' } };
+                if (raw.includes('Planned')) return { data: { startDate: '2026-03-01', endDate: '2026-03-10', title: 'Planned' } };
+                return { data: { startDate: '2026-01-01', endDate: '2026-01-10', title: 'Expired' } };
+            });
+
+            await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
+            const html = document.getElementById('module-inner').innerHTML;
+            expect(html).toContain('Aktive meldinger');
+            expect(html).toContain('Planlagte meldinger');
+            expect(html).toContain('Historikk');
+            
+            vi.useRealTimers();
+        });
     });
 
     describe('loadTjenesterModule', () => {
@@ -165,6 +210,26 @@ describe('admin-dashboard.js', () => {
             // Since Ape was first in sorted list, its id was 'a' and name was 'a.md'
             expect(onEdit).toHaveBeenCalledWith('a', 'a.md');
         });
+
+        it('should handle API errors', async () => {
+            document.body.innerHTML = `
+                <div id="module-inner"></div>
+                <div id="module-actions"></div>
+            `;
+            adminClient.listFiles.mockRejectedValue(new Error('Fail'));
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn());
+            expect(document.getElementById('module-inner').textContent).toContain('Kunne ikke laste tjenester');
+        });
+
+        it('should handle empty list', async () => {
+            document.body.innerHTML = `
+                <div id="module-inner"></div>
+                <div id="module-actions"></div>
+            `;
+            adminClient.listFiles.mockResolvedValue([]);
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn());
+            expect(document.getElementById('module-inner').textContent).toContain('Ingen tjenester funnet');
+        });
     });
 
     describe('initMarkdownEditor', () => {
@@ -187,6 +252,13 @@ describe('admin-dashboard.js', () => {
             expect(mockMDE.mock.calls[0][0].previewClass).toBeUndefined();
             expect(window.flatpickr).toBeUndefined();
             
+            delete window.EasyMDE;
+        });
+
+        it('should not crash if save button is missing', () => {
+            window.EasyMDE = vi.fn().mockImplementation(function() { this.value = () => ''; });
+            document.body.innerHTML = '<textarea id="edit-content"></textarea>';
+            expect(() => initMarkdownEditor(vi.fn())).not.toThrow();
             delete window.EasyMDE;
         });
     });
@@ -230,6 +302,24 @@ describe('admin-dashboard.js', () => {
             }));
             
             delete window.EasyMDE;
+            delete window.flatpickr;
+        });
+
+        it('should call onDateChange when flatpickr value changes', () => {
+            const mockFP = vi.fn();
+            const onDateChange = vi.fn();
+            window.flatpickr = mockFP;
+            document.body.innerHTML = '<input type="text" id="edit-start"><input type="text" id="edit-end">';
+            
+            initEditors(onDateChange, vi.fn());
+            const config = mockFP.mock.calls[0][1];
+            
+            const mockInstance = { element: { value: '' } };
+            config.onChange([], '2026-01-01', mockInstance);
+            
+            expect(mockInstance.element.value).toBe('2026-01-01');
+            expect(onDateChange).toHaveBeenCalled();
+            
             delete window.flatpickr;
         });
 

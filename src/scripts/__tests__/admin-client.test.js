@@ -13,7 +13,15 @@ import {
     getStoredUser,
     getSettingsWithNotes,
     updateSettings,
-    checkAccess 
+    checkAccess,
+    listFiles,
+    getFileContent,
+    saveFile,
+    createFile,
+    deleteFile,
+    parseMarkdown,
+    stringifyMarkdown,
+    checkMultipleAccess
 } from '../admin-client';
 
 describe('admin-client.js', () => {
@@ -22,7 +30,8 @@ describe('admin-client.js', () => {
         vi.stubEnv('PUBLIC_GOOGLE_CLIENT_ID', 'test-client-id');
 
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-            json: vi.fn().mockResolvedValue({ name: 'Test User', email: 'test@example.com' })
+            json: vi.fn().mockResolvedValue({ name: 'Test User', email: 'test@example.com' }),
+            ok: true
         }));
 
         vi.stubGlobal('gapi', {
@@ -43,7 +52,10 @@ describe('admin-client.js', () => {
                 },
                 drive: {
                     files: {
-                        get: vi.fn()
+                        get: vi.fn(),
+                        list: vi.fn(),
+                        create: vi.fn(),
+                        update: vi.fn()
                     }
                 }
             }
@@ -112,7 +124,8 @@ describe('admin-client.js', () => {
             expect(tryRestoreSession()).toBe(false);
         });
 
-        it('tryRestoreSession skal sette token i GAPI hvis gyldig', () => {
+        it('tryRestoreSession skal sette token i GAPI hvis gyldig', async () => {
+            await initGapi(); // Sørg for at den er inited
             const future = Date.now() + 3600000;
             localStorage.setItem('admin_google_token', JSON.stringify({
                 access_token: 'test-token',
@@ -199,6 +212,19 @@ describe('admin-client.js', () => {
     });
 
     describe('Detailed Error Handling', () => {
+        it('initGis skal kaste feil hvis google mangler', () => {
+            const originalGoogle = global.google;
+            delete global.google;
+            expect(() => initGis(() => {})).toThrow("Google Identity Services (google) script ikke lastet.");
+            global.google = originalGoogle;
+        });
+
+        it('getStoredUser skal håndtere korrupt JSON', () => {
+            localStorage.setItem('admin_google_token', 'ikke-json');
+            expect(getStoredUser()).toBeNull();
+            expect(localStorage.getItem('admin_google_token')).toBeNull();
+        });
+
         it('initGis callback skal håndtere error-respons', async () => {
             let capturedCallback;
             google.accounts.oauth2.initTokenClient.mockImplementation(({ callback }) => {
@@ -223,10 +249,10 @@ describe('admin-client.js', () => {
             expect(stored.user).toBeNull();
         });
 
-        it('tryRestoreSession skal rense opp utløpt token', () => {
-            localStorage.setItem('admin_google_token', JSON.stringify({ expiry: Date.now() - 1000 }));
+        it('tryRestoreSession skal håndtere korrupt JSON', async () => {
+            await initGapi(); // Sett gapiInited = true
+            localStorage.setItem('admin_google_token', '{invalid');
             expect(tryRestoreSession()).toBe(false);
-            expect(localStorage.getItem('admin_google_token')).toBeNull();
         });
 
         it('initGapi skal håndtere kritiske feil under initialisering', async () => {
@@ -254,6 +280,11 @@ describe('admin-client.js', () => {
             expect(result).toBe(true);
         });
 
+        it('checkMultipleAccess skal håndtere tom liste', async () => {
+            const result = await checkMultipleAccess([]);
+            expect(result).toEqual({});
+        });
+
         it('skal returnere false ved feil', async () => {
             gapi.client.drive.files.get.mockRejectedValue({ status: 403 });
             const result = await checkAccess('123');
@@ -263,6 +294,109 @@ describe('admin-client.js', () => {
         it('skal returnere false hvis ingen folderId er oppgitt', async () => {
             const result = await checkAccess(null);
             expect(result).toBe(false);
+        });
+    });
+
+    describe('Google Drive Operations', () => {
+        it('listFiles skal returnere liste med filer', async () => {
+            const mockFiles = [{ id: '1', name: 'test.md' }];
+            gapi.client.drive.files.list.mockResolvedValue({ result: { files: mockFiles } });
+            
+            const files = await listFiles('folder-123');
+            expect(files).toEqual(mockFiles);
+            expect(gapi.client.drive.files.list).toHaveBeenCalledWith(expect.objectContaining({
+                q: expect.stringContaining('folder-123')
+            }));
+        });
+
+        it('listFiles skal håndtere feil', async () => {
+            gapi.client.drive.files.list.mockRejectedValue(new Error('Drive error'));
+            await expect(listFiles('123')).rejects.toThrow('Drive error');
+        });
+
+        it('getFileContent skal returnere body', async () => {
+            gapi.client.drive.files.get.mockResolvedValue({ body: 'content' });
+            const content = await getFileContent('file-123');
+            expect(content).toBe('content');
+        });
+
+        it('getFileContent skal håndtere feil', async () => {
+            gapi.client.drive.files.get.mockRejectedValue(new Error('fail'));
+            await expect(getFileContent('123')).rejects.toThrow('fail');
+        });
+
+        it('saveFile skal oppdatere metadata og innhold', async () => {
+            gapi.client.drive.files.update.mockResolvedValue({});
+            global.fetch.mockResolvedValue({ ok: true });
+
+            const result = await saveFile('file-123', 'new-name.md', 'new-content');
+            expect(result).toBe(true);
+            expect(gapi.client.drive.files.update).toHaveBeenCalledWith(expect.objectContaining({
+                fileId: 'file-123',
+                resource: { name: 'new-name.md' }
+            }));
+            expect(global.fetch).toHaveBeenCalledWith(
+                expect.stringContaining('file-123'),
+                expect.objectContaining({ method: 'PATCH', body: 'new-content' })
+            );
+        });
+
+        it('createFile skal opprette fil og lagre innhold', async () => {
+            gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'new-id' } });
+            gapi.client.drive.files.update.mockResolvedValue({});
+            
+            const id = await createFile('folder-123', 'test.md', 'content');
+            expect(id).toBe('new-id');
+            expect(gapi.client.drive.files.create).toHaveBeenCalled();
+        });
+
+        it('deleteFile skal sette trashed til true', async () => {
+            gapi.client.drive.files.update.mockResolvedValue({});
+            const result = await deleteFile('file-123');
+            expect(result).toBe(true);
+            expect(gapi.client.drive.files.update).toHaveBeenCalledWith(expect.objectContaining({
+                resource: { trashed: true }
+            }));
+        });
+
+        it('saveFile skal kaste feil hvis API feiler', async () => {
+            gapi.client.drive.files.update.mockRejectedValue(new Error('fail'));
+            await expect(saveFile('1', 'n', 'c')).rejects.toThrow('fail');
+        });
+
+        it('createFile skal kaste feil hvis API feiler', async () => {
+            gapi.client.drive.files.create.mockRejectedValue(new Error('fail'));
+            await expect(createFile('f', 'n', 'c')).rejects.toThrow('fail');
+        });
+
+        it('deleteFile skal kaste feil hvis API feiler', async () => {
+            gapi.client.drive.files.update.mockRejectedValue(new Error('fail'));
+            await expect(deleteFile('1')).rejects.toThrow('fail');
+        });
+    });
+
+    describe('Markdown Utilities', () => {
+        it('parseMarkdown skal splitte frontmatter og body', () => {
+            const raw = '---\ntitle: Hei\nid: 123\n---\nInnhold her';
+            const { data, body } = parseMarkdown(raw);
+            expect(data).toEqual({ title: 'Hei', id: '123' });
+            expect(body).toBe('Innhold her');
+        });
+
+        it('parseMarkdown skal håndtere manglende frontmatter', () => {
+            const raw = 'Bare innhold';
+            const { data, body } = parseMarkdown(raw);
+            expect(data).toEqual({});
+            expect(body).toBe('Bare innhold');
+        });
+
+        it('stringifyMarkdown skal lage korrekt streng', () => {
+            const data = { title: 'Hei', id: '123' };
+            const body = 'Innhold';
+            const result = stringifyMarkdown(data, body);
+            expect(result).toContain('title: Hei');
+            expect(result).toContain('id: 123');
+            expect(result).toContain('---\nInnhold');
         });
     });
 });

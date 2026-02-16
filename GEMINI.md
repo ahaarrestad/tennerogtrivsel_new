@@ -92,6 +92,7 @@ To ensure high-quality, maintainable, and idiomatic code within this project, pl
     *   Use **English** keys for all content schemas (e.g., `title`, `description`) to ensure framework compatibility, even if content is Norwegian.
     *   Break down complex logic into smaller, testable units. Move complex Browser/DOM logic to testable helper scripts where possible.
     *   **Unit/Integration (Vitest):** Tests logic, API endpoints, and content loaders. Located in `__tests__` subdirectories. Run with `npm test`.
+    *   **Krav til testdekning:** Prosjektet skal til enhver tid ha minst **80% branch coverage** på all kjerne-logikk (scripts og API-endepunkter). Dekning SKAL sjekkes med `npm test` før hver commit.
     *   **End-to-End (Playwright):** Verifies the full user experience in real browsers. Located in `tests/`. Run with `npm run test:e2e`.
     *   **Specific E2E Categories:**
         *   **Accessibility (UU):** Automated WCAG compliance scans using `axe-core`.
