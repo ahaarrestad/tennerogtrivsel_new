@@ -140,7 +140,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         <div id="module-container" class="hidden admin-dashboard-container">
             <div class="flex justify-between items-center">
                 <button id="back-to-dashboard" class="text-brand font-bold flex items-center gap-2 hover:text-brand-hover transition-colors uppercase tracking-wider text-xs">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" cy1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" cy1="12" x2="5" cy1="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                     Tilbake
                 </button>
                 <div id="module-actions"></div>
@@ -164,7 +164,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
                 <h3 class="text-lg font-black uppercase tracking-tight text-brand">Velg bilde</h3>
                 <button onclick="document.getElementById('image-picker-modal').close()" class="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" cy1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
             
@@ -216,9 +216,10 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         import { formatDate, stripStackEditData, sortMessages, slugify } from '../../scripts/textFormatter.js';
         import { 
             updateUIWithUser, autoResizeTextarea, saveSingleSetting, 
-            loadMeldingerModule, initEditors, enforceAccessControl,
-            loadTjenesterModule, initMarkdownEditor, loadTannlegerModule
+            loadMeldingerModule, enforceAccessControl,
+            loadTjenesterModule, loadTannlegerModule
         } from '../../scripts/admin-dashboard.js';
+        import snarkdown from 'snarkdown';
 
         const configEl = document.getElementById('admin-config');
         const TJENESTER_FOLDER = configEl?.dataset.tjenesterFolder;
@@ -226,16 +227,14 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         const MELDINGER_FOLDER = configEl?.dataset.meldingerFolder;
         const SHEET_ID = configEl?.dataset.sheetId;
 
-        let currentSettings = [];
-
         async function loadSettingsModule() {
             const inner = document.getElementById('module-inner');
             if (!inner) return;
             inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter data...</div>';
             try {
-                currentSettings = await getSettingsWithNotes(SHEET_ID);
+                const settings = await getSettingsWithNotes(SHEET_ID);
                 let html = `<div class="space-y-4 max-w-4xl">`;
-                currentSettings.forEach((setting, i) => {
+                settings.forEach((setting, i) => {
                     const label = setting.description || setting.id;
                     const isLong = (setting.value && setting.value.length > 60) || setting.id.toLowerCase().includes('tekst');
                     html += `
@@ -256,7 +255,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         autoResizeTextarea(input); 
                         input.addEventListener('input', (e) => autoResizeTextarea(e.target)); 
                     }
-                    input.addEventListener('blur', (e) => saveSingleSetting(e.target.dataset.index, e.target, currentSettings, SHEET_ID));
+                    input.addEventListener('blur', (e) => saveSingleSetting(e.target.dataset.index, e.target, settings, SHEET_ID));
                 });
             } catch (e) { 
                 console.error("Settings load failed", e);
@@ -269,23 +268,18 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             const grid = document.getElementById('image-gallery-grid');
             if (!grid) return;
             
-            console.log("[Admin] Laster galleri for mappe:", folderId);
             grid.innerHTML = '<div class="col-span-full text-center py-12 text-slate-400 italic animate-pulse">Laster bilder...</div>';
             
             try {
                 if (!folderId) throw new Error("Mappe-ID mangler");
 
-                // Sjekk tilgang først
                 const hasAccess = await checkAccess(folderId);
-                console.log("[Admin] Har tilgang til mappe:", hasAccess);
-                
                 if (!hasAccess) {
                     grid.innerHTML = '<div class="col-span-full text-center py-12 text-amber-500 font-bold italic">⚠️ Du har ikke lesetilgang til denne mappen på Google Drive.</div>';
                     return;
                 }
 
                 const images = await listImages(folderId);
-                console.log("[Admin] Bilder funnet:", images.length);
 
                 if (images.length === 0) {
                     grid.innerHTML = '<div class="col-span-full text-center py-12 text-slate-400 italic">Ingen bilder funnet i mappen.</div>';
@@ -317,7 +311,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 });
             } catch (e) {
                 console.error("[Admin] Galleri feilet:", e);
-                grid.innerHTML = `<div class="col-span-full text-center py-12 text-red-400 italic">Kunne ikke laste bilder: ${e.message}</div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-red-400 italic">Kunne ikke laste bilder.</div>`;
             }
         }
 
@@ -325,12 +319,12 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             const input = document.getElementById('upload-image-input');
             if (!input) return;
             
-            // Remove old listeners to avoid duplicates if re-opened (clone node trick)
-            const newInput = input.cloneNode(true);
+            const newInput = input.cloneNode(true) as HTMLInputElement;
             input.parentNode.replaceChild(newInput, input);
             
             newInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
+                const target = e.target as HTMLInputElement;
+                const file = target.files?.[0];
                 if (!file) return;
 
                 const preview = document.getElementById('upload-preview');
@@ -348,9 +342,73 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 } finally {
                     if (preview) preview.classList.remove('opacity-0');
                     if (spinner) spinner.classList.add('hidden');
-                    newInput.value = ''; // Reset
+                    newInput.value = ''; 
                 }
             });
+        }
+
+        // --- EDITOR INITIALIZERS ---
+        function initMarkdownEditor(onSave) {
+            let easyMDE = null;
+            const EasyMDEGlobal = (window as any)['EasyMDE'];
+            if (typeof EasyMDEGlobal !== 'undefined') {
+                easyMDE = new EasyMDEGlobal({
+                    element: document.getElementById('edit-content'),
+                    spellChecker: false,
+                    status: false,
+                    minHeight: "350px",
+                    placeholder: "Skriv innholdet her...",
+                    toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
+                    previewRender: (plainText) => {
+                        return `<div class="markdown-content prose">${snarkdown(plainText)}</div>`;
+                    }
+                });
+            }
+            const saveBtn = document.getElementById('btn-save-tjeneste');
+            if (saveBtn) saveBtn.onclick = () => onSave(easyMDE);
+            return easyMDE;
+        }
+
+        function initEditors(onDateChange, onSave) {
+            let easyMDE = null;
+            const EasyMDEGlobal = (window as any)['EasyMDE'];
+            if (typeof EasyMDEGlobal !== 'undefined') {
+                easyMDE = new EasyMDEGlobal({
+                    element: document.getElementById('edit-content'),
+                    spellChecker: false,
+                    status: false,
+                    minHeight: "250px",
+                    placeholder: "Skriv innholdet her...",
+                    toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
+                    previewRender: (plainText) => {
+                        return `<div class="markdown-content prose">${snarkdown(plainText)}</div>`;
+                    }
+                });
+            }
+
+            const flatpickrGlobal = (window as any)['flatpickr'];
+            if (typeof flatpickrGlobal !== 'undefined') {
+                const fpConfig = {
+                    dateFormat: "Y-m-d",
+                    altInput: true,
+                    altFormat: "d.m.Y",
+                    allowInput: true,
+                    onChange: (selectedDates, dateStr, instance) => {
+                        instance.element.value = dateStr;
+                        if (onDateChange) onDateChange(selectedDates, dateStr, instance);
+                    }
+                };
+                const l10ns = flatpickrGlobal.l10ns;
+                const noLocale = l10ns ? (l10ns.no || l10ns.nb || l10ns.Norwegian) : null;
+                if (noLocale) (fpConfig as any).locale = noLocale;
+                
+                flatpickrGlobal("#edit-start", fpConfig);
+                flatpickrGlobal("#edit-end", fpConfig);
+            }
+
+            const saveBtn = document.getElementById('btn-save-melding');
+            if (saveBtn) saveBtn.onclick = () => onSave(easyMDE);
+            return easyMDE;
         }
 
         // --- TJENESTER MODUL ---
@@ -405,11 +463,11 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     </div>`;
 
                 const onSave = async (easyMDE) => {
-                    const title = document.getElementById('edit-title').value;
+                    const title = (document.getElementById('edit-title') as HTMLInputElement).value;
                     const safeTitle = slugify(title) || 'u-navngitt-tjeneste';
                     const entryId = data.id || safeTitle; 
                     const newFileName = `${safeTitle}-${Date.now()}.md`;
-                    const saveBtn = document.getElementById('btn-save-tjeneste');
+                    const saveBtn = document.getElementById('btn-save-tjeneste') as HTMLButtonElement;
 
                     saveBtn.disabled = true;
                     saveBtn.textContent = "Lagrer...";
@@ -417,10 +475,10 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     const frontmatter = {
                         id: entryId,
                         title: title,
-                        ingress: document.getElementById('edit-ingress').value
+                        ingress: (document.getElementById('edit-ingress') as HTMLTextAreaElement).value
                     };
                     
-                    const content = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
+                    const content = easyMDE ? easyMDE.value() : (document.getElementById('edit-content') as HTMLTextAreaElement).value;
                     
                     try {
                         if (id) await saveFile(id, newFileName, stringifyMarkdown(frontmatter, content));
@@ -514,36 +572,35 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     </div>`;
 
                 const onDateChange = (selectedDates, dateStr, instance) => {
-                    const startInp = document.getElementById('edit-start');
-                    const endInp = document.getElementById('edit-end');
+                    const startInp = document.getElementById('edit-start') as HTMLInputElement;
+                    const endInp = document.getElementById('edit-end') as HTMLInputElement;
                     const startEl = document.getElementById('preview-start');
                     const endEl = document.getElementById('preview-end');
                     const errorBox = document.getElementById('date-error');
-                    const saveBtn = document.getElementById('btn-save-melding');
+                    const saveBtn = document.getElementById('btn-save-melding') as HTMLButtonElement;
 
                     if (startEl && startInp) startEl.textContent = formatDate(startInp.value);
                     if (endEl && endInp) endEl.textContent = formatDate(endInp.value);
 
-                    // Hent faktiske datoer fra input (som er det Flatpickr oppdaterer)
                     const startVal = startInp.value;
                     const endVal = endInp.value;
 
                     if (startVal && endVal && new Date(endVal) < new Date(startVal)) {
-                        errorBox.classList.remove('hidden');
+                        errorBox?.classList.remove('hidden');
                         saveBtn.disabled = true;
                         saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
                     } else {
-                        errorBox.classList.add('hidden');
+                        errorBox?.classList.add('hidden');
                         saveBtn.disabled = false;
                         saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     }
                 };
 
                 const onSave = async (easyMDE) => {
-                    const title = document.getElementById('edit-title').value;
-                    const startDate = document.getElementById('edit-start').value;
-                    const endDate = document.getElementById('edit-end').value;
-                    const saveBtn = document.getElementById('btn-save-melding');
+                    const title = (document.getElementById('edit-title') as HTMLInputElement).value;
+                    const startDate = (document.getElementById('edit-start') as HTMLInputElement).value;
+                    const endDate = (document.getElementById('edit-end') as HTMLInputElement).value;
+                    const saveBtn = document.getElementById('btn-save-melding') as HTMLButtonElement;
 
                     if (saveBtn.disabled) return;
 
@@ -559,7 +616,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         endDate: endDate
                     };
                     
-                    const body = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
+                    const body = easyMDE ? easyMDE.value() : (document.getElementById('edit-content') as HTMLTextAreaElement).value;
                     
                     try {
                         if (id) await saveFile(id, newFileName, stringifyMarkdown(data, body));
@@ -575,9 +632,8 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
 
                 initEditors(onDateChange, onSave);
                 
-                // Legg til lyttere på selve input-feltene også for å fange opp eval-endringer i tester
-                document.getElementById('edit-start').addEventListener('change', () => onDateChange());
-                document.getElementById('edit-end').addEventListener('change', () => onDateChange());
+                document.getElementById('edit-start')?.addEventListener('change', () => onDateChange(null, '', null));
+                document.getElementById('edit-end')?.addEventListener('change', () => onDateChange(null, '', null));
             } catch (e) {
                 console.error("Klarte ikke laste editor:", e);
                 inner.innerHTML = `<div class="admin-alert-error">❌ En feil oppstod under lasting av editoren. Sjekk konsollen for detaljer.</div>`;
@@ -613,25 +669,16 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
 
             const t = data || { name: '', title: '', description: '', image: '', active: true, scale: 1.0, positionX: 50, positionY: 50 };
             
-            // Hent bilde-URL (blob) for preview
             let previewSrc = '';
             let currentImageId = null;
 
             if (t.image) {
-                console.log("[Admin] Forsøker å hente preview for bilde:", t.image);
                 try {
-                    // Hvis det ser ut som en ID (lang streng uten filendelse-liknende mønster)
                     if (t.image.length > 20 && !t.image.includes('.')) {
                         currentImageId = t.image;
                     } else {
-                        // Søk etter filID basert på navn
                         const file = await findFileByName(t.image, TANNLEGER_FOLDER);
-                        if (file) {
-                            currentImageId = file.id;
-                            console.log("[Admin] Fant fil-ID for bilde:", currentImageId);
-                        } else {
-                            console.warn("[Admin] Fant ikke bilde på Drive ved navn:", t.image);
-                        }
+                        if (file) currentImageId = file.id;
                     }
 
                     if (currentImageId) {
@@ -639,12 +686,10 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         if (blobUrl) previewSrc = blobUrl;
                     }
                 } catch (err) {
-                    console.warn("[Admin] Kunne ikke hente bilde-preview fra Drive:", err);
+                    console.warn("[Admin] Kunne ikke hente bilde-preview fra Drive.");
                 }
 
-                // FALLBACK: Hvis Drive-preview feilet, men vi har et filnavn, prøv å vis det lokale (synkede) bildet
                 if (!previewSrc && t.image && t.image.includes('.')) {
-                    console.log("[Admin] Bruker lokal fallback for preview:", t.image);
                     previewSrc = `/src/assets/tannleger/${t.image}`;
                 }
             }
@@ -763,20 +808,19 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
 
             // --- IMAGE GALLERY LOGIC ---
             const btnGallery = document.getElementById('btn-open-gallery');
-            const modal = document.getElementById('image-picker-modal');
+            const modal = document.getElementById('image-picker-modal') as HTMLDialogElement;
             
             if (btnGallery && modal) {
                 btnGallery.onclick = () => {
                     modal.showModal();
                     loadGallery(TANNLEGER_FOLDER, async (fileId, fileName) => {
-                        const imgInput = document.getElementById('edit-t-image');
-                        const previewImg = document.getElementById('preview-img');
+                        const imgInput = document.getElementById('edit-t-image') as HTMLInputElement;
+                        const previewImg = document.getElementById('preview-img') as HTMLImageElement;
                         const placeholder = document.getElementById('no-image-placeholder');
 
                         if (imgInput) {
                             imgInput.value = fileName;
                             
-                            // Oppdater preview-bildet umiddelbart med ny blob
                             if (previewImg) {
                                 const blobUrl = await getDriveImageBlob(fileId);
                                 if (blobUrl) {
@@ -793,17 +837,15 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 };
             }
 
-            // Setup upload handler for the modal
             setupUploadHandler(TANNLEGER_FOLDER, async (newFile) => {
                 if (newFile) {
-                     const imgInput = document.getElementById('edit-t-image');
-                     const previewImg = document.getElementById('preview-img');
+                     const imgInput = document.getElementById('edit-t-image') as HTMLInputElement;
+                     const previewImg = document.getElementById('preview-img') as HTMLImageElement;
                      const placeholder = document.getElementById('no-image-placeholder');
 
                      if (imgInput) {
                          imgInput.value = newFile.name;
                          
-                         // Oppdater preview
                          if (previewImg) {
                              const blobUrl = await getDriveImageBlob(newFile.id);
                              if (blobUrl) {
@@ -820,37 +862,54 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             });
 
             const updatePreview = () => {
-                const name = document.getElementById('edit-t-name').value;
-                const title = document.getElementById('edit-t-title').value;
-                const desc = document.getElementById('edit-t-desc').value;
-                const image = document.getElementById('edit-t-image').value;
-                const scale = document.getElementById('edit-t-scale').value;
-                const posX = document.getElementById('edit-t-x').value;
-                const posY = document.getElementById('edit-t-y').value;
-                const active = document.getElementById('edit-t-active').checked;
+                const nameInp = document.getElementById('edit-t-name') as HTMLInputElement;
+                const titleInp = document.getElementById('edit-t-title') as HTMLInputElement;
+                const descInp = document.getElementById('edit-t-desc') as HTMLTextAreaElement;
+                const imageInp = document.getElementById('edit-t-image') as HTMLInputElement;
+                const scaleInp = document.getElementById('edit-t-scale') as HTMLInputElement;
+                const xInp = document.getElementById('edit-t-x') as HTMLInputElement;
+                const yInp = document.getElementById('edit-t-y') as HTMLInputElement;
+                const activeInp = document.getElementById('edit-t-active') as HTMLInputElement;
 
-                document.getElementById('preview-name').textContent = name || 'Navn';
-                document.getElementById('preview-title').textContent = title || 'Tittel';
-                document.getElementById('preview-desc').textContent = desc || 'Beskrivelse kommer her...';
+                const name = nameInp.value;
+                const title = titleInp.value;
+                const desc = descInp.value;
+                const image = imageInp.value;
+                const scale = scaleInp.value;
+                const posX = xInp.value;
+                const posY = yInp.value;
+                const active = activeInp.checked;
+
+                const nameEl = document.getElementById('preview-name');
+                const titleEl = document.getElementById('preview-title');
+                const descEl = document.getElementById('preview-desc');
+                if (nameEl) nameEl.textContent = name || 'Navn';
+                if (titleEl) titleEl.textContent = title || 'Tittel';
+                if (descEl) descEl.textContent = desc || 'Beskrivelse kommer her...';
                 
-                const img = document.getElementById('preview-img');
-                img.style.width = `${scale * 100}%`;
-                img.style.height = `${scale * 100}%`;
-                img.style.objectPosition = `${posX}% ${posY}%`;
+                const img = document.getElementById('preview-img') as HTMLImageElement;
+                if (img) {
+                    img.style.width = `${parseFloat(scale) * 100}%`;
+                    img.style.height = `${parseFloat(scale) * 100}%`;
+                    img.style.objectPosition = `${posX}% ${posY}%`;
+                }
 
-                document.getElementById('val-scale').textContent = `${scale}x`;
-                document.getElementById('val-x').textContent = `${posX}%`;
-                document.getElementById('val-y').textContent = `${posY}%`;
+                const valScale = document.getElementById('val-scale');
+                const valX = document.getElementById('val-x');
+                const valY = document.getElementById('val-y');
+                if (valScale) valScale.textContent = `${scale}x`;
+                if (valX) valX.textContent = `${posX}%`;
+                if (valY) valY.textContent = `${posY}%`;
 
                 const statusEl = document.getElementById('save-status');
-                statusEl.textContent = "⏳ Endringer oppdaget...";
+                if (statusEl) statusEl.textContent = "⏳ Endringer oppdaget...";
                 
                 clearTimeout(tannlegeSaveTimeout);
                 tannlegeSaveTimeout = setTimeout(async () => {
-                    statusEl.textContent = "💾 Lagrer til Google Sheets...";
+                    if (statusEl) statusEl.textContent = "💾 Lagrer til Google Sheets...";
                     const updateData = {
                         name, title, description: desc, active,
-                        image: image, // Lagre den nye verdien fra input-feltet!
+                        image: image, 
                         scale: parseFloat(scale),
                         positionX: parseInt(posX),
                         positionY: parseInt(posY)
@@ -863,10 +922,10 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                             await addTannlegeRow(SHEET_ID, updateData);
                             return window.openTannlegerModule();
                         }
-                        statusEl.textContent = "✅ Lagret!";
-                        setTimeout(() => { if(statusEl.textContent === "✅ Lagret!") statusEl.textContent = ""; }, 3000);
+                        if (statusEl) statusEl.textContent = "✅ Lagret!";
+                        setTimeout(() => { if(statusEl && statusEl.textContent === "✅ Lagret!") statusEl.textContent = ""; }, 3000);
                     } catch (e) {
-                        statusEl.textContent = "❌ Feil ved lagring!";
+                        if (statusEl) statusEl.textContent = "❌ Feil ved lagring!";
                     }
                 }, 1500);
             };
@@ -883,20 +942,26 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         window.openTannlegerModule = () => loadTannlegerModule(SHEET_ID, window.editTannlege, window.deleteTannlege);
 
         function openModule(id, title) {
-            document.getElementById('dashboard').classList.add('hidden');
-            document.getElementById('module-container').classList.remove('hidden');
-            document.getElementById('module-title').textContent = title;
-            document.getElementById('module-actions').innerHTML = '';
+            document.getElementById('dashboard')?.classList.add('hidden');
+            document.getElementById('module-container')?.classList.remove('hidden');
+            const titleEl = document.getElementById('module-title');
+            if (titleEl) titleEl.textContent = title;
+            const actionsEl = document.getElementById('module-actions');
+            if (actionsEl) actionsEl.innerHTML = '';
+            
             if (id === 'settings') loadSettingsModule();
             else if (id === 'meldinger') window.loadMeldingerModule();
             else if (id === 'tjenester') window.loadTjenesterModule();
             else if (id === 'tannleger') window.openTannlegerModule();
-            else document.getElementById('module-inner').innerHTML = `<p class="text-slate-600 italic">Denne modulen er under utvikling.</p>`;
+            else {
+                const inner = document.getElementById('module-inner');
+                if (inner) inner.innerHTML = `<p class="text-slate-600 italic">Denne modulen er under utvikling.</p>`;
+            }
         }
 
         function closeModule() {
-            document.getElementById('dashboard').classList.remove('hidden');
-            document.getElementById('module-container').classList.add('hidden');
+            document.getElementById('dashboard')?.classList.remove('hidden');
+            document.getElementById('module-container')?.classList.add('hidden');
         }
 
         async function handleAuth(userInfo = null) {
@@ -914,29 +979,31 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
 
         const setup = async () => {
             try {
-                // 1. Initialiser GAPI først (Drive/Sheets APIer)
                 const gapiSuccess = await initGapi();
                 if (gapiSuccess) tryRestoreSession();
 
-                // 2. Initialiser GIS og koble til handleAuth
                 initGis(handleAuth);
 
-                // 3. Sjekk om vi allerede har en lagret bruker
                 const user = getStoredUser();
                 if (user) {
                     await handleAuth(user);
                 } else {
-                    // Prøv stille innlogging hvis ingen bruker er lagret
                     silentLogin();
                 }
 
-                document.getElementById('login-btn').onclick = login;
-                document.getElementById('user-pill').onclick = () => { if (confirm("Logge ut?")) { logout(); location.reload(); } };
-                document.getElementById('back-to-dashboard').onclick = closeModule;
-                document.getElementById('btn-open-settings').onclick = () => openModule('settings', 'Innstillinger');
-                document.getElementById('btn-open-tjenester').onclick = () => openModule('tjenester', 'Tjenester');
-                document.getElementById('btn-open-meldinger').onclick = () => openModule('meldinger', 'Meldinger');
-                document.getElementById('btn-open-tannleger').onclick = () => openModule('tannleger', 'Tannleger');
+                const loginBtn = document.getElementById('login-btn');
+                if (loginBtn) loginBtn.onclick = login;
+                
+                const userPill = document.getElementById('user-pill');
+                if (userPill) userPill.onclick = () => { if (confirm("Logge ut?")) { logout(); location.reload(); } };
+                
+                const backBtn = document.getElementById('back-to-dashboard');
+                if (backBtn) backBtn.onclick = closeModule;
+                
+                document.getElementById('btn-open-settings')?.addEventListener('click', () => openModule('settings', 'Innstillinger'));
+                document.getElementById('btn-open-tjenester')?.addEventListener('click', () => openModule('tjenester', 'Tjenester'));
+                document.getElementById('btn-open-meldinger')?.addEventListener('click', () => openModule('meldinger', 'Meldinger'));
+                document.getElementById('btn-open-tannleger')?.addEventListener('click', () => openModule('tannleger', 'Tannleger'));
             } catch (err) { console.error("[Admin] Kritisk feil under oppstart:", err); }
         };
         if (document.readyState === 'complete') setup();
