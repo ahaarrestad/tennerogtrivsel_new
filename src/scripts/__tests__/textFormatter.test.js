@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatInfoText, formatDate, stripStackEditData, sortMessages } from '../textFormatter';
+import { formatInfoText, formatDate, stripStackEditData, sortMessages, slugify } from '../textFormatter';
 
 describe('formatInfoText', () => {
     it('should return an empty string for null, undefined, or empty input', () => {
@@ -166,13 +166,44 @@ describe('sortMessages', () => {
     });
 
     it('should sort planned messages by start date (nearest first)', () => {
-        const planned1 = { title: 'Starter snart', startDate: '2026-03-01', endDate: '2026-04-01' };
-        const planned2 = { title: 'Starter senere', startDate: '2026-12-01', endDate: '2027-01-01' };
-        // We need to make sure now < start. Assuming "now" in tests is current date.
-        // Let's use 2099 to be safe.
-        const p1 = { ...planned1, startDate: '2099-01-01' };
-        const p2 = { ...planned2, startDate: '2099-02-01' };
-        const sorted = sortMessages([p2, p1]);
+        const planned1 = { title: 'Starter snart', startDate: '2099-03-01', endDate: '2099-04-01' };
+        const planned2 = { title: 'Starter senere', startDate: '2099-12-01', endDate: '2100-01-01' };
+        const sorted = sortMessages([planned2, planned1]);
         expect(sorted[0].title).toBe('Starter snart');
+    });
+
+    it('should sort expired messages by end date (newest first)', () => {
+        const expired1 = { title: 'Gammel', startDate: '2020-01-01', endDate: '2021-01-01' };
+        const expired2 = { title: 'Nyere utløpt', startDate: '2020-01-01', endDate: '2023-01-01' };
+        const sorted = sortMessages([expired1, expired2]);
+        expect(sorted[0].title).toBe('Nyere utløpt');
+    });
+
+    it('should handle invalid dates by putting them at the end', () => {
+        const invalid = { title: 'Feil', startDate: 'abc', endDate: 'def' };
+        const msgs = [invalid, activeMsg];
+        const sorted = sortMessages(msgs);
+        expect(sorted[0].title).toBe('Aktiv');
+        expect(sorted[1].title).toBe('Feil');
+    });
+
+    it('should return empty array for non-array input', () => {
+        expect(sortMessages(null)).toEqual([]);
+        expect(sortMessages({})).toEqual([]);
+    });
+});
+
+describe('slugify', () => {
+    it('should convert text to slug', () => {
+        expect(slugify('Hello World')).toBe('hello-world');
+        expect(slugify('ÆØÅ Test')).toBe('aeoeaa-test');
+        expect(slugify('  Trim  ')).toBe('trim');
+        expect(slugify('Multiple---Dashes')).toBe('multiple-dashes');
+        expect(slugify('Special!Chars?')).toBe('specialchars');
+    });
+
+    it('should return empty string for empty input', () => {
+        expect(slugify(null)).toBe('');
+        expect(slugify('')).toBe('');
     });
 });
