@@ -298,8 +298,11 @@ export function initEditors(onDateChange, onSave) {
     // Initialiser Flatpickr
     const flatpickrGlobal = window['flatpickr'];
     if (typeof flatpickrGlobal !== 'undefined') {
+        const l10n = flatpickrGlobal.l10ns;
+        const noLocale = l10n?.no || l10n?.nb || l10n?.Norwegian || "no";
+        
         const fpConfig = {
-            locale: (flatpickrGlobal.l10ns && flatpickrGlobal.l10ns.no) ? flatpickrGlobal.l10ns.no : "no",
+            locale: noLocale,
             dateFormat: "Y-m-d",
             altInput: true,
             altFormat: "d.m.Y",

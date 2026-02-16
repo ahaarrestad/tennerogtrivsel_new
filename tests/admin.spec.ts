@@ -1,6 +1,17 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Admin-panel Fase 1', () => {
+  test.beforeEach(async ({ page }) => {
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        console.error(`BROWSER ERROR: ${msg.text()}`);
+      }
+    });
+    page.on('pageerror', err => {
+      console.error(`PAGE ERROR: ${err.message}`);
+    });
+  });
+
   test('skal laste admin-siden og vise innloggingsknapp', async ({ page }) => {
     await page.goto('/admin');
     await expect(page).toHaveTitle(/Admin | Tenner og Trivsel/);

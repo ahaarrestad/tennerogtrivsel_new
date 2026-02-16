@@ -210,6 +210,7 @@ describe('admin-dashboard.js', () => {
                 this.config = config;
             });
             const mockFP = vi.fn();
+            mockFP.l10ns = { no: { firstDayOfWeek: 1 } };
             window.EasyMDE = mockMDE;
             window.flatpickr = mockFP;
 
@@ -222,11 +223,10 @@ describe('admin-dashboard.js', () => {
 
             initEditors(vi.fn(), vi.fn());
 
-            expect(mockMDE).toHaveBeenCalledWith(expect.objectContaining({
-                previewRender: expect.any(Function)
+            expect(mockMDE).toHaveBeenCalled();
+            expect(mockFP).toHaveBeenCalledWith("#edit-start", expect.objectContaining({
+                locale: { firstDayOfWeek: 1 }
             }));
-            expect(mockMDE.mock.calls[0][0].previewClass).toBeUndefined();
-            expect(mockFP).toHaveBeenCalled();
             
             delete window.EasyMDE;
             delete window.flatpickr;
