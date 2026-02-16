@@ -40,18 +40,13 @@ export async function enforceAccessControl(config) {
 
         if (hasAccess) {
             hasAnyAccess = true;
-            if (btn) btn.removeAttribute('disabled');
-            if (card) card.style.opacity = '1';
-        } else {
-            if (btn) {
-                btn.setAttribute('disabled', 'true');
-                btn.textContent = 'Ingen tilgang';
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
-            }
             if (card) {
-                card.style.opacity = '0.5';
-                card.classList.remove('hover:shadow-md', 'hover:border-brand-active');
-                card.title = 'Du har ikke tilgang til denne modulen i Google Drive.';
+                card.style.display = 'flex';
+                card.style.opacity = '1';
+            }
+        } else {
+            if (card) {
+                card.style.display = 'none';
             }
         }
     });

@@ -55,10 +55,10 @@ describe('admin-dashboard.js', () => {
             <div id="nav-user-info"></div>
             <div id="module-inner"></div>
             <div id="module-actions"></div>
-            <button id="btn-open-settings"></button>
-            <button id="btn-open-tjenester"></button>
-            <button id="btn-open-meldinger"></button>
-            <button id="btn-open-tannleger"></button>
+            <div class="admin-card-interactive"><button id="btn-open-settings"></button></div>
+            <div class="admin-card-interactive"><button id="btn-open-tjenester"></button></div>
+            <div class="admin-card-interactive"><button id="btn-open-meldinger"></button></div>
+            <div class="admin-card-interactive"><button id="btn-open-tannleger"></button></div>
         `;
         vi.clearAllMocks();
     });
@@ -247,7 +247,7 @@ describe('admin-dashboard.js', () => {
     });
 
     describe('enforceAccessControl', () => {
-        it('should enable modules where user has access', async () => {
+        it('should show modules where user has access and hide others', async () => {
             const config = {
                 SHEET_ID: 's',
                 TJENESTER_FOLDER: 'tj',
@@ -255,19 +255,41 @@ describe('admin-dashboard.js', () => {
                 TANNLEGER_FOLDER: 'ta'
             };
             // Only access to settings and meldinger
+            // Note: Tannleger requires BOTH ta and s
             adminClient.checkMultipleAccess.mockResolvedValue({
                 's': true,
                 'tj': false,
                 'm': true,
-                'ta': false
+                'ta': true
             });
 
             await enforceAccessControl(config);
             
-            expect(document.getElementById('btn-open-settings').hasAttribute('disabled')).toBe(false);
-            expect(document.getElementById('btn-open-tjenester').hasAttribute('disabled')).toBe(true);
-            expect(document.getElementById('btn-open-meldinger').hasAttribute('disabled')).toBe(false);
-            expect(document.getElementById('btn-open-tannleger').hasAttribute('disabled')).toBe(true);
+            const cardSettings = document.getElementById('btn-open-settings').closest('.admin-card-interactive');
+            const cardTjenester = document.getElementById('btn-open-tjenester').closest('.admin-card-interactive');
+            const cardMeldinger = document.getElementById('btn-open-meldinger').closest('.admin-card-interactive');
+            const cardTannleger = document.getElementById('btn-open-tannleger').closest('.admin-card-interactive');
+
+            expect(cardSettings.style.display).not.toBe('none');
+            expect(cardTjenester.style.display).toBe('none');
+            expect(cardMeldinger.style.display).not.toBe('none');
+            expect(cardTannleger.style.display).not.toBe('none');
+        });
+
+        it('should hide tannleger if one of its required resources is missing', async () => {
+             const config = {
+                SHEET_ID: 's',
+                TANNLEGER_FOLDER: 'ta'
+            };
+            // Access to folder but NOT sheet
+            adminClient.checkMultipleAccess.mockResolvedValue({
+                's': false,
+                'ta': true
+            });
+
+            await enforceAccessControl(config);
+            const cardTannleger = document.getElementById('btn-open-tannleger').closest('.admin-card-interactive');
+            expect(cardTannleger.style.display).toBe('none');
         });
 
         it('should logout and redirect if no access at all', async () => {
