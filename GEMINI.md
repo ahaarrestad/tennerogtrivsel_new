@@ -21,8 +21,9 @@ For å sikre stabilitet og unngå regresjoner, SKAL følgende sjekkliste følges
 3.  **E2E-tester:** Kjør `npm run test:e2e`. "Happy path" for berørt funksjonalitet SKAL verifiseres i Chromium.
 4.  **Rapporteringskrav:** Før en oppgave markeres som ferdig, SKAL du liste opp de faktiske dekningsgradene (% Branch) for alle filer du har endret.
 5.  **Build-sjekk:** Kjør `npm run build` lokalt for å bekrefte at prosjektet lar seg kompilere uten feil.
+6.  **CI/CD Konsistens:** Hvis du har lagt til en ny miljøvariabel (i `.env`, `src/env.d.ts` eller `sync-data.js`), SKAL du verifisere at denne også er lagt til i relevante workflow-filer i `.github/workflows/` (både for `test` og `build` steg).
 
-**AGENT-REGEL:** Du har ikke lov til å si deg ferdig eller foreslå en commit før du har presentert en fersk testrapport som viser at kravene er møtt for alle berørte filer. Enhver "ferdig"-melding uten tallgrunnlag er et brudd på instruksene. Hvis dekningsgraden faller på grunn av nye funksjoner, SKAL du skrive tester for disse før du går videre.
+**AGENT-REGEL:** Du har ikke lov til å si deg ferdig eller foreslå en commit før du har presentert en fersk testrapport som viser at kravene er møtt for alle berørte filer. Enhver "ferdig"-melding uten tallgrunnlag er et brudd på instruksene. Hvis dekningsgraden faller på grunn av nye funksjoner, SKAL du skrive tester for disse før du går videre. Ved innføring av nye avhengigheter eller miljøvariabler SKAL du eksplisitt sjekke og oppdatere CI-konfigurasjonen.
 
 ## Veikart: Tannleger Admin-modul
 
