@@ -28,12 +28,8 @@ import {
     deleteTannlegeRow,
     findFileByName,
     listImages,
-<<<<<<< Updated upstream
-    uploadImage
-=======
     uploadImage,
     getDriveImageBlob
->>>>>>> Stashed changes
 } from '../admin-client';
 
 describe('admin-client.js', () => {
