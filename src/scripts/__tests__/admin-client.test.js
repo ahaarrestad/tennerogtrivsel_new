@@ -21,7 +21,11 @@ import {
     deleteFile,
     parseMarkdown,
     stringifyMarkdown,
-    checkMultipleAccess
+    checkMultipleAccess,
+    getTannlegerRaw,
+    updateTannlegeRow,
+    addTannlegeRow,
+    deleteTannlegeRow
 } from '../admin-client';
 
 describe('admin-client.js', () => {
@@ -46,7 +50,8 @@ describe('admin-client.js', () => {
                         get: vi.fn(),
                         values: {
                             get: vi.fn(),
-                            update: vi.fn()
+                            update: vi.fn(),
+                            append: vi.fn()
                         }
                     }
                 },
@@ -397,6 +402,69 @@ describe('admin-client.js', () => {
             expect(result).toContain('title: Hei');
             expect(result).toContain('id: 123');
             expect(result).toContain('---\nInnhold');
+        });
+    });
+
+    describe('Tannleger CRUD (Google Sheets)', () => {
+        const spreadsheetId = 'sheet-123';
+
+        it('getTannlegerRaw skal mappe rader korrekt', async () => {
+            const mockValues = [
+                ['Navn', 'Tittel', 'Beskrivelse', 'Bilde', 'Aktiv', 'Skala', 'X', 'Y'],
+                ['Ola', 'T', 'B', 'o.jpg', 'ja', '1.2', '10', '20']
+            ];
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
+                result: { values: mockValues }
+            });
+
+            const result = await getTannlegerRaw(spreadsheetId);
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                rowIndex: 2,
+                name: 'Ola',
+                title: 'T',
+                description: 'B',
+                image: 'o.jpg',
+                active: true,
+                scale: 1.2,
+                positionX: 10,
+                positionY: 20
+            });
+        });
+
+        it('updateTannlegeRow skal sende korrekte verdier', async () => {
+            const data = { name: 'Ola', title: 'T', active: true, scale: 1.5 };
+            gapi.client.sheets.spreadsheets.values.update.mockResolvedValue({});
+
+            await updateTannlegeRow(spreadsheetId, 5, data);
+
+            expect(gapi.client.sheets.spreadsheets.values.update).toHaveBeenCalledWith(expect.objectContaining({
+                range: 'tannleger!A5:H5',
+                resource: { values: [['Ola', 'T', undefined, undefined, 'ja', 1.5, 50, 50]] }
+            }));
+        });
+
+        it('addTannlegeRow skal bruke append API', async () => {
+            const data = { name: 'Ny' };
+            gapi.client.sheets.spreadsheets.values.append.mockResolvedValue({});
+
+            await addTannlegeRow(spreadsheetId, data);
+
+            expect(gapi.client.sheets.spreadsheets.values.append).toHaveBeenCalled();
+        });
+
+        it('deleteTannlegeRow skal sette Aktiv til nei', async () => {
+            gapi.client.sheets.spreadsheets.values.update.mockResolvedValue({});
+            await deleteTannlegeRow(spreadsheetId, 3);
+            expect(gapi.client.sheets.spreadsheets.values.update).toHaveBeenCalledWith(expect.objectContaining({
+                range: 'tannleger!E3',
+                resource: { values: [['nei']] }
+            }));
+        });
+
+        it('skal kaste feil hvis API feiler i CRUD', async () => {
+            gapi.client.sheets.spreadsheets.values.get.mockRejectedValue(new Error('fail'));
+            await expect(getTannlegerRaw('id')).rejects.toThrow('fail');
         });
     });
 });

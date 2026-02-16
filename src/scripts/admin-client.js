@@ -417,3 +417,119 @@ export async function checkAccess(folderId) {
         return false;
     }
 }
+
+/**
+ * TANNLEGER CRUD (GOOGLE SHEETS)
+ */
+
+/**
+ * Henter alle rader fra tannleger-arket.
+ * Kolonne A-H: Navn, Tittel, Beskrivelse, Bilde, Aktiv, Skala, X, Y
+ */
+export async function getTannlegerRaw(spreadsheetId) {
+    try {
+        const response = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: spreadsheetId,
+            range: 'tannleger!A:H',
+        });
+
+        const rows = response.result.values;
+        if (!rows || rows.length <= 1) return [];
+
+        return rows.slice(1).map((row, index) => ({
+            rowIndex: index + 2, // 1-basert + 1 for header
+            name: row[0] || '',
+            title: row[1] || '',
+            description: row[2] || '',
+            image: row[3] || '',
+            active: (row[4] || 'nei').toLowerCase() === 'ja',
+            scale: parseFloat(row[5]) || 1.0,
+            positionX: parseInt(row[6]) || 50,
+            positionY: parseInt(row[7]) || 50
+        }));
+    } catch (err) {
+        console.error("[Admin] Kunne ikke hente tannleger:", err);
+        throw err;
+    }
+}
+
+/**
+ * Oppdaterer en spesifikk rad i tannleger-arket.
+ */
+export async function updateTannlegeRow(spreadsheetId, rowIndex, data) {
+    try {
+        const values = [[
+            data.name,
+            data.title,
+            data.description,
+            data.image,
+            data.active ? 'ja' : 'nei',
+            data.scale || 1.0,
+            data.positionX || 50,
+            data.positionY || 50
+        ]];
+
+        await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId: spreadsheetId,
+            range: `tannleger!A${rowIndex}:H${rowIndex}`,
+            valueInputOption: 'RAW',
+            resource: { values }
+        });
+
+        console.log(`[Admin] Tannlege rad ${rowIndex} oppdatert.`);
+        return true;
+    } catch (err) {
+        console.error("[Admin] Kunne ikke oppdatere tannlege:", err);
+        throw err;
+    }
+}
+
+/**
+ * Legger til en ny tannlege-rad nederst i arket.
+ */
+export async function addTannlegeRow(spreadsheetId, data) {
+    try {
+        const values = [[
+            data.name || 'Ny tannlege',
+            data.title || '',
+            data.description || '',
+            data.image || '',
+            'ja', // Alltid aktiv som default ved opprettelse
+            1.0,
+            50,
+            50
+        ]];
+
+        await gapi.client.sheets.spreadsheets.values.append({
+            spreadsheetId: spreadsheetId,
+            range: 'tannleger!A:H',
+            valueInputOption: 'RAW',
+            resource: { values }
+        });
+
+        console.log("[Admin] Ny tannlege lagt til i Sheets.");
+        return true;
+    } catch (err) {
+        console.error("[Admin] Kunne ikke legge til tannlege:", err);
+        throw err;
+    }
+}
+
+/**
+ * Logisk sletting av en tannlege (setter Aktiv til 'nei').
+ */
+export async function deleteTannlegeRow(spreadsheetId, rowIndex) {
+    try {
+        await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId: spreadsheetId,
+            range: `tannleger!E${rowIndex}`, // Kolonne E er 'Aktiv'
+            valueInputOption: 'RAW',
+            resource: { values: [['nei']] }
+        });
+        console.log(`[Admin] Tannlege rad ${rowIndex} deaktivert.`);
+        return true;
+    } catch (err) {
+        console.error("[Admin] Kunne ikke slette tannlege:", err);
+        throw err;
+    }
+}
