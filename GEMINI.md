@@ -24,11 +24,3 @@ For å sikre stabilitet og unngå regresjoner, SKAL følgende sjekkliste følges
 6.  **CI/CD Konsistens:** Hvis du har lagt til en ny miljøvariabel (i `.env`, `src/env.d.ts` eller `sync-data.js`), SKAL du verifisere at denne også er lagt til i relevante workflow-filer i `.github/workflows/` (både for `test` og `build` steg).
 
 **AGENT-REGEL:** Du har ikke lov til å si deg ferdig eller foreslå en commit før du har presentert en fersk testrapport som viser at kravene er møtt for alle berørte filer. Enhver "ferdig"-melding uten tallgrunnlag er et brudd på instruksene. Hvis dekningsgraden faller på grunn av nye funksjoner, SKAL du skrive tester for disse før du går videre. Ved innføring av nye avhengigheter eller miljøvariabler SKAL du eksplisitt sjekke og oppdatere CI-konfigurasjonen.
-
-## Veikart: Tannleger Admin-modul
-
-Dette veikartet beskriver implementeringen av tannlege-administrasjon.
-
-### Fase 4: Bildehåndtering
-- [x] Implementere bildevelger som lister filer fra Drive.
-- [x] Implementere bildeopplasting til Drive-mappen for tannleger.

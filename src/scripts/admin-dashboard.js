@@ -5,8 +5,7 @@ import {
     checkMultipleAccess, logout, getTannlegerRaw, updateTannlegeRow, 
     addTannlegeRow, deleteTannlegeRow
 } from './admin-client.js';
-import { formatDate, stripStackEditData, sortMessages, slugify } from './textFormatter.js';
-import snarkdown from 'snarkdown';
+import { formatDate, sortMessages } from './textFormatter.js';
 
 /**
  * Kontrollerer tilgang til dashboard-moduler og deaktiverer de som ikke er tilgjengelige.
@@ -70,13 +69,11 @@ export function updateUIWithUser(user) {
     if (!user) return;
     const loginContainer = document.getElementById('login-container');
     const dashboard = document.getElementById('dashboard');
-    const noAccess = document.getElementById('no-access');
     const pill = document.getElementById('user-pill');
     const info = document.getElementById('nav-user-info');
 
     if (loginContainer) loginContainer.classList.add('hidden');
     if (dashboard) dashboard.classList.remove('hidden');
-    if (noAccess) noAccess.classList.add('hidden');
     
     if (pill && info) {
         pill.style.display = 'flex';
@@ -112,10 +109,10 @@ export async function saveSingleSetting(index, inputEl, currentSettings, sheetId
         await updateSettings(sheetId, updatedList);
         currentSettings[index].value = newValue;
         statusEl.innerHTML = '<span class="text-green-600 text-[10px] font-bold">✅</span>';
-        setTimeout(() => { statusEl.innerHTML = ''; }, 3000);
+        setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 3000);
     } catch (e) { 
         console.error("Save failed", e);
-        statusEl.innerHTML = '<span class="text-red-500 text-[10px] font-bold">❌</span>'; 
+        if (statusEl) statusEl.innerHTML = '<span class="text-red-500 text-[10px] font-bold">❌</span>'; 
     }
 }
 
@@ -127,18 +124,16 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
 
-    actions.innerHTML = `<button id="btn-new-melding" class="btn-primary text-xs py-2 px-4 shadow-md">➕ Ny melding</button>`;
-    inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Laster meldinger...</div>';
+    actions.innerHTML = `<button id="btn-new-melding" class="btn-primary text-xs py-2 px-4 shadow-md">➕ Heng opp nytt oppslag</button>`;
+    inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter oppslag...</div>';
 
     try {
         const files = await listFiles(folderId);
-        
-        // Normaliser nåtid til midnatt UTC for sammenligning
         const today = new Date();
         const nowUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
 
         if (files.length === 0) {
-            inner.innerHTML = `<div class="text-center py-12 text-slate-400 italic">Ingen meldinger funnet.</div>`;
+            inner.innerHTML = `<div class="text-center py-12 text-slate-400 italic">Ingen oppslag funnet.</div>`;
         } else {
             const messages = await Promise.all(files.map(async (f) => {
                 const raw = await getFileContent(f.id);
@@ -156,7 +151,6 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                 return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
             };
 
-            // Finn overlapp for aktive/planlagte meldinger
             const activeOrPlanned = sortedMessages
                 .map(m => ({ 
                     ...m, 
@@ -178,19 +172,18 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
 
                 if (startTime !== null && endTime !== null) {
                     if (nowUTC >= startTime && nowUTC <= endTime) {
-                        statusClass = "bg-green-100 text-green-700 border-green-200 ring-4 ring-green-500/5 font-black";
+                        statusClass = "bg-green-100 text-green-700 border-green-200 font-black";
                         statusText = "Aktiv nå";
                         dotClass = "admin-status-dot-active";
-                        currentGroup = "Aktive meldinger";
+                        currentGroup = "Aktive oppslag";
                     } else if (nowUTC < startTime) {
                         statusClass = "bg-blue-100 text-blue-700 border-blue-200";
                         statusText = "Planlagt";
                         dotClass = "admin-status-dot-planned";
-                        currentGroup = "Planlagte meldinger";
+                        currentGroup = "Planlagte oppslag";
                     }
                 }
 
-                // Sett inn gruppe-skille dersom status endres
                 if (currentGroup !== lastGroup) {
                     html += `
                         <div class="col-span-1 mt-8 mb-2 first:mt-0">
@@ -202,7 +195,6 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                     lastGroup = currentGroup;
                 }
 
-                // Sjekk om denne meldinger overlapper med andre (kun for aktive/planlagte)
                 const hasOverlap = endTime >= nowUTC && activeOrPlanned.some(other => 
                     other.driveId !== msg.driveId && 
                     startTime <= other.end && 
@@ -218,18 +210,11 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                                     ${statusText}
                                 </span>
                                 <h3 class="font-bold text-brand truncate">${msg.title || msg.name}</h3>
-                                ${hasOverlap ? `
-                                    <span class="flex items-center gap-1 text-[10px] font-black text-amber-600 uppercase tracking-tighter bg-amber-100 px-2 py-0.5 rounded-md animate-pulse">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                                        Dato-konflikt
-                                    </span>
-                                ` : ''}
                             </div>
                             <p class="text-xs text-slate-500 flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                                 ${formatDate(msg.startDate)} til ${formatDate(msg.endDate || 'Uendelig')}
                             </p>
-                            ${hasOverlap ? `<p class="text-[10px] text-amber-700 mt-1 font-medium">⚠️ Denne meldingen overlapper med en annen aktiv eller planlagt melding. Kun én melding vises av gangen på nettsiden.</p>` : ''}
                         </div>
                         <div class="flex gap-2 shrink-0">
                             <button data-id="${msg.driveId}" data-name="${msg.name}" class="edit-btn p-3 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
@@ -243,7 +228,6 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
             });
             inner.innerHTML = html + `</div>`;
 
-            // Event listeners for dynamiske knapper
             inner.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.onclick = () => onEdit(btn.dataset.id, btn.dataset.name);
             });
@@ -254,7 +238,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
         document.getElementById('btn-new-melding').onclick = () => onEdit(null, null);
     } catch (e) { 
         console.error("Load failed", e);
-        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste meldinger.</div>`; 
+        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste oppslag.</div>`; 
     }
 }
 
@@ -266,13 +250,13 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
 
-    actions.innerHTML = `<button id="btn-new-tjeneste" class="btn-primary text-xs py-2 px-4 shadow-md">➕ Ny tjeneste</button>`;
-    inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Laster tjenester...</div>';
+    actions.innerHTML = `<button id="btn-new-tjeneste" class="btn-primary text-xs py-2 px-4 shadow-md">➕ Legg til behandling</button>`;
+    inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter behandlinger...</div>';
 
     try {
         const files = await listFiles(folderId);
         if (files.length === 0) {
-            inner.innerHTML = `<div class="text-center py-12 text-slate-400 italic">Ingen tjenester funnet.</div>`;
+            inner.innerHTML = `<div class="text-center py-12 text-slate-400 italic">Ingen behandlinger funnet.</div>`;
         } else {
             const services = await Promise.all(files.map(async (f) => {
                 const raw = await getFileContent(f.id);
@@ -280,7 +264,6 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
                 return { ...f, driveId: f.id, ...data };
             }));
 
-            // Sorter alfabetisk på tittel
             services.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'nb'));
 
             let html = `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
@@ -313,7 +296,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
         document.getElementById('btn-new-tjeneste').onclick = () => onEdit(null, null);
     } catch (e) {
         console.error("Load failed", e);
-        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste tjenester.</div>`;
+        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste behandlinger.</div>`;
     }
 }
 
@@ -325,16 +308,15 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete) {
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
 
-    actions.innerHTML = `<button id="btn-new-tannlege" class="btn-primary text-xs py-2 px-4 shadow-md">➕ Legg til tannlege</button>`;
-    inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter tannleger fra Sheets...</div>';
+    actions.innerHTML = `<button id="btn-new-tannlege" class="btn-primary text-xs py-2 px-4 shadow-md">➕ Legg til team-medlem</button>`;
+    inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter teamet...</div>';
 
     try {
         const dentists = await getTannlegerRaw(sheetId);
         
         if (dentists.length === 0) {
-            inner.innerHTML = `<div class="text-center py-12 text-slate-400 italic">Ingen tannleger funnet i arket.</div>`;
+            inner.innerHTML = `<div class="text-center py-12 text-slate-400 italic">Ingen team-medlemmer funnet.</div>`;
         } else {
-            // Sorter alfabetisk på navn
             dentists.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'nb'));
 
             let html = `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
@@ -373,91 +355,6 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete) {
         document.getElementById('btn-new-tannlege').onclick = () => onEdit(null, null);
     } catch (e) {
         console.error("Load failed", e);
-        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste tannleger fra Google Sheets.</div>`;
+        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste teamet.</div>`;
     }
-}
-
-/**
- * Initialiserer kun Markdown-editor (for tjenester)
- */
-export function initMarkdownEditor(onSave) {
-    let easyMDE = null;
-    const EasyMDEGlobal = window['EasyMDE'];
-    if (typeof EasyMDEGlobal !== 'undefined') {
-        easyMDE = new EasyMDEGlobal({
-            element: document.getElementById('edit-content'),
-            spellChecker: false,
-            status: false,
-            minHeight: "350px",
-            placeholder: "Skriv innholdet her...",
-            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
-            previewRender: (plainText) => {
-                return `<div class="markdown-content prose">${snarkdown(plainText)}</div>`;
-            }
-        });
-    }
-
-    const saveBtn = document.getElementById('btn-save-tjeneste');
-    if (saveBtn) {
-        saveBtn.onclick = () => onSave(easyMDE);
-    }
-
-    return easyMDE;
-}
-
-/**
- * Initialiserer Flatpickr og EasyMDE
- */
-export function initEditors(onDateChange, onSave) {
-    // Initialiser EasyMDE
-    let easyMDE = null;
-    const EasyMDEGlobal = window['EasyMDE'];
-    if (typeof EasyMDEGlobal !== 'undefined') {
-        easyMDE = new EasyMDEGlobal({
-            element: document.getElementById('edit-content'),
-            spellChecker: false,
-            status: false,
-            minHeight: "250px",
-            placeholder: "Skriv innholdet her...",
-            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
-            previewRender: (plainText) => {
-                return `<div class="markdown-content prose">${snarkdown(plainText)}</div>`;
-            }
-        });
-    }
-
-    // Initialiser Flatpickr
-    const flatpickrGlobal = window['flatpickr'];
-    if (typeof flatpickrGlobal !== 'undefined') {
-        const l10ns = flatpickrGlobal.l10ns;
-        // Finn den beste tilgjengelige norske lokalen, eller null hvis ingen finnes
-        const noLocale = l10ns ? (l10ns.no || l10ns.nb || l10ns.Norwegian) : null;
-        
-        const fpConfig = {
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d.m.Y",
-            allowInput: true,
-            onChange: (selectedDates, dateStr, instance) => {
-                // Oppdater det underliggende input-feltet manuelt for å sikre at 'change' event trigges riktig
-                instance.element.value = dateStr;
-                if (onDateChange) onDateChange(selectedDates, dateStr, instance);
-            }
-        };
-
-        // Kun legg til locale hvis vi faktisk fant et objekt (unngår "invalid locale" string feil)
-        if (noLocale) {
-            fpConfig.locale = noLocale;
-        }
-        
-        flatpickrGlobal("#edit-start", fpConfig);
-        flatpickrGlobal("#edit-end", fpConfig);
-    }
-
-    const saveBtn = document.getElementById('btn-save-melding');
-    if (saveBtn) {
-        saveBtn.onclick = () => onSave(easyMDE);
-    }
-
-    return easyMDE;
 }

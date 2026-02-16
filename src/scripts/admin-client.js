@@ -187,15 +187,11 @@ async function fetchUserInfo(accessToken) {
  * Lister alle bildefiler i en mappe
  */
 export async function listImages(folderId) {
-    console.log("[Admin] listImages kalles for mappe:", folderId);
-    
     if (!gapi.client.drive) {
-        console.error("[Admin] Drive API er ikke lastet!");
         throw new Error("Drive API ikke initialisert");
     }
 
     try {
-        // Vi prøver et litt bredere søk først for å se hva som finnes
         const response = await gapi.client.drive.files.list({
             q: `'${folderId}' in parents and trashed = false`,
             fields: 'files(id, name, mimeType, thumbnailLink, webContentLink), nextPageToken',
@@ -205,25 +201,16 @@ export async function listImages(folderId) {
         });
         
         const allFiles = response.result.files || [];
-        console.log(`[Admin] Fant totalt ${allFiles.length} filer i mappen.`);
-        
-        // LOGG ALT FOR DIAGNOSE
-        allFiles.forEach((f, i) => {
-            console.log(`[Admin] Fil #${i}: "${f.name}" (Type: ${f.mimeType}, ID: ${f.id})`);
-        });
 
-        // Filtrer ut bilder
-        const images = allFiles.filter(file => {
+        // Filtrer ut kun bilder basert på mimeType eller vanlige filendelser
+        return allFiles.filter(file => {
             const isImageMime = file.mimeType && file.mimeType.startsWith('image/');
             const isImageExt = /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(file.name);
             return isImageMime || isImageExt;
         });
-
-        console.log(`[Admin] Etter filtrering: ${images.length} bilder.`);
-        return images;
     } catch (err) {
         const msg = err.result?.error?.message || err.message || "Ukjent API-feil";
-        console.error("[Admin] listImages feilet:", msg, err);
+        console.error("[Admin] listImages feilet:", msg);
         throw new Error(msg);
     }
 }
