@@ -78,16 +78,26 @@ export function stripStackEditData(content) {
 export function sortMessages(messages) {
     if (!messages || !Array.isArray(messages)) return [];
     
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
+    // Vi bruker UTC-datoer for å unngå tidssone-problemer på S3/Produksjon.
+    // Vi normaliserer "nå" til midnatt UTC.
+    const today = new Date();
+    const nowUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+
+    const parseToUTC = (dateStr) => {
+        if (!dateStr) return null;
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return null;
+        return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+    };
 
     const getStatus = (msg) => {
-        const start = new Date(msg.startDate);
-        const end = new Date(msg.endDate);
-        if (isNaN(start.getTime()) || isNaN(end.getTime())) return 3; // Ukjent/Feil -> nederst
+        const start = parseToUTC(msg.startDate);
+        const end = parseToUTC(msg.endDate || '2099-12-31');
         
-        if (now >= start && now <= end) return 0; // Aktiv
-        if (now < start) return 1; // Planlagt
+        if (start === null || end === null) return 3; // Ukjent/Feil -> nederst
+        
+        if (nowUTC >= start && nowUTC <= end) return 0; // Aktiv
+        if (nowUTC < start) return 1; // Planlagt
         return 2; // Utløpt
     };
 
@@ -100,10 +110,10 @@ export function sortMessages(messages) {
         }
 
         // Samme status, sorter på dato
-        const startA = new Date(a.startDate).getTime();
-        const startB = new Date(b.startDate).getTime();
-        const endA = new Date(a.endDate).getTime();
-        const endB = new Date(b.endDate).getTime();
+        const startA = parseToUTC(a.startDate) || 0;
+        const startB = parseToUTC(b.startDate) || 0;
+        const endA = parseToUTC(a.endDate || '2099-12-31') || 0;
+        const endB = parseToUTC(b.endDate || '2099-12-31') || 0;
 
         if (statusA === 0) { // Aktiv: Sorter etter sluttdato (den som går ut først øverst)
             return endA - endB;

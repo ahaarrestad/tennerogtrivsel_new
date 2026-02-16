@@ -131,8 +131,10 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
 
     try {
         const files = await listFiles(folderId);
-        const now = new Date();
-        now.setHours(0,0,0,0);
+        
+        // Normaliser nåtid til midnatt UTC for sammenligning
+        const today = new Date();
+        const nowUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
 
         if (files.length === 0) {
             inner.innerHTML = `<div class="text-center py-12 text-slate-400 italic">Ingen meldinger funnet.</div>`;
@@ -146,34 +148,45 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
             const sortedMessages = sortMessages(messages);
             let html = `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
 
+            const parseToUTC = (dateStr) => {
+                if (!dateStr) return null;
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return null;
+                return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+            };
+
             // Finn overlapp for aktive/planlagte meldinger
             const activeOrPlanned = sortedMessages
-                .map(m => ({ ...m, start: new Date(m.startDate).getTime(), end: new Date(m.endDate || '2099-12-31').getTime() }))
-                .filter(m => m.end >= now.getTime());
+                .map(m => ({ 
+                    ...m, 
+                    start: parseToUTC(m.startDate) || 0, 
+                    end: parseToUTC(m.endDate || '2099-12-31') || 0 
+                }))
+                .filter(m => m.end >= nowUTC);
 
             let lastGroup = null;
 
             sortedMessages.forEach((msg) => {
-                const start = new Date(msg.startDate);
-                const end = new Date(msg.endDate || '2099-12-31');
-                const startTime = start.getTime();
-                const endTime = end.getTime();
+                const startTime = parseToUTC(msg.startDate);
+                const endTime = parseToUTC(msg.endDate || '2099-12-31');
                 
                 let statusClass = "bg-slate-100 text-slate-500 border-slate-200";
                 let statusText = "Utløpt";
                 let dotClass = "admin-status-dot-expired";
                 let currentGroup = "Historikk (Utløpte)";
 
-                if (now >= start && now <= end) {
-                    statusClass = "bg-green-100 text-green-700 border-green-200 ring-4 ring-green-500/5 font-black";
-                    statusText = "Aktiv nå";
-                    dotClass = "admin-status-dot-active";
-                    currentGroup = "Aktive meldinger";
-                } else if (now < start) {
-                    statusClass = "bg-blue-100 text-blue-700 border-blue-200";
-                    statusText = "Planlagt";
-                    dotClass = "admin-status-dot-planned";
-                    currentGroup = "Planlagte meldinger";
+                if (startTime !== null && endTime !== null) {
+                    if (nowUTC >= startTime && nowUTC <= endTime) {
+                        statusClass = "bg-green-100 text-green-700 border-green-200 ring-4 ring-green-500/5 font-black";
+                        statusText = "Aktiv nå";
+                        dotClass = "admin-status-dot-active";
+                        currentGroup = "Aktive meldinger";
+                    } else if (nowUTC < startTime) {
+                        statusClass = "bg-blue-100 text-blue-700 border-blue-200";
+                        statusText = "Planlagt";
+                        dotClass = "admin-status-dot-planned";
+                        currentGroup = "Planlagte meldinger";
+                    }
                 }
 
                 // Sett inn gruppe-skille dersom status endres
@@ -189,7 +202,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                 }
 
                 // Sjekk om denne meldinger overlapper med andre (kun for aktive/planlagte)
-                const hasOverlap = endTime >= now.getTime() && activeOrPlanned.some(other => 
+                const hasOverlap = endTime >= nowUTC && activeOrPlanned.some(other => 
                     other.driveId !== msg.driveId && 
                     startTime <= other.end && 
                     endTime >= other.start
@@ -213,7 +226,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                             </div>
                             <p class="text-xs text-slate-500 flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                ${formatDate(start)} til ${formatDate(end.getFullYear() === 2099 ? 'Uendelig' : end)}
+                                ${formatDate(msg.startDate)} til ${formatDate(msg.endDate || 'Uendelig')}
                             </p>
                             ${hasOverlap ? `<p class="text-[10px] text-amber-700 mt-1 font-medium">⚠️ Denne meldingen overlapper med en annen aktiv eller planlagt melding. Kun én melding vises av gangen på nettsiden.</p>` : ''}
                         </div>
