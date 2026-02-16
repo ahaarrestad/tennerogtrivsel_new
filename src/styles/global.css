@@ -317,7 +317,7 @@
     }
 
     .admin-nav-container {
-        @apply layout-container flex justify-between items-center gap-4;
+        @apply container mx-auto px-4 flex justify-between items-center gap-4;
     }
 
     .admin-logo-container {
@@ -337,7 +337,7 @@
     }
 
     .admin-dashboard-container {
-        @apply layout-container space-y-12 py-12 w-full;
+        @apply container mx-auto px-4 space-y-12 py-12 w-full;
     }
 
     .admin-module-grid {
@@ -349,20 +349,20 @@
     }
 
     .admin-card-interactive {
-        @apply admin-card hover:shadow-md hover:border-brand-active flex flex-col;
+        @apply bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-brand-border transition-all duration-300 hover:shadow-md hover:border-brand-active flex flex-col;
     }
 
     .admin-card-header {
-        @apply admin-card text-center;
+        @apply bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-brand-border transition-all duration-300 text-center;
     }
 
     /* TYPOGRAPHY */
     .admin-title {
-        @apply h2 font-black uppercase tracking-tight;
+        @apply text-3xl md:text-5xl font-black text-brand tracking-tight leading-tight uppercase;
     }
 
     .admin-subtitle {
-        @apply h3 mb-4 transition-colors;
+        @apply text-2xl md:text-3xl font-bold text-brand leading-snug mb-4 transition-colors;
     }
 
     .admin-description {

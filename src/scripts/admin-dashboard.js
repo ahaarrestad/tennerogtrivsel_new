@@ -139,7 +139,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
             const messages = await Promise.all(files.map(async (f) => {
                 const raw = await getFileContent(f.id);
                 const { data } = parseMarkdown(raw);
-                return { ...f, ...data };
+                return { ...f, driveId: f.id, ...data };
             }));
 
             const sortedMessages = sortMessages(messages);
@@ -151,16 +151,6 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                 let statusClass = "bg-slate-100 text-slate-500 border-slate-200";
                 let statusText = "Utløpt";
                 let dotClass = "admin-status-dot-expired";
-
-                if (now >= start && now <= end) {
-                    statusClass = "bg-green-100 text-green-700 border-green-200 ring-4 ring-green-500/5 font-black";
-                    statusText = "Aktiv nå";
-                    dotClass = "admin-status-dot-active";
-                } else if (now < start) {
-                    statusClass = "bg-blue-100 text-blue-700 border-blue-200";
-                    statusText = "Planlagt";
-                    dotClass = "admin-status-dot-planned";
-                }
 
                 html += `
                     <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -178,8 +168,8 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                             </p>
                         </div>
                         <div class="flex gap-2 shrink-0 w-full sm:w-auto">
-                            <button data-id="${msg.id}" class="edit-btn flex-grow sm:flex-grow-0 admin-btn-secondary">Rediger</button>
-                            <button data-id="${msg.id}" data-name="${msg.name}" class="delete-btn admin-btn-danger">Slett</button>
+                            <button data-id="${msg.driveId}" data-name="${msg.name}" class="edit-btn flex-grow sm:flex-grow-0 admin-btn-secondary">Rediger</button>
+                            <button data-id="${msg.driveId}" data-name="${msg.name}" class="delete-btn admin-btn-danger">Slett</button>
                         </div>
                     </div>`;
             });
@@ -187,17 +177,97 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
 
             // Event listeners for dynamiske knapper
             inner.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.onclick = () => onEdit(btn.dataset.id);
+                btn.onclick = () => onEdit(btn.dataset.id, btn.dataset.name);
             });
             inner.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.onclick = () => onDelete(btn.dataset.id, btn.dataset.name);
             });
         }
-        document.getElementById('btn-new-melding').onclick = () => onEdit(null);
+        document.getElementById('btn-new-melding').onclick = () => onEdit(null, null);
     } catch (e) { 
         console.error("Load failed", e);
         inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste meldinger.</div>`; 
     }
+}
+
+/**
+ * Henter og viser tjenester-listen
+ */
+export async function loadTjenesterModule(folderId, onEdit, onDelete) {
+    const inner = document.getElementById('module-inner');
+    const actions = document.getElementById('module-actions');
+    if (!inner || !actions) return;
+
+    actions.innerHTML = `<button id="btn-new-tjeneste" class="btn-primary text-xs py-2 px-4 shadow-md">➕ Ny tjeneste</button>`;
+    inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Laster tjenester...</div>';
+
+    try {
+        const files = await listFiles(folderId);
+        if (files.length === 0) {
+            inner.innerHTML = `<div class="text-center py-12 text-slate-400 italic">Ingen tjenester funnet.</div>`;
+        } else {
+            const services = await Promise.all(files.map(async (f) => {
+                const raw = await getFileContent(f.id);
+                const { data } = parseMarkdown(raw);
+                return { ...f, driveId: f.id, ...data };
+            }));
+
+            // Sorter alfabetisk på tittel
+            services.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'nb'));
+
+            let html = `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
+            services.forEach((s) => {
+                html += `
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div class="min-w-0 flex-grow">
+                            <h3 class="font-bold text-brand truncate">${s.title || s.name}</h3>
+                            <p class="text-xs text-slate-500 mt-1 line-clamp-1">${s.ingress || ''}</p>
+                        </div>
+                        <div class="flex gap-2 shrink-0 w-full sm:w-auto">
+                            <button data-id="${s.driveId}" data-name="${s.name}" class="edit-btn flex-grow sm:flex-grow-0 admin-btn-secondary">Rediger</button>
+                            <button data-id="${s.driveId}" data-name="${s.name}" class="delete-btn admin-btn-danger">Slett</button>
+                        </div>
+                    </div>`;
+            });
+            inner.innerHTML = html + `</div>`;
+
+            inner.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.onclick = () => onEdit(btn.dataset.id, btn.dataset.name);
+            });
+            inner.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.onclick = () => onDelete(btn.dataset.id, btn.dataset.name);
+            });
+        }
+        document.getElementById('btn-new-tjeneste').onclick = () => onEdit(null, null);
+    } catch (e) {
+        console.error("Load failed", e);
+        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste tjenester.</div>`;
+    }
+}
+
+/**
+ * Initialiserer kun Markdown-editor (for tjenester)
+ */
+export function initMarkdownEditor(onSave) {
+    let easyMDE = null;
+    const EasyMDEGlobal = window['EasyMDE'];
+    if (typeof EasyMDEGlobal !== 'undefined') {
+        easyMDE = new EasyMDEGlobal({
+            element: document.getElementById('edit-content'),
+            spellChecker: false,
+            status: false,
+            minHeight: "350px",
+            placeholder: "Skriv innholdet her...",
+            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"]
+        });
+    }
+
+    const saveBtn = document.getElementById('btn-save-tjeneste');
+    if (saveBtn) {
+        saveBtn.onclick = () => onSave(easyMDE);
+    }
+
+    return easyMDE;
 }
 
 /**

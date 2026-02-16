@@ -3,7 +3,8 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { 
-    updateUIWithUser, autoResizeTextarea, saveSingleSetting, loadMeldingerModule, initEditors, enforceAccessControl
+    updateUIWithUser, autoResizeTextarea, saveSingleSetting, loadMeldingerModule, initEditors, enforceAccessControl,
+    loadTjenesterModule, initMarkdownEditor
 } from '../admin-dashboard.js';
 import * as adminClient from '../admin-client.js';
 import * as textFormatter from '../textFormatter.js';
@@ -115,7 +116,7 @@ describe('admin-dashboard.js', () => {
             
             const editBtn = document.querySelector('.edit-btn');
             editBtn.click();
-            expect(onEdit).toHaveBeenCalledWith('1');
+            expect(onEdit).toHaveBeenCalledWith('1', 'test.md');
 
             const deleteBtn = document.querySelector('.delete-btn');
             deleteBtn.click();
@@ -133,6 +134,54 @@ describe('admin-dashboard.js', () => {
             await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
 
             expect(document.getElementById('module-inner').textContent).toContain('Ingen meldinger funnet');
+        });
+    });
+
+    describe('loadTjenesterModule', () => {
+        it('should list services and sort them by title', async () => {
+            document.body.innerHTML = `
+                <div id="module-inner"></div>
+                <div id="module-actions"></div>
+            `;
+
+            adminClient.listFiles.mockResolvedValue([
+                { id: 'z', name: 'z.md' },
+                { id: 'a', name: 'a.md' }
+            ]);
+            adminClient.getFileContent.mockResolvedValue('---title: Z---body');
+            // Mock parseMarkdown to return different titles
+            adminClient.parseMarkdown
+                .mockReturnValueOnce({ data: { title: 'Zebra' }, body: 'z' })
+                .mockReturnValueOnce({ data: { title: 'Ape' }, body: 'a' });
+
+            const onEdit = vi.fn();
+            await loadTjenesterModule('folder-id', onEdit, vi.fn());
+
+            const titles = Array.from(document.querySelectorAll('#module-inner h3')).map(h => h.textContent);
+            expect(titles).toEqual(['Ape', 'Zebra']);
+
+            const firstEditBtn = document.querySelector('.edit-btn');
+            firstEditBtn.click();
+            // Since Ape was first in sorted list, its id was 'a' and name was 'a.md'
+            expect(onEdit).toHaveBeenCalledWith('a', 'a.md');
+        });
+    });
+
+    describe('initMarkdownEditor', () => {
+        it('should initialize EasyMDE without Flatpickr', () => {
+            const mockMDE = vi.fn().mockImplementation(function() { this.value = () => 'content'; });
+            window.EasyMDE = mockMDE;
+
+            document.body.innerHTML = `
+                <textarea id="edit-content"></textarea>
+                <button id="btn-save-tjeneste"></button>
+            `;
+
+            initMarkdownEditor(vi.fn());
+            expect(mockMDE).toHaveBeenCalled();
+            expect(window.flatpickr).toBeUndefined();
+            
+            delete window.EasyMDE;
         });
     });
 

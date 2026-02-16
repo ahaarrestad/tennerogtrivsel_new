@@ -23,6 +23,10 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/no.js"></script>
+    
+    <!-- Icons for EasyMDE -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
     <style is:global>
         .EasyMDEContainer .editor-toolbar {
             border-top-left-radius: 12px;
@@ -171,7 +175,8 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         import { formatDate, stripStackEditData, sortMessages, slugify } from '../../scripts/textFormatter.js';
         import { 
             updateUIWithUser, autoResizeTextarea, saveSingleSetting, 
-            loadMeldingerModule, initEditors, enforceAccessControl
+            loadMeldingerModule, initEditors, enforceAccessControl,
+            loadTjenesterModule, initMarkdownEditor
         } from '../../scripts/admin-dashboard.js';
 
         const configEl = document.getElementById('admin-config');
@@ -218,16 +223,17 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             }
         }
 
-        window.deleteMelding = async (id, name) => {
-            if (confirm(`Vil du slette "${name}"?`)) {
+        // --- TJENESTER MODUL ---
+        window.deleteTjeneste = async (id, name) => {
+            if (confirm(`Vil du slette tjenesten "${name}"?`)) {
                 try { 
                     await deleteFile(id); 
-                    loadMeldingerModule(MELDINGER_FOLDER, window.editMelding, window.deleteMelding); 
+                    loadTjenesterModule(TJENESTER_FOLDER, window.editTjeneste, window.deleteTjeneste); 
                 } catch (e) { alert("Sletting feilet."); }
             }
         };
 
-        window.editMelding = async (id) => {
+        window.editTjeneste = async (id, name) => {
             const inner = document.getElementById('module-inner');
             const actions = document.getElementById('module-actions');
             if (!inner || !actions) return;
@@ -235,90 +241,183 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             actions.innerHTML = '';
             inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Laster editor...</div>';
             
-            let msgData = { title: '', startDate: new Date().toISOString().split('T')[0], endDate: '', content: '' };
-            let currentFileName = '';
+            try {
+                let data = { title: '', ingress: '', id: '' };
+                let body = '';
 
-            if (id) {
-                const raw = await getFileContent(id);
-                const { data, body } = parseMarkdown(raw);
-                msgData = { ...data, content: stripStackEditData(body) };
-                const files = await listFiles(MELDINGER_FOLDER);
-                currentFileName = files.find(f => f.id === id).name;
-            }
-
-            inner.innerHTML = `
-                <div class="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div class="grid grid-cols-1 gap-6">
-                        <div class="flex flex-col gap-2">
-                            <label class="admin-label">Tittel</label>
-                            <input type="text" id="edit-title" value="${msgData.title}" placeholder="Skriv en tittel..." class="admin-input">
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="flex flex-col gap-2">
-                                <div class="flex justify-between items-center">
-                                    <label class="admin-label">Fra og med</label>
-                                    <span id="preview-start" class="text-[10px] text-slate-400 font-bold">${formatDate(msgData.startDate)}</span>
-                                </div>
-                                <input type="text" id="edit-start" value="${msgData.startDate}" placeholder="Velg dato..." class="admin-input cursor-pointer bg-white">
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <div class="flex justify-between items-center">
-                                    <label class="admin-label">Til og med</label>
-                                    <span id="preview-end" class="text-[10px] text-slate-400 font-bold">${formatDate(msgData.endDate)}</span>
-                                </div>
-                                <input type="text" id="edit-end" value="${msgData.endDate}" placeholder="Velg dato..." class="admin-input cursor-pointer bg-white">
-                            </div>
-                        </div>
-                        <div class="flex flex-col gap-2 editor-container">
-                            <label class="admin-label">Innhold</label>
-                            <textarea id="edit-content" placeholder="Skriv meldingen her...">${msgData.content}</textarea>
-                        </div>
-                    </div>
-                    <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100">
-                        <button id="btn-save-melding" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Lagre melding</button>
-                        <button onclick="window.loadMeldingerModule(MELDINGER_FOLDER, window.editMelding, window.deleteMelding)" class="admin-btn-secondary !py-4 !px-8 !rounded-2xl uppercase tracking-widest text-xs">Avbryt</button>
-                    </div>
-                </div>`;
-
-            const onDateChange = () => {
-                const startInp = document.getElementById('edit-start');
-                const endInp = document.getElementById('edit-end');
-                const startEl = document.getElementById('preview-start');
-                const endEl = document.getElementById('preview-end');
-                if (startEl && startInp) startEl.textContent = formatDate(startInp.value);
-                if (endEl && endInp) endEl.textContent = formatDate(endInp.value);
-            };
-
-            const onSave = async (easyMDE) => {
-                const title = document.getElementById('edit-title').value;
-                const safeTitle = slugify(title) || 'u-navnet';
-                const newFileName = `${safeTitle}-${Date.now()}.md`;
-                const saveBtn = document.getElementById('btn-save-melding');
-
-                saveBtn.disabled = true;
-                saveBtn.textContent = "Lagrer...";
-                
-                const data = {
-                    title: title,
-                    startDate: document.getElementById('edit-start').value,
-                    endDate: document.getElementById('edit-end').value
-                };
-                
-                const body = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
-                
-                try {
-                    if (id) await saveFile(id, newFileName, stringifyMarkdown(data, body));
-                    else await createFile(MELDINGER_FOLDER, newFileName, stringifyMarkdown(data, body));
-                    loadMeldingerModule(MELDINGER_FOLDER, window.editMelding, window.deleteMelding);
-                } catch (e) { 
-                    console.error("Lagring feilet:", e);
-                    alert("Feil ved lagring."); 
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = "Lagre melding"; 
+                if (id) {
+                    const raw = await getFileContent(id);
+                    const parsed = parseMarkdown(raw);
+                    data = parsed.data;
+                    body = stripStackEditData(parsed.body);
                 }
-            };
 
-            initEditors(onDateChange, onSave);
+                inner.innerHTML = `
+                    <div class="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div class="grid grid-cols-1 gap-6">
+                            <div class="flex flex-col gap-2">
+                                <label class="admin-label">Tittel</label>
+                                <input type="text" id="edit-title" value="${data.title || ''}" placeholder="Navn på tjenesten..." class="admin-input">
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="admin-label">Ingress (kort sammendrag)</label>
+                                <textarea id="edit-ingress" rows="3" class="admin-input resize-none">${data.ingress || ''}</textarea>
+                            </div>
+                            <div class="flex flex-col gap-2 editor-container">
+                                <label class="admin-label">Beskrivelse (Innhold)</label>
+                                <textarea id="edit-content" placeholder="Full beskrivelse her...">${body}</textarea>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100">
+                            <button id="btn-save-tjeneste" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Lagre tjeneste</button>
+                            <button onclick="window.loadTjenesterModule()" class="admin-btn-secondary !py-4 !px-8 !rounded-2xl uppercase tracking-widest text-xs">Avbryt</button>
+                        </div>
+                    </div>`;
+
+                const onSave = async (easyMDE) => {
+                    const title = document.getElementById('edit-title').value;
+                    const safeTitle = slugify(title) || 'u-navngitt-tjeneste';
+                    const entryId = data.id || safeTitle; 
+                    const newFileName = `${safeTitle}-${Date.now()}.md`;
+                    const saveBtn = document.getElementById('btn-save-tjeneste');
+
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = "Lagrer...";
+                    
+                    const frontmatter = {
+                        id: entryId,
+                        title: title,
+                        ingress: document.getElementById('edit-ingress').value
+                    };
+                    
+                    const content = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
+                    
+                    try {
+                        if (id) await saveFile(id, newFileName, stringifyMarkdown(frontmatter, content));
+                        else await createFile(TJENESTER_FOLDER, newFileName, stringifyMarkdown(frontmatter, content));
+                        window.loadTjenesterModule();
+                    } catch (e) { 
+                        console.error("Lagring feilet:", e);
+                        alert("Feil ved lagring."); 
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = "Lagre tjeneste"; 
+                    }
+                };
+
+                initMarkdownEditor(onSave);
+            } catch (e) {
+                console.error("Klarte ikke laste editor:", e);
+                inner.innerHTML = `<div class="admin-alert-error">❌ En feil oppstod under lasting av editoren. Sjekk konsollen for detaljer.</div>`;
+            }
+        };
+
+        window.loadTjenesterModule = () => loadTjenesterModule(TJENESTER_FOLDER, window.editTjeneste, window.deleteTjeneste);
+
+        // --- MELDINGER MODUL ---
+
+        window.deleteMelding = async (id, name) => {
+            if (confirm(`Vil du slette "${name}"?`)) {
+                try { 
+                    await deleteFile(id); 
+                    window.loadMeldingerModule(); 
+                } catch (e) { alert("Sletting feilet."); }
+            }
+        };
+
+        window.editMelding = async (id, name) => {
+            const inner = document.getElementById('module-inner');
+            const actions = document.getElementById('module-actions');
+            if (!inner || !actions) return;
+
+            actions.innerHTML = '';
+            inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Laster editor...</div>';
+            
+            try {
+                let msgData = { title: '', startDate: new Date().toISOString().split('T')[0], endDate: '', content: '' };
+
+                if (id) {
+                    const raw = await getFileContent(id);
+                    const { data, body } = parseMarkdown(raw);
+                    msgData = { ...data, content: stripStackEditData(body) };
+                }
+
+                inner.innerHTML = `
+                    <div class="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div class="grid grid-cols-1 gap-6">
+                            <div class="flex flex-col gap-2">
+                                <label class="admin-label">Tittel</label>
+                                <input type="text" id="edit-title" value="${msgData.title || ''}" placeholder="Skriv en tittel..." class="admin-input">
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="flex flex-col gap-2">
+                                    <div class="flex justify-between items-center">
+                                        <label class="admin-label">Fra og med</label>
+                                        <span id="preview-start" class="text-[10px] text-slate-400 font-bold">${formatDate(msgData.startDate)}</span>
+                                    </div>
+                                    <input type="text" id="edit-start" value="${msgData.startDate || ''}" placeholder="Velg dato..." class="admin-input cursor-pointer bg-white">
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <div class="flex justify-between items-center">
+                                        <label class="admin-label">Til og med</label>
+                                        <span id="preview-end" class="text-[10px] text-slate-400 font-bold">${formatDate(msgData.endDate)}</span>
+                                    </div>
+                                    <input type="text" id="edit-end" value="${msgData.endDate || ''}" placeholder="Velg dato..." class="admin-input cursor-pointer bg-white">
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2 editor-container">
+                                <label class="admin-label">Innhold</label>
+                                <textarea id="edit-content" placeholder="Skriv meldingen her...">${msgData.content || ''}</textarea>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100">
+                            <button id="btn-save-melding" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Lagre melding</button>
+                            <button onclick="window.loadMeldingerModule()" class="admin-btn-secondary !py-4 !px-8 !rounded-2xl uppercase tracking-widest text-xs">Avbryt</button>
+                        </div>
+                    </div>`;
+
+                const onDateChange = () => {
+                    const startInp = document.getElementById('edit-start');
+                    const endInp = document.getElementById('edit-end');
+                    const startEl = document.getElementById('preview-start');
+                    const endEl = document.getElementById('preview-end');
+                    if (startEl && startInp) startEl.textContent = formatDate(startInp.value);
+                    if (endEl && endInp) endEl.textContent = formatDate(endInp.value);
+                };
+
+                const onSave = async (easyMDE) => {
+                    const title = document.getElementById('edit-title').value;
+                    const safeTitle = slugify(title) || 'u-navnet';
+                    const newFileName = `${safeTitle}-${Date.now()}.md`;
+                    const saveBtn = document.getElementById('btn-save-melding');
+
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = "Lagrer...";
+                    
+                    const data = {
+                        title: title,
+                        startDate: document.getElementById('edit-start').value,
+                        endDate: document.getElementById('edit-end').value
+                    };
+                    
+                    const body = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
+                    
+                    try {
+                        if (id) await saveFile(id, newFileName, stringifyMarkdown(data, body));
+                        else await createFile(MELDINGER_FOLDER, newFileName, stringifyMarkdown(data, body));
+                        window.loadMeldingerModule();
+                    } catch (e) { 
+                        console.error("Lagring feilet:", e);
+                        alert("Feil ved lagring."); 
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = "Lagre melding"; 
+                    }
+                };
+
+                initEditors(onDateChange, onSave);
+            } catch (e) {
+                console.error("Klarte ikke laste editor:", e);
+                inner.innerHTML = `<div class="admin-alert-error">❌ En feil oppstod under lasting av editoren. Sjekk konsollen for detaljer.</div>`;
+            }
         };
         
         window.loadMeldingerModule = () => loadMeldingerModule(MELDINGER_FOLDER, window.editMelding, window.deleteMelding);
@@ -330,6 +429,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             document.getElementById('module-actions').innerHTML = '';
             if (id === 'settings') loadSettingsModule();
             else if (id === 'meldinger') window.loadMeldingerModule();
+            else if (id === 'tjenester') window.loadTjenesterModule();
             else document.getElementById('module-inner').innerHTML = `<p class="text-slate-600 italic">Denne modulen er under utvikling.</p>`;
         }
 
@@ -353,11 +453,22 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
 
         const setup = async () => {
             try {
+                // 1. Initialiser GAPI først (Drive/Sheets APIer)
+                const gapiSuccess = await initGapi();
+                if (gapiSuccess) tryRestoreSession();
+
+                // 2. Initialiser GIS og koble til handleAuth
                 initGis(handleAuth);
+
+                // 3. Sjekk om vi allerede har en lagret bruker
                 const user = getStoredUser();
-                if (user) await handleAuth(user);
-                initGapi().then(success => { if (success) tryRestoreSession(); });
-                if (!user) silentLogin();
+                if (user) {
+                    await handleAuth(user);
+                } else {
+                    // Prøv stille innlogging hvis ingen bruker er lagret
+                    silentLogin();
+                }
+
                 document.getElementById('login-btn').onclick = login;
                 document.getElementById('user-pill').onclick = () => { if (confirm("Logge ut?")) { logout(); location.reload(); } };
                 document.getElementById('back-to-dashboard').onclick = closeModule;
@@ -365,7 +476,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 document.getElementById('btn-open-tjenester').onclick = () => openModule('tjenester', 'Tjenester');
                 document.getElementById('btn-open-meldinger').onclick = () => openModule('meldinger', 'Meldinger');
                 document.getElementById('btn-open-tannleger').onclick = () => openModule('tannleger', 'Tannleger');
-            } catch (err) { console.error("[Admin] Feil:", err); }
+            } catch (err) { console.error("[Admin] Kritisk feil under oppstart:", err); }
         };
         if (document.readyState === 'complete') setup();
         else window.addEventListener('load', setup);

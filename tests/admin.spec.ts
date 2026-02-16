@@ -54,6 +54,57 @@ test.describe('Admin-panel Fase 1', () => {
     expect(dateText).toMatch(/1\.?\s+jan\.?\s+2026/i);
   });
 
+  test('skal kunne åpne tjenester, se sortert liste og bruke editor', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('admin_google_token', JSON.stringify({
+        access_token: 'mock_token',
+        expiry: Date.now() + 3600000,
+        user: { name: 'Test', email: 'test@test.com' }
+      }));
+      
+      (window as any).gapi = {
+        load: (name, cb) => cb(),
+        client: {
+          init: () => Promise.resolve(),
+          load: () => Promise.resolve(),
+          setToken: () => {},
+          getToken: () => ({ access_token: 'mock' }),
+          drive: { files: { 
+            list: () => Promise.resolve({ result: { files: [
+                { id: 'z', name: 'z.md' },
+                { id: 'a', name: 'a.md' }
+            ]}}),
+            get: (params) => {
+                if (params.fileId === 'a') return Promise.resolve({ body: '---\ntitle: Ape\ningress: Ingress A\n---\nBody A' });
+                if (params.fileId === 'z') return Promise.resolve({ body: '---\ntitle: Zebra\ningress: Ingress Z\n---\nBody Z' });
+                return Promise.resolve({ result: { name: 'Folder', capabilities: { canEdit: true } } });
+            }
+          }},
+          sheets: { spreadsheets: { values: { get: () => Promise.resolve({ result: { values: [] } }) } } }
+        }
+      };
+      (window as any).google = { accounts: { oauth2: { initTokenClient: () => ({ requestAccessToken: () => {} }) } } };
+    });
+
+    await page.goto('/admin');
+    await page.locator('#btn-open-tjenester').click();
+    
+    // Sjekk sortering (Ape før Zebra)
+    const titles = page.locator('#module-inner h3');
+    await expect(titles.first()).toHaveText('Ape');
+    await expect(titles.nth(1)).toHaveText('Zebra');
+
+    // Åpne redigering
+    await page.locator('button:has-text("Rediger")').first().click();
+    
+    // Sjekk inputs
+    await expect(page.locator('#edit-title')).toHaveValue('Ape');
+    await expect(page.locator('#edit-ingress')).toHaveValue('Ingress A');
+
+    // Sjekk EasyMDE
+    await expect(page.locator('.CodeMirror')).toBeVisible();
+  });
+
   test('skal deaktivere moduler uten tilgang og logge ut hvis ingen tilgang i det hele tatt', async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('admin_google_token', JSON.stringify({
