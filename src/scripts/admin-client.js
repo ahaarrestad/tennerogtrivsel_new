@@ -7,6 +7,25 @@ let gisInited = false;
 const SCOPES = 'openid profile email https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets';
 
 /**
+ * Finner en fil ved navn i en bestemt mappe
+ */
+export async function findFileByName(name, folderId) {
+    try {
+        const response = await gapi.client.drive.files.list({
+            q: `'${folderId}' in parents and name = '${name}' and trashed = false`,
+            fields: 'files(id, name)',
+            pageSize: 1,
+            supportsAllDrives: true,
+            includeItemsFromAllDrives: true
+        });
+        return response.result.files?.[0] || null;
+    } catch (err) {
+        console.error("[Admin] Kunne ikke finne fil ved navn:", err);
+        return null;
+    }
+}
+
+/**
  * Lister alle .md filer i en mappe
  */
 export async function listFiles(folderId) {
@@ -14,7 +33,9 @@ export async function listFiles(folderId) {
         const response = await gapi.client.drive.files.list({
             q: `'${folderId}' in parents and trashed = false and name contains '.md'`,
             fields: 'files(id, name, modifiedTime)',
-            orderBy: 'name'
+            orderBy: 'name',
+            supportsAllDrives: true,
+            includeItemsFromAllDrives: true
         });
         return response.result.files || [];
     } catch (err) {
@@ -47,7 +68,8 @@ export async function saveFile(fileId, name, content) {
         // 1. Oppdater metadata (navn) hvis nødvendig
         await gapi.client.drive.files.update({
             fileId: fileId,
-            resource: { name: name }
+            resource: { name: name },
+            supportsAllDrives: true
         });
 
         // 2. Oppdater selve innholdet
@@ -81,7 +103,8 @@ export async function createFile(folderId, name, content) {
 
         const response = await gapi.client.drive.files.create({
             resource: metadata,
-            fields: 'id'
+            fields: 'id',
+            supportsAllDrives: true
         });
 
         const fileId = response.result.id;
@@ -100,7 +123,8 @@ export async function deleteFile(fileId) {
     try {
         await gapi.client.drive.files.update({
             fileId: fileId,
-            resource: { trashed: true }
+            resource: { trashed: true },
+            supportsAllDrives: true
         });
         return true;
     } catch (err) {
@@ -156,6 +180,84 @@ async function fetchUserInfo(accessToken) {
     } catch (err) {
         console.error("[Admin] Kunne ikke hente brukerinfo:", err);
         return null;
+    }
+}
+
+/**
+ * Lister alle bildefiler i en mappe
+ */
+export async function listImages(folderId) {
+    console.log("[Admin] listImages kalles for mappe:", folderId);
+    
+    if (!gapi.client.drive) {
+        console.error("[Admin] Drive API er ikke lastet!");
+        throw new Error("Drive API ikke initialisert");
+    }
+
+    try {
+        // Vi prøver et litt bredere søk først for å se hva som finnes
+        const response = await gapi.client.drive.files.list({
+            q: `'${folderId}' in parents and trashed = false`,
+            fields: 'files(id, name, mimeType, thumbnailLink, webContentLink), nextPageToken',
+            pageSize: 100,
+            supportsAllDrives: true,
+            includeItemsFromAllDrives: true
+        });
+        
+        const allFiles = response.result.files || [];
+        console.log(`[Admin] Fant totalt ${allFiles.length} filer i mappen.`);
+        
+        // LOGG ALT FOR DIAGNOSE
+        allFiles.forEach((f, i) => {
+            console.log(`[Admin] Fil #${i}: "${f.name}" (Type: ${f.mimeType}, ID: ${f.id})`);
+        });
+
+        // Filtrer ut bilder
+        const images = allFiles.filter(file => {
+            const isImageMime = file.mimeType && file.mimeType.startsWith('image/');
+            const isImageExt = /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(file.name);
+            return isImageMime || isImageExt;
+        });
+
+        console.log(`[Admin] Etter filtrering: ${images.length} bilder.`);
+        return images;
+    } catch (err) {
+        const msg = err.result?.error?.message || err.message || "Ukjent API-feil";
+        console.error("[Admin] listImages feilet:", msg, err);
+        throw new Error(msg);
+    }
+}
+
+/**
+ * Laster opp et bilde til Drive
+ */
+export async function uploadImage(folderId, file) {
+    try {
+        const metadata = {
+            name: file.name,
+            parents: [folderId]
+        };
+
+        const accessToken = gapi.client.getToken().access_token;
+        const form = new FormData();
+        
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', file);
+
+        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true', {
+            method: 'POST',
+            headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
+            body: form
+        });
+
+        if (!response.ok) throw new Error('Upload failed: ' + response.statusText);
+
+        const json = await response.json();
+        console.log("[Admin] Bilde lastet opp:", json);
+        return json;
+    } catch (err) {
+        console.error("[Admin] Bildeopplasting feilet:", err);
+        throw err;
     }
 }
 
@@ -404,7 +506,8 @@ export async function checkAccess(folderId) {
         console.log(`[Admin] Prøver å hente metadata for mappe: ${folderId}...`);
         const response = await gapi.client.drive.files.get({
             fileId: folderId,
-            fields: 'id, name, capabilities(canEdit)'
+            fields: 'id, name, capabilities(canEdit)',
+            supportsAllDrives: true
         });
         console.log("[Admin] Metadata mottatt:", response.result.name);
         return true;
@@ -463,17 +566,23 @@ export async function getTannlegerRaw(spreadsheetId) {
         const rows = response.result.values;
         if (!rows || rows.length <= 1) return [];
 
-        return rows.slice(1).map((row, index) => ({
-            rowIndex: index + 2, // 1-basert + 1 for header
-            name: row[0] || '',
-            title: row[1] || '',
-            description: row[2] || '',
-            image: row[3] || '',
-            active: (row[4] || 'nei').toLowerCase() === 'ja',
-            scale: parseFloat(row[5]) || 1.0,
-            positionX: parseInt(row[6]) || 50,
-            positionY: parseInt(row[7]) || 50
-        }));
+        return rows.slice(1).map((row, index) => {
+            const scale = parseFloat(row[5]);
+            const pX = parseInt(row[6]);
+            const pY = parseInt(row[7]);
+            
+            return {
+                rowIndex: index + 2, // 1-basert + 1 for header
+                name: row[0] || '',
+                title: row[1] || '',
+                description: row[2] || '',
+                image: row[3] || '',
+                active: (row[4] || 'nei').toLowerCase() === 'ja',
+                scale: isNaN(scale) ? 1.0 : scale,
+                positionX: isNaN(pX) ? 50 : pX,
+                positionY: isNaN(pY) ? 50 : pY
+            };
+        });
     } catch (err) {
         console.error("[Admin] Kunne ikke hente tannleger:", err);
         throw err;
@@ -491,9 +600,9 @@ export async function updateTannlegeRow(spreadsheetId, rowIndex, data) {
             data.description,
             data.image,
             data.active ? 'ja' : 'nei',
-            data.scale || 1.0,
-            data.positionX || 50,
-            data.positionY || 50
+            data.scale,
+            data.positionX,
+            data.positionY
         ]];
 
         await gapi.client.sheets.spreadsheets.values.update({
