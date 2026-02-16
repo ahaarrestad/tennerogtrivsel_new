@@ -444,6 +444,10 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 };
 
                 initEditors(onDateChange, onSave);
+                
+                // Legg til lyttere på selve input-feltene også for å fange opp eval-endringer i tester
+                document.getElementById('edit-start').addEventListener('change', () => onDateChange());
+                document.getElementById('edit-end').addEventListener('change', () => onDateChange());
             } catch (e) {
                 console.error("Klarte ikke laste editor:", e);
                 inner.innerHTML = `<div class="admin-alert-error">❌ En feil oppstod under lasting av editoren. Sjekk konsollen for detaljer.</div>`;

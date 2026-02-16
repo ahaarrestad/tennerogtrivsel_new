@@ -151,6 +151,8 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                 .map(m => ({ ...m, start: new Date(m.startDate).getTime(), end: new Date(m.endDate || '2099-12-31').getTime() }))
                 .filter(m => m.end >= now.getTime());
 
+            let lastGroup = null;
+
             sortedMessages.forEach((msg) => {
                 const start = new Date(msg.startDate);
                 const end = new Date(msg.endDate || '2099-12-31');
@@ -160,15 +162,30 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                 let statusClass = "bg-slate-100 text-slate-500 border-slate-200";
                 let statusText = "Utløpt";
                 let dotClass = "admin-status-dot-expired";
+                let currentGroup = "Historikk (Utløpte)";
 
                 if (now >= start && now <= end) {
                     statusClass = "bg-green-100 text-green-700 border-green-200 ring-4 ring-green-500/5 font-black";
                     statusText = "Aktiv nå";
                     dotClass = "admin-status-dot-active";
+                    currentGroup = "Aktive meldinger";
                 } else if (now < start) {
                     statusClass = "bg-blue-100 text-blue-700 border-blue-200";
                     statusText = "Planlagt";
                     dotClass = "admin-status-dot-planned";
+                    currentGroup = "Planlagte meldinger";
+                }
+
+                // Sett inn gruppe-skille dersom status endres
+                if (currentGroup !== lastGroup) {
+                    html += `
+                        <div class="col-span-1 mt-8 mb-2 first:mt-0">
+                            <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-3">
+                                ${currentGroup}
+                                <span class="flex-grow h-[1px] bg-slate-200"></span>
+                            </h4>
+                        </div>`;
+                    lastGroup = currentGroup;
                 }
 
                 // Sjekk om denne meldinger overlapper med andre (kun for aktive/planlagte)
