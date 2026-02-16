@@ -101,6 +101,18 @@ To ensure high-quality, maintainable, and idiomatic code within this project, pl
         *   **Link Crawler:** Automatic detection of broken internal and external links.
     *   Tests are integrated into the CI/CD pipeline and MUST pass before deployment. Environment variables must be provisioned for all test steps.
 
+## Kvalitetssikring (Quality Gates)
+
+For å sikre stabilitet og unngå regresjoner, SKAL følgende sjekkliste følges før en oppgave eller endring kan markeres som ferdig:
+
+1.  **Unit-tester:** Kjør `npm test`. Alle tester SKAL passere 100%.
+2.  **Dekningsgrad:** Sjekk coverage-rapporten fra `npm test`. Kjerne-logikk (scripts og API) SKAL ha minst **80% branch coverage**.
+3.  **E2E-tester:** Kjør `npm run test:e2e`. "Happy path" for berørt funksjonalitet SKAL verifiseres i Chromium.
+4.  **Linting:** Kjør prosjektets lint-kommandoer hvis tilgjengelig for å sikre kodestil.
+5.  **Build-sjekk:** Kjør `npm run build` lokalt for å bekrefte at prosjektet lar seg kompilere uten feil.
+
+**AGENT-REGEL:** Du har ikke lov til å avslutte en økt eller markere en oppgave som ferdig hvis testene feiler eller dekningsgraden har sunket under kravet. Hvis en endring fører til at eksisterende tester feiler, er det din oppgave å oppdatere enten koden eller testene (hvis logikken er endret med vilje).
+
 ## Veikart: Tannleger Admin-modul
 
 Dette veikartet beskriver implementeringen av tannlege-administrasjon. Planen er persistert her for å sikre kontinuitet på tvers av sesjoner.
