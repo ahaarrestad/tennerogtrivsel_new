@@ -28,7 +28,12 @@ import {
     deleteTannlegeRow,
     findFileByName,
     listImages,
+<<<<<<< Updated upstream
     uploadImage
+=======
+    uploadImage,
+    getDriveImageBlob
+>>>>>>> Stashed changes
 } from '../admin-client';
 
 describe('admin-client.js', () => {
@@ -36,9 +41,25 @@ describe('admin-client.js', () => {
         vi.stubEnv('PUBLIC_GOOGLE_API_KEY', 'test-api-key');
         vi.stubEnv('PUBLIC_GOOGLE_CLIENT_ID', 'test-client-id');
 
+        // Mock globals needed for uploads/files
+        vi.stubGlobal('File', class { 
+            constructor(parts, name, opts) { 
+                this.name = name; 
+                this.type = opts?.type || '';
+                this.size = 1024;
+            } 
+        });
+        vi.stubGlobal('Blob', class { constructor(content, opts) { this.type = opts?.type; } });
+        vi.stubGlobal('FormData', class { 
+            constructor() { this.data = {}; }
+            append(k, v) { this.data[k] = v; } 
+        });
+        vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:url') });
+
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
             json: vi.fn().mockResolvedValue({ name: 'Test User', email: 'test@example.com' }),
-            ok: true
+            ok: true,
+            blob: vi.fn().mockResolvedValue(new Blob())
         }));
 
         vi.stubGlobal('gapi', {
@@ -92,6 +113,108 @@ describe('admin-client.js', () => {
         vi.unstubAllGlobals();
     });
 
+    describe('findFileByName', () => {
+        it('skal returnere fil hvis den finnes', async () => {
+            const mockFile = { id: 'file-123', name: 'test.png' };
+            gapi.client.drive.files.list.mockResolvedValue({ result: { files: [mockFile] } });
+
+            const result = await findFileByName('test.png', 'folder-123');
+            expect(result).toEqual(mockFile);
+            expect(gapi.client.drive.files.list).toHaveBeenCalledWith(expect.objectContaining({
+                q: expect.stringContaining("name = 'test.png'"),
+                supportsAllDrives: true
+            }));
+        });
+
+        it('skal returnere null hvis filen ikke finnes', async () => {
+            gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
+            const result = await findFileByName('ukjent.png', 'folder-123');
+            expect(result).toBeNull();
+        });
+
+        it('skal returnere null og logge feil hvis API feiler', async () => {
+            gapi.client.drive.files.list.mockRejectedValue(new Error('fail'));
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            const result = await findFileByName('test.png', 'folder-123');
+            expect(result).toBeNull();
+            expect(consoleSpy).toHaveBeenCalled();
+        });
+    });
+
+    describe('listImages', () => {
+        it('skal returnere filtrert liste med bilder', async () => {
+            const mockFiles = [
+                { id: '1', name: 'image.jpg', mimeType: 'image/jpeg' },
+                { id: '2', name: 'doc.pdf', mimeType: 'application/pdf' },
+                { id: '3', name: 'photo.png', mimeType: 'image/png' }
+            ];
+            gapi.client.drive.files.list.mockResolvedValue({ result: { files: mockFiles } });
+
+            const images = await listImages('folder-123');
+            expect(images).toHaveLength(2);
+            expect(images[0].name).toBe('image.jpg');
+            expect(images[1].name).toBe('photo.png');
+        });
+
+        it('skal kaste feil hvis API feiler med detaljert melding', async () => {
+            const apiError = { result: { error: { message: 'Custom Google Error' } } };
+            gapi.client.drive.files.list.mockRejectedValue(apiError);
+            await expect(listImages('123')).rejects.toThrow('Custom Google Error');
+        });
+
+        it('skal kaste feil hvis GAPI ikke er lastet', async () => {
+            const originalDrive = gapi.client.drive;
+            delete gapi.client.drive;
+            await expect(listImages('123')).rejects.toThrow('Drive API ikke initialisert');
+            gapi.client.drive = originalDrive;
+        });
+    });
+
+    describe('uploadImage', () => {
+        it('skal laste opp fil med multipart request', async () => {
+            global.fetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({ id: 'new-img' }) });
+            const mockFile = new File([''], 'test.png', { type: 'image/png' });
+
+            const result = await uploadImage('folder-123', mockFile);
+            
+            expect(result).toEqual({ id: 'new-img' });
+            expect(global.fetch).toHaveBeenCalledWith(
+                expect.stringContaining('uploadType=multipart'),
+                expect.objectContaining({ method: 'POST' })
+            );
+        });
+
+        it('skal kaste feil hvis opplasting feiler (http feil)', async () => {
+            global.fetch.mockResolvedValue({ ok: false, statusText: 'Bad Request' });
+            const mockFile = new File([''], 'test.png');
+            await expect(uploadImage('folder-123', mockFile)).rejects.toThrow('Upload failed: Bad Request');
+        });
+
+        it('skal kaste feil hvis fetch kaster feil (nettverk)', async () => {
+            global.fetch.mockRejectedValue(new Error('Network error'));
+            const mockFile = new File([''], 'test.png');
+            await expect(uploadImage('folder-123', mockFile)).rejects.toThrow('Network error');
+        });
+    });
+
+    describe('getDriveImageBlob', () => {
+        it('skal returnere en blob-url for et bilde', async () => {
+            const result = await getDriveImageBlob('img-123');
+            expect(result).toBe('blob:url');
+            expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('img-123'), expect.any(Object));
+        });
+
+        it('skal returnere null hvis ingen id er oppgitt', async () => {
+            expect(await getDriveImageBlob(null)).toBeNull();
+        });
+
+        it('skal returnere null og logge ved feil', async () => {
+            global.fetch.mockRejectedValue(new Error('fetch fail'));
+            const result = await getDriveImageBlob('123');
+            expect(result).toBeNull();
+        });
+    });
+
     describe('getStoredUser', () => {
         it('skal returnere null hvis ingenting er lagret', () => {
             expect(getStoredUser()).toBeNull();
@@ -133,7 +256,7 @@ describe('admin-client.js', () => {
         });
 
         it('tryRestoreSession skal sette token i GAPI hvis gyldig', async () => {
-            await initGapi(); // Sørg for at den er inited
+            await initGapi(); 
             const future = Date.now() + 3600000;
             localStorage.setItem('admin_google_token', JSON.stringify({
                 access_token: 'test-token',
@@ -179,7 +302,7 @@ describe('admin-client.js', () => {
     describe('Google Sheets Module', () => {
         it('getSettingsWithNotes skal mappe rader fra A, B og C korrekt', async () => {
             const mockValues = [
-                ['ID', 'Verdi', 'Beskrivelse'], // Header
+                ['ID', 'Verdi', 'Beskrivelse'], 
                 ['tel', '123', 'Telefonnummer']
             ];
             gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
@@ -258,7 +381,7 @@ describe('admin-client.js', () => {
         });
 
         it('tryRestoreSession skal håndtere korrupt JSON', async () => {
-            await initGapi(); // Sett gapiInited = true
+            await initGapi(); 
             localStorage.setItem('admin_google_token', '{invalid');
             expect(tryRestoreSession()).toBe(false);
         });
@@ -435,6 +558,21 @@ describe('admin-client.js', () => {
             });
         });
 
+        it('getTannlegerRaw skal håndtere manglende verdier med defaults', async () => {
+            const mockValues = [
+                ['Navn', 'Tittel', 'Beskrivelse', 'Bilde', 'Aktiv', 'Skala', 'X', 'Y'],
+                ['Ola', 'T', 'B', 'o.jpg', 'ja', '', '', '']
+            ];
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
+                result: { values: mockValues }
+            });
+
+            const result = await getTannlegerRaw(spreadsheetId);
+            expect(result[0].scale).toBe(1.0);
+            expect(result[0].positionX).toBe(50);
+            expect(result[0].positionY).toBe(50);
+        });
+
         it('updateTannlegeRow skal sende korrekte verdier', async () => {
             const data = { 
                 name: 'Ola', 
@@ -477,6 +615,21 @@ describe('admin-client.js', () => {
         it('skal kaste feil hvis API feiler i CRUD', async () => {
             gapi.client.sheets.spreadsheets.values.get.mockRejectedValue(new Error('fail'));
             await expect(getTannlegerRaw('id')).rejects.toThrow('fail');
+        });
+
+        it('updateTannlegeRow skal kaste feil hvis API feiler', async () => {
+            gapi.client.sheets.spreadsheets.values.update.mockRejectedValue(new Error('fail'));
+            await expect(updateTannlegeRow('id', 1, {})).rejects.toThrow('fail');
+        });
+
+        it('addTannlegeRow skal kaste feil hvis API feiler', async () => {
+            gapi.client.sheets.spreadsheets.values.append.mockRejectedValue(new Error('fail'));
+            await expect(addTannlegeRow('id', {})).rejects.toThrow('fail');
+        });
+
+        it('deleteTannlegeRow skal kaste feil hvis API feiler', async () => {
+            gapi.client.sheets.spreadsheets.values.update.mockRejectedValue(new Error('fail'));
+            await expect(deleteTannlegeRow('id', 1)).rejects.toThrow('fail');
         });
     });
 });
