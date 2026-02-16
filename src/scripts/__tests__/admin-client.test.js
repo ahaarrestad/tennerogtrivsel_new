@@ -433,14 +433,23 @@ describe('admin-client.js', () => {
         });
 
         it('updateTannlegeRow skal sende korrekte verdier', async () => {
-            const data = { name: 'Ola', title: 'T', active: true, scale: 1.5 };
+            const data = { 
+                name: 'Ola', 
+                title: 'T', 
+                description: 'B',
+                image: 'o.jpg',
+                active: true, 
+                scale: 1.5,
+                positionX: 50,
+                positionY: 50
+            };
             gapi.client.sheets.spreadsheets.values.update.mockResolvedValue({});
 
             await updateTannlegeRow(spreadsheetId, 5, data);
 
             expect(gapi.client.sheets.spreadsheets.values.update).toHaveBeenCalledWith(expect.objectContaining({
                 range: 'tannleger!A5:H5',
-                resource: { values: [['Ola', 'T', undefined, undefined, 'ja', 1.5, 50, 50]] }
+                resource: { values: [['Ola', 'T', 'B', 'o.jpg', 'ja', 1.5, 50, 50]] }
             }));
         });
 

@@ -2,21 +2,26 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import fs from 'fs';
 
 // Mock astro:content
-vi.mock('astro:content', () => ({
-    defineCollection: vi.fn((config) => config),
-    z: {
-        object: vi.fn(() => ({
-            optional: vi.fn(),
-        })),
-        string: vi.fn(() => ({
-            optional: vi.fn(),
-            trim: vi.fn(),
-        })),
+vi.mock('astro:content', () => {
+    const zMock: any = {
+        object: vi.fn(() => zMock),
+        string: vi.fn(() => zMock),
+        number: vi.fn(() => zMock),
+        boolean: vi.fn(() => zMock),
+        array: vi.fn(() => zMock),
+        optional: vi.fn(() => zMock),
+        default: vi.fn(() => zMock),
+        describe: vi.fn(() => zMock),
         coerce: {
-            date: vi.fn(),
+            date: vi.fn(() => zMock),
         },
-    },
-}));
+        safeParse: vi.fn((data) => ({ success: true, data })),
+    };
+    return {
+        defineCollection: vi.fn((config) => config),
+        z: zMock,
+    };
+});
 
 // Mock global fetch
 const mockFetch = vi.fn();
