@@ -1,9 +1,65 @@
 // src/scripts/admin-dashboard.js
 import { 
     listFiles, getFileContent, saveFile, createFile, deleteFile,
-    parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes
+    parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
+    checkMultipleAccess, logout
 } from './admin-client.js';
 import { formatDate, stripStackEditData, sortMessages, slugify } from './textFormatter.js';
+
+/**
+ * Kontrollerer tilgang til dashboard-moduler og deaktiverer de som ikke er tilgjengelige.
+ * Hvis brukeren ikke har tilgang til noe som helst, logges de ut.
+ */
+export async function enforceAccessControl(config) {
+    const ids = [
+        config.SHEET_ID,
+        config.TJENESTER_FOLDER,
+        config.MELDINGER_FOLDER,
+        config.TANNLEGER_FOLDER
+    ].filter(Boolean);
+
+    const accessMap = await checkMultipleAccess(ids);
+    
+    const modules = [
+        { id: 'settings', resource: config.SHEET_ID, btn: 'btn-open-settings' },
+        { id: 'tjenester', resource: config.TJENESTER_FOLDER, btn: 'btn-open-tjenester' },
+        { id: 'meldinger', resource: config.MELDINGER_FOLDER, btn: 'btn-open-meldinger' },
+        { id: 'tannleger', resource: config.TANNLEGER_FOLDER, btn: 'btn-open-tannleger' }
+    ];
+
+    let hasAnyAccess = false;
+
+    modules.forEach(mod => {
+        const hasAccess = accessMap[mod.resource];
+        const btn = document.getElementById(mod.btn);
+        const card = btn?.closest('.admin-card-interactive');
+
+        if (hasAccess) {
+            hasAnyAccess = true;
+            if (btn) btn.removeAttribute('disabled');
+            if (card) card.style.opacity = '1';
+        } else {
+            if (btn) {
+                btn.setAttribute('disabled', 'true');
+                btn.textContent = 'Ingen tilgang';
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+            if (card) {
+                card.style.opacity = '0.5';
+                card.classList.remove('hover:shadow-md', 'hover:border-brand-active');
+                card.title = 'Du har ikke tilgang til denne modulen i Google Drive.';
+            }
+        }
+    });
+
+    if (!hasAnyAccess && ids.length > 0) {
+        console.warn("[Admin] Ingen tilgang funnet for noen moduler. Logger ut.");
+        logout();
+        window.location.href = '/?access_denied=true';
+    }
+
+    return accessMap;
+}
 
 /**
  * Oppdaterer UI med brukerinformasjon

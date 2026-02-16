@@ -53,4 +53,56 @@ test.describe('Admin-panel Fase 1', () => {
     const dateText = await page.locator('#module-inner p.text-xs').first().textContent();
     expect(dateText).toMatch(/1\.?\s+jan\.?\s+2026/i);
   });
+
+  test('skal deaktivere moduler uten tilgang og logge ut hvis ingen tilgang i det hele tatt', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('admin_google_token', JSON.stringify({
+        access_token: 'mock_token',
+        expiry: Date.now() + 3600000,
+        user: { name: 'No Access User', email: 'none@test.com' }
+      }));
+      
+      (window as any).gapi = {
+        load: (name, cb) => cb(),
+        client: {
+          init: () => Promise.resolve(),
+          load: () => Promise.resolve(),
+          setToken: () => {},
+          getToken: () => ({ access_token: 'mock' }),
+          drive: { files: { 
+            get: () => Promise.reject({ status: 403 }) // Ingen tilgang
+          }},
+          sheets: { spreadsheets: { values: { 
+            get: () => Promise.reject({ status: 403 }) // Ingen tilgang
+          } } }
+        }
+      };
+      (window as any).google = { 
+        accounts: { 
+            oauth2: { 
+                initTokenClient: () => ({ requestAccessToken: () => {} }),
+                revoke: () => {} 
+            } 
+        } 
+      };
+
+      // Sett opp mock IDs i DOMen før scriptet kjører
+      const mockConfig = () => {
+          const el = document.getElementById('admin-config');
+          if (el) {
+              el.dataset.tjenesterFolder = 'f1';
+              el.dataset.meldingerFolder = 'f2';
+              el.dataset.tannlegerFolder = 'f3';
+              el.dataset.sheetId = 's1';
+          } else {
+              setTimeout(mockConfig, 10);
+          }
+      };
+      mockConfig();
+    });
+
+    // Vi forventer redirect til forsiden
+    await page.goto('/admin');
+    await expect(page).toHaveURL(/\/(\?access_denied=true)?$/);
+  });
 });

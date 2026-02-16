@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { 
-    updateUIWithUser, autoResizeTextarea, saveSingleSetting, loadMeldingerModule, initEditors
+    updateUIWithUser, autoResizeTextarea, saveSingleSetting, loadMeldingerModule, initEditors, enforceAccessControl
 } from '../admin-dashboard.js';
 import * as adminClient from '../admin-client.js';
 import * as textFormatter from '../textFormatter.js';
@@ -18,7 +18,9 @@ vi.mock('../admin-client.js', () => ({
     deleteFile: vi.fn(),
     parseMarkdown: vi.fn(),
     stringifyMarkdown: vi.fn(),
-    getSettingsWithNotes: vi.fn()
+    getSettingsWithNotes: vi.fn(),
+    checkMultipleAccess: vi.fn(),
+    logout: vi.fn()
 }));
 
 // Mock textFormatter
@@ -169,6 +171,55 @@ describe('admin-dashboard.js', () => {
             
             delete window.EasyMDE;
             delete window.flatpickr;
+        });
+    });
+
+    describe('enforceAccessControl', () => {
+        const config = {
+            SHEET_ID: 's1',
+            TJENESTER_FOLDER: 'f1',
+            MELDINGER_FOLDER: 'f2',
+            TANNLEGER_FOLDER: 'f3'
+        };
+
+        it('should enable modules where user has access', async () => {
+            document.body.innerHTML = `
+                <div class="admin-card-interactive"><button id="btn-open-settings"></button></div>
+                <div class="admin-card-interactive"><button id="btn-open-tjenester"></button></div>
+            `;
+
+            adminClient.checkMultipleAccess.mockResolvedValue({
+                's1': true,
+                'f1': false
+            });
+
+            await enforceAccessControl(config);
+
+            const settingsBtn = document.getElementById('btn-open-settings');
+            const tjenesterBtn = document.getElementById('btn-open-tjenester');
+
+            expect(settingsBtn.disabled).toBe(false);
+            expect(tjenesterBtn.disabled).toBe(true);
+            expect(tjenesterBtn.textContent).toBe('Ingen tilgang');
+        });
+
+        it('should logout and redirect if no access at all', async () => {
+            // Mock location
+            const originalLocation = window.location;
+            // In JSDOM we can sometimes just set it, but let's be careful
+            delete window.location;
+            window.location = { href: '' };
+
+            adminClient.checkMultipleAccess.mockResolvedValue({
+                's1': false, 'f1': false, 'f2': false, 'f3': false
+            });
+
+            await enforceAccessControl(config);
+
+            expect(adminClient.logout).toHaveBeenCalled();
+            expect(window.location.href).toContain('/?access_denied=true');
+
+            window.location = originalLocation;
         });
     });
 });

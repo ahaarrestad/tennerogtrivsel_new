@@ -379,6 +379,19 @@ export async function updateSettings(spreadsheetId, settings) {
 }
 
 /**
+ * Sjekker tilgang til flere ressurser samtidig
+ * @param {Array<string>} ids 
+ * @returns {Promise<Object>} Kart over id -> boolean
+ */
+export async function checkMultipleAccess(ids) {
+    const results = {};
+    await Promise.all(ids.map(async (id) => {
+        results[id] = await checkAccess(id);
+    }));
+    return results;
+}
+
+/**
  * Sjekker om brukeren har tilgang ved å prøve å hente info om en mappe
  */
 export async function checkAccess(folderId) {

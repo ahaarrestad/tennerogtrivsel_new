@@ -77,7 +77,16 @@ const settings = await getSiteSettings();
             }
         }
 
-        document.addEventListener('astro:page-load', updateHeroMessage);
+        document.addEventListener('astro:page-load', () => {
+            updateHeroMessage();
+            
+            // Sjekk om brukeren ble sendt hit pga manglende tilgang
+            if (new URLSearchParams(window.location.search).has('access_denied')) {
+                alert("Du har ikke tilgang til noen av admin-modulene med din Google-konto.");
+                // Fjern parameteren fra URL uten å refreshe
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
         updateHeroMessage();
     </script>
 </section>

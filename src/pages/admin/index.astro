@@ -154,19 +154,6 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 </div>
             </div>
         </div>
-
-        <!-- NO ACCESS CONTAINER -->
-        <div id="no-access" class="hidden bg-white p-10 rounded-3xl shadow-xl border border-red-100 max-w-md w-full text-center space-y-6">
-            <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-            </div>
-            <h1 class="h2 text-red-600 uppercase font-black">Ingen tilgang</h1>
-            <p class="text-slate-600 leading-relaxed">Din Google-konto har ikke tilgang til å redigere innholdet i denne mappen. Vennligst be administratoren om tilgang.</p>
-            <div class="flex flex-col gap-3 pt-4">
-                <button id="retry-btn" class="btn-primary w-full">Prøv med en annen konto</button>
-                <a href="/" class="text-slate-500 hover:text-brand transition-colors text-sm font-bold uppercase tracking-wider underline">Tilbake til nettsiden</a>
-            </div>
-        </div>
     </main>
 
     <div id="admin-config" 
@@ -186,11 +173,12 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         import { formatDate, stripStackEditData, sortMessages, slugify } from '../../scripts/textFormatter.js';
         import { 
             updateUIWithUser, autoResizeTextarea, saveSingleSetting, 
-            loadMeldingerModule, initEditors 
+            loadMeldingerModule, initEditors, enforceAccessControl
         } from '../../scripts/admin-dashboard.js';
 
         const configEl = document.getElementById('admin-config');
         const TJENESTER_FOLDER = configEl?.dataset.tjenesterFolder;
+        const TANNLEGER_FOLDER = configEl?.dataset.tannlegerFolder;
         const MELDINGER_FOLDER = configEl?.dataset.meldingerFolder;
         const SHEET_ID = configEl?.dataset.sheetId;
 
@@ -354,25 +342,26 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
 
         async function handleAuth(userInfo = null) {
             const user = userInfo || getStoredUser();
-            if (user) updateUIWithUser(user);
-            checkAccess(TJENESTER_FOLDER).then(hasAccess => {
-                if (!hasAccess && user) {
-                    document.getElementById('dashboard').classList.add('hidden');
-                    document.getElementById('no-access').classList.remove('hidden');
-                }
-            });
+            if (user) {
+                updateUIWithUser(user);
+                await enforceAccessControl({
+                    SHEET_ID,
+                    TJENESTER_FOLDER,
+                    MELDINGER_FOLDER,
+                    TANNLEGER_FOLDER
+                });
+            }
         }
 
         const setup = async () => {
             try {
                 initGis(handleAuth);
                 const user = getStoredUser();
-                if (user) updateUIWithUser(user);
+                if (user) await handleAuth(user);
                 initGapi().then(success => { if (success) tryRestoreSession(); });
                 if (!user) silentLogin();
                 document.getElementById('login-btn').onclick = login;
                 document.getElementById('user-pill').onclick = () => { if (confirm("Logge ut?")) { logout(); location.reload(); } };
-                document.getElementById('retry-btn').onclick = () => { logout(); location.reload(); };
                 document.getElementById('back-to-dashboard').onclick = closeModule;
                 document.getElementById('btn-open-settings').onclick = () => openModule('settings', 'Innstillinger');
                 document.getElementById('btn-open-tjenester').onclick = () => openModule('tjenester', 'Tjenester');
