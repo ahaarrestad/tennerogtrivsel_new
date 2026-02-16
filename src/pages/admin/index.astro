@@ -368,6 +368,14 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                 <label class="admin-label">Innhold</label>
                                 <textarea id="edit-content" placeholder="Skriv meldingen her...">${msgData.content || ''}</textarea>
                             </div>
+                            
+                            <!-- DYNAMISK FEILMELDING -->
+                            <div id="date-error" class="hidden animate-in fade-in slide-in-from-top-1">
+                                <div class="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    <span class="text-sm font-black uppercase tracking-tight">Ugyldig dato-rekkefølge: Sluttdato må være etter startdato!</span>
+                                </div>
+                            </div>
                         </div>
                         <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100">
                             <button id="btn-save-melding" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Lagre melding</button>
@@ -375,28 +383,50 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         </div>
                     </div>`;
 
-                const onDateChange = () => {
+                const onDateChange = (selectedDates, dateStr, instance) => {
                     const startInp = document.getElementById('edit-start');
                     const endInp = document.getElementById('edit-end');
                     const startEl = document.getElementById('preview-start');
                     const endEl = document.getElementById('preview-end');
+                    const errorBox = document.getElementById('date-error');
+                    const saveBtn = document.getElementById('btn-save-melding');
+
                     if (startEl && startInp) startEl.textContent = formatDate(startInp.value);
                     if (endEl && endInp) endEl.textContent = formatDate(endInp.value);
+
+                    // Hent faktiske datoer fra input (som er det Flatpickr oppdaterer)
+                    const startVal = startInp.value;
+                    const endVal = endInp.value;
+
+                    if (startVal && endVal && new Date(endVal) < new Date(startVal)) {
+                        errorBox.classList.remove('hidden');
+                        saveBtn.disabled = true;
+                        saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        errorBox.classList.add('hidden');
+                        saveBtn.disabled = false;
+                        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
                 };
 
                 const onSave = async (easyMDE) => {
                     const title = document.getElementById('edit-title').value;
+                    const startDate = document.getElementById('edit-start').value;
+                    const endDate = document.getElementById('edit-end').value;
+                    const saveBtn = document.getElementById('btn-save-melding');
+
+                    if (saveBtn.disabled) return;
+
                     const safeTitle = slugify(title) || 'u-navnet';
                     const newFileName = `${safeTitle}-${Date.now()}.md`;
-                    const saveBtn = document.getElementById('btn-save-melding');
 
                     saveBtn.disabled = true;
                     saveBtn.textContent = "Lagrer...";
                     
                     const data = {
                         title: title,
-                        startDate: document.getElementById('edit-start').value,
-                        endDate: document.getElementById('edit-end').value
+                        startDate: startDate,
+                        endDate: endDate
                     };
                     
                     const body = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;

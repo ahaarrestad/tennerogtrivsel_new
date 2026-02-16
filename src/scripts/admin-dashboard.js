@@ -146,15 +146,40 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
             const sortedMessages = sortMessages(messages);
             let html = `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
 
+            // Finn overlapp for aktive/planlagte meldinger
+            const activeOrPlanned = sortedMessages
+                .map(m => ({ ...m, start: new Date(m.startDate).getTime(), end: new Date(m.endDate || '2099-12-31').getTime() }))
+                .filter(m => m.end >= now.getTime());
+
             sortedMessages.forEach((msg) => {
                 const start = new Date(msg.startDate);
-                const end = new Date(msg.endDate);
+                const end = new Date(msg.endDate || '2099-12-31');
+                const startTime = start.getTime();
+                const endTime = end.getTime();
+                
                 let statusClass = "bg-slate-100 text-slate-500 border-slate-200";
                 let statusText = "Utløpt";
                 let dotClass = "admin-status-dot-expired";
 
+                if (now >= start && now <= end) {
+                    statusClass = "bg-green-100 text-green-700 border-green-200 ring-4 ring-green-500/5 font-black";
+                    statusText = "Aktiv nå";
+                    dotClass = "admin-status-dot-active";
+                } else if (now < start) {
+                    statusClass = "bg-blue-100 text-blue-700 border-blue-200";
+                    statusText = "Planlagt";
+                    dotClass = "admin-status-dot-planned";
+                }
+
+                // Sjekk om denne meldinger overlapper med andre (kun for aktive/planlagte)
+                const hasOverlap = endTime >= now.getTime() && activeOrPlanned.some(other => 
+                    other.driveId !== msg.driveId && 
+                    startTime <= other.end && 
+                    endTime >= other.start
+                );
+
                 html += `
-                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${hasOverlap ? 'border-amber-300 bg-amber-50/30' : ''}">
                         <div class="min-w-0 flex-grow">
                             <div class="flex items-center gap-3 mb-1.5">
                                 <span class="admin-status-pill ${statusClass}">
@@ -162,11 +187,18 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                                     ${statusText}
                                 </span>
                                 <h3 class="font-bold text-brand truncate">${msg.title || msg.name}</h3>
+                                ${hasOverlap ? `
+                                    <span class="flex items-center gap-1 text-[10px] font-black text-amber-600 uppercase tracking-tighter bg-amber-100 px-2 py-0.5 rounded-md animate-pulse">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                        Dato-konflikt
+                                    </span>
+                                ` : ''}
                             </div>
                             <p class="text-xs text-slate-500 flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                ${formatDate(start)} til ${formatDate(end)}
+                                ${formatDate(start)} til ${formatDate(end.getFullYear() === 2099 ? 'Uendelig' : end)}
                             </p>
+                            ${hasOverlap ? `<p class="text-[10px] text-amber-700 mt-1 font-medium">⚠️ Denne meldingen overlapper med en annen aktiv eller planlagt melding. Kun én melding vises av gangen på nettsiden.</p>` : ''}
                         </div>
                         <div class="flex gap-2 shrink-0 w-full sm:w-auto">
                             <button data-id="${msg.driveId}" data-name="${msg.name}" class="edit-btn flex-grow sm:flex-grow-0 admin-btn-secondary">Rediger</button>
@@ -307,7 +339,11 @@ export function initEditors(onDateChange, onSave) {
             altInput: true,
             altFormat: "d.m.Y",
             allowInput: true,
-            onChange: onDateChange
+            onChange: (selectedDates, dateStr, instance) => {
+                // Oppdater det underliggende input-feltet manuelt for å sikre at 'change' event trigges riktig
+                instance.element.value = dateStr;
+                if (onDateChange) onDateChange(selectedDates, dateStr, instance);
+            }
         };
 
         // Kun legg til locale hvis vi faktisk fant et objekt (unngår "invalid locale" string feil)

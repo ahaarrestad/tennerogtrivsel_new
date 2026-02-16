@@ -65,6 +65,62 @@ test.describe('Admin-panel Fase 1', () => {
     expect(dateText).toMatch(/1\.?\s+jan\.?\s+2026/i);
   });
 
+  test('skal stoppe lagring og vise feilmelding ved ugyldig dato-rekkefølge', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('admin_google_token', JSON.stringify({
+        access_token: 'mock_token',
+        expiry: Date.now() + 3600000,
+        user: { name: 'Test', email: 'test@test.com' }
+      }));
+      (window as any).gapi = {
+        load: (name, cb) => cb(),
+        client: {
+          init: () => Promise.resolve(),
+          load: () => Promise.resolve(),
+          setToken: () => {},
+          getToken: () => ({ access_token: 'mock' }),
+          drive: { files: { 
+            list: () => Promise.resolve({ result: { files: [] }}),
+            get: () => Promise.resolve({ result: { name: 'Folder', capabilities: { canEdit: true } } })
+          }}
+        }
+      };
+      (window as any).google = { accounts: { oauth2: { initTokenClient: () => ({ requestAccessToken: () => {} }) } } };
+    });
+
+    await page.goto('/admin');
+    await page.locator('#btn-open-meldinger').click();
+    await page.locator('#btn-new-melding').click();
+
+    // Sett sluttdato FØR startdato
+    // Vi bruker evaluate fordi Flatpickr skjuler de ekte input-feltene
+    await page.locator('#edit-start').evaluate((el: HTMLInputElement) => { 
+        el.value = '2026-02-20'; 
+        el.dispatchEvent(new Event('change', { bubbles: true })); 
+    });
+    await page.locator('#edit-end').evaluate((el: HTMLInputElement) => { 
+        el.value = '2026-02-15'; 
+        el.dispatchEvent(new Event('change', { bubbles: true })); 
+    });
+
+    // Verifiser at feilmeldingen er synlig
+    const errorBox = page.locator('#date-error');
+    await expect(errorBox).toBeVisible();
+    await expect(errorBox).toContainText('Sluttdato må være etter startdato');
+
+    // Verifiser at lagre-knappen er deaktivert
+    const saveBtn = page.locator('#btn-save-melding');
+    await expect(saveBtn).toBeDisabled();
+    
+    // Rett opp datoen og sjekk at feilen forsvinner
+    await page.locator('#edit-end').evaluate((el: HTMLInputElement) => { 
+        el.value = '2026-02-25'; 
+        el.dispatchEvent(new Event('change', { bubbles: true })); 
+    });
+    await expect(errorBox).toBeHidden();
+    await expect(saveBtn).toBeEnabled();
+  });
+
   test('skal kunne åpne tjenester, se sortert liste og bruke editor', async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('admin_google_token', JSON.stringify({
