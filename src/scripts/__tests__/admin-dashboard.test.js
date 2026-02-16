@@ -169,7 +169,10 @@ describe('admin-dashboard.js', () => {
 
     describe('initMarkdownEditor', () => {
         it('should initialize EasyMDE without Flatpickr', () => {
-            const mockMDE = vi.fn().mockImplementation(function() { this.value = () => 'content'; });
+            const mockMDE = vi.fn().mockImplementation(function(config) { 
+                this.value = () => 'content'; 
+                this.config = config;
+            });
             window.EasyMDE = mockMDE;
 
             document.body.innerHTML = `
@@ -178,7 +181,9 @@ describe('admin-dashboard.js', () => {
             `;
 
             initMarkdownEditor(vi.fn());
-            expect(mockMDE).toHaveBeenCalled();
+            expect(mockMDE).toHaveBeenCalledWith(expect.objectContaining({
+                previewClass: ["markdown-content", "prose"]
+            }));
             expect(window.flatpickr).toBeUndefined();
             
             delete window.EasyMDE;
@@ -199,8 +204,9 @@ describe('admin-dashboard.js', () => {
         });
 
         it('should initialize EasyMDE and Flatpickr when globals exist', () => {
-            const mockMDE = vi.fn().mockImplementation(function() {
+            const mockMDE = vi.fn().mockImplementation(function(config) {
                 this.value = () => 'content';
+                this.config = config;
             });
             const mockFP = vi.fn();
             window.EasyMDE = mockMDE;
@@ -215,7 +221,9 @@ describe('admin-dashboard.js', () => {
 
             initEditors(vi.fn(), vi.fn());
 
-            expect(mockMDE).toHaveBeenCalled();
+            expect(mockMDE).toHaveBeenCalledWith(expect.objectContaining({
+                previewClass: ["markdown-content", "prose"]
+            }));
             expect(mockFP).toHaveBeenCalled();
             
             delete window.EasyMDE;

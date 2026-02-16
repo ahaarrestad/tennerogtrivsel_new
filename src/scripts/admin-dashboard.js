@@ -258,7 +258,8 @@ export function initMarkdownEditor(onSave) {
             status: false,
             minHeight: "350px",
             placeholder: "Skriv innholdet her...",
-            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"]
+            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
+            previewClass: ["markdown-content", "prose"]
         });
     }
 
@@ -284,7 +285,8 @@ export function initEditors(onDateChange, onSave) {
             status: false,
             minHeight: "250px",
             placeholder: "Skriv innholdet her...",
-            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"]
+            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
+            previewClass: ["markdown-content", "prose"]
         });
     }
 
