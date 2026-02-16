@@ -5,6 +5,7 @@ import {
     checkMultipleAccess, logout
 } from './admin-client.js';
 import { formatDate, stripStackEditData, sortMessages, slugify } from './textFormatter.js';
+import snarkdown from 'snarkdown';
 
 /**
  * Kontrollerer tilgang til dashboard-moduler og deaktiverer de som ikke er tilgjengelige.
@@ -259,7 +260,9 @@ export function initMarkdownEditor(onSave) {
             minHeight: "350px",
             placeholder: "Skriv innholdet her...",
             toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
-            previewClass: ["markdown-content", "prose"]
+            previewRender: (plainText) => {
+                return `<div class="markdown-content prose">${snarkdown(plainText)}</div>`;
+            }
         });
     }
 
@@ -286,7 +289,9 @@ export function initEditors(onDateChange, onSave) {
             minHeight: "250px",
             placeholder: "Skriv innholdet her...",
             toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
-            previewClass: ["markdown-content", "prose"]
+            previewRender: (plainText) => {
+                return `<div class="markdown-content prose">${snarkdown(plainText)}</div>`;
+            }
         });
     }
 

@@ -182,8 +182,9 @@ describe('admin-dashboard.js', () => {
 
             initMarkdownEditor(vi.fn());
             expect(mockMDE).toHaveBeenCalledWith(expect.objectContaining({
-                previewClass: ["markdown-content", "prose"]
+                previewRender: expect.any(Function)
             }));
+            expect(mockMDE.mock.calls[0][0].previewClass).toBeUndefined();
             expect(window.flatpickr).toBeUndefined();
             
             delete window.EasyMDE;
@@ -222,8 +223,9 @@ describe('admin-dashboard.js', () => {
             initEditors(vi.fn(), vi.fn());
 
             expect(mockMDE).toHaveBeenCalledWith(expect.objectContaining({
-                previewClass: ["markdown-content", "prose"]
+                previewRender: expect.any(Function)
             }));
+            expect(mockMDE.mock.calls[0][0].previewClass).toBeUndefined();
             expect(mockFP).toHaveBeenCalled();
             
             delete window.EasyMDE;

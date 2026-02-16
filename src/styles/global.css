@@ -408,4 +408,11 @@
     .admin-btn-danger {
         @apply bg-white hover:bg-red-50 border border-red-100 text-red-500 text-xs font-bold py-2 px-4 rounded-xl transition-colors;
     }
+
+    /* EASYMDE PREVIEW FIX */
+    /* Vi tvinger forhåndsvisningen til å være hvit og solid så den dekker editoren */
+    .editor-preview {
+        background-color: white !important;
+        z-index: 10 !important;
+    }
 }
