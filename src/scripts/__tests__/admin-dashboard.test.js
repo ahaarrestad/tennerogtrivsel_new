@@ -224,10 +224,35 @@ describe('admin-dashboard.js', () => {
             initEditors(vi.fn(), vi.fn());
 
             expect(mockMDE).toHaveBeenCalled();
+            // Sjekk at vi bruker objektet fra l10ns.no
             expect(mockFP).toHaveBeenCalledWith("#edit-start", expect.objectContaining({
                 locale: { firstDayOfWeek: 1 }
             }));
             
+            delete window.EasyMDE;
+            delete window.flatpickr;
+        });
+
+        it('should not crash if locale is missing', () => {
+            const mockMDE = vi.fn().mockImplementation(function() { this.value = () => ''; });
+            const mockFP = vi.fn();
+            mockFP.l10ns = {}; // Tom l10ns
+            window.EasyMDE = mockMDE;
+            window.flatpickr = mockFP;
+
+            document.body.innerHTML = `
+                <input type="text" id="edit-start">
+                <textarea id="edit-content"></textarea>
+                <button id="btn-save-melding"></button>
+            `;
+
+            // Skal ikke kaste feil selv om 'no' mangler
+            initEditors(vi.fn(), vi.fn());
+            
+            expect(mockFP).toHaveBeenCalledWith("#edit-start", expect.not.objectContaining({
+                locale: expect.anything()
+            }));
+
             delete window.EasyMDE;
             delete window.flatpickr;
         });

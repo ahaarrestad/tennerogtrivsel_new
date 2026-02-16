@@ -298,17 +298,23 @@ export function initEditors(onDateChange, onSave) {
     // Initialiser Flatpickr
     const flatpickrGlobal = window['flatpickr'];
     if (typeof flatpickrGlobal !== 'undefined') {
-        const l10n = flatpickrGlobal.l10ns;
-        const noLocale = l10n?.no || l10n?.nb || l10n?.Norwegian || "no";
+        const l10ns = flatpickrGlobal.l10ns;
+        // Finn den beste tilgjengelige norske lokalen, eller null hvis ingen finnes
+        const noLocale = l10ns ? (l10ns.no || l10ns.nb || l10ns.Norwegian) : null;
         
         const fpConfig = {
-            locale: noLocale,
             dateFormat: "Y-m-d",
             altInput: true,
             altFormat: "d.m.Y",
             allowInput: true,
             onChange: onDateChange
         };
+
+        // Kun legg til locale hvis vi faktisk fant et objekt (unngår "invalid locale" string feil)
+        if (noLocale) {
+            fpConfig.locale = noLocale;
+        }
+        
         flatpickrGlobal("#edit-start", fpConfig);
         flatpickrGlobal("#edit-end", fpConfig);
     }
