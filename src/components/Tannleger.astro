@@ -41,6 +41,10 @@ const sorterteTannleger = tannleger.sort((a, b) => a.data.name.localeCompare(b.d
                                            src={images[imagePath]()}
                                            alt={tannlegeData.name}
                                            class="w-full h-full object-cover"
+                                           style={{
+                                               objectPosition: `${tannlegeData.imageConfig?.positionX ?? 50}% ${tannlegeData.imageConfig?.positionY ?? 50}%`,
+                                               transform: `scale(${tannlegeData.imageConfig?.scale ?? 1.0})`
+                                           }}
                                     />
                             ) : (
                                     <div slot="image"

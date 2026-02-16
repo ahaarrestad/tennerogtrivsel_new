@@ -100,6 +100,29 @@ To ensure high-quality, maintainable, and idiomatic code within this project, pl
         *   **Link Crawler:** Automatic detection of broken internal and external links.
     *   Tests are integrated into the CI/CD pipeline and MUST pass before deployment. Environment variables must be provisioned for all test steps.
 
+## Veikart: Tannleger Admin-modul
+
+Dette veikartet beskriver implementeringen av tannlege-administrasjon. Planen er persistert her for å sikre kontinuitet på tvers av sesjoner.
+
+### Fase 1: Datagrunnlag og Defaults (Sync)
+- [ ] Utvide `sync-data.js` til å lese kolonner A-H i Sheets (Navn, Tittel, Beskrivelse, Bilde, Aktiv, Skala, X, Y).
+- [ ] Implementere kodesikre defaults: Skala = 1.0 (0.5-2.0), X/Y = 50.
+- [ ] Oppdatere `Tannleger.astro` til å bruke `object-position` og `transform: scale` basert på disse verdiene.
+
+### Fase 2: Admin API (Sheets CRUD)
+- [ ] Lage `getTannlegerRaw()` i `admin-client.js` for å hente alle rader.
+- [ ] Lage `updateTannlegeRow(index, data)` for debounced auto-save.
+- [ ] Lage funksjoner for å legge til/slette rader.
+
+### Fase 3: UI med Live Preview
+- [ ] Bygge editor-grensesnitt med Live Preview (gjenbruk av `Card.astro` logikk).
+- [ ] Implementere slidere for Zoom (0.5-2.0) og Posisjon (0-100%).
+- [ ] Legge til auto-save funksjonalitet på alle felter.
+
+### Fase 4: Bildehåndtering
+- [ ] Implementere bildevelger som lister filer fra Drive.
+- [ ] Implementere bildeopplasting til Drive-mappen for tannleger.
+
 ### 5. Admin Panel (Phase 1)
 
 The project includes a browser-based admin panel at `/admin` for content management. It uses Google OAuth 2.0 for authentication and relies on Google Drive permissions for access control.

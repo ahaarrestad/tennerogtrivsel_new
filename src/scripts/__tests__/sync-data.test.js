@@ -192,6 +192,37 @@ describe('sync-data.js', () => {
             expect(fs.unlinkSync).not.toHaveBeenCalledWith(expect.stringContaining('.gitkeep'));
             expect(fs.unlinkSync).not.toHaveBeenCalledWith(expect.stringMatching(/[\/\\]brukt\.jpg$/));
         });
+
+        it('bør håndtere bilde-justeringer og defaults korrekt (Fase 1)', async () => {
+            const mockData = {
+                data: {
+                    values: [
+                        // Navn, Tittel, Beskrivelse, Bilde, Aktiv, Skala, X, Y
+                        ['Ola', 'T', 'B', 'o.jpg', 'ja', '1.5', '20', '30'], // Fullstendig data
+                        ['Kari', 'T', 'B', 'k.jpg', 'ja', '', '', ''],       // Mangler justering (skal få defaults)
+                        ['Per', 'T', 'B', 'p.jpg', 'ja', '0.1', '150', '-10'] // Ugyldige verdier (skal få defaults/clamped)
+                    ],
+                },
+            };
+
+            mockSheets.spreadsheets.values.get.mockResolvedValue(mockData);
+            mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
+
+            await syncTannleger();
+
+            const writtenData = JSON.parse(fs.writeFileSync.mock.calls[0][1]);
+            
+            // Ola: 1.5, 20, 30
+            expect(writtenData[0].imageConfig).toEqual({ scale: 1.5, positionX: 20, positionY: 30 });
+            
+            // Kari: Defaults (1.0, 50, 50)
+            expect(writtenData[1].imageConfig).toEqual({ scale: 1.0, positionX: 50, positionY: 50 });
+            
+            // Per: Skala clamped (0.5), X/Y fallback (50) siden 150 og -10 er utenfor 0-100
+            expect(writtenData[2].imageConfig.scale).toBe(0.5); // 0.1 blir clamped til 0.5
+            expect(writtenData[2].imageConfig.positionX).toBe(50); // 150 er ugyldig -> default 50
+            expect(writtenData[2].imageConfig.positionY).toBe(50); // -10 er ugyldig -> default 50
+        });
     });
 
     describe('syncMarkdownCollection', () => {

@@ -108,15 +108,27 @@ async function syncTannleger() {
     try {
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: config.spreadsheetId,
-            range: 'tannleger!A2:E',
+            range: 'tannleger!A2:H',
         });
 
         const rows = res.data.values || [];
         const activeRows = rows.filter(([navn, tittel, beskrivelse, bildeFil, aktiv]) => aktiv?.toLowerCase() === 'ja');
         
-        const tannlegeData = await Promise.all(activeRows.map(async ([navn, tittel, beskrivelse, bildeFil]) => {
+        const tannlegeData = await Promise.all(activeRows.map(async ([navn, tittel, beskrivelse, bildeFil, aktiv, skala, posX, posY]) => {
             console.log(`  🔄 Behandler: ${navn}`);
             
+            // Pars og valider bilde-justeringer med trygge defaults
+            let scale = parseFloat(skala);
+            scale = (!isNaN(scale) && scale >= 0.5 && scale <= 2.0) ? scale : 1.0;
+            if (!isNaN(parseFloat(skala)) && parseFloat(skala) < 0.5) scale = 0.5; // Clamp min
+            if (!isNaN(parseFloat(skala)) && parseFloat(skala) > 2.0) scale = 2.0; // Clamp max
+            
+            const parsedX = parseInt(posX);
+            const positionX = (!isNaN(parsedX) && parsedX >= 0 && parsedX <= 100) ? parsedX : 50;
+            
+            const parsedY = parseInt(posY);
+            const positionY = (!isNaN(parsedY) && parsedY >= 0 && parsedY <= 100) ? parsedY : 50;
+
             if (bildeFil) {
                 try {
                     const destinationPath = path.join(config.paths.tannlegerAssets, bildeFil);
@@ -142,7 +154,12 @@ async function syncTannleger() {
                                         name: navn,
                                         title: tittel,
                                         description: beskrivelse,
-                                        image: bildeFil
+                                        image: bildeFil,
+                                        imageConfig: {
+                                            scale,
+                                            positionX,
+                                            positionY
+                                        }
                                     };
                                 }));
                         
