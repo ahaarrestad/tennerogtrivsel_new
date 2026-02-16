@@ -101,6 +101,18 @@ To ensure high-quality, maintainable, and idiomatic code within this project, pl
         *   **Link Crawler:** Automatic detection of broken internal and external links.
     *   Tests are integrated into the CI/CD pipeline and MUST pass before deployment. Environment variables must be provisioned for all test steps.
 
+## Kvalitetssikring (Quality Gates)
+
+For å sikre stabilitet og unngå regresjoner, SKAL følgende sjekkliste følges før en oppgave eller endring kan markeres som ferdig:
+
+1.  **Unit-tester:** Kjør `npm test`. Alle tester SKAL passere 100%.
+2.  **Dekningsgrad (Per fil):** Sjekk coverage-rapporten fra `npm test`. **Hver enkelt fil** som inneholder kjerne-logikk (scripts og API) SKAL ha minst **80% branch coverage**. Det er ikke tilstrekkelig at totalen er over 80% hvis enkeltfiler ligger under.
+3.  **E2E-tester:** Kjør `npm run test:e2e`. "Happy path" for berørt funksjonalitet SKAL verifiseres i Chromium.
+4.  **Rapporteringskrav:** Før en oppgave markeres som ferdig, SKAL du liste opp de faktiske dekningsgradene (% Branch) for alle filer du har endret.
+5.  **Build-sjekk:** Kjør `npm run build` lokalt for å bekrefte at prosjektet lar seg kompilere uten feil.
+
+**AGENT-REGEL:** Du har ikke lov til å si deg ferdig eller foreslå en commit før du har presentert en fersk testrapport som viser at kravene er møtt for alle berørte filer. Enhver "ferdig"-melding uten tallgrunnlag er et brudd på instruksene. Hvis dekningsgraden faller på grunn av nye funksjoner, SKAL du skrive tester for disse før du går videre.
+
 ## Veikart: Tannleger Admin-modul
 
 Dette veikartet beskriver implementeringen av tannlege-administrasjon. Planen er persistert her for å sikre kontinuitet på tvers av sesjoner.
@@ -122,9 +134,9 @@ Dette veikartet beskriver implementeringen av tannlege-administrasjon. Planen er
 - [x] Legge til auto-save funksjonalitet på alle felter.
 - [x] Sikre 80% branch coverage for den nye logikken.
 
-### Fase 4: Bildehåndtering (NESTE STEG)
-- [ ] Implementere bildevelger som lister filer fra Drive.
-- [ ] Implementere bildeopplasting til Drive-mappen for tannleger.
+### Fase 4: Bildehåndtering
+- [x] Implementere bildevelger som lister filer fra Drive.
+- [x] Implementere bildeopplasting til Drive-mappen for tannleger.
 
 ### 5. Admin Panel (Phase 1)
 

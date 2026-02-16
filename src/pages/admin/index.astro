@@ -158,6 +158,45 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         </div>
     </main>
 
+    <!-- IMAGE PICKER MODAL -->
+    <dialog id="image-picker-modal" class="p-0 rounded-2xl shadow-2xl backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm w-[90vw] max-w-4xl max-h-[85vh]">
+        <div class="flex flex-col h-full max-h-[85vh]">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                <h3 class="text-lg font-black uppercase tracking-tight text-brand">Velg bilde</h3>
+                <button onclick="document.getElementById('image-picker-modal').close()" class="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            
+            <div class="p-6 bg-slate-50 overflow-y-auto grow">
+                <!-- UPLOAD SECTION -->
+                <div class="mb-8">
+                    <label for="upload-image-input" class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-slate-50 transition-colors group relative">
+                        <div id="upload-preview" class="flex flex-col items-center justify-center pt-5 pb-6 transition-opacity duration-200">
+                            <svg class="w-8 h-8 mb-3 text-slate-400 group-hover:text-brand transition-colors" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                            </svg>
+                            <p class="mb-2 text-sm text-slate-500"><span class="font-bold text-brand">Klikk for å laste opp</span> eller dra og slipp</p>
+                            <p class="text-xs text-slate-400">JPG, PNG, WEBP (Maks 5MB)</p>
+                        </div>
+                        <div id="upload-spinner" class="absolute inset-0 flex items-center justify-center bg-white/80 hidden">
+                            <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </div>
+                        <input id="upload-image-input" type="file" class="hidden" accept="image/*" />
+                    </label>
+                </div>
+
+                <!-- GALLERY GRID -->
+                <div>
+                    <h4 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Bilder på Google Drive</h4>
+                    <div id="image-gallery-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        <!-- Bilder lastes inn her via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
     <div id="admin-config" 
          data-tjenester-folder={TJENESTER_FOLDER} 
          data-tannleger-folder={TANNLEGER_FOLDER} 
@@ -171,7 +210,8 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             silentLogin, getStoredUser, getSettingsWithNotes, updateSettings,
             listFiles, getFileContent, saveFile, createFile, deleteFile,
             parseMarkdown, stringifyMarkdown, updateTannlegeRow, 
-            addTannlegeRow, deleteTannlegeRow, getDriveImageBlob
+            addTannlegeRow, deleteTannlegeRow, getDriveImageBlob,
+            listImages, uploadImage, findFileByName
         } from '../../scripts/admin-client.js';
         import { formatDate, stripStackEditData, sortMessages, slugify } from '../../scripts/textFormatter.js';
         import { 
@@ -222,6 +262,95 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 console.error("Settings load failed", e);
                 inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste innstillinger.</div>`; 
             }
+        }
+
+        // --- IMAGE GALLERY HELPERS ---
+        async function loadGallery(folderId, onSelect) {
+            const grid = document.getElementById('image-gallery-grid');
+            if (!grid) return;
+            
+            console.log("[Admin] Laster galleri for mappe:", folderId);
+            grid.innerHTML = '<div class="col-span-full text-center py-12 text-slate-400 italic animate-pulse">Laster bilder...</div>';
+            
+            try {
+                if (!folderId) throw new Error("Mappe-ID mangler");
+
+                // Sjekk tilgang først
+                const hasAccess = await checkAccess(folderId);
+                console.log("[Admin] Har tilgang til mappe:", hasAccess);
+                
+                if (!hasAccess) {
+                    grid.innerHTML = '<div class="col-span-full text-center py-12 text-amber-500 font-bold italic">⚠️ Du har ikke lesetilgang til denne mappen på Google Drive.</div>';
+                    return;
+                }
+
+                const images = await listImages(folderId);
+                console.log("[Admin] Bilder funnet:", images.length);
+
+                if (images.length === 0) {
+                    grid.innerHTML = '<div class="col-span-full text-center py-12 text-slate-400 italic">Ingen bilder funnet i mappen.</div>';
+                    return;
+                }
+                
+                grid.innerHTML = '';
+                images.forEach(img => {
+                    const el = document.createElement('div');
+                    el.className = 'group relative aspect-square bg-slate-100 rounded-lg overflow-hidden cursor-pointer hover:ring-4 ring-brand transition-all flex items-center justify-center';
+                    
+                    if (img.thumbnailLink) {
+                        el.innerHTML = `
+                            <img src="${img.thumbnailLink}" referrerpolicy="no-referrer" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
+                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2 text-center">
+                                <span class="text-white text-[10px] font-bold break-all line-clamp-2">${img.name}</span>
+                            </div>
+                        `;
+                    } else {
+                        el.innerHTML = `
+                            <div class="flex flex-col items-center justify-center text-slate-400 p-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                <span class="text-[8px] font-bold break-all line-clamp-2 text-center">${img.name}</span>
+                            </div>
+                        `;
+                    }
+                    el.onclick = () => onSelect(img.id, img.name);
+                    grid.appendChild(el);
+                });
+            } catch (e) {
+                console.error("[Admin] Galleri feilet:", e);
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-red-400 italic">Kunne ikke laste bilder: ${e.message}</div>`;
+            }
+        }
+
+        function setupUploadHandler(folderId, onUploadSuccess) {
+            const input = document.getElementById('upload-image-input');
+            if (!input) return;
+            
+            // Remove old listeners to avoid duplicates if re-opened (clone node trick)
+            const newInput = input.cloneNode(true);
+            input.parentNode.replaceChild(newInput, input);
+            
+            newInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const preview = document.getElementById('upload-preview');
+                const spinner = document.getElementById('upload-spinner');
+                
+                if (preview) preview.classList.add('opacity-0');
+                if (spinner) spinner.classList.remove('hidden');
+
+                try {
+                    const result = await uploadImage(folderId, file);
+                    if (onUploadSuccess) onUploadSuccess(result);
+                } catch (err) {
+                    alert("Opplasting feilet!");
+                    console.error(err);
+                } finally {
+                    if (preview) preview.classList.remove('opacity-0');
+                    if (spinner) spinner.classList.add('hidden');
+                    newInput.value = ''; // Reset
+                }
+            });
         }
 
         // --- TJENESTER MODUL ---
@@ -474,18 +603,50 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             const actions = document.getElementById('module-actions');
             if (!inner || !actions) return;
 
-            actions.innerHTML = '';
+            actions.innerHTML = `
+                <button onclick="window.openTannlegerModule()" class="admin-btn-secondary text-xs py-2 px-4 shadow-md flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Tilbake til liste
+                </button>
+            `;
             inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter profil og bilde fra Google...</div>';
 
             const t = data || { name: '', title: '', description: '', image: '', active: true, scale: 1.0, positionX: 50, positionY: 50 };
             
-            // Hent bilde fra Drive hvis vi har en ID
-            let previewSrc = '/venterom3.jpg';
-            if (t.image && t.image.length > 20) {
-                const blobUrl = await getDriveImageBlob(t.image);
-                if (blobUrl) previewSrc = blobUrl;
-            } else if (t.image) {
-                previewSrc = `/src/assets/tannleger/${t.image}`;
+            // Hent bilde-URL (blob) for preview
+            let previewSrc = '';
+            let currentImageId = null;
+
+            if (t.image) {
+                console.log("[Admin] Forsøker å hente preview for bilde:", t.image);
+                try {
+                    // Hvis det ser ut som en ID (lang streng uten filendelse-liknende mønster)
+                    if (t.image.length > 20 && !t.image.includes('.')) {
+                        currentImageId = t.image;
+                    } else {
+                        // Søk etter filID basert på navn
+                        const file = await findFileByName(t.image, TANNLEGER_FOLDER);
+                        if (file) {
+                            currentImageId = file.id;
+                            console.log("[Admin] Fant fil-ID for bilde:", currentImageId);
+                        } else {
+                            console.warn("[Admin] Fant ikke bilde på Drive ved navn:", t.image);
+                        }
+                    }
+
+                    if (currentImageId) {
+                        const blobUrl = await getDriveImageBlob(currentImageId);
+                        if (blobUrl) previewSrc = blobUrl;
+                    }
+                } catch (err) {
+                    console.warn("[Admin] Kunne ikke hente bilde-preview fra Drive:", err);
+                }
+
+                // FALLBACK: Hvis Drive-preview feilet, men vi har et filnavn, prøv å vis det lokale (synkede) bildet
+                if (!previewSrc && t.image && t.image.includes('.')) {
+                    console.log("[Admin] Bruker lokal fallback for preview:", t.image);
+                    previewSrc = `/src/assets/tannleger/${t.image}`;
+                }
             }
 
             inner.innerHTML = `
@@ -501,6 +662,15 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         </div>
 
                         <div class="space-y-4">
+                            <div class="admin-field-container">
+                                <label class="admin-label">Profilbilde</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="text" id="edit-t-image" value="${t.image}" class="admin-input flex-grow text-xs text-slate-500 font-mono" placeholder="Ingen bilde valgt" readonly>
+                                    <button id="btn-open-gallery" class="btn-primary py-3 px-4 text-xs shrink-0 whitespace-nowrap">Velg bilde</button>
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-1 italic">Lastes fra Google Drive (mappe: tannleger)</p>
+                            </div>
+
                             <div class="admin-field-container">
                                 <label class="admin-label">Fullt navn</label>
                                 <input type="text" id="edit-t-name" value="${t.name}" class="admin-input" placeholder="Navn Navnesen">
@@ -546,6 +716,13 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         </div>
 
                         <div id="save-status" class="h-6 text-[10px] font-black uppercase tracking-widest text-slate-400 italic"></div>
+                        
+                        <div class="pt-6 border-t border-slate-100">
+                            <button onclick="window.openTannlegerModule()" class="btn-primary w-full py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                Ferdig / Tilbake til liste
+                            </button>
+                        </div>
                     </div>
 
                     <!-- HØYRE: Preview -->
@@ -557,9 +734,13 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                 
                                 <div class="relative z-10 mb-6 w-48 h-48 mx-auto">
                                     <div class="relative overflow-hidden z-10 h-full w-full rounded-2xl border-4 border-white shadow-md bg-slate-50 flex items-center justify-center">
+                                        <div id="no-image-placeholder" class="flex flex-col items-center justify-center text-slate-300 ${previewSrc ? 'hidden' : ''}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                            <span class="text-[10px] font-black uppercase tracking-widest">Velg bilde</span>
+                                        </div>
                                         <img id="preview-img" 
                                              src="${previewSrc}" 
-                                             class="flex-shrink-0 max-w-none transition-all duration-75" 
+                                             class="flex-shrink-0 max-w-none transition-all duration-75 ${previewSrc ? '' : 'hidden'}" 
                                              style="width: ${t.scale * 100}%; height: ${t.scale * 100}%; object-fit: cover; object-position: ${t.positionX}% ${t.positionY}%;"
                                         >
                                     </div>
@@ -580,10 +761,69 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 </div>
             `;
 
+            // --- IMAGE GALLERY LOGIC ---
+            const btnGallery = document.getElementById('btn-open-gallery');
+            const modal = document.getElementById('image-picker-modal');
+            
+            if (btnGallery && modal) {
+                btnGallery.onclick = () => {
+                    modal.showModal();
+                    loadGallery(TANNLEGER_FOLDER, async (fileId, fileName) => {
+                        const imgInput = document.getElementById('edit-t-image');
+                        const previewImg = document.getElementById('preview-img');
+                        const placeholder = document.getElementById('no-image-placeholder');
+
+                        if (imgInput) {
+                            imgInput.value = fileName;
+                            
+                            // Oppdater preview-bildet umiddelbart med ny blob
+                            if (previewImg) {
+                                const blobUrl = await getDriveImageBlob(fileId);
+                                if (blobUrl) {
+                                    previewImg.src = blobUrl;
+                                    previewImg.classList.remove('hidden');
+                                    placeholder?.classList.add('hidden');
+                                }
+                            }
+                            
+                            imgInput.dispatchEvent(new Event('input')); 
+                        }
+                        modal.close();
+                    });
+                };
+            }
+
+            // Setup upload handler for the modal
+            setupUploadHandler(TANNLEGER_FOLDER, async (newFile) => {
+                if (newFile) {
+                     const imgInput = document.getElementById('edit-t-image');
+                     const previewImg = document.getElementById('preview-img');
+                     const placeholder = document.getElementById('no-image-placeholder');
+
+                     if (imgInput) {
+                         imgInput.value = newFile.name;
+                         
+                         // Oppdater preview
+                         if (previewImg) {
+                             const blobUrl = await getDriveImageBlob(newFile.id);
+                             if (blobUrl) {
+                                 previewImg.src = blobUrl;
+                                 previewImg.classList.remove('hidden');
+                                 placeholder?.classList.add('hidden');
+                             }
+                         }
+
+                         imgInput.dispatchEvent(new Event('input'));
+                     }
+                     modal.close();
+                }
+            });
+
             const updatePreview = () => {
                 const name = document.getElementById('edit-t-name').value;
                 const title = document.getElementById('edit-t-title').value;
                 const desc = document.getElementById('edit-t-desc').value;
+                const image = document.getElementById('edit-t-image').value;
                 const scale = document.getElementById('edit-t-scale').value;
                 const posX = document.getElementById('edit-t-x').value;
                 const posY = document.getElementById('edit-t-y').value;
@@ -610,7 +850,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     statusEl.textContent = "💾 Lagrer til Google Sheets...";
                     const updateData = {
                         name, title, description: desc, active,
-                        image: t.image, 
+                        image: image, // Lagre den nye verdien fra input-feltet!
                         scale: parseFloat(scale),
                         positionX: parseInt(posX),
                         positionY: parseInt(posY)
@@ -631,8 +871,9 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 }, 1500);
             };
 
-            ['edit-t-name', 'edit-t-title', 'edit-t-desc', 'edit-t-scale', 'edit-t-x', 'edit-t-y', 'edit-t-active'].forEach(id => {
+            ['edit-t-name', 'edit-t-title', 'edit-t-desc', 'edit-t-image', 'edit-t-scale', 'edit-t-x', 'edit-t-y', 'edit-t-active'].forEach(id => {
                 const el = document.getElementById(id);
+                if (!el) return;
                 el.addEventListener(el.type === 'range' ? 'input' : 'change', updatePreview);
                 if (el.type === 'text' || el.tagName === 'TEXTAREA') {
                     el.addEventListener('input', updatePreview);

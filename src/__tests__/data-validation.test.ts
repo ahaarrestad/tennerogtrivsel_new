@@ -2,6 +2,27 @@ import { describe, it, expect, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 
+// Mock astro:content med en funksjonell zod-liknende mock
+vi.mock('astro:content', () => {
+    const zMock: any = {
+        object: vi.fn(() => zMock),
+        string: vi.fn(() => zMock),
+        number: vi.fn(() => zMock),
+        boolean: vi.fn(() => zMock),
+        array: vi.fn(() => zMock),
+        optional: vi.fn(() => zMock),
+        default: vi.fn(() => zMock),
+        coerce: {
+            date: vi.fn(() => zMock),
+        },
+        safeParse: vi.fn((data) => ({ success: true, data })),
+    };
+    return {
+        defineCollection: vi.fn((config) => config),
+        z: zMock,
+    };
+});
+
 describe('Datavalidering (Synkroniserte filer)', () => {
     const contentPath = path.join(process.cwd(), 'src/content');
     const assetsPath = path.join(process.cwd(), 'src/assets/tannleger');
