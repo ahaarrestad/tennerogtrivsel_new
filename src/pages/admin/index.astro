@@ -83,10 +83,10 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         <!-- LOGIN CONTAINER -->
         <div id="login-container" class="admin-login-box">
             <div class="space-y-4">
-                <div class="w-20 h-20 bg-brand-light rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <div class="admin-login-icon-box">
                     <Image src={logoImage} alt="" width={64} class="w-12 h-12 object-contain" />
                 </div>
-                <h1 class="h2 font-black uppercase">Velkommen</h1>
+                <h1 class="admin-title">Velkommen</h1>
                 <p class="text-slate-600">Logg inn for å administrere innholdet på nettsiden.</p>
             </div>
             
@@ -103,30 +103,30 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
 
         <!-- DASHBOARD CONTAINER -->
         <div id="dashboard" class="hidden admin-dashboard-container">
-            <header class="admin-card text-center">
-                <h1 class="h2 font-black uppercase tracking-tight">Admin Dashboard</h1>
-                <p class="text-slate-600 italic mt-2 text-sm sm:text-base">Velg en modul nedenfor for å gjøre endringer.</p>
+            <header class="admin-card-header">
+                <h1 class="admin-title">Admin Dashboard</h1>
+                <p class="admin-info-text">Velg en modul nedenfor for å gjøre endringer.</p>
             </header>
 
             <div class="admin-module-grid">
                 <div class="admin-card-interactive group">
-                    <h2 class="h3 mb-4 group-hover:text-brand-hover transition-colors">Innstillinger</h2>
-                    <p class="text-slate-600 mb-6 grow">Administrer telefonnumre, åpningstider og nettsidetitler.</p>
+                    <h2 class="admin-subtitle group-hover:text-brand-hover">Innstillinger</h2>
+                    <p class="admin-description">Administrer telefonnumre, åpningstider og nettsidetitler.</p>
                     <button id="btn-open-settings" class="btn-primary w-full mt-auto">Åpne editor</button>
                 </div>
                 <div class="admin-card-interactive group">
-                    <h2 class="h3 mb-4 group-hover:text-brand-hover transition-colors">Tjenester</h2>
-                    <p class="text-slate-600 mb-6 grow">Rediger tekst og innhold for alle tannhelsetjenester.</p>
+                    <h2 class="admin-subtitle group-hover:text-brand-hover">Tjenester</h2>
+                    <p class="admin-description">Rediger tekst og innhold for alle tannhelsetjenester.</p>
                     <button id="btn-open-tjenester" class="btn-primary w-full mt-auto">Åpne editor</button>
                 </div>
                 <div class="admin-card-interactive group">
-                    <h2 class="h3 mb-4 group-hover:text-brand-hover transition-colors">Meldinger</h2>
-                    <p class="text-slate-600 mb-6 grow">Lag og administrer aktive meldinger og infobannere.</p>
+                    <h2 class="admin-subtitle group-hover:text-brand-hover">Meldinger</h2>
+                    <p class="admin-description">Lag og administrer aktive meldinger og infobannere.</p>
                     <button id="btn-open-meldinger" class="btn-primary w-full mt-auto">Åpne editor</button>
                 </div>
                 <div class="admin-card-interactive group">
-                    <h2 class="h3 mb-4 group-hover:text-brand-hover transition-colors">Tannleger</h2>
-                    <p class="text-slate-600 mb-6 grow">Oppdater informasjon om ansatte og last opp nye portretter.</p>
+                    <h2 class="admin-subtitle group-hover:text-brand-hover">Tannleger</h2>
+                    <p class="admin-description">Oppdater informasjon om ansatte og last opp nye portretter.</p>
                     <button id="btn-open-tannleger" class="btn-primary w-full mt-auto">Åpne editor</button>
                 </div>
             </div>
@@ -143,7 +143,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             </div>
             
             <div id="module-content" class="admin-card min-h-[500px]">
-                <h2 id="module-title" class="h2 mb-8 border-b border-brand-light pb-6 font-black uppercase tracking-tight">Modulnavn</h2>
+                <h2 id="module-title" class="admin-title !mb-8 border-b border-brand-light pb-6">Modulnavn</h2>
                 <div id="module-inner">
                     <div class="flex items-center gap-3 text-slate-500 text-sm italic">
                         <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -214,7 +214,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 });
             } catch (e) { 
                 console.error("Settings load failed", e);
-                inner.innerHTML = `<div class="text-red-500 font-bold p-4 bg-red-50 rounded-2xl">❌ Kunne ikke laste innstillinger.</div>`; 
+                inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste innstillinger.</div>`; 
             }
         }
 

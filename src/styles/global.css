@@ -332,6 +332,10 @@
         @apply bg-white p-10 rounded-3xl shadow-xl border border-brand-border max-w-md w-full text-center space-y-8;
     }
 
+    .admin-login-icon-box {
+        @apply w-20 h-20 bg-brand-light rounded-2xl flex items-center justify-center mx-auto mb-6;
+    }
+
     .admin-dashboard-container {
         @apply layout-container space-y-12 py-12 w-full;
     }
@@ -346,6 +350,27 @@
 
     .admin-card-interactive {
         @apply admin-card hover:shadow-md hover:border-brand-active flex flex-col;
+    }
+
+    .admin-card-header {
+        @apply admin-card text-center;
+    }
+
+    /* TYPOGRAPHY */
+    .admin-title {
+        @apply h2 font-black uppercase tracking-tight;
+    }
+
+    .admin-subtitle {
+        @apply h3 mb-4 transition-colors;
+    }
+
+    .admin-description {
+        @apply text-slate-600 mb-6 grow;
+    }
+
+    .admin-info-text {
+        @apply text-slate-600 italic mt-2 text-sm sm:text-base;
     }
 
     .admin-status-pill {
@@ -370,6 +395,10 @@
 
     .admin-field-container {
         @apply flex flex-col gap-1.5 p-4 sm:p-5 rounded-2xl border border-brand-light bg-white hover:border-brand-active transition-colors;
+    }
+
+    .admin-alert-error {
+        @apply text-red-500 font-bold p-4 bg-red-50 rounded-2xl;
     }
 
     .admin-btn-secondary {

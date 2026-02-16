@@ -196,7 +196,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
         document.getElementById('btn-new-melding').onclick = () => onEdit(null);
     } catch (e) { 
         console.error("Load failed", e);
-        inner.innerHTML = `<div class="text-red-500 p-4 bg-red-50 rounded-2xl font-bold">❌ Kunne ikke laste meldinger.</div>`; 
+        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste meldinger.</div>`; 
     }
 }
 
