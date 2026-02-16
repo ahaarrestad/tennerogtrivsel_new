@@ -170,13 +170,14 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             initGapi, initGis, login, logout, checkAccess, tryRestoreSession, 
             silentLogin, getStoredUser, getSettingsWithNotes, updateSettings,
             listFiles, getFileContent, saveFile, createFile, deleteFile,
-            parseMarkdown, stringifyMarkdown
+            parseMarkdown, stringifyMarkdown, updateTannlegeRow, 
+            addTannlegeRow, deleteTannlegeRow
         } from '../../scripts/admin-client.js';
         import { formatDate, stripStackEditData, sortMessages, slugify } from '../../scripts/textFormatter.js';
         import { 
             updateUIWithUser, autoResizeTextarea, saveSingleSetting, 
             loadMeldingerModule, initEditors, enforceAccessControl,
-            loadTjenesterModule, initMarkdownEditor
+            loadTjenesterModule, initMarkdownEditor, loadTannlegerModule
         } from '../../scripts/admin-dashboard.js';
 
         const configEl = document.getElementById('admin-config');
@@ -456,6 +457,175 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         
         window.loadMeldingerModule = () => loadMeldingerModule(MELDINGER_FOLDER, window.editMelding, window.deleteMelding);
 
+        // --- TANNLEGER MODUL ---
+        let tannlegeSaveTimeout = null;
+
+        window.deleteTannlege = async (rowIndex, name) => {
+            if (confirm(`Vil du fjerne "${name}" fra nettsiden?`)) {
+                try {
+                    await deleteTannlegeRow(SHEET_ID, rowIndex);
+                    window.loadTannlegerModule();
+                } catch (e) { alert("Feil ved sletting."); }
+            }
+        };
+
+        window.editTannlege = async (rowIndex, data = null) => {
+            const inner = document.getElementById('module-inner');
+            const actions = document.getElementById('module-actions');
+            if (!inner || !actions) return;
+
+            actions.innerHTML = '';
+            inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Laster tannlege-profil...</div>';
+
+            const t = data || { name: '', title: '', description: '', image: '', active: true, scale: 1.0, positionX: 50, positionY: 50 };
+            
+            inner.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <!-- VENSTRE: Skjema -->
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-brand font-black uppercase tracking-tighter">Rediger profil</h3>
+                            <div class="flex items-center gap-2">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Aktiv på nettsiden</label>
+                                <input type="checkbox" id="edit-t-active" ${t.active ? 'checked' : ''} class="w-5 h-5 accent-brand cursor-pointer">
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="admin-field-container">
+                                <label class="admin-label">Fullt navn</label>
+                                <input type="text" id="edit-t-name" value="${t.name}" class="admin-input" placeholder="Navn Navnesen">
+                            </div>
+                            <div class="admin-field-container">
+                                <label class="admin-label">Tittel / Rolle</label>
+                                <input type="text" id="edit-t-title" value="${t.title}" class="admin-input" placeholder="Tannlege / Spesialist">
+                            </div>
+                            <div class="admin-field-container">
+                                <label class="admin-label">Kort beskrivelse</label>
+                                <textarea id="edit-t-desc" rows="4" class="admin-input resize-none">${t.description}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6 pt-4 border-t border-slate-100">
+                            <h4 class="text-brand font-black text-xs uppercase tracking-widest">Bildejustering</h4>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <label class="admin-label !mb-0">Zoom (Skala)</label>
+                                        <span id="val-scale" class="text-[10px] font-bold text-brand">${t.scale}x</span>
+                                    </div>
+                                    <input type="range" id="edit-t-scale" min="0.5" max="2.0" step="0.05" value="${t.scale}" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <label class="admin-label !mb-0">Horisontal posisjon (X)</label>
+                                        <span id="val-x" class="text-[10px] font-bold text-brand">${t.positionX}%</span>
+                                    </div>
+                                    <input type="range" id="edit-t-x" min="0" max="100" value="${t.positionX}" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                </div>
+
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <label class="admin-label !mb-0">Vertikal posisjon (Y)</label>
+                                        <span id="val-y" class="text-[10px] font-bold text-brand">${t.positionY}%</span>
+                                    </div>
+                                    <input type="range" id="edit-t-y" min="0" max="100" value="${t.positionY}" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="save-status" class="h-6 text-[10px] font-black uppercase tracking-widest text-slate-400 italic"></div>
+                    </div>
+
+                    <!-- HØYRE: Preview -->
+                    <div class="space-y-6">
+                        <h3 class="text-brand font-black uppercase tracking-tighter">Live Preview</h3>
+                        <div class="max-w-[350px] mx-auto lg:mx-0 sticky top-24">
+                            <!-- Gjenbruk av Card.astro struktur via ren HTML/Tailwind -->
+                            <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl flex flex-col relative overflow-hidden min-h-[450px]">
+                                <div class="absolute top-0 right-0 w-20 h-20 rounded-bl-full -mr-8 -mt-8 bg-slate-100 transition-colors"></div>
+                                <div class="aspect-square mb-8 rounded-2xl overflow-hidden bg-slate-50 relative border border-slate-50">
+                                    <img id="preview-img" 
+                                         src="${t.image ? `/src/assets/tannleger/${t.image}` : '/venterom3.jpg'}" 
+                                         class="w-full h-full object-cover transition-transform duration-75" 
+                                         style="object-position: ${t.positionX}% ${t.positionY}%; transform: scale(${t.scale});"
+                                    >
+                                </div>
+                                <h3 id="preview-name" class="text-2xl font-bold text-brand mb-2">${t.name || 'Navn'}</h3>
+                                <p id="preview-title" class="text-lg text-brand font-semibold italic mb-4">${t.title || 'Tittel'}</p>
+                                <p id="preview-desc" class="text-slate-600 text-sm leading-relaxed line-clamp-6">${t.description || 'Beskrivelse kommer her...'}</p>
+                                <div class="absolute bottom-0 left-0 h-1.5 bg-slate-800 w-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const updatePreview = () => {
+                const name = document.getElementById('edit-t-name').value;
+                const title = document.getElementById('edit-t-title').value;
+                const desc = document.getElementById('edit-t-desc').value;
+                const scale = document.getElementById('edit-t-scale').value;
+                const posX = document.getElementById('edit-t-x').value;
+                const posY = document.getElementById('edit-t-y').value;
+                const active = document.getElementById('edit-t-active').checked;
+
+                document.getElementById('preview-name').textContent = name || 'Navn';
+                document.getElementById('preview-title').textContent = title || 'Tittel';
+                document.getElementById('preview-desc').textContent = desc || 'Beskrivelse kommer her...';
+                
+                const img = document.getElementById('preview-img');
+                img.style.objectPosition = `${posX}% ${posY}%`;
+                img.style.transform = `scale(${scale})`;
+
+                document.getElementById('val-scale').textContent = `${scale}x`;
+                document.getElementById('val-x').textContent = `${posX}%`;
+                document.getElementById('val-y').textContent = `${posY}%`;
+
+                // Auto-save logikk
+                const statusEl = document.getElementById('save-status');
+                statusEl.textContent = "⏳ Endringer oppdaget...";
+                
+                clearTimeout(tannlegeSaveTimeout);
+                tannlegeSaveTimeout = setTimeout(async () => {
+                    statusEl.textContent = "💾 Lagrer til Google Sheets...";
+                    const updateData = {
+                        name, title, description: desc, active,
+                        image: t.image, // Bildeopplasting i Fase 4
+                        scale: parseFloat(scale),
+                        positionX: parseInt(posX),
+                        positionY: parseInt(posY)
+                    };
+
+                    try {
+                        if (rowIndex) {
+                            await updateTannlegeRow(SHEET_ID, rowIndex, updateData);
+                        } else {
+                            await addTannlegeRow(SHEET_ID, updateData);
+                            // Hvis ny, må vi laste modulen på nytt for å få rowIndex
+                            return window.openTannlegerModule();
+                        }
+                        statusEl.textContent = "✅ Lagret!";
+                        setTimeout(() => { if(statusEl.textContent === "✅ Lagret!") statusEl.textContent = ""; }, 3000);
+                    } catch (e) {
+                        statusEl.textContent = "❌ Feil ved lagring!";
+                    }
+                }, 1500);
+            };
+
+            ['edit-t-name', 'edit-t-title', 'edit-t-desc', 'edit-t-scale', 'edit-t-x', 'edit-t-y', 'edit-t-active'].forEach(id => {
+                const el = document.getElementById(id);
+                el.addEventListener(el.type === 'range' ? 'input' : 'change', updatePreview);
+                if (el.type === 'text' || el.tagName === 'TEXTAREA') {
+                     el.addEventListener('input', updatePreview);
+                }
+            });
+        };
+
+        window.openTannlegerModule = () => loadTannlegerModule(SHEET_ID, window.editTannlege, window.deleteTannlege);
+
         function openModule(id, title) {
             document.getElementById('dashboard').classList.add('hidden');
             document.getElementById('module-container').classList.remove('hidden');
@@ -464,6 +634,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             if (id === 'settings') loadSettingsModule();
             else if (id === 'meldinger') window.loadMeldingerModule();
             else if (id === 'tjenester') window.loadTjenesterModule();
+            else if (id === 'tannleger') window.openTannlegerModule();
             else document.getElementById('module-inner').innerHTML = `<p class="text-slate-600 italic">Denne modulen er under utvikling.</p>`;
         }
 

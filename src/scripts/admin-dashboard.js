@@ -2,7 +2,8 @@
 import { 
     listFiles, getFileContent, saveFile, createFile, deleteFile,
     parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
-    checkMultipleAccess, logout
+    checkMultipleAccess, logout, getTannlegerRaw, updateTannlegeRow, 
+    addTannlegeRow, deleteTannlegeRow
 } from './admin-client.js';
 import { formatDate, stripStackEditData, sortMessages, slugify } from './textFormatter.js';
 import snarkdown from 'snarkdown';
@@ -305,6 +306,62 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
     } catch (e) {
         console.error("Load failed", e);
         inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste tjenester.</div>`;
+    }
+}
+
+/**
+ * Henter og viser tannleger-listen fra Sheets
+ */
+export async function loadTannlegerModule(sheetId, onEdit, onDelete) {
+    const inner = document.getElementById('module-inner');
+    const actions = document.getElementById('module-actions');
+    if (!inner || !actions) return;
+
+    actions.innerHTML = `<button id="btn-new-tannlege" class="btn-primary text-xs py-2 px-4 shadow-md">➕ Legg til tannlege</button>`;
+    inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter tannleger fra Sheets...</div>';
+
+    try {
+        const dentists = await getTannlegerRaw(sheetId);
+        
+        if (dentists.length === 0) {
+            inner.innerHTML = `<div class="text-center py-12 text-slate-400 italic">Ingen tannleger funnet i arket.</div>`;
+        } else {
+            // Sorter alfabetisk på navn
+            dentists.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'nb'));
+
+            let html = `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
+            dentists.forEach((t) => {
+                const statusClass = t.active ? "bg-green-100 text-green-700 border-green-200" : "bg-slate-100 text-slate-500 border-slate-200";
+                const statusText = t.active ? "Aktiv" : "Inaktiv";
+
+                html += `
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!t.active ? 'opacity-60' : ''}">
+                        <div class="min-w-0 flex-grow">
+                            <div class="flex items-center gap-3 mb-1">
+                                <h3 class="font-bold text-brand truncate">${t.name}</h3>
+                                <span class="admin-status-pill ${statusClass} text-[8px]">${statusText}</span>
+                            </div>
+                            <p class="text-xs text-slate-500 line-clamp-1 italic">${t.title || 'Ingen tittel'}</p>
+                        </div>
+                        <div class="flex gap-2 shrink-0 w-full sm:w-auto">
+                            <button data-row="${t.rowIndex}" data-name="${t.name}" class="edit-tannlege-btn flex-grow sm:flex-grow-0 admin-btn-secondary">Rediger</button>
+                            <button data-row="${t.rowIndex}" data-name="${t.name}" class="delete-tannlege-btn admin-btn-danger">Slett</button>
+                        </div>
+                    </div>`;
+            });
+            inner.innerHTML = html + `</div>`;
+
+            inner.querySelectorAll('.edit-tannlege-btn').forEach(btn => {
+                btn.onclick = () => onEdit(parseInt(btn.dataset.row), dentists.find(d => d.rowIndex === parseInt(btn.dataset.row)));
+            });
+            inner.querySelectorAll('.delete-tannlege-btn').forEach(btn => {
+                btn.onclick = () => onDelete(parseInt(btn.dataset.row), btn.dataset.name);
+            });
+        }
+        document.getElementById('btn-new-tannlege').onclick = () => onEdit(null, null);
+    } catch (e) {
+        console.error("Load failed", e);
+        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste tannleger fra Google Sheets.</div>`;
     }
 }
 

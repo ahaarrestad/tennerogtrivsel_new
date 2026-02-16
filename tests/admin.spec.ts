@@ -172,6 +172,62 @@ test.describe('Admin-panel Fase 1', () => {
     await expect(page.locator('.CodeMirror')).toBeVisible();
   });
 
+  test('skal kunne åpne tannleger, se sortert liste og åpne editor', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('admin_google_token', JSON.stringify({
+        access_token: 'mock_token',
+        expiry: Date.now() + 3600000,
+        user: { name: 'Test User', email: 'test@example.com' }
+      }));
+      
+      (window as any).gapi = {
+        load: (name, cb) => cb(),
+        client: {
+          init: () => Promise.resolve(),
+          load: () => Promise.resolve(),
+          setToken: () => {},
+          getToken: () => ({ access_token: 'mock' }),
+          drive: { files: { 
+            get: () => Promise.resolve({ result: { name: 'Test' } })
+          }},
+          sheets: { spreadsheets: { values: { 
+            get: (params) => {
+                if (params.range.includes('tannleger')) {
+                    return Promise.resolve({
+                        result: {
+                            values: [
+                                ["Navn", "Tittel", "Beskrivelse", "Bilde", "Aktiv", "Skala", "X", "Y"],
+                                ["Zebra", "Tittel Z", "Beskrivelse Z", "bilde.jpg", "ja", "1.0", "50", "50"],
+                                ["Ape", "Tittel A", "Beskrivelse A", "ape.jpg", "ja", "1.2", "40", "60"]
+                            ]
+                        }
+                    });
+                }
+                return Promise.resolve({ result: { values: [] } });
+            }
+          } } }
+        }
+      };
+      (window as any).google = { accounts: { oauth2: { initTokenClient: () => ({ requestAccessToken: () => {} }) } } };
+    });
+
+    await page.goto('/admin');
+    await page.click('#btn-open-tannleger');
+    
+    // Sjekk sortering (Ape før Zebra)
+    await expect(page.locator('#module-inner h3').filter({ hasText: 'Ape' })).toBeVisible();
+    await expect(page.locator('#module-inner h3').filter({ hasText: 'Zebra' })).toBeVisible();
+
+    // Åpne editor
+    await page.click('.edit-tannlege-btn >> nth=0');
+    await expect(page.locator('h3:has-text("Rediger profil")')).toBeVisible();
+    await expect(page.locator('#preview-name')).toHaveText('Ape');
+    
+    // Verifiser at endringer i inputs oppdaterer preview (og ikke krasjer)
+    await page.fill('#edit-t-name', 'Nytt Navn');
+    await expect(page.locator('#preview-name')).toHaveText('Nytt Navn');
+  });
+
   test('skal deaktivere moduler uten tilgang og logge ut hvis ingen tilgang i det hele tatt', async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('admin_google_token', JSON.stringify({

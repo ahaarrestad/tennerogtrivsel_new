@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { 
     updateUIWithUser, autoResizeTextarea, saveSingleSetting, loadMeldingerModule, initEditors, enforceAccessControl,
-    loadTjenesterModule, initMarkdownEditor
+    loadTjenesterModule, initMarkdownEditor, loadTannlegerModule
 } from '../admin-dashboard.js';
 import * as adminClient from '../admin-client.js';
 import * as textFormatter from '../textFormatter.js';
@@ -21,7 +21,11 @@ vi.mock('../admin-client.js', () => ({
     stringifyMarkdown: vi.fn(),
     getSettingsWithNotes: vi.fn(),
     checkMultipleAccess: vi.fn(),
-    logout: vi.fn()
+    logout: vi.fn(),
+    getTannlegerRaw: vi.fn(),
+    updateTannlegeRow: vi.fn(),
+    addTannlegeRow: vi.fn(),
+    deleteTannlegeRow: vi.fn()
 }));
 
 // Mock textFormatter
@@ -82,6 +86,13 @@ describe('admin-dashboard.js', () => {
 
             expect(adminClient.updateSettings).toHaveBeenCalledWith(sheetId, [{ id: 'test', value: 'new value' }]);
             expect(document.getElementById('status-0').innerHTML).toContain('✅');
+        });
+
+        it('should handle save error', async () => {
+            document.body.innerHTML = '<div id="status-0"></div>';
+            adminClient.updateSettings.mockRejectedValue(new Error('fail'));
+            await saveSingleSetting(0, { value: 'new' }, [{ value: 'old' }], 'id');
+            expect(document.getElementById('status-0').innerHTML).toContain('❌');
         });
 
         it('should do nothing if value is unchanged', async () => {
@@ -232,7 +243,72 @@ describe('admin-dashboard.js', () => {
         });
     });
 
+    describe('loadTannlegerModule', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="module-inner"></div>
+                <div id="module-actions"></div>
+            `;
+        });
+
+        it('should list dentists and sort them alphabetically', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 2, name: 'Zebra', active: true },
+                { rowIndex: 3, name: 'Ape', active: false }
+            ]);
+
+            const onEdit = vi.fn();
+            const onDelete = vi.fn();
+
+            await loadTannlegerModule('sheet-id', onEdit, onDelete);
+
+            const titles = Array.from(document.querySelectorAll('h3')).map(h => h.textContent);
+            expect(titles).toEqual(['Ape', 'Zebra']);
+
+            // Sjekk status-piller
+            const pills = Array.from(document.querySelectorAll('.admin-status-pill')).map(p => p.textContent);
+            expect(pills).toEqual(['Inaktiv', 'Aktiv']);
+
+            // Klikk på knapper
+            document.querySelector('.edit-tannlege-btn').click();
+            expect(onEdit).toHaveBeenCalledWith(3, expect.objectContaining({ name: 'Ape' }));
+
+            document.querySelector('.delete-tannlege-btn').click();
+            expect(onDelete).toHaveBeenCalledWith(3, 'Ape');
+        });
+
+        it('should show empty message when no dentists found', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([]);
+            await loadTannlegerModule('id', vi.fn(), vi.fn());
+            expect(document.getElementById('module-inner').textContent).toContain('Ingen tannleger funnet');
+        });
+
+        it('should handle API errors', async () => {
+            adminClient.getTannlegerRaw.mockRejectedValue(new Error('fail'));
+            await loadTannlegerModule('id', vi.fn(), vi.fn());
+            expect(document.getElementById('module-inner').textContent).toContain('Kunne ikke laste tannleger');
+        });
+
+        it('should early return if DOM elements are missing', async () => {
+            document.body.innerHTML = '';
+            await expect(loadTannlegerModule('id', vi.fn(), vi.fn())).resolves.toBeUndefined();
+        });
+    });
+
     describe('initMarkdownEditor', () => {
+        it('should attach save handler if button exists', () => {
+            window.EasyMDE = vi.fn().mockImplementation(function() { this.value = () => ''; });
+            document.body.innerHTML = `
+                <textarea id="edit-content"></textarea>
+                <button id="btn-save-tjeneste"></button>
+            `;
+            const onSave = vi.fn();
+            initMarkdownEditor(onSave);
+            document.getElementById('btn-save-tjeneste').click();
+            expect(onSave).toHaveBeenCalled();
+            delete window.EasyMDE;
+        });
+
         it('should initialize EasyMDE without Flatpickr', () => {
             const mockMDE = vi.fn().mockImplementation(function(config) { 
                 this.value = () => 'content'; 
@@ -264,6 +340,22 @@ describe('admin-dashboard.js', () => {
     });
 
     describe('initEditors', () => {
+        it('should attach save handler if button exists', () => {
+            window.EasyMDE = vi.fn().mockImplementation(function() { this.value = () => ''; });
+            window.flatpickr = vi.fn();
+            document.body.innerHTML = `
+                <input id="edit-start"><input id="edit-end">
+                <textarea id="edit-content"></textarea>
+                <button id="btn-save-melding"></button>
+            `;
+            const onSave = vi.fn();
+            initEditors(vi.fn(), onSave);
+            document.getElementById('btn-save-melding').click();
+            expect(onSave).toHaveBeenCalled();
+            delete window.EasyMDE;
+            delete window.flatpickr;
+        });
+
         it('should handle missing globals gracefully', () => {
             document.body.innerHTML = `
                 <input type="text" id="edit-start">
@@ -320,6 +412,15 @@ describe('admin-dashboard.js', () => {
             expect(mockInstance.element.value).toBe('2026-01-01');
             expect(onDateChange).toHaveBeenCalled();
             
+            delete window.flatpickr;
+        });
+
+        it('should not crash if save button is missing', () => {
+            window.EasyMDE = vi.fn().mockImplementation(function() { this.value = () => ''; });
+            window.flatpickr = vi.fn();
+            document.body.innerHTML = '<textarea id="edit-content"></textarea><input id="edit-start"><input id="edit-end">';
+            expect(() => initEditors(vi.fn(), vi.fn())).not.toThrow();
+            delete window.EasyMDE;
             delete window.flatpickr;
         });
 

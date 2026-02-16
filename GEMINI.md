@@ -94,6 +94,7 @@ To ensure high-quality, maintainable, and idiomatic code within this project, pl
     *   **Unit/Integration (Vitest):** Tests logic, API endpoints, and content loaders. Located in `__tests__` subdirectories. Run with `npm test`.
     *   **Krav til testdekning:** Prosjektet skal til enhver tid ha minst **80% branch coverage** på all kjerne-logikk (scripts og API-endepunkter). Dekning SKAL sjekkes med `npm test` før hver commit.
     *   **End-to-End (Playwright):** Verifies the full user experience in real browsers. Located in `tests/`. Run with `npm run test:e2e`.
+    *   **Obligatorisk integrasjonstest:** Alle nye moduler eller kritiske UI-endringer **SKAL** ha en dedikert E2E-test som verifiserer "happy path" (lasting og grunnleggende bruk) før oppgaven kan markeres som OK. Dette er for å fange opp feil som manglende importer eller rekursjonsløkker i det ferdig pakkede Astro-miljøet.
     *   **Specific E2E Categories:**
         *   **Accessibility (UU):** Automated WCAG compliance scans using `axe-core`.
         *   **SEO:** Verification of sidetitles, meta descriptions, and OpenGraph tags.
@@ -115,11 +116,13 @@ Dette veikartet beskriver implementeringen av tannlege-administrasjon. Planen er
 - [ ] Lage funksjoner for å legge til/slette rader.
 
 ### Fase 3: UI med Live Preview
-- [ ] Bygge editor-grensesnitt med Live Preview (gjenbruk av `Card.astro` logikk).
-- [ ] Implementere slidere for Zoom (0.5-2.0) og Posisjon (0-100%).
-- [ ] Legge til auto-save funksjonalitet på alle felter.
+- [x] Implementere `loadTannlegerModule` med alfabetisk sortering.
+- [x] Bygge editor-grensesnitt med Live Preview (gjenbruk av `Card.astro` logikk).
+- [x] Implementere slidere for Zoom (0.5-2.0) og Posisjon (0-100%).
+- [x] Legge til auto-save funksjonalitet på alle felter.
+- [x] Sikre 80% branch coverage for den nye logikken.
 
-### Fase 4: Bildehåndtering
+### Fase 4: Bildehåndtering (NESTE STEG)
 - [ ] Implementere bildevelger som lister filer fra Drive.
 - [ ] Implementere bildeopplasting til Drive-mappen for tannleger.
 
