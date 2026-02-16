@@ -166,7 +166,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                     <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div class="min-w-0 flex-grow">
                             <div class="flex items-center gap-3 mb-1.5">
-                                <span class="text-[9px] uppercase px-2 py-0.5 rounded-full border ${statusClass} flex items-center gap-1.5">
+                                <span class="admin-status-pill ${statusClass}">
                                     <span class="admin-status-dot ${dotClass}"></span>
                                     ${statusText}
                                 </span>
@@ -178,8 +178,8 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                             </p>
                         </div>
                         <div class="flex gap-2 shrink-0 w-full sm:w-auto">
-                            <button data-id="${msg.id}" class="edit-btn flex-grow sm:flex-grow-0 bg-slate-50 hover:bg-brand hover:text-white border border-slate-200 text-brand text-xs font-bold py-2 px-4 rounded-xl transition-colors">Rediger</button>
-                            <button data-id="${msg.id}" data-name="${msg.name}" class="delete-btn bg-white hover:bg-red-50 border border-red-100 text-red-500 text-xs font-bold py-2 px-4 rounded-xl transition-colors">Slett</button>
+                            <button data-id="${msg.id}" class="edit-btn flex-grow sm:flex-grow-0 admin-btn-secondary">Rediger</button>
+                            <button data-id="${msg.id}" data-name="${msg.name}" class="delete-btn admin-btn-danger">Slett</button>
                         </div>
                     </div>`;
             });

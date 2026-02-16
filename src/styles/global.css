@@ -308,12 +308,48 @@
     }
 
     /* ADMIN INTERFACE STYLES */
+    .admin-layout {
+        @apply h-full flex flex-col bg-slate-50 text-brand;
+    }
+
+    .admin-nav {
+        @apply bg-white border-b border-brand-border sticky top-0 z-[100] h-20 flex items-center;
+    }
+
+    .admin-nav-container {
+        @apply layout-container flex justify-between items-center gap-4;
+    }
+
+    .admin-logo-container {
+        @apply flex items-center gap-2 sm:gap-3 no-underline shrink min-w-0;
+    }
+
+    .admin-user-pill {
+        @apply bg-slate-100 hover:bg-slate-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-slate-200 transition-colors flex items-center gap-2 shrink-0;
+    }
+
+    .admin-login-box {
+        @apply bg-white p-10 rounded-3xl shadow-xl border border-brand-border max-w-md w-full text-center space-y-8;
+    }
+
+    .admin-dashboard-container {
+        @apply layout-container space-y-12 py-12 w-full;
+    }
+
+    .admin-module-grid {
+        @apply grid grid-cols-1 md:grid-cols-2 gap-8;
+    }
+
     .admin-card {
         @apply bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-brand-border transition-all duration-300;
     }
 
     .admin-card-interactive {
-        @apply admin-card hover:shadow-md hover:border-brand-active;
+        @apply admin-card hover:shadow-md hover:border-brand-active flex flex-col;
+    }
+
+    .admin-status-pill {
+        @apply text-[9px] uppercase px-2 py-0.5 rounded-full border flex items-center gap-1.5;
     }
 
     .admin-status-dot {
@@ -334,5 +370,13 @@
 
     .admin-field-container {
         @apply flex flex-col gap-1.5 p-4 sm:p-5 rounded-2xl border border-brand-light bg-white hover:border-brand-active transition-colors;
+    }
+
+    .admin-btn-secondary {
+        @apply bg-slate-50 hover:bg-brand hover:text-white border border-slate-200 text-brand text-xs font-bold py-2 px-4 rounded-xl transition-colors;
+    }
+
+    .admin-btn-danger {
+        @apply bg-white hover:bg-red-50 border border-red-100 text-red-500 text-xs font-bold py-2 px-4 rounded-xl transition-colors;
     }
 }
