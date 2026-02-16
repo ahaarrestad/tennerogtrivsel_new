@@ -9,6 +9,7 @@ import crypto from 'crypto';
 function getConfig() {
     return {
         spreadsheetId: process.env.PUBLIC_GOOGLE_SHEET_ID,
+        tannlegerFolderId: process.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID,
         paths: {
             tannlegerAssets: path.join(process.cwd(), 'src/assets/tannleger'),
             tannlegerData: path.join(process.cwd(), 'src/content/tannleger.json'),
@@ -86,11 +87,17 @@ async function downloadFile(fileId, destinationPath) {
     await pipeline(res.data, fs.createWriteStream(destinationPath));
 }
 
-async function findFileMetadataByName(name) {
+async function findFileMetadataByName(name, folderId) {
     const drive = getDrive();
+    let q = `name = '${name}' and trashed = false`;
+    if (folderId) {
+        q = `'${folderId}' in parents and ${q}`;
+    }
     const res = await drive.files.list({
-        q: `name = '${name}' and trashed = false`,
+        q: q,
         fields: 'files(id, name, md5Checksum)',
+        supportsAllDrives: true,
+        includeItemsFromAllDrives: true
     });
     return res.data.files[0];
 }
@@ -132,7 +139,7 @@ async function syncTannleger() {
             if (bildeFil) {
                 try {
                     const destinationPath = path.join(config.paths.tannlegerAssets, bildeFil);
-                    const driveFile = await findFileMetadataByName(bildeFil);
+                    const driveFile = await findFileMetadataByName(bildeFil, config.tannlegerFolderId);
 
                     if (driveFile) {
                                                 if (await shouldDownload(driveFile, destinationPath)) {
@@ -193,6 +200,8 @@ async function syncTannleger() {
                             const res = await drive.files.list({
                                 q: `'${collection.folderId}' in parents and trashed = false`,
                                 fields: 'files(id, name, md5Checksum)',
+                                supportsAllDrives: true,
+                                includeItemsFromAllDrives: true
                             });
                         
                             const files = (res.data.files || []).filter(f => f.name.endsWith('.md'));
@@ -238,7 +247,8 @@ async function runSync() {
         'GOOGLE_PRIVATE_KEY',
         'PUBLIC_GOOGLE_SHEET_ID',
         'PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID',
-        'PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID'
+        'PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID',
+        'PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID'
     ];
 
     const missing = requiredEnv.filter(key => !process.env[key]);

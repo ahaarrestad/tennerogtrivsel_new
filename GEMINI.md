@@ -122,9 +122,9 @@ Dette veikartet beskriver implementeringen av tannlege-administrasjon. Planen er
 - [x] Legge til auto-save funksjonalitet på alle felter.
 - [x] Sikre 80% branch coverage for den nye logikken.
 
-### Fase 4: Bildehåndtering (NESTE STEG)
-- [ ] Implementere bildevelger som lister filer fra Drive.
-- [ ] Implementere bildeopplasting til Drive-mappen for tannleger.
+### Fase 4: Bildehåndtering
+- [x] Implementere bildevelger som lister filer fra Drive.
+- [x] Implementere bildeopplasting til Drive-mappen for tannleger.
 
 ### 5. Admin Panel (Phase 1)
 
