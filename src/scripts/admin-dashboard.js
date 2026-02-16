@@ -200,7 +200,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                 );
 
                 html += `
-                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${hasOverlap ? 'border-amber-300 bg-amber-50/30' : ''}">
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${hasOverlap ? 'border-amber-300 bg-amber-50/30' : ''}" onclick="this.querySelector('.edit-btn').click()">
                         <div class="min-w-0 flex-grow">
                             <div class="flex items-center gap-3 mb-1.5">
                                 <span class="admin-status-pill ${statusClass}">
@@ -214,7 +214,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                                 ${formatDate(msg.startDate)} til ${formatDate(msg.endDate || 'Uendelig')}
                             </p>
                         </div>
-                        <div class="flex gap-2 shrink-0">
+                        <div class="flex gap-2 shrink-0" onclick="event.stopPropagation()">
                             <button data-id="${msg.driveId}" data-name="${msg.name}" class="edit-btn p-3 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
@@ -267,12 +267,12 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
             let html = `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
             services.forEach((s) => {
                 html += `
-                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4" onclick="this.querySelector('.edit-btn').click()">
                         <div class="min-w-0 flex-grow">
                             <h3 class="font-bold text-brand truncate">${s.title || s.name}</h3>
                             <p class="text-xs text-slate-500 mt-1 line-clamp-1">${s.ingress || ''}</p>
                         </div>
-                        <div class="flex gap-2 shrink-0">
+                        <div class="flex gap-2 shrink-0" onclick="event.stopPropagation()">
                             <button data-id="${s.driveId}" data-name="${s.name}" class="edit-btn p-3 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
@@ -323,7 +323,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete) {
                 const statusText = t.active ? "Aktiv" : "Inaktiv";
 
                 html += `
-                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!t.active ? 'opacity-60' : ''}">
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!t.active ? 'opacity-60' : ''}" onclick="this.querySelector('.edit-tannlege-btn').click()">
                         <div class="min-w-0 flex-grow">
                             <div class="flex items-center gap-3 mb-1">
                                 <h3 class="font-bold text-brand truncate">${t.name}</h3>
@@ -331,7 +331,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete) {
                             </div>
                             <p class="text-xs text-slate-500 line-clamp-1 italic">${t.title || 'Ingen tittel'}</p>
                         </div>
-                        <div class="flex gap-2 shrink-0">
+                        <div class="flex gap-2 shrink-0" onclick="event.stopPropagation()">
                             <button data-row="${t.rowIndex}" data-name="${t.name}" class="edit-tannlege-btn p-3 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>

@@ -113,22 +113,22 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             </header>
 
             <div class="admin-module-grid">
-                <div class="admin-card-interactive group">
+                <div id="card-settings" class="admin-card-interactive group">
                     <h2 class="admin-subtitle group-hover:text-brand-hover">Ta en rutinesjekk</h2>
                     <p class="admin-description">Administrer telefonnumre, åpningstider og nettsidetitler.</p>
                     <button id="btn-open-settings" class="btn-primary w-full mt-auto">Start behandlingen</button>
                 </div>
-                <div class="admin-card-interactive group">
+                <div id="card-tjenester" class="admin-card-interactive group">
                     <h2 class="admin-subtitle group-hover:text-brand-hover">Finpuss behandlingene</h2>
                     <p class="admin-description">Rediger tekst og innhold for alle tannhelsetjenester.</p>
                     <button id="btn-open-tjenester" class="btn-primary w-full mt-auto">Start behandlingen</button>
                 </div>
-                <div class="admin-card-interactive group">
+                <div id="card-meldinger" class="admin-card-interactive group">
                     <h2 class="admin-subtitle group-hover:text-brand-hover">Heng opp oppslag</h2>
                     <p class="admin-description">Lag og administrer aktive meldinger og infobannere.</p>
                     <button id="btn-open-meldinger" class="btn-primary w-full mt-auto">Start behandlingen</button>
                 </div>
-                <div class="admin-card-interactive group">
+                <div id="card-tannleger" class="admin-card-interactive group">
                     <h2 class="admin-subtitle group-hover:text-brand-hover">Puss på profilene</h2>
                     <p class="admin-description">Oppdater informasjon om ansatte og last opp nye portretter.</p>
                     <button id="btn-open-tannleger" class="btn-primary w-full mt-auto">Start behandlingen</button>
@@ -238,9 +238,9 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     const label = setting.description || setting.id;
                     const isLong = (setting.value && setting.value.length > 60) || setting.id.toLowerCase().includes('tekst');
                     html += `
-                        <div class="admin-field-container">
+                        <div class="admin-field-container cursor-pointer" id="setting-container-${i}">
                             <div class="flex justify-between items-start gap-4">
-                                <label class="admin-label !mb-0">${label}</label>
+                                <label class="admin-label !mb-0 cursor-pointer">${label}</label>
                                 <div id="status-${i}" class="shrink-0 h-5"></div>
                             </div>
                             ${isLong ? 
@@ -253,9 +253,15 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 document.querySelectorAll('.setting-field').forEach(input => {
                     if (input.tagName === 'TEXTAREA') { 
                         autoResizeTextarea(input); 
-                        input.addEventListener('input', (e) => autoResizeTextarea(e.target)); 
+                        input.addEventListener('input', (e) => autoResizeTextarea(e.target as HTMLTextAreaElement)); 
                     }
-                    input.addEventListener('blur', (e) => saveSingleSetting(e.target.dataset.index, e.target, settings, SHEET_ID));
+                    input.addEventListener('blur', (e) => saveSingleSetting(parseInt((e.target as any).dataset.index), e.target as HTMLInputElement, settings, SHEET_ID));
+                });
+                // Legg til klikk-lytter på containere
+                settings.forEach((_, i) => {
+                    document.getElementById(`setting-container-${i}`)?.addEventListener('click', () => {
+                        (document.getElementById(`setting-input-${i}`) as HTMLElement)?.focus();
+                    });
                 });
             } catch (e) { 
                 console.error("Settings load failed", e);
@@ -320,7 +326,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             if (!input) return;
             
             const newInput = input.cloneNode(true) as HTMLInputElement;
-            input.parentNode.replaceChild(newInput, input);
+            input.parentNode?.replaceChild(newInput, input);
             
             newInput.addEventListener('change', async (e) => {
                 const target = e.target as HTMLInputElement;
@@ -412,16 +418,16 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         }
 
         // --- TJENESTER MODUL ---
-        window.deleteTjeneste = async (id, name) => {
+        (window as any).deleteTjeneste = async (id, name) => {
             if (confirm(`Vil du slette tjenesten "${name}"?`)) {
                 try { 
                     await deleteFile(id); 
-                    loadTjenesterModule(TJENESTER_FOLDER, window.editTjeneste, window.deleteTjeneste); 
+                    (window as any).loadTjenesterModule(); 
                 } catch (e) { alert("Sletting feilet."); }
             }
         };
 
-        window.editTjeneste = async (id, name) => {
+        (window as any).editTjeneste = async (id, name) => {
             const inner = document.getElementById('module-inner');
             const actions = document.getElementById('module-actions');
             if (!inner || !actions) return;
@@ -436,7 +442,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 if (id) {
                     const raw = await getFileContent(id);
                     const parsed = parseMarkdown(raw);
-                    data = parsed.data;
+                    data = parsed.data as any;
                     body = stripStackEditData(parsed.body);
                 }
 
@@ -483,7 +489,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     try {
                         if (id) await saveFile(id, newFileName, stringifyMarkdown(frontmatter, content));
                         else await createFile(TJENESTER_FOLDER, newFileName, stringifyMarkdown(frontmatter, content));
-                        window.loadTjenesterModule();
+                        (window as any).loadTjenesterModule();
                     } catch (e) { 
                         console.error("Lagring feilet:", e);
                         alert("Feil ved lagring."); 
@@ -499,20 +505,20 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             }
         };
 
-        window.loadTjenesterModule = () => loadTjenesterModule(TJENESTER_FOLDER, window.editTjeneste, window.deleteTjeneste);
+        (window as any).loadTjenesterModule = () => loadTjenesterModule(TJENESTER_FOLDER, (window as any).editTjeneste, (window as any).deleteTjeneste);
 
         // --- MELDINGER MODUL ---
 
-        window.deleteMelding = async (id, name) => {
+        (window as any).deleteMelding = async (id, name) => {
             if (confirm(`Vil du slette "${name}"?`)) {
                 try { 
                     await deleteFile(id); 
-                    window.loadMeldingerModule(); 
+                    (window as any).loadMeldingerModule(); 
                 } catch (e) { alert("Sletting feilet."); }
             }
         };
 
-        window.editMelding = async (id, name) => {
+        (window as any).editMelding = async (id, name) => {
             const inner = document.getElementById('module-inner');
             const actions = document.getElementById('module-actions');
             if (!inner || !actions) return;
@@ -526,7 +532,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 if (id) {
                     const raw = await getFileContent(id);
                     const { data, body } = parseMarkdown(raw);
-                    msgData = { ...data, content: stripStackEditData(body) };
+                    msgData = { ...data, content: stripStackEditData(body) } as any;
                 }
 
                 inner.innerHTML = `
@@ -621,7 +627,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     try {
                         if (id) await saveFile(id, newFileName, stringifyMarkdown(data, body));
                         else await createFile(MELDINGER_FOLDER, newFileName, stringifyMarkdown(data, body));
-                        window.loadMeldingerModule();
+                        (window as any).loadMeldingerModule();
                     } catch (e) { 
                         console.error("Lagring feilet:", e);
                         alert("Feil ved lagring."); 
@@ -640,28 +646,28 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             }
         };
         
-        window.loadMeldingerModule = () => loadMeldingerModule(MELDINGER_FOLDER, window.editMelding, window.deleteMelding);
+        (window as any).loadMeldingerModule = () => loadMeldingerModule(MELDINGER_FOLDER, (window as any).editMelding, (window as any).deleteMelding);
 
         // --- TANNLEGER MODUL ---
         let tannlegeSaveTimeout = null;
 
-        window.deleteTannlege = async (rowIndex, name) => {
+        (window as any).deleteTannlege = async (rowIndex, name) => {
             if (confirm(`Vil du fjerne "${name}" fra nettsiden?`)) {
                 try {
                     await deleteTannlegeRow(SHEET_ID, rowIndex);
-                    window.openTannlegerModule();
+                    (window as any).openTannlegerModule();
                 } catch (e) { alert("Feil ved sletting."); }
             }
         };
 
-        window.editTannlege = async (rowIndex, data = null) => {
+        (window as any).editTannlege = async (rowIndex, data = null) => {
             const inner = document.getElementById('module-inner');
             const actions = document.getElementById('module-actions');
             if (!inner || !actions) return;
 
             actions.innerHTML = `
                 <button onclick="window.openTannlegerModule()" class="admin-btn-secondary text-xs py-2 px-4 shadow-md flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                     Tilbake til liste
                 </button>
             `;
@@ -920,7 +926,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                             await updateTannlegeRow(SHEET_ID, rowIndex, updateData);
                         } else {
                             await addTannlegeRow(SHEET_ID, updateData);
-                            return window.openTannlegerModule();
+                            return (window as any).openTannlegerModule();
                         }
                         if (statusEl) statusEl.textContent = "✅ Lagret!";
                         setTimeout(() => { if(statusEl && statusEl.textContent === "✅ Lagret!") statusEl.textContent = ""; }, 3000);
@@ -933,13 +939,13 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             ['edit-t-name', 'edit-t-title', 'edit-t-desc', 'edit-t-image', 'edit-t-scale', 'edit-t-x', 'edit-t-y', 'edit-t-active'].forEach(id => {
                 const el = document.getElementById(id);
                 if (!el) return;
-                el.addEventListener(el.type === 'range' ? 'input' : 'change', updatePreview);
-                if (el.type === 'text' || el.tagName === 'TEXTAREA') {
+                el.addEventListener(el instanceof HTMLInputElement && el.type === 'range' ? 'input' : 'change', updatePreview);
+                if (el instanceof HTMLInputElement && el.type === 'text' || el instanceof HTMLTextAreaElement) {
                     el.addEventListener('input', updatePreview);
                 }
             });
         };
-        window.openTannlegerModule = () => loadTannlegerModule(SHEET_ID, window.editTannlege, window.deleteTannlege);
+        (window as any).openTannlegerModule = () => loadTannlegerModule(SHEET_ID, (window as any).editTannlege, (window as any).deleteTannlege);
 
         function openModule(id, title) {
             document.getElementById('dashboard')?.classList.add('hidden');
@@ -950,9 +956,9 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             if (actionsEl) actionsEl.innerHTML = '';
             
             if (id === 'settings') loadSettingsModule();
-            else if (id === 'meldinger') window.loadMeldingerModule();
-            else if (id === 'tjenester') window.loadTjenesterModule();
-            else if (id === 'tannleger') window.openTannlegerModule();
+            else if (id === 'meldinger') (window as any).loadMeldingerModule();
+            else if (id === 'tjenester') (window as any).loadTjenesterModule();
+            else if (id === 'tannleger') (window as any).openTannlegerModule();
             else {
                 const inner = document.getElementById('module-inner');
                 if (inner) inner.innerHTML = `<p class="text-slate-600 italic">Denne modulen er under utvikling.</p>`;
@@ -997,13 +1003,26 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 const userPill = document.getElementById('user-pill');
                 if (userPill) userPill.onclick = () => { if (confirm("Logge ut?")) { logout(); location.reload(); } };
                 
-                const backBtn = document.getElementById('back-to-dashboard');
-                if (backBtn) backBtn.onclick = closeModule;
+                document.getElementById('back-to-dashboard')?.addEventListener('click', () => closeModule());
                 
                 document.getElementById('btn-open-settings')?.addEventListener('click', () => openModule('settings', 'Innstillinger'));
                 document.getElementById('btn-open-tjenester')?.addEventListener('click', () => openModule('tjenester', 'Tjenester'));
                 document.getElementById('btn-open-meldinger')?.addEventListener('click', () => openModule('meldinger', 'Meldinger'));
                 document.getElementById('btn-open-tannleger')?.addEventListener('click', () => openModule('tannleger', 'Tannleger'));
+
+                // Hele kortet skal være klikkbart
+                document.getElementById('card-settings')?.addEventListener('click', (e) => { 
+                    if ((e.target as HTMLElement).id !== 'btn-open-settings') openModule('settings', 'Innstillinger');
+                });
+                document.getElementById('card-tjenester')?.addEventListener('click', (e) => { 
+                    if ((e.target as HTMLElement).id !== 'btn-open-tjenester') (window as any).loadTjenesterModule();
+                });
+                document.getElementById('card-meldinger')?.addEventListener('click', (e) => { 
+                    if ((e.target as HTMLElement).id !== 'btn-open-meldinger') (window as any).loadMeldingerModule();
+                });
+                document.getElementById('card-tannleger')?.addEventListener('click', (e) => { 
+                    if ((e.target as HTMLElement).id !== 'btn-open-tannleger') (window as any).openTannlegerModule();
+                });
             } catch (err) { console.error("[Admin] Kritisk feil under oppstart:", err); }
         };
         if (document.readyState === 'complete') setup();

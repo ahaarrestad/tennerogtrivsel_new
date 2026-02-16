@@ -349,7 +349,7 @@
     }
 
     .admin-card-interactive {
-        @apply bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-brand-border transition-all duration-300 hover:shadow-md hover:border-brand-active flex flex-col;
+        @apply bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-brand-border transition-all duration-300 hover:shadow-md hover:border-brand-active flex flex-col cursor-pointer;
     }
 
     .admin-card-header {
