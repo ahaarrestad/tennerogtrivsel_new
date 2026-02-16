@@ -419,6 +419,33 @@ export async function checkAccess(folderId) {
 }
 
 /**
+ * Henter et bilde fra Google Drive som en Blob-URL.
+ * Brukes for live preview i admin-panelet.
+ */
+export async function getDriveImageBlob(fileId) {
+    if (!fileId) return null;
+    try {
+        const response = await gapi.client.drive.files.get({
+            fileId: fileId,
+            alt: 'media'
+        });
+        
+        // GAPI returnerer media som en streng/arraybuffer avhengig av konfigurasjon
+        // Men vi kan også bruke den direkte webContentLink hvis den er offentlig, 
+        // eller fetch med token for best resultat.
+        const token = gapi.client.getToken().access_token;
+        const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const blob = await res.blob();
+        return URL.createObjectURL(blob);
+    } catch (err) {
+        console.error("[Admin] Kunne ikke hente bilde-blob:", err);
+        return null;
+    }
+}
+
+/**
  * TANNLEGER CRUD (GOOGLE SHEETS)
  */
 

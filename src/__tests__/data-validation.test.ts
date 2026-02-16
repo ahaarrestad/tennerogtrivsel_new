@@ -58,4 +58,27 @@ describe('Datavalidering (Synkroniserte filer)', () => {
             expect(fs.existsSync(gitkeep), `Mappen ${folder} mangler .gitkeep`).toBe(true);
         });
     });
+
+    it('tannleger collection should include imageConfig in schema', async () => {
+        const { collections } = await import('../content.config');
+        const schema = collections.tannleger.schema;
+        
+        const validData = {
+            id: 'test',
+            name: 'Test',
+            title: 'Tittel',
+            description: 'Besk',
+            imageConfig: {
+                scale: 1.5,
+                positionX: 20,
+                positionY: 80
+            }
+        };
+        
+        const result = schema.safeParse(validData);
+        expect(result.success).toBe(true);
+        if (result.success) {
+            expect(result.data.imageConfig?.scale).toBe(1.5);
+        }
+    });
 });

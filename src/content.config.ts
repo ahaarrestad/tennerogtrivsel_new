@@ -85,6 +85,11 @@ const tannleger = defineCollection({
         title: z.string(),
         description: z.string(),
         image: z.string().optional(),
+        imageConfig: z.object({
+            scale: z.number().default(1.0),
+            positionX: z.number().default(50),
+            positionY: z.number().default(50)
+        }).optional()
     }),
 });
 
