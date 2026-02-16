@@ -8,9 +8,11 @@ export function generateRobotsTxt(hostname, sitemapUrl) {
         return `User-agent: *
 Disallow: /`;
     } else {
-        // Tillat alt på alle andre domener (produksjon)
+        // Tillat det meste på produksjon, men skjul admin
         return `User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /admin/*
 
 Sitemap: ${sitemapUrl}`;
     }
