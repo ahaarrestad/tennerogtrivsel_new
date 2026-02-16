@@ -231,9 +231,13 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                             </p>
                             ${hasOverlap ? `<p class="text-[10px] text-amber-700 mt-1 font-medium">⚠️ Denne meldingen overlapper med en annen aktiv eller planlagt melding. Kun én melding vises av gangen på nettsiden.</p>` : ''}
                         </div>
-                        <div class="flex gap-2 shrink-0 w-full sm:w-auto">
-                            <button data-id="${msg.driveId}" data-name="${msg.name}" class="edit-btn flex-grow sm:flex-grow-0 admin-btn-secondary">Rediger</button>
-                            <button data-id="${msg.driveId}" data-name="${msg.name}" class="delete-btn admin-btn-danger">Slett</button>
+                        <div class="flex gap-2 shrink-0">
+                            <button data-id="${msg.driveId}" data-name="${msg.name}" class="edit-btn p-3 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button data-id="${msg.driveId}" data-name="${msg.name}" class="delete-btn p-3 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all group/btn" title="Slett">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
                         </div>
                     </div>`;
             });
@@ -287,9 +291,13 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
                             <h3 class="font-bold text-brand truncate">${s.title || s.name}</h3>
                             <p class="text-xs text-slate-500 mt-1 line-clamp-1">${s.ingress || ''}</p>
                         </div>
-                        <div class="flex gap-2 shrink-0 w-full sm:w-auto">
-                            <button data-id="${s.driveId}" data-name="${s.name}" class="edit-btn flex-grow sm:flex-grow-0 admin-btn-secondary">Rediger</button>
-                            <button data-id="${s.driveId}" data-name="${s.name}" class="delete-btn admin-btn-danger">Slett</button>
+                        <div class="flex gap-2 shrink-0">
+                            <button data-id="${s.driveId}" data-name="${s.name}" class="edit-btn p-3 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button data-id="${s.driveId}" data-name="${s.name}" class="delete-btn p-3 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all group/btn" title="Slett">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
                         </div>
                     </div>`;
             });
@@ -343,9 +351,13 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete) {
                             </div>
                             <p class="text-xs text-slate-500 line-clamp-1 italic">${t.title || 'Ingen tittel'}</p>
                         </div>
-                        <div class="flex gap-2 shrink-0 w-full sm:w-auto">
-                            <button data-row="${t.rowIndex}" data-name="${t.name}" class="edit-tannlege-btn flex-grow sm:flex-grow-0 admin-btn-secondary">Rediger</button>
-                            <button data-row="${t.rowIndex}" data-name="${t.name}" class="delete-tannlege-btn admin-btn-danger">Slett</button>
+                        <div class="flex gap-2 shrink-0">
+                            <button data-row="${t.rowIndex}" data-name="${t.name}" class="edit-tannlege-btn p-3 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button data-row="${t.rowIndex}" data-name="${t.name}" class="delete-tannlege-btn p-3 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all group/btn" title="Slett">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
                         </div>
                     </div>`;
             });
