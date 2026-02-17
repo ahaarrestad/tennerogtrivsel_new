@@ -201,13 +201,13 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
 
                 html += `
                     <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${hasOverlap ? 'border-amber-300 bg-amber-50/30' : ''}" onclick="this.querySelector('.edit-btn').click()">
-                        <div class="min-w-0 flex-grow">
-                            <div class="flex items-center gap-3 mb-1.5">
-                                <span class="admin-status-pill ${statusClass}">
+                        <div class="min-w-0 flex-grow w-full">
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 mb-1.5">
+                                <span class="admin-status-pill ${statusClass} shrink-0">
                                     <span class="admin-status-dot ${dotClass}"></span>
                                     ${statusText}
                                 </span>
-                                <h3 class="font-bold text-brand truncate">${msg.title || msg.name}</h3>
+                                <h3 class="font-bold text-brand sm:truncate sm:min-w-0">${msg.title || msg.name}</h3>
                             </div>
                             <p class="text-xs text-slate-500 flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -324,10 +324,10 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete) {
 
                 html += `
                     <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!t.active ? 'opacity-60' : ''}" onclick="this.querySelector('.edit-tannlege-btn').click()">
-                        <div class="min-w-0 flex-grow">
-                            <div class="flex items-center gap-3 mb-1">
-                                <h3 class="font-bold text-brand truncate">${t.name}</h3>
-                                <span class="admin-status-pill ${statusClass} text-[8px]">${statusText}</span>
+                        <div class="min-w-0 flex-grow w-full">
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 mb-1">
+                                <span class="admin-status-pill ${statusClass} text-[8px] shrink-0">${statusText}</span>
+                                <h3 class="font-bold text-brand sm:truncate sm:min-w-0">${t.name}</h3>
                             </div>
                             <p class="text-xs text-slate-500 line-clamp-1 italic">${t.title || 'Ingen tittel'}</p>
                         </div>
