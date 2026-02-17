@@ -220,6 +220,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             loadTjenesterModule, loadTannlegerModule
         } from '../../scripts/admin-dashboard.js';
         import snarkdown from 'snarkdown';
+        import DOMPurify from 'dompurify';
 
         const configEl = document.getElementById('admin-config');
         const TJENESTER_FOLDER = configEl?.dataset.tjenesterFolder;
@@ -366,7 +367,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     placeholder: "Skriv innholdet her...",
                     toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
                     previewRender: (plainText) => {
-                        return `<div class="markdown-content prose">${snarkdown(plainText)}</div>`;
+                        return `<div class="markdown-content prose">${DOMPurify.sanitize(snarkdown(plainText))}</div>`;
                     }
                 });
             }
@@ -387,7 +388,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     placeholder: "Skriv innholdet her...",
                     toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
                     previewRender: (plainText) => {
-                        return `<div class="markdown-content prose">${snarkdown(plainText)}</div>`;
+                        return `<div class="markdown-content prose">${DOMPurify.sanitize(snarkdown(plainText))}</div>`;
                     }
                 });
             }
@@ -1011,18 +1012,23 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 document.getElementById('btn-open-tannleger')?.addEventListener('click', () => openModule('tannleger', 'Tannleger'));
 
                 // Hele kortet skal være klikkbart
-                document.getElementById('card-settings')?.addEventListener('click', (e) => { 
-                    if ((e.target as HTMLElement).id !== 'btn-open-settings') openModule('settings', 'Innstillinger');
-                });
-                document.getElementById('card-tjenester')?.addEventListener('click', (e) => { 
-                    if ((e.target as HTMLElement).id !== 'btn-open-tjenester') (window as any).loadTjenesterModule();
-                });
-                document.getElementById('card-meldinger')?.addEventListener('click', (e) => { 
-                    if ((e.target as HTMLElement).id !== 'btn-open-meldinger') (window as any).loadMeldingerModule();
-                });
-                document.getElementById('card-tannleger')?.addEventListener('click', (e) => { 
-                    if ((e.target as HTMLElement).id !== 'btn-open-tannleger') (window as any).openTannlegerModule();
-                });
+                const cardModules: [string, string, string][] = [
+                    ['card-settings',  'btn-open-settings',  'settings'],
+                    ['card-tjenester', 'btn-open-tjenester', 'tjenester'],
+                    ['card-meldinger', 'btn-open-meldinger', 'meldinger'],
+                    ['card-tannleger', 'btn-open-tannleger', 'tannleger'],
+                ];
+                const moduleTitles: Record<string, string> = {
+                    settings: 'Innstillinger', tjenester: 'Tjenester',
+                    meldinger: 'Meldinger', tannleger: 'Tannleger',
+                };
+                for (const [cardId, btnId, moduleId] of cardModules) {
+                    document.getElementById(cardId)?.addEventListener('click', (e) => {
+                        if (!(e.target as HTMLElement).closest(`#${btnId}`)) {
+                            openModule(moduleId, moduleTitles[moduleId]);
+                        }
+                    });
+                }
             } catch (err) { console.error("[Admin] Kritisk feil under oppstart:", err); }
         };
         if (document.readyState === 'complete') setup();

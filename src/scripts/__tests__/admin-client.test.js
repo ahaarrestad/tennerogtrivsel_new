@@ -263,6 +263,30 @@ describe('admin-client.js', () => {
             expect(gapi.client.setToken).toHaveBeenCalledWith({ access_token: 'test-token' });
         });
 
+        it('tryRestoreSession skal fjerne utløpt token og returnere false', async () => {
+            await initGapi();
+            const past = Date.now() - 1000;
+            localStorage.setItem('admin_google_token', JSON.stringify({
+                access_token: 'old-token',
+                expiry: past
+            }));
+
+            expect(tryRestoreSession()).toBe(false);
+            expect(localStorage.getItem('admin_google_token')).toBeNull();
+        });
+
+        it('tryRestoreSession skal returnere false hvis gapi.client ikke er klar', async () => {
+            const future = Date.now() + 3600000;
+            localStorage.setItem('admin_google_token', JSON.stringify({
+                access_token: 'test-token',
+                expiry: future
+            }));
+            // gapi.client is null before initGapi()
+            vi.stubGlobal('gapi', { client: null });
+
+            expect(tryRestoreSession()).toBe(false);
+        });
+
         it('logout skal fjerne token hvis gapi.client finnes', () => {
             localStorage.setItem('admin_google_token', 'some-data');
             logout();
@@ -272,6 +296,20 @@ describe('admin-client.js', () => {
     });
 
     describe('GIS Auth', () => {
+        it('login skal returnere tidlig hvis tokenClient ikke er initialisert', () => {
+            const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            login();
+            expect(spy).toHaveBeenCalledWith(expect.stringContaining('login feilet'));
+            spy.mockRestore();
+        });
+
+        it('silentLogin skal returnere tidlig hvis tokenClient ikke er initialisert', () => {
+            const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            silentLogin();
+            expect(spy).toHaveBeenCalledWith(expect.stringContaining('silentLogin avbrutt'));
+            spy.mockRestore();
+        });
+
         it('initGis skal sette opp token client', () => {
             const cb = vi.fn();
             initGis(cb);
@@ -410,6 +448,13 @@ describe('admin-client.js', () => {
         it('checkMultipleAccess skal håndtere tom liste', async () => {
             const result = await checkMultipleAccess([]);
             expect(result).toEqual({});
+        });
+
+        it('checkMultipleAccess skal sjekke alle IDs parallelt', async () => {
+            gapi.client.drive.files.get.mockResolvedValue({ result: { name: 'Folder' } });
+            const result = await checkMultipleAccess(['folder-1', 'folder-2']);
+            expect(result['folder-1']).toBe(true);
+            expect(result['folder-2']).toBe(true);
         });
 
         it('skal returnere false ved feil', async () => {

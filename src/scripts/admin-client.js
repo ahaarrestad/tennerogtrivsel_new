@@ -302,7 +302,7 @@ export function initGis(callback) {
         client_id: import.meta.env.PUBLIC_GOOGLE_CLIENT_ID,
         scope: SCOPES,
         callback: async (resp) => {
-            console.log("[GIS] Callback mottatt", resp);
+            if (import.meta.env.DEV) console.log("[GIS] Callback mottatt", resp);
             if (resp.error !== undefined) {
                 console.warn("[GIS] Autorisasjonsfeil:", resp.error);
                 return;
@@ -310,7 +310,7 @@ export function initGis(callback) {
             
             // Hent full brukerinfo når vi får nytt token
             const userInfo = await fetchUserInfo(resp.access_token);
-            console.log("[GIS] Brukerinfo mottatt:", userInfo);
+            if (import.meta.env.DEV) console.log("[GIS] Brukerinfo mottatt:", userInfo);
 
             // Lagre token og utløpstidspunkt
             const expiry = Date.now() + (resp.expires_in * 1000);
@@ -354,7 +354,7 @@ export function tryRestoreSession() {
         
         // Sjekk om tokenet fortsatt er gyldig (med 1 minutts margin)
         if (Date.now() < (expiry - 60000)) {
-            console.log("[Admin] Gjenoppretter sesjon i GAPI");
+            if (import.meta.env.DEV) console.log("[Admin] Gjenoppretter sesjon i GAPI");
             if (gapi.client) {
                 gapi.client.setToken({ access_token });
                 return true;
@@ -499,7 +499,7 @@ export async function checkAccess(folderId) {
         console.log("[Admin] Metadata mottatt:", response.result.name);
         return true;
     } catch (err) {
-        console.error("[Admin] checkAccess feilet detaljer:", {
+        if (import.meta.env.DEV) console.error("[Admin] checkAccess feilet detaljer:", {
             status: err.status,
             message: err.result?.error?.message || err.message,
             reason: err.result?.error?.errors?.[0]?.reason

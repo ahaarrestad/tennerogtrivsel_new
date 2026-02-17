@@ -6,6 +6,11 @@ vi.mock('snarkdown', () => ({
     default: vi.fn((markdown) => `<html>${markdown}</html>`)
 }));
 
+// Mock dompurify – tester kjører i node-miljø uten DOM
+vi.mock('dompurify', () => ({
+    default: { sanitize: vi.fn((html) => html) }
+}));
+
 // Mock global fetch
 const mockFetch = vi.fn();
 global.fetch = mockFetch;

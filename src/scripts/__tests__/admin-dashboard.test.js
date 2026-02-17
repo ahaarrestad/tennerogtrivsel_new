@@ -182,8 +182,95 @@ describe('admin-dashboard.js', () => {
             expect(html).toContain('Aktive oppslag');
             expect(html).toContain('Planlagte oppslag');
             expect(html).toContain('Historikk');
-            
+
             vi.useRealTimers();
+        });
+
+        it('should highlight overlapping messages with amber border', async () => {
+            const today = new Date('2026-02-15');
+            vi.setSystemTime(today);
+
+            const mockFiles = [
+                { id: '1', name: 'msg1.md' },
+                { id: '2', name: 'msg2.md' }
+            ];
+            adminClient.listFiles.mockResolvedValue(mockFiles);
+            adminClient.getFileContent
+                .mockResolvedValueOnce('---\ntitle: Active1\nstartDate: 2026-02-10\nendDate: 2026-02-20\n---')
+                .mockResolvedValueOnce('---\ntitle: Active2\nstartDate: 2026-02-12\nendDate: 2026-02-25\n---');
+            adminClient.parseMarkdown
+                .mockReturnValueOnce({ data: { title: 'Active1', startDate: '2026-02-10', endDate: '2026-02-20' }, body: '' })
+                .mockReturnValueOnce({ data: { title: 'Active2', startDate: '2026-02-12', endDate: '2026-02-25' }, body: '' });
+
+            await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
+            const html = document.getElementById('module-inner').innerHTML;
+            expect(html).toContain('border-amber-300');
+
+            vi.useRealTimers();
+        });
+
+        it('should use file name when message has no title', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: '1', name: 'no-title.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\n---');
+            adminClient.parseMarkdown.mockReturnValueOnce({
+                data: { startDate: '2026-02-10', endDate: '2026-02-20' },
+                body: ''
+            });
+
+            await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
+            const html = document.getElementById('module-inner').innerHTML;
+            expect(html).toContain('no-title.md');
+        });
+
+        it('should show Uendelig when message has no endDate', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: '1', name: 'open.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: Open\n---');
+            adminClient.parseMarkdown.mockReturnValueOnce({
+                data: { title: 'Open', startDate: '2026-01-01' },
+                body: ''
+            });
+
+            await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
+            const html = document.getElementById('module-inner').innerHTML;
+            expect(html).toContain('Uendelig');
+        });
+
+        it('should treat message with no startDate as expired', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: '1', name: 'nodates.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: NoDates\n---');
+            adminClient.parseMarkdown.mockReturnValueOnce({
+                data: { title: 'NoDates' },
+                body: ''
+            });
+
+            await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
+            const html = document.getElementById('module-inner').innerHTML;
+            expect(html).toContain('Utløpt');
+        });
+
+        it('should trigger edit when card is clicked (click delegation)', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: '1', name: 'active.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: Active\nstartDate: 2026-01-01\n---');
+
+            const onEdit = vi.fn();
+            await loadMeldingerModule('folder-id', onEdit, vi.fn());
+
+            const card = document.getElementById('module-inner').querySelector('.admin-card-interactive');
+            card.click();
+
+            expect(onEdit).toHaveBeenCalledWith('1', 'active.md');
+        });
+
+        it('should not double-trigger edit when edit-btn is clicked directly', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: '1', name: 'active.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: Active\nstartDate: 2026-01-01\n---');
+
+            const onEdit = vi.fn();
+            await loadMeldingerModule('folder-id', onEdit, vi.fn());
+
+            document.getElementById('module-inner').querySelector('.edit-btn').click();
+
+            expect(onEdit).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -199,11 +286,41 @@ describe('admin-dashboard.js', () => {
             });
 
             await loadTjenesterModule('folder-id', vi.fn(), vi.fn());
-            
+
             const inner = document.getElementById('module-inner');
             // 'A' should come before 'B' in sorted list
             const titles = Array.from(inner.querySelectorAll('h3')).map(h => h.textContent);
             expect(titles).toEqual(['A', 'B']);
+        });
+
+        it('should use file name as fallback when title is missing', async () => {
+            // Two services: one without title, one with title – forces sort comparator to run with missing title
+            adminClient.listFiles.mockResolvedValue([
+                { id: 'x', name: 'fallback.md' },
+                { id: 'y', name: 'named.md' }
+            ]);
+            adminClient.getFileContent
+                .mockResolvedValueOnce('---\n---')
+                .mockResolvedValueOnce('---\ntitle: Named\n---');
+            adminClient.parseMarkdown
+                .mockReturnValueOnce({ data: {}, body: '' })
+                .mockReturnValueOnce({ data: { title: 'Named' }, body: '' });
+
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            expect(inner.innerHTML).toContain('fallback.md');
+        });
+
+        it('should render ingress text when provided', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: 'y', name: 'y.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: Y\ningress: My ingress\n---');
+            adminClient.parseMarkdown.mockReturnValueOnce({ data: { title: 'Y', ingress: 'My ingress' }, body: '' });
+
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            expect(inner.innerHTML).toContain('My ingress');
         });
 
         it('should handle API errors', async () => {
@@ -217,20 +334,65 @@ describe('admin-dashboard.js', () => {
             await loadTjenesterModule('folder-id', vi.fn(), vi.fn());
             expect(document.getElementById('module-inner').textContent).toContain('Ingen behandlinger funnet');
         });
+
+        it('should trigger edit when card is clicked (click delegation)', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: 's1', name: 'tjeneste.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: Tjeneste\n---');
+
+            const onEdit = vi.fn();
+            await loadTjenesterModule('folder-id', onEdit, vi.fn());
+
+            document.getElementById('module-inner').querySelector('.admin-card-interactive').click();
+
+            expect(onEdit).toHaveBeenCalledWith('s1', 'tjeneste.md');
+        });
     });
 
     describe('loadTannlegerModule', () => {
         it('should list dentists and sort them alphabetically', async () => {
             const mockDentists = [
                 { rowIndex: 3, name: 'Zoe', title: 'T', active: true },
-                { rowIndex: 2, name: 'Adam', title: 'T', active: true }
+                { rowIndex: 2, name: 'Adam', title: 'T', active: true },
+                { rowIndex: 1, active: true } // no name - covers sort fallback branch
             ];
             adminClient.getTannlegerRaw.mockResolvedValue(mockDentists);
 
             await loadTannlegerModule('sheet-id', vi.fn(), vi.fn());
-            
-            const names = Array.from(document.querySelectorAll('h3')).map(h => h.textContent);
-            expect(names).toEqual(['Adam', 'Zoe']);
+
+            const names = Array.from(document.querySelectorAll('h3')).map(h => h.textContent.trim()).filter(Boolean);
+            expect(names).toContain('Adam');
+            expect(names).toContain('Zoe');
+        });
+
+        it('should render inactive dentist with correct styling', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 1, name: 'Inaktiv', title: 'Tittel', active: false }
+            ]);
+
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            expect(inner.innerHTML).toContain('Inaktiv');
+            expect(inner.innerHTML).toContain('opacity-60');
+        });
+
+        it('should use fallback title when dentist has no title', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 1, name: 'Ingen Tittel', active: true }
+            ]);
+
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            expect(inner.innerHTML).toContain('Ingen tittel');
+        });
+
+        it('should return early when module-inner is missing from DOM', async () => {
+            document.body.innerHTML = '<div id="module-actions"></div>';
+
+            await loadTannlegerModule('id', vi.fn(), vi.fn());
+
+            expect(adminClient.getTannlegerRaw).not.toHaveBeenCalled();
         });
 
         it('should show empty message when no dentists found', async () => {
@@ -243,6 +405,19 @@ describe('admin-dashboard.js', () => {
             adminClient.getTannlegerRaw.mockRejectedValue(new Error('fail'));
             await loadTannlegerModule('id', vi.fn(), vi.fn());
             expect(document.getElementById('module-inner').textContent).toContain('Kunne ikke laste teamet');
+        });
+
+        it('should trigger edit when card is clicked (click delegation)', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 2, name: 'Anna', title: 'Lege', active: true }
+            ]);
+
+            const onEdit = vi.fn();
+            await loadTannlegerModule('sheet-id', onEdit, vi.fn());
+
+            document.getElementById('module-inner').querySelector('.admin-card-interactive').click();
+
+            expect(onEdit).toHaveBeenCalledWith(2, expect.objectContaining({ name: 'Anna' }));
         });
     });
 

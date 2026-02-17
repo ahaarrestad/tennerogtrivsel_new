@@ -1,5 +1,6 @@
 // src/scripts/messageClient.js
 import snarkdown from 'snarkdown';
+import DOMPurify from 'dompurify';
 
 export async function getActiveMessage() {
     try {
@@ -15,7 +16,7 @@ export async function getActiveMessage() {
             // Vi vasker og formaterer her, så slipper vi å gjøre det i hver komponent
             return {
                 ...aktiv,
-                htmlContent: snarkdown(aktiv.content)
+                htmlContent: DOMPurify.sanitize(snarkdown(aktiv.content))
             };
         }
         return null;

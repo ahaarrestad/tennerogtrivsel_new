@@ -1,11 +1,12 @@
 // src/scripts/admin-dashboard.js
-import { 
+import {
     listFiles, getFileContent, saveFile, createFile, deleteFile,
     parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
-    checkMultipleAccess, logout, getTannlegerRaw, updateTannlegeRow, 
+    checkMultipleAccess, logout, getTannlegerRaw, updateTannlegeRow,
     addTannlegeRow, deleteTannlegeRow
 } from './admin-client.js';
 import { formatDate, sortMessages } from './textFormatter.js';
+import DOMPurify from 'dompurify';
 
 /**
  * Kontrollerer tilgang til dashboard-moduler og deaktiverer de som ikke er tilgjengelige.
@@ -224,13 +225,20 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                         </div>
                     </div>`;
             });
-            inner.innerHTML = html + `</div>`;
+            inner.innerHTML = DOMPurify.sanitize(html + `</div>`);
 
             inner.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.onclick = () => onEdit(btn.dataset.id, btn.dataset.name);
             });
             inner.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.onclick = () => onDelete(btn.dataset.id, btn.dataset.name);
+            });
+            // DOMPurify strips onclick attributes – re-attach card click delegation
+            inner.querySelectorAll('.edit-btn, .delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => e.stopPropagation());
+            });
+            inner.querySelectorAll('.admin-card-interactive').forEach(card => {
+                card.onclick = () => card.querySelector('.edit-btn')?.click();
             });
         }
         document.getElementById('btn-new-melding').onclick = () => onEdit(null, null);
@@ -282,13 +290,20 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
                         </div>
                     </div>`;
             });
-            inner.innerHTML = html + `</div>`;
+            inner.innerHTML = DOMPurify.sanitize(html + `</div>`);
 
             inner.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.onclick = () => onEdit(btn.dataset.id, btn.dataset.name);
             });
             inner.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.onclick = () => onDelete(btn.dataset.id, btn.dataset.name);
+            });
+            // DOMPurify strips onclick attributes – re-attach card click delegation
+            inner.querySelectorAll('.edit-btn, .delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => e.stopPropagation());
+            });
+            inner.querySelectorAll('.admin-card-interactive').forEach(card => {
+                card.onclick = () => card.querySelector('.edit-btn')?.click();
             });
         }
         document.getElementById('btn-new-tjeneste').onclick = () => onEdit(null, null);
@@ -341,13 +356,20 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete) {
                         </div>
                     </div>`;
             });
-            inner.innerHTML = html + `</div>`;
+            inner.innerHTML = DOMPurify.sanitize(html + `</div>`);
 
             inner.querySelectorAll('.edit-tannlege-btn').forEach(btn => {
                 btn.onclick = () => onEdit(parseInt(btn.dataset.row), dentists.find(d => d.rowIndex === parseInt(btn.dataset.row)));
             });
             inner.querySelectorAll('.delete-tannlege-btn').forEach(btn => {
                 btn.onclick = () => onDelete(parseInt(btn.dataset.row), btn.dataset.name);
+            });
+            // DOMPurify strips onclick attributes – re-attach card click delegation
+            inner.querySelectorAll('.edit-tannlege-btn, .delete-tannlege-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => e.stopPropagation());
+            });
+            inner.querySelectorAll('.admin-card-interactive').forEach(card => {
+                card.onclick = () => card.querySelector('.edit-tannlege-btn')?.click();
             });
         }
         document.getElementById('btn-new-tannlege').onclick = () => onEdit(null, null);
