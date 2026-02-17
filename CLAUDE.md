@@ -1,6 +1,6 @@
-# Gemini CLI Agent Instructions
+# Claude Code Instructions
 
-This document outlines the operational guidelines and expectations for the Gemini CLI agent when interacting with this project. Adhering to these instructions ensures efficient, safe, and context-aware assistance.
+This document outlines the operational guidelines and expectations for the Claude Code agent when interacting with this project. Adhering to these instructions ensures efficient, safe, and context-aware assistance.
 
 ## Core Principles
 
@@ -24,3 +24,33 @@ For å sikre stabilitet og unngå regresjoner, SKAL følgende sjekkliste følges
 6.  **CI/CD Konsistens:** Hvis du har lagt til en ny miljøvariabel (i `.env`, `src/env.d.ts` eller `sync-data.js`), SKAL du verifisere at denne også er lagt til i relevante workflow-filer i `.github/workflows/` (både for `test` og `build` steg).
 
 **AGENT-REGEL:** Du har ikke lov til å si deg ferdig eller foreslå en commit før du har presentert en fersk testrapport som viser at kravene er møtt for alle berørte filer. Enhver "ferdig"-melding uten tallgrunnlag er et brudd på instruksene. Hvis dekningsgraden faller på grunn av nye funksjoner, SKAL du skrive tester for disse før du går videre. Ved innføring av nye avhengigheter eller miljøvariabler SKAL du eksplisitt sjekke og oppdatere CI-konfigurasjonen.
+
+## Sikkerhet
+
+### DOMPurify og innerHTML
+All HTML som settes via `innerHTML` og som inneholder bruker- eller CMS-generert innhold, SKAL saniteres med DOMPurify. **DOMPurify fjerner alle inline event-handlere** (f.eks. `onclick="..."`). Event-lyttere MÅ derfor alltid knyttes programmatisk etter at `innerHTML` er satt — aldri som attributter i template-strenger.
+
+```js
+// Feil – onclick strippes av DOMPurify og har ingen effekt:
+inner.innerHTML = DOMPurify.sanitize(`<div onclick="doSomething()">...</div>`);
+
+// Riktig – knytt lyttere programmatisk etterpå:
+inner.innerHTML = DOMPurify.sanitize(html);
+inner.querySelectorAll('.my-btn').forEach(btn => {
+    btn.addEventListener('click', () => doSomething());
+});
+```
+
+I node-miljø (Vitest) finnes ingen DOM, så DOMPurify må mockes i testfiler:
+```js
+vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
+```
+
+### Middleware og produksjonsmiljø
+`src/middleware.ts` setter HTTP-sikkerhetsheadere (CSP, X-Frame-Options, m.fl.) og kjører i Astro dev-server og for SSR-endepunkter. **Prosjektet deployes som statiske filer til AWS S3 og har ingen kjørende server i produksjon.** Middleware påvirker derfor ikke produksjon. Dersom disse headerne skal gjelde i prod, må de konfigureres i CloudFront (Response Headers Policy) eller S3.
+
+### CSP-verifisering
+`tests/csp-check.spec.ts` er et manuelt verktøy for å avdekke CSP-brudd på tvers av nøkkelsider. Kjør det når `src/middleware.ts` endres, mens dev-server kjører:
+```
+npx playwright test csp-check --project=chromium
+```
