@@ -202,12 +202,22 @@ describe('admin-client.js', () => {
 
         it('skal returnere null hvis ingen id er oppgitt', async () => {
             expect(await getDriveImageBlob(null)).toBeNull();
+            expect(await getDriveImageBlob(undefined)).toBeNull();
         });
 
         it('skal returnere null og logge ved feil', async () => {
             global.fetch.mockRejectedValue(new Error('fetch fail'));
             const result = await getDriveImageBlob('123');
             expect(result).toBeNull();
+        });
+
+        it('skal returnere null når gapi.client.drive.files.get kaster feil', async () => {
+            gapi.client.drive.files.get.mockRejectedValueOnce(new Error('Drive API feil'));
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            const result = await getDriveImageBlob('img-456');
+            expect(result).toBeNull();
+            expect(consoleSpy).toHaveBeenCalled();
+            consoleSpy.mockRestore();
         });
     });
 
@@ -612,6 +622,52 @@ describe('admin-client.js', () => {
             expect(result[0].scale).toBe(1.0);
             expect(result[0].positionX).toBe(50);
             expect(result[0].positionY).toBe(50);
+        });
+
+        it('getTannlegerRaw skal sette active: false når aktiv-kolonne er tom', async () => {
+            const mockValues = [
+                ['Navn', 'Tittel', 'Beskrivelse', 'Bilde', 'Aktiv', 'Skala', 'X', 'Y'],
+                ['Per', 'T', 'B', 'p.jpg', '', '', '', '']
+            ];
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
+                result: { values: mockValues }
+            });
+
+            const result = await getTannlegerRaw(spreadsheetId);
+            expect(result[0].active).toBe(false);
+            expect(result[0].scale).toBe(1.0);
+            expect(result[0].positionX).toBe(50);
+            expect(result[0].positionY).toBe(50);
+        });
+
+        it('getTannlegerRaw skal bruke tomme strenger som fallback for navn/tittel/beskrivelse/bilde', async () => {
+            const mockValues = [
+                ['Navn', 'Tittel', 'Beskrivelse', 'Bilde', 'Aktiv', 'Skala', 'X', 'Y'],
+                ['', '', '', '', 'nei', '1.5', '30', '40']
+            ];
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
+                result: { values: mockValues }
+            });
+
+            const result = await getTannlegerRaw(spreadsheetId);
+            expect(result[0].name).toBe('');
+            expect(result[0].title).toBe('');
+            expect(result[0].description).toBe('');
+            expect(result[0].image).toBe('');
+            expect(result[0].active).toBe(false);
+            expect(result[0].scale).toBe(1.5);
+        });
+
+        it('getTannlegerRaw skal returnere tom liste når rader er null eller bare header', async () => {
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
+                result: { values: null }
+            });
+            expect(await getTannlegerRaw(spreadsheetId)).toEqual([]);
+
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
+                result: { values: [['Navn', 'Tittel']] }
+            });
+            expect(await getTannlegerRaw(spreadsheetId)).toEqual([]);
         });
 
         it('updateTannlegeRow skal sende korrekte verdier', async () => {

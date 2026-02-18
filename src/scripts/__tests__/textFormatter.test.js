@@ -191,6 +191,15 @@ describe('sortMessages', () => {
         expect(sortMessages(null)).toEqual([]);
         expect(sortMessages({})).toEqual([]);
     });
+
+    it('should return 0 when both messages have unknown status (fallback branch)', () => {
+        // Both messages have invalid dates → status 3 (unknown) for each.
+        // When statusA === statusB and neither is 0, 1, nor 2, the comparator hits `return 0`.
+        const unknown1 = { title: 'Ukjent 1', startDate: 'ugyldig', endDate: 'ugyldig' };
+        const unknown2 = { title: 'Ukjent 2', startDate: 'ugyldig', endDate: 'ugyldig' };
+        const sorted = sortMessages([unknown1, unknown2]);
+        expect(sorted).toHaveLength(2);
+    });
 });
 
 describe('slugify', () => {
