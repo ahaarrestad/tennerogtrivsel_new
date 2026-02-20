@@ -29,5 +29,8 @@
     "@vitest/coverage-v8": "^4.0.18",
     "jsdom": "^28.1.0",
     "vitest": "^4.0.18"
+  },
+  "overrides": {
+    "rimraf": "^6.1.3"
   }
 }
