@@ -313,7 +313,7 @@
     }
 
     .admin-nav {
-        @apply bg-white border-b border-brand-border sticky top-0 z-[100] h-16 sm:h-20 flex items-center;
+        @apply bg-white border-b border-brand-border sticky top-0 z-[100] h-20 sm:h-28 flex items-center;
     }
 
     .admin-nav-container {

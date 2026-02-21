@@ -12,8 +12,8 @@ const CSP = [
     "img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com https://maps.gstatic.com",
     // Iframes: Google Drive + Google OAuth + Google Maps embed + GAPI iframe-kanaler (content-*.googleapis.com)
     "frame-src https://drive.google.com https://accounts.google.com https://www.google.com https://*.googleapis.com",
-    // API-kall: Google APIs + OAuth
-    "connect-src 'self' https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com",
+    // API-kall: Google APIs + OAuth + telemetri fra Google-skript (gen_204)
+    "connect-src 'self' https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com",
 ].join('; ');
 
 export const onRequest = defineMiddleware((_context, next) => {

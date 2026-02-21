@@ -8,13 +8,13 @@ const navLinks = [
 ];
 
 import {Image} from "astro:assets";
-import logoImage from "../assets/logo.png";
+import logoImage from "../assets/tt-logo-2026.png";
 ---
 
 <nav class="bg-brand-light border-b border-brand-border">
     <div class="layout-container">
         <div class="flex justify-between items-center h-20">
-            <a href="/" class="flex items-center gap-4 no-underline">
+            <a href="/" class="flex items-center no-underline">
                 <Image
                         src={logoImage}
                         alt="Tenner og Trivsel"
@@ -22,15 +22,6 @@ import logoImage from "../assets/logo.png";
                         class="h-16 w-auto object-contain"
                         loading="eager"
                 />
-
-                <div class="flex flex-col justify-center leading-none whitespace-nowrap">
-                    <span class="text-2xl font-black uppercase tracking-tighter text-brand">
-                        Tenner
-                    </span>
-                    <span class="text-2xl font-black uppercase tracking-tighter text-brand">
-                        & Trivsel
-                    </span>
-                </div>
             </a>
 
             <div class="hidden md:flex items-center gap-8 whitespace-nowrap">
