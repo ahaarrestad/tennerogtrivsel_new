@@ -24,7 +24,8 @@ export const HARD_DEFAULTS: Record<string, string> = {
     forsideBilde: "",
     forsideBildeScale: "1",
     forsideBildePosX: "50",
-    forsideBildePosY: "50"
+    forsideBildePosY: "50",
+    galleriTekst: "Ta en titt på klinikken vår — vi ønsker deg velkommen til lyse og moderne lokaler."
 };
 
 export async function getSiteSettings() {

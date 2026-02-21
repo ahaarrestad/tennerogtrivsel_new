@@ -12,10 +12,15 @@ const sortedServices = allServices.sort((a, b) =>
     a.data.title.localeCompare(b.data.title, 'nb')
 );
 const settings = await getSiteSettings();
+
+interface Props { variant?: 'white' | 'brand' }
+const { variant = 'white' } = Astro.props;
+const sectionBg = variant === 'brand' ? 'bg-brand-light' : 'bg-white';
+const headerBg = variant === 'brand' ? 'bg-brand-light/95 md:bg-transparent' : 'bg-white/95';
 ---
-<section id="tjenester" class="section-container bg-white">
+<section id="tjenester" class={`section-container ${sectionBg}`}>
     <div class="section-content">
-        <div class="section-header section-header-centered bg-white/95 section-header-sticky">
+        <div class={`section-header section-header-centered ${headerBg} section-header-sticky`}>
             <h2 class="section-heading">Våre Tjenester</h2>
             <p class="section-intro">{settings.tjenesteTekst}</p>
             <div class="heading-accent"></div>

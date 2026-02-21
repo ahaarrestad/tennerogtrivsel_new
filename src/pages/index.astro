@@ -1,18 +1,31 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
 
 import Forside from '../components/Forside.astro';
 import Kontakt from '../components/Kontakt.astro';
+import Galleri from '../components/Galleri.astro';
 import Tjenester from '../components/Tjenester.astro';
 import Tannleger from '../components/Tannleger.astro';
+
+// Beregn dynamisk annenhver bakgrunnsfarge basert på om galleriet er synlig
+const galleriSynlig = (await getCollection('galleri')).length > 0;
+// Forside: hvit (hero, ingen variant)
+// Kontakt: brand (alltid #1)
+// Galleri: white (alltid #2 hvis synlig)
+// Tjenester: brand hvis galleri synlig (#3), white hvis ikke (#2)
+// Tannleger: motsatt av Tjenester
+const tjenesterVariant = galleriSynlig ? 'brand' : 'white';
+const tannlegerVariant = galleriSynlig ? 'white' : 'brand';
 ---
 <Layout title="Tenner og Trivsel | Din Tannlege i Stavanger">
     <main>
         <Forside/>
-        <Kontakt/>
+        <Kontakt variant="brand" />
+        <Galleri variant="white" />
         <div class="hidden md:block">
-            <Tjenester/>
-            <Tannleger/>
+            <Tjenester variant={tjenesterVariant} />
+            <Tannleger variant={tannlegerVariant} />
         </div>
     </main>
 </Layout>

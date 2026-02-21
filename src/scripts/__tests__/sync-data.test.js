@@ -84,7 +84,7 @@ vi.mock('stream/promises', () => ({
 }));
 
 // Importer etter mocks
-const { syncTannleger, syncMarkdownCollection, syncForsideBilde, runSync, cropToOG } = await import('../sync-data.js');
+const { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, runSync, cropToOG } = await import('../sync-data.js');
 
 describe('sync-data.js', () => {
     let logSpy;
@@ -326,6 +326,9 @@ describe('sync-data.js', () => {
 
         it('bør hoppe over hvis forsideBilde ikke er konfigurert i Sheets', async () => {
             mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } });
+            // Galleri-arket: ingen forsidebilde-rad
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({ data: { values: [] } });
+            // Innstillinger fallback: ingen forsideBilde-nøkkel
             mockSheets.spreadsheets.values.get.mockResolvedValueOnce({ data: { values: [['annet', 'verdi']] } });
 
             await syncForsideBilde();
@@ -337,6 +340,9 @@ describe('sync-data.js', () => {
 
         it('bør laste ned bilde hvis det har endret seg', async () => {
             mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } }); // parent lookup
+            // Galleri-ark: ingen forsidebilde-rad → fallback
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({ data: { values: [] } });
+            // Innstillinger fallback
             mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
                 data: { values: [['forsideBilde', 'nytt-bilde.jpg']] }
             });
@@ -356,6 +362,9 @@ describe('sync-data.js', () => {
         it('bør hoppe over nedlasting hvis bildet er uendret', async () => {
             const dummyHash = crypto.createHash('md5').update(Buffer.from('dummy')).digest('hex');
             mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } }); // parent lookup
+            // Galleri-ark: ingen forsidebilde-rad → fallback
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({ data: { values: [] } });
+            // Innstillinger fallback
             mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
                 data: { values: [['forsideBilde', 'uendret.jpg']] }
             });
@@ -374,6 +383,9 @@ describe('sync-data.js', () => {
 
         it('bør generere beskjært OG-bilde til public/ etter nedlasting', async () => {
             mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } });
+            // Galleri-ark: ingen forsidebilde-rad → fallback
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({ data: { values: [] } });
+            // Innstillinger fallback
             mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
                 data: { values: [
                     ['forsideBilde', 'nytt-bilde.jpg'],
@@ -397,6 +409,9 @@ describe('sync-data.js', () => {
         it('bør generere OG-bilde selv om bildefilen er uendret', async () => {
             const dummyHash = crypto.createHash('md5').update(Buffer.from('dummy')).digest('hex');
             mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } });
+            // Galleri-ark: ingen forsidebilde-rad → fallback
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({ data: { values: [] } });
+            // Innstillinger fallback
             mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
                 data: { values: [['forsideBilde', 'uendret.jpg']] }
             });
@@ -412,6 +427,9 @@ describe('sync-data.js', () => {
 
         it('bør advare hvis bilde ikke finnes i Drive', async () => {
             mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } }); // parent lookup
+            // Galleri-ark: ingen forsidebilde-rad → fallback
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({ data: { values: [] } });
+            // Innstillinger fallback
             mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
                 data: { values: [['forsideBilde', 'mangler.jpg']] }
             });
@@ -422,11 +440,81 @@ describe('sync-data.js', () => {
             expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Forsidebilde ikke funnet'));
         });
 
-        it('bør kaste feil hvis Sheets API feiler', async () => {
+        it('bør kaste feil hvis Innstillinger Sheets API feiler', async () => {
             mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } }); // parent lookup
+            // Galleri-ark: feiler → fallback
+            mockSheets.spreadsheets.values.get.mockRejectedValueOnce(new Error('Galleri feil'));
+            // Innstillinger fallback: feiler også → kastes videre
             mockSheets.spreadsheets.values.get.mockRejectedValueOnce(new Error('Sheets API-feil'));
 
             await expect(syncForsideBilde()).rejects.toThrow('Sheets API-feil');
+        });
+
+        it('bør lese forsidebilde fra galleri-arket når type=forsidebilde finnes', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } }); // parent lookup
+            // Galleri-arket har en forsidebilde-rad
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: {
+                    values: [
+                        // Tittel, Bildefil, AltTekst, Aktiv, Rekkefølge, Skala, PosX, PosY, Type
+                        ['Forside', 'hero.jpg', 'Hero', 'ja', '0', '1.5', '60', '40', 'forsidebilde'],
+                        ['Venterom', 'venterom.jpg', 'Vent', 'ja', '1', '1', '50', '50', 'galleri']
+                    ]
+                }
+            });
+            mockDrive.files.list.mockResolvedValueOnce({
+                data: { files: [{ id: 'f1', name: 'hero.jpg', md5Checksum: 'different-hash' }] }
+            });
+            mockDrive.files.get.mockResolvedValueOnce({ data: { on: vi.fn() } }); // download stream
+            fs.existsSync.mockReturnValue(false);
+
+            await syncForsideBilde();
+
+            const logs = logSpy.mock.calls.map(c => c[0]);
+            expect(logs.some(l => l.includes('Forsidebilde funnet i galleri-arket'))).toBe(true);
+            expect(logs.some(l => l.includes('Laster ned forsidebilde'))).toBe(true);
+        });
+
+        it('bør falle tilbake til Innstillinger når galleri-ark ikke er tilgjengelig', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } }); // parent lookup
+            // Galleri-arket kaster feil (finnes ikke)
+            mockSheets.spreadsheets.values.get.mockRejectedValueOnce(new Error('Unable to parse range'));
+            // Fallback til Innstillinger
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: { values: [['forsideBilde', 'innstilling.jpg']] }
+            });
+            mockDrive.files.list.mockResolvedValueOnce({
+                data: { files: [{ id: 'f2', name: 'innstilling.jpg', md5Checksum: 'different-hash' }] }
+            });
+            mockDrive.files.get.mockResolvedValueOnce({ data: { on: vi.fn() } }); // download stream
+            fs.existsSync.mockReturnValue(false);
+
+            await syncForsideBilde();
+
+            const logs = logSpy.mock.calls.map(c => c[0]);
+            expect(logs.some(l => l.includes('Galleri-ark ikke tilgjengelig'))).toBe(true);
+            expect(logs.some(l => l.includes('Laster ned forsidebilde'))).toBe(true);
+        });
+
+        it('bør ignorere galleri-rad der type=forsidebilde men aktiv=nei', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } }); // parent lookup
+            // Galleri har forsidebilde-rad men den er inaktiv
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: {
+                    values: [
+                        ['Forside', 'hero.jpg', 'Hero', 'nei', '0', '1', '50', '50', 'forsidebilde']
+                    ]
+                }
+            });
+            // Fallback til Innstillinger – ingen forsideBilde-nøkkel
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: { values: [['siteTitle', 'Tenner og Trivsel']] }
+            });
+
+            await syncForsideBilde();
+
+            const logs = logSpy.mock.calls.map(c => c[0]);
+            expect(logs.some(l => l.includes('Ingen forsidebilde konfigurert'))).toBe(true);
         });
     });
 
@@ -459,6 +547,186 @@ describe('sync-data.js', () => {
             const extractCall = mockSharpInstance.extract.mock.calls[0][0];
             expect(extractCall.left).toBe(0);
             expect(extractCall.top).toBe(0);
+        });
+    });
+
+    describe('syncGalleri', () => {
+        it('bør advare hvis ingen foreldre-mappe finnes for regnearket', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: {} });
+
+            await syncGalleri();
+
+            expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Hopper over galleri'));
+        });
+
+        it('bør skrive tom galleri.json hvis fane mangler (400 error)', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
+            const sheetErr = new Error('Unable to parse range');
+            sheetErr.code = 400;
+            mockSheets.spreadsheets.values.get.mockRejectedValueOnce(sheetErr);
+
+            await syncGalleri();
+
+            expect(fs.writeFileSync).toHaveBeenCalledWith(
+                expect.stringContaining('galleri.json'),
+                '[]'
+            );
+            const logs = logSpy.mock.calls.map(c => c[0]);
+            expect(logs.some(l => l.includes('finnes ikke ennå'))).toBe(true);
+        });
+
+        it('bør skrive tom galleri.json ved parse range error', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
+            const sheetErr = new Error('Unable to parse range: galleri!A2:H');
+            mockSheets.spreadsheets.values.get.mockRejectedValueOnce(sheetErr);
+
+            await syncGalleri();
+
+            expect(fs.writeFileSync).toHaveBeenCalledWith(
+                expect.stringContaining('galleri.json'),
+                '[]'
+            );
+            const logs = logSpy.mock.calls.map(c => c[0]);
+            expect(logs.some(l => l.includes('Tom galleri.json skrevet'))).toBe(true);
+        });
+
+        it('bør kaste videre uventede API-feil', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
+            mockSheets.spreadsheets.values.get.mockRejectedValueOnce(new Error('Server Error'));
+
+            await expect(syncGalleri()).rejects.toThrow('Server Error');
+        });
+
+        it('bør hente galleribilder og skrive JSON-fil', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: {
+                    values: [
+                        ['Venterom', 'venterom.jpg', 'Venterommet', 'ja', '1', '1.2', '30', '40'],
+                        ['Behandling', 'behandling.jpg', 'Behandlingsrom', 'nei', '2', '', '', ''],
+                        ['Fasade', 'fasade.jpg', 'Bygningen', 'ja', '3', '0.1', '150', '-10'],
+                    ]
+                }
+            });
+            mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
+
+            await syncGalleri();
+
+            expect(fs.writeFileSync).toHaveBeenCalled();
+            const writtenData = JSON.parse(fs.writeFileSync.mock.calls[0][1]);
+            // Kun aktive rader
+            expect(writtenData).toHaveLength(2);
+            expect(writtenData[0].title).toBe('Venterom');
+            expect(writtenData[0].imageConfig).toEqual({ scale: 1.2, positionX: 30, positionY: 40 });
+            // Fasade: ugyldig scale (0.1 → clamped 0.5), posX (150 → default 50), posY (-10 → default 50)
+            expect(writtenData[1].title).toBe('Fasade');
+            expect(writtenData[1].imageConfig.scale).toBe(0.5);
+            expect(writtenData[1].imageConfig.positionX).toBe(50);
+            expect(writtenData[1].imageConfig.positionY).toBe(50);
+        });
+
+        it('bør slette bilder som ikke lenger er i bruk', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: {
+                    values: [['Venterom', 'brukt.jpg', 'Alt', 'ja', '1', '', '', '']]
+                }
+            });
+            mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
+            fs.readdirSync.mockReturnValue(['brukt.jpg', 'ubrukt.jpg', '.gitkeep']);
+
+            await syncGalleri();
+
+            expect(fs.unlinkSync).toHaveBeenCalledWith(expect.stringMatching(/[\/\\]ubrukt\.jpg$/));
+            expect(fs.unlinkSync).not.toHaveBeenCalledWith(expect.stringContaining('.gitkeep'));
+            expect(fs.unlinkSync).not.toHaveBeenCalledWith(expect.stringMatching(/[\/\\]brukt\.jpg$/));
+        });
+
+        it('bør håndtere tom gallerifane uten å krasje', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({ data: { values: [] } });
+
+            await syncGalleri();
+
+            expect(fs.writeFileSync).toHaveBeenCalled();
+            const writtenData = JSON.parse(fs.writeFileSync.mock.calls[0][1]);
+            expect(writtenData).toHaveLength(0);
+        });
+
+        it('bør laste ned bilde som har endret seg', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: {
+                    values: [['Bilde', 'ny.jpg', 'Alt', 'ja', '1', '', '', '']]
+                }
+            });
+            mockDrive.files.list.mockResolvedValueOnce({
+                data: { files: [{ id: 'f1', name: 'ny.jpg', md5Checksum: 'different-hash' }] }
+            });
+            mockDrive.files.get.mockResolvedValueOnce({ data: { on: vi.fn() } });
+            fs.existsSync.mockReturnValue(false);
+
+            await syncGalleri();
+
+            const logs = logSpy.mock.calls.map(c => c[0]);
+            expect(logs.some(l => l.includes('Laster ned bilde: ny.jpg'))).toBe(true);
+        });
+
+        it('bør advare hvis galleribilde ikke finnes i Drive', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: {
+                    values: [['Bilde', 'mangler.jpg', 'Alt', 'ja', '1', '', '', '']]
+                }
+            });
+            mockDrive.files.list.mockResolvedValueOnce({ data: { files: [] } });
+
+            await syncGalleri();
+
+            expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Galleribilde ikke funnet'));
+        });
+
+        it('bør filtrere ut forsidebilde-rader fra galleri-output', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: {
+                    values: [
+                        // Tittel, Bildefil, AltTekst, Aktiv, Rekkefølge, Skala, PosX, PosY, Type
+                        ['Forside', 'hero.jpg', 'Hero', 'ja', '0', '1', '50', '50', 'forsidebilde'],
+                        ['Venterom', 'venterom.jpg', 'Vent', 'ja', '1', '1', '50', '50', 'galleri'],
+                        ['Fasade', 'fasade.jpg', 'Fas', 'ja', '2', '1', '50', '50', '']
+                    ]
+                }
+            });
+            mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
+
+            await syncGalleri();
+
+            expect(fs.writeFileSync).toHaveBeenCalled();
+            const writtenData = JSON.parse(fs.writeFileSync.mock.calls[0][1]);
+            // Forsidebilde-raden skal ikke være med, kun Venterom og Fasade (tom type = galleri)
+            expect(writtenData).toHaveLength(2);
+            expect(writtenData[0].title).toBe('Venterom');
+            expect(writtenData[1].title).toBe('Fasade');
+        });
+
+        it('bør behandle rader uten type-kolonne som galleri', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: {
+                    values: [
+                        // Gammel format uten Type-kolonne (8 kolonner)
+                        ['Bilde1', 'b1.jpg', 'Alt1', 'ja', '1', '1', '50', '50'],
+                        ['Bilde2', 'b2.jpg', 'Alt2', 'ja', '2', '1', '50', '50']
+                    ]
+                }
+            });
+            mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
+
+            await syncGalleri();
+
+            const writtenData = JSON.parse(fs.writeFileSync.mock.calls[0][1]);
+            expect(writtenData).toHaveLength(2);
         });
     });
 

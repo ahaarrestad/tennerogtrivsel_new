@@ -1,0 +1,66 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import { getSiteSettings } from '../scripts/getSettings';
+
+const galleri = await getCollection('galleri');
+const settings = await getSiteSettings();
+
+const images = import.meta.glob('/src/assets/galleri/*.{jpeg,jpg,png,webp}');
+
+const sortert = [...galleri].sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
+
+interface Props { variant?: 'white' | 'brand' }
+const { variant = 'white' } = Astro.props;
+const sectionBg = variant === 'brand' ? 'bg-brand-light' : 'bg-white';
+const headerBg = variant === 'brand' ? 'bg-brand-light/95 md:bg-transparent' : 'bg-white/95';
+---
+{sortert.length > 0 && (
+<section id="galleri" class={`section-container ${sectionBg}`}>
+    <div class="section-content">
+        <div class={`section-header section-header-centered ${headerBg}`}>
+            <h2 class="section-heading">Klinikken vår</h2>
+            <p class="section-intro">{settings.galleriTekst}</p>
+            <div class="heading-accent"></div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {sortert.map((item, index) => {
+                const imgPath = `/src/assets/galleri/${item.data.image}`;
+                const hasImage = item.data.image && images[imgPath];
+                const mobileHidden = index >= 2 ? 'hidden md:block' : '';
+                const pX = item.data.imageConfig?.positionX ?? 50;
+                const pY = item.data.imageConfig?.positionY ?? 50;
+                const sc = item.data.imageConfig?.scale ?? 1.0;
+
+                return (
+                    <div class={`rounded-2xl overflow-hidden shadow-md aspect-[4/3] bg-slate-100 relative group ${mobileHidden}`}>
+                        {hasImage ? (
+                            <Image
+                                src={images[imgPath]()}
+                                alt={item.data.altText || item.data.title}
+                                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                                style={{
+                                    objectPosition: `${pX}% ${pY}%`,
+                                    transform: `scale(${sc})`,
+                                    transformOrigin: `${pX}% ${pY}%`
+                                }}
+                                loading="lazy"
+                            />
+                        ) : (
+                            <div class="w-full h-full flex items-center justify-center text-slate-400">
+                                Bilde mangler
+                            </div>
+                        )}
+                        {item.data.title && (
+                            <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-3 md:p-4">
+                                <p class="text-white text-xs md:text-sm font-bold">{item.data.title}</p>
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    </div>
+</section>
+)}

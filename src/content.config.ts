@@ -111,5 +111,31 @@ const tjenester = defineCollection({
     }),
 });
 
+const galleri = defineCollection({
+    loader: async () => {
+        const filePath = path.join(process.cwd(), 'src/content/galleri.json');
+        if (!fs.existsSync(filePath)) return [];
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const data = JSON.parse(content);
+        return data.map((g: any, index: number) => ({
+            id: g.id || `galleri-${index}`,
+            ...g
+        }));
+    },
+    schema: z.object({
+        id: z.string(),
+        title: z.string(),
+        image: z.string().optional(),
+        altText: z.string().optional(),
+        order: z.number().default(99),
+        type: z.string().default('galleri'),
+        imageConfig: z.object({
+            scale: z.number().default(1.0),
+            positionX: z.number().default(50),
+            positionY: z.number().default(50)
+        }).optional()
+    }),
+});
+
 // --- 4. EKSPORT ---
-export const collections = {tjenester, meldinger, innstillinger, tannleger};
+export const collections = {tjenester, meldinger, innstillinger, tannleger, galleri};

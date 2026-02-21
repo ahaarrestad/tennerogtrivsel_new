@@ -13,7 +13,7 @@ const CSP = [
     // Iframes: Google Drive + Google OAuth + Google Maps embed + GAPI iframe-kanaler (content-*.googleapis.com)
     "frame-src https://drive.google.com https://accounts.google.com https://www.google.com https://*.googleapis.com",
     // API-kall: Google APIs + OAuth + telemetri fra Google-skript (gen_204)
-    "connect-src 'self' https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com",
+    "connect-src 'self' blob: https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com",
 ].join('; ');
 
 export const onRequest = defineMiddleware((_context, next) => {

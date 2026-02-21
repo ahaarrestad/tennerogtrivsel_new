@@ -14,6 +14,8 @@ function getConfig() {
         paths: {
             tannlegerAssets: path.join(process.cwd(), 'src/assets/tannleger'),
             tannlegerData: path.join(process.cwd(), 'src/content/tannleger.json'),
+            galleriAssets: path.join(process.cwd(), 'src/assets/galleri'),
+            galleriData: path.join(process.cwd(), 'src/content/galleri.json'),
         },
         collections: [
             {
@@ -270,7 +272,8 @@ export async function cropToOG(sourcePath, outputPath, scale = 1, posX = 50, pos
         .toFile(outputPath);
 }
 
-// Synkroniserer forsidebilde fra Google Drive basert på innstillingen i Sheets
+// Synkroniserer forsidebilde fra Google Drive.
+// Prøver først galleri-arket (type=forsidebilde), deretter fallback til Innstillinger.
 async function syncForsideBilde() {
     const config = getConfig();
     const drive = getDrive();
@@ -293,18 +296,51 @@ async function syncForsideBilde() {
             return;
         }
 
-        const res = await sheets.spreadsheets.values.get({
-            spreadsheetId: config.spreadsheetId,
-            range: 'Innstillinger!A:B',
-        });
+        let bildeFil = '';
+        let scale = 1;
+        let posX = 50;
+        let posY = 50;
 
-        const rows = res.data.values || [];
-        const getRow = (key, def) => parseFloat(rows.find(r => r[0] === key)?.[1]) || def;
+        // Prøv galleri-arket først
+        let foundInGalleri = false;
+        try {
+            const galleriRes = await sheets.spreadsheets.values.get({
+                spreadsheetId: config.spreadsheetId,
+                range: 'galleri!A2:I',
+            });
+            const galleriRows = galleriRes.data.values || [];
+            const forsideRow = galleriRows.find(row =>
+                (row[8] || '').toLowerCase() === 'forsidebilde' &&
+                (row[3] || '').toLowerCase() === 'ja'
+            );
+            if (forsideRow) {
+                bildeFil = forsideRow[1] || '';
+                scale = parseFloat(forsideRow[5]) || 1;
+                posX = parseInt(forsideRow[6]) || 50;
+                posY = parseInt(forsideRow[7]) || 50;
+                foundInGalleri = true;
+                console.log('  📋 Forsidebilde funnet i galleri-arket.');
+            }
+        } catch (galleriErr) {
+            // Galleri-arket finnes ikke ennå – fall through til Innstillinger
+            console.log('  ℹ️ Galleri-ark ikke tilgjengelig, faller tilbake til Innstillinger.');
+        }
 
-        const bildeFil = rows.find(r => r[0] === 'forsideBilde')?.[1] || '';
-        const scale    = getRow('forsideBildeScale', 1);
-        const posX     = getRow('forsideBildePosX',  50);
-        const posY     = getRow('forsideBildePosY',  50);
+        // Fallback: Les fra Innstillinger-arket
+        if (!foundInGalleri) {
+            const res = await sheets.spreadsheets.values.get({
+                spreadsheetId: config.spreadsheetId,
+                range: 'Innstillinger!A:B',
+            });
+
+            const rows = res.data.values || [];
+            const getRow = (key, def) => parseFloat(rows.find(r => r[0] === key)?.[1]) || def;
+
+            bildeFil = rows.find(r => r[0] === 'forsideBilde')?.[1] || '';
+            scale    = getRow('forsideBildeScale', 1);
+            posX     = getRow('forsideBildePosX',  50);
+            posY     = getRow('forsideBildePosY',  50);
+        }
 
         if (!bildeFil) {
             console.log('  ℹ️ Ingen forsidebilde konfigurert, hopper over.');
@@ -334,6 +370,125 @@ async function syncForsideBilde() {
         console.log('  ✅ Forsidebilde synkronisert.');
     } catch (err) {
         console.error('❌ Feil under synkronisering av forsidebilde:', err.message);
+        throw err;
+    }
+}
+
+// Synkroniserer galleribilder fra Google Drive + Sheets
+async function syncGalleri() {
+    const config = getConfig();
+    const drive = getDrive();
+    const sheets = getSheets();
+
+    console.log('🚀 Synkroniserer galleri...');
+    if (!fs.existsSync(config.paths.galleriAssets)) fs.mkdirSync(config.paths.galleriAssets, { recursive: true });
+
+    try {
+        // Hent foreldre-mappen til regnearket (samme mønster som syncForsideBilde)
+        const sheetMeta = await drive.files.get({
+            fileId: config.spreadsheetId,
+            fields: 'parents',
+            supportsAllDrives: true,
+            includeItemsFromAllDrives: true
+        });
+        const folderId = sheetMeta.data.parents?.[0];
+
+        if (!folderId) {
+            logWarning('Missing Parent', 'Kunne ikke bestemme foreldre-mappe for regnearket. Hopper over galleri-synkronisering.');
+            return;
+        }
+
+        let res;
+        try {
+            res = await sheets.spreadsheets.values.get({
+                spreadsheetId: config.spreadsheetId,
+                range: 'galleri!A2:I',
+            });
+        } catch (sheetErr) {
+            if (sheetErr.code === 400 || sheetErr.message?.includes('Unable to parse range')) {
+                console.log('  ℹ️ Fane "galleri" finnes ikke ennå. Opprett den via admin-panelet.');
+                fs.writeFileSync(config.paths.galleriData, JSON.stringify([]));
+                console.log('  ✅ Tom galleri.json skrevet.');
+                return;
+            } else {
+                throw sheetErr;
+            }
+        }
+
+        const rows = res.data.values || [];
+        // Filtrer ut forsidebilde-rader (de hører til syncForsideBilde) og kun vis aktive
+        const activeRows = rows.filter(([tittel, bildeFil, altTekst, aktiv, rekkefølge, skala, posX, posY, type]) =>
+            aktiv?.toLowerCase() === 'ja' && (type || 'galleri').toLowerCase() !== 'forsidebilde'
+        );
+
+        const galleriData = await Promise.all(activeRows.map(async ([tittel, bildeFil, altTekst, aktiv, rekkefølge, skala, posX, posY, type]) => {
+            console.log(`  🔄 Behandler: ${tittel || bildeFil}`);
+
+            // Pars og valider bilde-justeringer med trygge defaults (identisk mønster som syncTannleger)
+            let scale = parseFloat(skala);
+            scale = (!isNaN(scale) && scale >= 0.5 && scale <= 3.0) ? scale : 1.0;
+            if (!isNaN(parseFloat(skala)) && parseFloat(skala) < 0.5) scale = 0.5;
+            if (!isNaN(parseFloat(skala)) && parseFloat(skala) > 3.0) scale = 3.0;
+
+            const parsedX = parseInt(posX);
+            const positionX = (!isNaN(parsedX) && parsedX >= 0 && parsedX <= 100) ? parsedX : 50;
+
+            const parsedY = parseInt(posY);
+            const positionY = (!isNaN(parsedY) && parsedY >= 0 && parsedY <= 100) ? parsedY : 50;
+
+            const parsedOrder = parseInt(rekkefølge);
+            const order = (!isNaN(parsedOrder)) ? parsedOrder : 99;
+
+            if (bildeFil) {
+                try {
+                    const destinationPath = path.join(config.paths.galleriAssets, bildeFil);
+                    const driveFile = await findFileMetadataByName(bildeFil, folderId);
+
+                    if (driveFile) {
+                        if (await shouldDownload(driveFile, destinationPath)) {
+                            console.log(`    ⬇️ Laster ned bilde: ${bildeFil}`);
+                            await downloadFile(driveFile.id, destinationPath);
+                        } else {
+                            console.log(`    ⏭️ Skip: ${bildeFil} er uendret`);
+                        }
+                    } else {
+                        logWarning('Missing Asset', `Galleribilde ikke funnet i Drive: ${bildeFil}`);
+                    }
+                } catch (imgErr) {
+                    logWarning('Download Error', `Feil ved behandling av galleribilde ${bildeFil}: ${imgErr.message}`);
+                }
+            }
+
+            return {
+                id: (tittel || bildeFil || 'galleri').toLowerCase().replace(/\s+/g, '-'),
+                title: tittel || '',
+                image: bildeFil || '',
+                altText: altTekst || '',
+                order,
+                imageConfig: {
+                    scale,
+                    positionX,
+                    positionY
+                }
+            };
+        }));
+
+        // Rydding: Slett bilder som ikke lenger er i bruk
+        const localAssets = fs.readdirSync(config.paths.galleriAssets);
+        const activeImages = new Set(galleriData.map(g => g.image).filter(Boolean));
+
+        localAssets.forEach(file => {
+            if (file !== '.gitkeep' && !activeImages.has(file)) {
+                const pathToDelete = path.join(config.paths.galleriAssets, file);
+                console.log(`  🗑️ Sletter ubrukt galleribilde: ${file}`);
+                fs.unlinkSync(pathToDelete);
+            }
+        });
+
+        fs.writeFileSync(config.paths.galleriData, JSON.stringify(galleriData, null, 2));
+        console.log(`  ✅ Synkroniserte ${galleriData.length} galleribilder.`);
+    } catch (err) {
+        console.error('❌ Feil under synkronisering av galleri:', err.message);
         throw err;
     }
 }
@@ -375,7 +530,10 @@ async function runSync() {
         // 2. Synkroniser forsidebilde (valgfritt – hopper over hvis mappe-ID mangler)
         await syncForsideBilde();
 
-        // 3. Synkroniser alle markdown-samlinger fra mapper
+        // 3. Synkroniser galleribilder
+        await syncGalleri();
+
+        // 4. Synkroniser alle markdown-samlinger fra mapper
         for (const col of config.collections) {
             await syncMarkdownCollection(col);
         }
@@ -398,4 +556,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 /* v8 ignore stop */
 
-export { syncTannleger, syncMarkdownCollection, syncForsideBilde, runSync, getConfig, getLocalHash, shouldDownload };
+export { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, runSync, getConfig, getLocalHash, shouldDownload };

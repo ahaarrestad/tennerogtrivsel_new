@@ -12,10 +12,15 @@ const settings = await getSiteSettings();
 const images = import.meta.glob('/src/assets/tannleger/*.{jpeg,jpg,png,webp}');
 
 const sorterteTannleger = tannleger.sort((a, b) => a.data.name.localeCompare(b.data.name, 'nb'));
+
+interface Props { variant?: 'white' | 'brand' }
+const { variant = 'brand' } = Astro.props;
+const sectionBg = variant === 'brand' ? 'bg-brand-light' : 'bg-white';
+const headerBg = variant === 'brand' ? 'bg-brand-light/95 md:bg-transparent' : 'bg-white/95';
 ---
-<section id="tannleger" class="section-container bg-brand-light">
+<section id="tannleger" class={`section-container ${sectionBg}`}>
     <div class="section-content">
-        <div class="section-header section-header-centered section-header-sticky bg-brand-light/95 md:bg-transparent">
+        <div class={`section-header section-header-centered section-header-sticky ${headerBg}`}>
             <h2 class="section-heading">Våre Tannleger</h2>
             <p class="section-intro">{settings.tannlegerTekst}</p>
             <div class="heading-accent"></div>

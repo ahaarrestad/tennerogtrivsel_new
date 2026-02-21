@@ -3,7 +3,7 @@ import {
     listFiles, getFileContent, saveFile, createFile, deleteFile,
     parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
     checkMultipleAccess, logout, getTannlegerRaw, updateTannlegeRow,
-    addTannlegeRow
+    addTannlegeRow, getGalleriRaw, updateGalleriRow, findFileByName, getDriveImageBlob
 } from './admin-client.js';
 import { formatDate, sortMessages } from './textFormatter.js';
 import DOMPurify from 'dompurify';
@@ -27,7 +27,7 @@ export async function enforceAccessControl(config) {
         { id: 'tjenester', resource: config.TJENESTER_FOLDER, btn: 'btn-open-tjenester' },
         { id: 'meldinger', resource: config.MELDINGER_FOLDER, btn: 'btn-open-meldinger' },
         { id: 'tannleger', resources: [config.TANNLEGER_FOLDER, config.SHEET_ID], btn: 'btn-open-tannleger' },
-        { id: 'forsidebilde', resource: config.SHEET_ID, btn: 'btn-open-forsidebilde' }
+        { id: 'bilder', resource: config.SHEET_ID, btn: 'btn-open-bilder' }
     ];
 
     let hasAnyAccess = false;
@@ -377,5 +377,143 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete) {
     } catch (e) {
         console.error("Load failed", e);
         inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste teamet.</div>`;
+    }
+}
+
+/**
+ * Bytter rekkefølge (order) mellom to galleri-rader.
+ * direction: -1 = opp, +1 = ned
+ */
+export async function reorderGalleriItem(sheetId, items, rowIndex, direction) {
+    const currentIdx = items.findIndex(i => i.rowIndex === rowIndex);
+    const neighborIdx = currentIdx + direction;
+    if (neighborIdx < 0 || neighborIdx >= items.length) return false;
+
+    const current = items[currentIdx];
+    const neighbor = items[neighborIdx];
+
+    const tmpOrder = current.order;
+    current.order = neighbor.order;
+    neighbor.order = tmpOrder;
+
+    // Hvis begge har samme order, tving ulik
+    if (current.order === neighbor.order) {
+        current.order = currentIdx + direction;
+        neighbor.order = currentIdx;
+    }
+
+    await Promise.all([
+        updateGalleriRow(sheetId, current.rowIndex, current),
+        updateGalleriRow(sheetId, neighbor.rowIndex, neighbor)
+    ]);
+    return true;
+}
+
+/**
+ * Henter og viser galleri-listen fra Sheets med thumbnails, badges og reorder-knapper.
+ */
+export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorder, parentFolderId) {
+    const container = document.getElementById('galleri-liste-container');
+    if (!container) return;
+
+    container.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter galleribilder...</div>';
+
+    try {
+        const images = await getGalleriRaw(sheetId);
+
+        if (images.length === 0) {
+            container.innerHTML = `<div class="text-center py-8 text-slate-400 italic">Ingen galleribilder funnet.</div>`;
+        } else {
+            // Forsidebilde først, deretter sortert på order
+            images.sort((a, b) => {
+                if (a.type === 'forsidebilde' && b.type !== 'forsidebilde') return -1;
+                if (a.type !== 'forsidebilde' && b.type === 'forsidebilde') return 1;
+                return (a.order ?? 99) - (b.order ?? 99);
+            });
+
+            let html = `<div class="grid grid-cols-1 gap-4">`;
+            images.forEach((img, idx) => {
+                const isForsidebilde = img.type === 'forsidebilde';
+                const statusClass = img.active ? "bg-green-100 text-green-700 border-green-200" : "bg-slate-100 text-slate-500 border-slate-200";
+                const statusText = img.active ? "Aktiv" : "Inaktiv";
+                const badgeHtml = isForsidebilde
+                    ? `<span class="admin-status-pill bg-amber-100 text-amber-700 border-amber-300 text-[8px] shrink-0 font-black">Forsidebilde</span>`
+                    : '';
+                const isFirst = idx === 0 || (idx === 1 && images[0].type === 'forsidebilde');
+                const isLast = idx === images.length - 1;
+
+                html += `
+                    <div class="admin-card-interactive group flex flex-row items-center gap-4 ${!img.active ? 'opacity-60' : ''} ${isForsidebilde ? 'border-amber-200 bg-amber-50/30' : ''}">
+                        <div class="shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center" data-thumb-row="${img.rowIndex}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        </div>
+                        <div class="min-w-0 flex-grow">
+                            <div class="flex flex-wrap items-center gap-1 sm:gap-2 mb-1">
+                                ${badgeHtml}
+                                <span class="admin-status-pill ${statusClass} text-[8px] shrink-0">${statusText}</span>
+                                <h3 class="font-bold text-brand sm:truncate sm:min-w-0 text-sm">${img.title || img.image || 'Uten tittel'}</h3>
+                            </div>
+                            <p class="text-xs text-slate-500 line-clamp-1 italic">${img.image || 'Ingen bilde'}</p>
+                        </div>
+                        <div class="flex flex-col gap-1 shrink-0">
+                            <button data-row="${img.rowIndex}" data-dir="-1" class="reorder-btn p-1.5 rounded-lg bg-slate-100 text-slate-400 hover:bg-brand hover:text-white transition-all ${isFirst || isForsidebilde ? 'invisible' : ''}" title="Flytt opp">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                            </button>
+                            <button data-row="${img.rowIndex}" data-dir="1" class="reorder-btn p-1.5 rounded-lg bg-slate-100 text-slate-400 hover:bg-brand hover:text-white transition-all ${isLast || isForsidebilde ? 'invisible' : ''}" title="Flytt ned">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="edit-galleri-btn p-3 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="delete-galleri-btn p-3 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all group/btn" title="Slett">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </div>
+                    </div>`;
+            });
+            container.innerHTML = DOMPurify.sanitize(html + `</div>`);
+
+            container.querySelectorAll('.edit-galleri-btn').forEach(btn => {
+                btn.onclick = () => onEdit(parseInt(btn.dataset.row), images.find(i => i.rowIndex === parseInt(btn.dataset.row)));
+            });
+            container.querySelectorAll('.delete-galleri-btn').forEach(btn => {
+                btn.onclick = () => onDelete(parseInt(btn.dataset.row), btn.dataset.title);
+            });
+            container.querySelectorAll('.reorder-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (onReorder) onReorder(parseInt(btn.dataset.row), parseInt(btn.dataset.dir));
+                };
+            });
+            container.querySelectorAll('.edit-galleri-btn, .delete-galleri-btn, .reorder-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => e.stopPropagation());
+            });
+            container.querySelectorAll('.admin-card-interactive').forEach(card => {
+                card.onclick = () => card.querySelector('.edit-galleri-btn')?.click();
+            });
+
+            // Asynkron lasting av thumbnails
+            if (parentFolderId) {
+                images.forEach(async (img) => {
+                    if (!img.image) return;
+                    const thumbContainer = container.querySelector(`[data-thumb-row="${img.rowIndex}"]`);
+                    if (!thumbContainer) return;
+                    try {
+                        const file = await findFileByName(img.image, parentFolderId);
+                        if (file) {
+                            const blobUrl = await getDriveImageBlob(file.id);
+                            if (blobUrl) {
+                                thumbContainer.innerHTML = `<img src="${blobUrl}" class="w-full h-full object-cover" alt="">`;
+                            }
+                        }
+                    } catch (_) { /* thumbnail er best-effort */ }
+                });
+            }
+        }
+    } catch (e) {
+        console.error("Load galleri failed", e);
+        container.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste galleribilder.</div>`;
     }
 }

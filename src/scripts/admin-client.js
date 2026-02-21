@@ -775,3 +775,228 @@ export async function deleteTannlegeRowPermanently(spreadsheetId, rowIndex) {
         throw err;
     }
 }
+
+// --- GALLERI ---
+
+export async function ensureGalleriSheet(spreadsheetId) {
+    const resp = await gapi.client.sheets.spreadsheets.get({
+        spreadsheetId,
+        fields: 'sheets.properties.title'
+    });
+    const exists = (resp.result.sheets || []).some(
+        s => s.properties.title === 'galleri'
+    );
+    if (!exists) {
+        await gapi.client.sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: { requests: [{ addSheet: { properties: { title: 'galleri' } } }] }
+        });
+        await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: 'galleri!A1:I1',
+            valueInputOption: 'RAW',
+            resource: { values: [['Tittel', 'Bildefil', 'AltTekst', 'Aktiv', 'Rekkefølge', 'Skala', 'PosX', 'PosY', 'Type']] }
+        });
+        console.log("[Admin] Galleri-ark opprettet med overskrifter.");
+    }
+}
+
+export async function getGalleriRaw(spreadsheetId) {
+    try {
+        const response = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: spreadsheetId,
+            range: 'galleri!A:I',
+        });
+
+        const rows = response.result.values;
+        if (!rows || rows.length <= 1) return [];
+
+        return rows.slice(1).map((row, index) => {
+            const scale = parseFloat(row[5]);
+            const pX = parseInt(row[6]);
+            const pY = parseInt(row[7]);
+            const order = parseInt(row[4]);
+
+            return {
+                rowIndex: index + 2,
+                title: row[0] || '',
+                image: row[1] || '',
+                altText: row[2] || '',
+                active: (row[3] || 'nei').toLowerCase() === 'ja',
+                order: isNaN(order) ? 99 : order,
+                scale: isNaN(scale) ? 1.0 : scale,
+                positionX: isNaN(pX) ? 50 : pX,
+                positionY: isNaN(pY) ? 50 : pY,
+                type: row[8] || 'galleri'
+            };
+        });
+    } catch (err) {
+        console.error("[Admin] Kunne ikke hente galleri:", err);
+        throw err;
+    }
+}
+
+export async function updateGalleriRow(spreadsheetId, rowIndex, data) {
+    try {
+        const values = [[
+            data.title,
+            data.image,
+            data.altText,
+            data.active ? 'ja' : 'nei',
+            data.order,
+            data.scale,
+            data.positionX,
+            data.positionY,
+            data.type || 'galleri'
+        ]];
+
+        await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId: spreadsheetId,
+            range: `galleri!A${rowIndex}:I${rowIndex}`,
+            valueInputOption: 'RAW',
+            resource: { values }
+        });
+
+        console.log(`[Admin] Galleri rad ${rowIndex} oppdatert.`);
+        return true;
+    } catch (err) {
+        console.error("[Admin] Kunne ikke oppdatere galleribilde:", err);
+        throw err;
+    }
+}
+
+export async function addGalleriRow(spreadsheetId, data) {
+    try {
+        await ensureGalleriSheet(spreadsheetId);
+
+        const values = [[
+            data.title || 'Nytt bilde',
+            data.image || '',
+            data.altText || '',
+            'ja',
+            data.order || 99,
+            1.0,
+            50,
+            50,
+            data.type || 'galleri'
+        ]];
+
+        await gapi.client.sheets.spreadsheets.values.append({
+            spreadsheetId: spreadsheetId,
+            range: 'galleri!A:I',
+            valueInputOption: 'RAW',
+            resource: { values }
+        });
+
+        console.log("[Admin] Nytt galleribilde lagt til i Sheets.");
+        return true;
+    } catch (err) {
+        console.error("[Admin] Kunne ikke legge til galleribilde:", err);
+        throw err;
+    }
+}
+
+/**
+ * Setter en galleri-rad som forsidebilde og nedgraderer evt. eksisterende forsidebilde.
+ * Kun én rad kan ha type='forsidebilde' om gangen.
+ */
+export async function setForsideBildeInGalleri(spreadsheetId, rowIndex) {
+    try {
+        const allRows = await getGalleriRaw(spreadsheetId);
+        const existing = allRows.find(r => r.type === 'forsidebilde' && r.rowIndex !== rowIndex);
+        if (existing) {
+            await updateGalleriRow(spreadsheetId, existing.rowIndex, { ...existing, type: 'galleri' });
+        }
+        const target = allRows.find(r => r.rowIndex === rowIndex);
+        if (target) {
+            await updateGalleriRow(spreadsheetId, rowIndex, { ...target, type: 'forsidebilde' });
+        }
+        console.log(`[Admin] Rad ${rowIndex} satt som forsidebilde.`);
+        return true;
+    } catch (err) {
+        console.error("[Admin] Kunne ikke sette forsidebilde:", err);
+        throw err;
+    }
+}
+
+/**
+ * Migrerer forsidebilde fra Innstillinger-arket til galleri-arket (one-time).
+ * Avbryter hvis galleri allerede har en forsidebilde-rad.
+ */
+export async function migrateForsideBildeToGalleri(spreadsheetId) {
+    try {
+        const allRows = await getGalleriRaw(spreadsheetId);
+        if (allRows.some(r => r.type === 'forsidebilde')) {
+            console.log("[Admin] Migrering unødvendig – forsidebilde finnes allerede i galleri.");
+            return false;
+        }
+
+        const settings = await getSettingsWithNotes(spreadsheetId);
+        const getSetting = (key) => settings.find(s => s.id === key)?.value || '';
+
+        const bildeFil = getSetting('forsideBilde');
+        if (!bildeFil) {
+            console.log("[Admin] Ingen forsidebilde i Innstillinger å migrere.");
+            return false;
+        }
+
+        const scale = parseFloat(getSetting('forsideBildeScale')) || 1.0;
+        const posX = parseInt(getSetting('forsideBildePosX')) || 50;
+        const posY = parseInt(getSetting('forsideBildePosY')) || 50;
+
+        await addGalleriRow(spreadsheetId, {
+            title: 'Forsidebilde',
+            image: bildeFil,
+            altText: 'Forsidebilde',
+            active: true,
+            order: 0,
+            scale: scale,
+            positionX: posX,
+            positionY: posY,
+            type: 'forsidebilde'
+        });
+
+        console.log("[Admin] Forsidebilde migrert fra Innstillinger til galleri-arket.");
+        return true;
+    } catch (err) {
+        console.error("[Admin] Migrering av forsidebilde feilet:", err);
+        throw err;
+    }
+}
+
+export async function deleteGalleriRowPermanently(spreadsheetId, rowIndex) {
+    try {
+        const sheetResp = await gapi.client.sheets.spreadsheets.get({
+            spreadsheetId,
+            fields: 'sheets.properties'
+        });
+        const sheet = (sheetResp.result.sheets || []).find(
+            s => s.properties.title === 'galleri'
+        );
+        if (!sheet) {
+            throw new Error("Fant ikke 'galleri'-arket i regnearket.");
+        }
+        const sheetId = sheet.properties.sheetId;
+
+        await gapi.client.sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: {
+                requests: [{
+                    deleteDimension: {
+                        range: {
+                            sheetId,
+                            dimension: 'ROWS',
+                            startIndex: rowIndex - 1,
+                            endIndex: rowIndex
+                        }
+                    }
+                }]
+            }
+        });
+        console.log(`[Admin] Galleri rad ${rowIndex} permanent slettet.`);
+        return true;
+    } catch (err) {
+        console.error("[Admin] Kunne ikke slette galleribilde permanent:", err);
+        throw err;
+    }
+}

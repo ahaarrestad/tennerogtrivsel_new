@@ -29,7 +29,11 @@ vi.mock('../admin-client.js', () => ({
     getTannlegerRaw: vi.fn(),
     updateTannlegeRow: vi.fn(),
     addTannlegeRow: vi.fn(),
-    deleteTannlegeRow: vi.fn()
+    deleteTannlegeRow: vi.fn(),
+    getGalleriRaw: vi.fn(),
+    updateGalleriRow: vi.fn(),
+    findFileByName: vi.fn(),
+    getDriveImageBlob: vi.fn()
 }));
 
 // Mock textFormatter
@@ -40,10 +44,10 @@ vi.mock('../textFormatter.js', () => ({
     slugify: vi.fn(s => s)
 }));
 
-const { 
-    enforceAccessControl, updateUIWithUser, autoResizeTextarea, 
-    saveSingleSetting, loadMeldingerModule, loadTjenesterModule, 
-    loadTannlegerModule 
+const {
+    enforceAccessControl, updateUIWithUser, autoResizeTextarea,
+    saveSingleSetting, loadMeldingerModule, loadTjenesterModule,
+    loadTannlegerModule, loadGalleriListeModule, reorderGalleriItem
 } = adminDashboard;
 
 describe('admin-dashboard.js', () => {
@@ -59,7 +63,7 @@ describe('admin-dashboard.js', () => {
             <div class="admin-card-interactive"><button id="btn-open-tjenester"></button></div>
             <div class="admin-card-interactive"><button id="btn-open-meldinger"></button></div>
             <div class="admin-card-interactive"><button id="btn-open-tannleger"></button></div>
-            <div class="admin-card-interactive"><button id="btn-open-forsidebilde"></button></div>
+            <div class="admin-card-interactive"><button id="btn-open-bilder"></button></div>
         `;
         vi.clearAllMocks();
     });
@@ -422,6 +426,246 @@ describe('admin-dashboard.js', () => {
         });
     });
 
+    describe('loadGalleriListeModule', () => {
+        beforeEach(() => {
+            document.body.innerHTML += `<div id="galleri-liste-container"></div>`;
+        });
+
+        it('should list gallery images sorted by order with forsidebilde first', async () => {
+            const mockImages = [
+                { rowIndex: 3, title: 'Fasade', image: 'fasade.jpg', active: true, order: 2, type: 'galleri' },
+                { rowIndex: 2, title: 'Venterom', image: 'venterom.jpg', active: true, order: 1, type: 'galleri' },
+                { rowIndex: 4, title: 'Forside', image: 'forside.jpg', active: true, order: 0, type: 'forsidebilde' },
+                { rowIndex: 5, title: 'Inaktiv', image: 'inaktiv.jpg', active: false, order: 3, type: 'galleri' }
+            ];
+            adminClient.getGalleriRaw.mockResolvedValue(mockImages);
+
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null);
+
+            const container = document.getElementById('galleri-liste-container');
+            const titles = Array.from(container.querySelectorAll('h3')).map(h => h.textContent.trim());
+            expect(titles[0]).toBe('Forside');   // forsidebilde alltid først
+            expect(titles[1]).toBe('Venterom');  // order 1
+            expect(titles[2]).toBe('Fasade');    // order 2
+            expect(titles[3]).toBe('Inaktiv');   // order 3
+        });
+
+        it('should render forsidebilde badge', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 2, title: 'Forside', image: 'f.jpg', active: true, order: 0, type: 'forsidebilde' }
+            ]);
+
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null);
+
+            const container = document.getElementById('galleri-liste-container');
+            expect(container.innerHTML).toContain('Forsidebilde');
+            expect(container.innerHTML).toContain('bg-amber-100');
+        });
+
+        it('should render inactive image with opacity', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 1, title: 'Inaktiv', image: 'i.jpg', active: false, order: 1, type: 'galleri' }
+            ]);
+
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null);
+
+            const container = document.getElementById('galleri-liste-container');
+            expect(container.innerHTML).toContain('opacity-60');
+            expect(container.innerHTML).toContain('Inaktiv');
+        });
+
+        it('should show empty message when no images found', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([]);
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null);
+            expect(document.getElementById('galleri-liste-container').textContent).toContain('Ingen galleribilder funnet');
+        });
+
+        it('should handle API errors', async () => {
+            adminClient.getGalleriRaw.mockRejectedValue(new Error('fail'));
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null);
+            expect(document.getElementById('galleri-liste-container').textContent).toContain('Kunne ikke laste galleribilder');
+        });
+
+        it('should return early when container is missing from DOM', async () => {
+            document.getElementById('galleri-liste-container')?.remove();
+            await loadGalleriListeModule('id', vi.fn(), vi.fn(), vi.fn(), null);
+            expect(adminClient.getGalleriRaw).not.toHaveBeenCalled();
+        });
+
+        it('should trigger edit callback on edit button click', async () => {
+            const mockImages = [
+                { rowIndex: 2, title: 'Venterom', image: 'v.jpg', active: true, order: 1, type: 'galleri' }
+            ];
+            adminClient.getGalleriRaw.mockResolvedValue(mockImages);
+
+            const onEdit = vi.fn();
+            await loadGalleriListeModule('sheet-id', onEdit, vi.fn(), vi.fn(), null);
+
+            const editBtn = document.querySelector('.edit-galleri-btn');
+            editBtn.click();
+
+            expect(onEdit).toHaveBeenCalledWith(2, expect.objectContaining({ title: 'Venterom' }));
+        });
+
+        it('should trigger delete callback on delete button click', async () => {
+            const mockImages = [
+                { rowIndex: 2, title: 'Venterom', image: 'v.jpg', active: true, order: 1, type: 'galleri' }
+            ];
+            adminClient.getGalleriRaw.mockResolvedValue(mockImages);
+
+            const onDelete = vi.fn();
+            await loadGalleriListeModule('sheet-id', vi.fn(), onDelete, vi.fn(), null);
+
+            const deleteBtn = document.querySelector('.delete-galleri-btn');
+            deleteBtn.click();
+
+            expect(onDelete).toHaveBeenCalledWith(2, 'Venterom');
+        });
+
+        it('should trigger reorder callback on reorder button click', async () => {
+            const mockImages = [
+                { rowIndex: 2, title: 'Bilde1', image: 'b1.jpg', active: true, order: 1, type: 'galleri' },
+                { rowIndex: 3, title: 'Bilde2', image: 'b2.jpg', active: true, order: 2, type: 'galleri' }
+            ];
+            adminClient.getGalleriRaw.mockResolvedValue(mockImages);
+
+            const onReorder = vi.fn();
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), onReorder, null);
+
+            const reorderBtns = document.querySelectorAll('.reorder-btn');
+            // Find the visible down-button for first item
+            const downBtn = Array.from(reorderBtns).find(btn => btn.dataset.dir === '1' && !btn.classList.contains('invisible'));
+            if (downBtn) {
+                downBtn.click();
+                expect(onReorder).toHaveBeenCalledWith(2, 1);
+            }
+        });
+
+        it('should make reorder buttons invisible for forsidebilde rows', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 2, title: 'Forside', image: 'f.jpg', active: true, order: 0, type: 'forsidebilde' },
+                { rowIndex: 3, title: 'Bilde', image: 'b.jpg', active: true, order: 1, type: 'galleri' }
+            ]);
+
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null);
+
+            const container = document.getElementById('galleri-liste-container');
+            const cards = container.querySelectorAll('.admin-card-interactive');
+            // First card (forsidebilde) should have invisible reorder buttons
+            const forsideReorderBtns = cards[0].querySelectorAll('.reorder-btn');
+            forsideReorderBtns.forEach(btn => {
+                expect(btn.classList.contains('invisible')).toBe(true);
+            });
+        });
+
+        it('should use fallback title when image has no title', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 2, title: '', image: 'bilde.jpg', active: true, order: 1, type: 'galleri' }
+            ]);
+
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null);
+
+            const container = document.getElementById('galleri-liste-container');
+            expect(container.innerHTML).toContain('bilde.jpg');
+        });
+
+        it('should load thumbnails when parentFolderId is provided', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 2, title: 'Bilde', image: 'bilde.jpg', active: true, order: 1, type: 'galleri' }
+            ]);
+            adminClient.findFileByName.mockResolvedValue({ id: 'file-123' });
+            adminClient.getDriveImageBlob.mockResolvedValue('blob:thumb-url');
+
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), 'parent-folder-id');
+
+            // Wait for async thumbnail loading
+            await vi.waitFor(() => {
+                expect(adminClient.findFileByName).toHaveBeenCalledWith('bilde.jpg', 'parent-folder-id');
+            });
+        });
+
+        it('should trigger edit via card click delegation', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 2, title: 'Bilde', image: 'b.jpg', active: true, order: 1, type: 'galleri' }
+            ]);
+
+            const onEdit = vi.fn();
+            await loadGalleriListeModule('sheet-id', onEdit, vi.fn(), vi.fn(), null);
+
+            const container = document.getElementById('galleri-liste-container');
+            const card = container.querySelector('.admin-card-interactive');
+            card.click();
+
+            expect(onEdit).toHaveBeenCalledWith(2, expect.objectContaining({ title: 'Bilde' }));
+        });
+    });
+
+    describe('reorderGalleriItem', () => {
+        it('should swap order values between current and neighbor (down)', async () => {
+            const items = [
+                { rowIndex: 2, title: 'A', order: 1, type: 'galleri' },
+                { rowIndex: 3, title: 'B', order: 2, type: 'galleri' }
+            ];
+            adminClient.updateGalleriRow.mockResolvedValue(true);
+
+            const result = await reorderGalleriItem('sheet-id', items, 2, 1);
+
+            expect(result).toBe(true);
+            expect(items[0].order).toBe(2);
+            expect(items[1].order).toBe(1);
+            expect(adminClient.updateGalleriRow).toHaveBeenCalledTimes(2);
+        });
+
+        it('should swap order values between current and neighbor (up)', async () => {
+            const items = [
+                { rowIndex: 2, title: 'A', order: 1, type: 'galleri' },
+                { rowIndex: 3, title: 'B', order: 2, type: 'galleri' }
+            ];
+            adminClient.updateGalleriRow.mockResolvedValue(true);
+
+            const result = await reorderGalleriItem('sheet-id', items, 3, -1);
+
+            expect(result).toBe(true);
+            expect(items[0].order).toBe(2);
+            expect(items[1].order).toBe(1);
+        });
+
+        it('should return false if neighbor is out of bounds (move first up)', async () => {
+            const items = [
+                { rowIndex: 2, title: 'A', order: 1, type: 'galleri' }
+            ];
+
+            const result = await reorderGalleriItem('sheet-id', items, 2, -1);
+
+            expect(result).toBe(false);
+            expect(adminClient.updateGalleriRow).not.toHaveBeenCalled();
+        });
+
+        it('should return false if neighbor is out of bounds (move last down)', async () => {
+            const items = [
+                { rowIndex: 2, title: 'A', order: 1, type: 'galleri' }
+            ];
+
+            const result = await reorderGalleriItem('sheet-id', items, 2, 1);
+
+            expect(result).toBe(false);
+            expect(adminClient.updateGalleriRow).not.toHaveBeenCalled();
+        });
+
+        it('should force different order values when both have same order', async () => {
+            const items = [
+                { rowIndex: 2, title: 'A', order: 5, type: 'galleri' },
+                { rowIndex: 3, title: 'B', order: 5, type: 'galleri' }
+            ];
+            adminClient.updateGalleriRow.mockResolvedValue(true);
+
+            await reorderGalleriItem('sheet-id', items, 2, 1);
+
+            // After swap both are 5, so force different: current.order = 0+1=1, neighbor.order = 0
+            expect(items[0].order).not.toBe(items[1].order);
+        });
+    });
+
     describe('enforceAccessControl', () => {
         it('should show modules where user has access and hide others', async () => {
             const config = {
@@ -480,22 +724,22 @@ describe('admin-dashboard.js', () => {
             expect(window.location.href).toContain('access_denied');
         });
 
-        it('should show forsidebilde card when user has access to sheet', async () => {
+        it('should show bilder card when user has access to sheet', async () => {
             adminClient.checkMultipleAccess.mockResolvedValue({ 's': true });
 
             await enforceAccessControl({ SHEET_ID: 's' });
 
-            const cardForside = document.getElementById('btn-open-forsidebilde').closest('.admin-card-interactive');
-            expect(cardForside.style.display).not.toBe('none');
+            const cardBilder = document.getElementById('btn-open-bilder').closest('.admin-card-interactive');
+            expect(cardBilder.style.display).not.toBe('none');
         });
 
-        it('should hide forsidebilde card when user lacks sheet access', async () => {
+        it('should hide bilder card when user lacks sheet access', async () => {
             adminClient.checkMultipleAccess.mockResolvedValue({ 's': false });
 
             await enforceAccessControl({ SHEET_ID: 's' });
 
-            const cardForside = document.getElementById('btn-open-forsidebilde').closest('.admin-card-interactive');
-            expect(cardForside.style.display).toBe('none');
+            const cardBilder = document.getElementById('btn-open-bilder').closest('.admin-card-interactive');
+            expect(cardBilder.style.display).toBe('none');
         });
     });
 });
