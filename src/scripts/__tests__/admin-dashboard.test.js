@@ -23,6 +23,7 @@ vi.mock('../admin-client.js', () => ({
     }),
     stringifyMarkdown: vi.fn(),
     updateSettings: vi.fn(),
+    updateSettingByKey: vi.fn(),
     getSettingsWithNotes: vi.fn(),
     checkMultipleAccess: vi.fn(),
     logout: vi.fn(),
@@ -47,7 +48,8 @@ vi.mock('../textFormatter.js', () => ({
 const {
     enforceAccessControl, updateUIWithUser, autoResizeTextarea,
     saveSingleSetting, loadMeldingerModule, loadTjenesterModule,
-    loadTannlegerModule, loadGalleriListeModule, reorderGalleriItem
+    loadTannlegerModule, loadGalleriListeModule, reorderGalleriItem,
+    mergeSettingsWithDefaults
 } = adminDashboard;
 
 describe('admin-dashboard.js', () => {
@@ -663,6 +665,101 @@ describe('admin-dashboard.js', () => {
 
             // After swap both are 5, so force different: current.order = 0+1=1, neighbor.order = 0
             expect(items[0].order).not.toBe(items[1].order);
+        });
+    });
+
+    describe('mergeSettingsWithDefaults', () => {
+        it('should add missing defaults as virtual settings', () => {
+            const sheetSettings = [
+                { id: 'phone1', value: '12345', description: 'Telefon' }
+            ];
+            const defaults = { phone1: 'default1', email: 'default@test.no' };
+
+            const result = mergeSettingsWithDefaults(sheetSettings, defaults);
+
+            expect(result).toHaveLength(2);
+            expect(result[0]).toEqual({ id: 'phone1', value: '12345', description: 'Telefon' });
+            expect(result[1]).toEqual({ id: 'email', value: 'default@test.no', description: '', isVirtual: true });
+        });
+
+        it('should return all defaults as virtual when sheet is empty', () => {
+            const defaults = { phone1: '111', email: 'e@e.no' };
+            const result = mergeSettingsWithDefaults([], defaults);
+
+            expect(result).toHaveLength(2);
+            result.forEach(s => expect(s.isVirtual).toBe(true));
+        });
+
+        it('should not duplicate existing keys', () => {
+            const sheetSettings = [
+                { id: 'phone1', value: '12345', description: '' }
+            ];
+            const defaults = { phone1: 'default1' };
+
+            const result = mergeSettingsWithDefaults(sheetSettings, defaults);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].value).toBe('12345');
+            expect(result[0].isVirtual).toBeUndefined();
+        });
+
+        it('should preserve order of sheet settings before virtual ones', () => {
+            const sheetSettings = [
+                { id: 'b', value: 'B', description: '' },
+                { id: 'a', value: 'A', description: '' }
+            ];
+            const defaults = { a: 'dA', b: 'dB', c: 'dC' };
+
+            const result = mergeSettingsWithDefaults(sheetSettings, defaults);
+
+            expect(result[0].id).toBe('b');
+            expect(result[1].id).toBe('a');
+            expect(result[2].id).toBe('c');
+            expect(result[2].isVirtual).toBe(true);
+        });
+    });
+
+    describe('saveSingleSetting (virtual rows)', () => {
+        it('should call updateSettingByKey for virtual setting and clear isVirtual', async () => {
+            const settings = [
+                { id: 'phone1', value: 'Old', isVirtual: false },
+                { id: 'kontaktTittel', value: 'Kontakt oss', isVirtual: true }
+            ];
+            const input = document.createElement('input');
+            input.value = 'Ny Kontakt';
+            const status = document.createElement('div');
+            status.id = 'status-1';
+            document.body.appendChild(status);
+
+            adminClient.updateSettingByKey.mockResolvedValue(true);
+
+            await saveSingleSetting(1, input, settings, 'sheet-123');
+
+            expect(adminClient.updateSettingByKey).toHaveBeenCalledWith('sheet-123', 'kontaktTittel', 'Ny Kontakt');
+            expect(adminClient.updateSettings).not.toHaveBeenCalled();
+            expect(settings[1].isVirtual).toBe(false);
+            expect(settings[1].value).toBe('Ny Kontakt');
+        });
+
+        it('should filter out virtual rows when saving non-virtual setting', async () => {
+            const settings = [
+                { id: 'phone1', value: 'Old' },
+                { id: 'kontaktTittel', value: 'Kontakt oss', isVirtual: true }
+            ];
+            const input = document.createElement('input');
+            input.value = 'New';
+            const status = document.createElement('div');
+            status.id = 'status-0';
+            document.body.appendChild(status);
+
+            adminClient.updateSettings.mockResolvedValue(true);
+
+            await saveSingleSetting(0, input, settings, 'sheet-123');
+
+            expect(adminClient.updateSettings).toHaveBeenCalled();
+            const callArg = adminClient.updateSettings.mock.calls[0][1];
+            expect(callArg.every(s => !s.isVirtual)).toBe(true);
+            expect(adminClient.updateSettingByKey).not.toHaveBeenCalled();
         });
     });
 

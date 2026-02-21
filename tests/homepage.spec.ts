@@ -27,7 +27,7 @@ test.describe('Forsiden', () => {
   });
 
   test('mobilmeny skal fungere', async ({ page }) => {
-    const isMobile = page.viewportSize()?.width! < 768;
+    const isMobile = page.viewportSize()?.width! < 1024;
     if (isMobile) {
       const menuBtn = page.locator('#menu-btn');
       const mobileMenu = page.locator('#mobile-menu');

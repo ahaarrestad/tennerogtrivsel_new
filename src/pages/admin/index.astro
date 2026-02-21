@@ -3,6 +3,7 @@
 import '../../styles/global.css';
 import { Image } from "astro:assets";
 import logoImage from "../../assets/tt-logo-2026.png";
+import { HARD_DEFAULTS } from '../../scripts/getSettings';
 
 const TJENESTER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID;
 const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID;
@@ -212,6 +213,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
          data-tannleger-folder={TANNLEGER_FOLDER}
          data-meldinger-folder={MELDINGER_FOLDER}
          data-sheet-id={import.meta.env.PUBLIC_GOOGLE_SHEET_ID}
+         data-defaults={JSON.stringify(HARD_DEFAULTS)}
          class="hidden"></div>
 
     <script>
@@ -231,7 +233,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             updateUIWithUser, autoResizeTextarea, saveSingleSetting,
             loadMeldingerModule, enforceAccessControl,
             loadTjenesterModule, loadTannlegerModule, loadGalleriListeModule,
-            reorderGalleriItem
+            reorderGalleriItem, mergeSettingsWithDefaults
         } from '../../scripts/admin-dashboard.js';
         import snarkdown from 'snarkdown';
         import DOMPurify from 'dompurify';
@@ -241,15 +243,28 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         const TANNLEGER_FOLDER = configEl?.dataset.tannlegerFolder;
         const MELDINGER_FOLDER = configEl?.dataset.meldingerFolder;
         const SHEET_ID = configEl?.dataset.sheetId;
+        const HARD_DEFAULTS_DATA = JSON.parse(configEl?.dataset.defaults || '{}');
 
         async function loadSettingsModule() {
             const inner = document.getElementById('module-inner');
             if (!inner) return;
             inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter data...</div>';
             try {
-                const settings = await getSettingsWithNotes(SHEET_ID);
+                const sheetSettings = await getSettingsWithNotes(SHEET_ID);
+                const allSettings = mergeSettingsWithDefaults(sheetSettings, HARD_DEFAULTS_DATA);
+
+                // Skriv manglende nøkler til Google Sheets med en gang
+                const virtualSettings = allSettings.filter(s => s.isVirtual);
+                if (virtualSettings.length > 0) {
+                    await Promise.all(virtualSettings.map(s =>
+                        updateSettingByKey(SHEET_ID, s.id, s.value)
+                            .then(() => { s.isVirtual = false; })
+                            .catch(err => console.warn(`Kunne ikke skrive ${s.id} til arket:`, err))
+                    ));
+                }
+
                 let html = `<div class="space-y-4 max-w-4xl">`;
-                settings.forEach((setting, i) => {
+                allSettings.forEach((setting, i) => {
                     const label = setting.description || setting.id;
                     const isLong = (setting.value && setting.value.length > 60) || setting.id.toLowerCase().includes('tekst');
                     html += `
@@ -258,29 +273,28 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                 <label class="admin-label !mb-0 cursor-pointer">${label}</label>
                                 <div id="status-${i}" class="shrink-0 h-5"></div>
                             </div>
-                            ${isLong ? 
-                                `<textarea id="setting-input-${i}" data-index="${i}" class="setting-field admin-input resize-none overflow-hidden">${setting.value}</textarea>` : 
+                            ${isLong ?
+                                `<textarea id="setting-input-${i}" data-index="${i}" class="setting-field admin-input resize-none overflow-hidden">${setting.value}</textarea>` :
                                 `<input type="text" id="setting-input-${i}" data-index="${i}" value="${setting.value}" class="setting-field admin-input">`
                             }
                         </div>`;
                 });
                 inner.innerHTML = html + `</div>`;
                 document.querySelectorAll('.setting-field').forEach(input => {
-                    if (input.tagName === 'TEXTAREA') { 
-                        autoResizeTextarea(input); 
-                        input.addEventListener('input', (e) => autoResizeTextarea(e.target as HTMLTextAreaElement)); 
+                    if (input.tagName === 'TEXTAREA') {
+                        autoResizeTextarea(input);
+                        input.addEventListener('input', (e) => autoResizeTextarea(e.target as HTMLTextAreaElement));
                     }
-                    input.addEventListener('blur', (e) => saveSingleSetting(parseInt((e.target as any).dataset.index), e.target as HTMLInputElement, settings, SHEET_ID));
+                    input.addEventListener('blur', (e) => saveSingleSetting(parseInt((e.target as any).dataset.index), e.target as HTMLInputElement, allSettings, SHEET_ID));
                 });
-                // Legg til klikk-lytter på containere
-                settings.forEach((_, i) => {
+                allSettings.forEach((_, i) => {
                     document.getElementById(`setting-container-${i}`)?.addEventListener('click', () => {
                         (document.getElementById(`setting-input-${i}`) as HTMLElement)?.focus();
                     });
                 });
-            } catch (e) { 
+            } catch (e) {
                 console.error("Settings load failed", e);
-                inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste innstillinger.</div>`; 
+                inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste innstillinger.</div>`;
             }
         }
 

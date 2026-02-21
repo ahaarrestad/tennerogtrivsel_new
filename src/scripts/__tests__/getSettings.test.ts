@@ -78,6 +78,13 @@ describe('getSiteSettings', () => {
         expect(settings.email).toBe('new@example.com');
     });
 
+    it('should include section title keys in HARD_DEFAULTS', () => {
+        expect(HARD_DEFAULTS).toHaveProperty('kontaktTittel', 'Kontakt oss');
+        expect(HARD_DEFAULTS).toHaveProperty('galleriTittel', 'Klinikken vår');
+        expect(HARD_DEFAULTS).toHaveProperty('tjenesterTittel', 'Våre Tjenester');
+        expect(HARD_DEFAULTS).toHaveProperty('tannlegerTittel', 'Våre Tannleger');
+    });
+
     it('should log warning in GitHub Actions format when GITHUB_ACTIONS is set', async () => {
         const originalEnv = process.env.GITHUB_ACTIONS;
         process.env.GITHUB_ACTIONS = 'true';

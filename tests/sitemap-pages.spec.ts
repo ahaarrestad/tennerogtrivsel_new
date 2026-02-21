@@ -52,19 +52,18 @@ test.describe('Sitemap-sider', () => {
     }
   });
 
-  test('navigasjonsmenyen skal inneholde Klinikken vår-lenke', async ({ page }) => {
+  test('navigasjonsmenyen skal inneholde galleri-lenke med dynamisk tittel', async ({ page }) => {
     await page.goto('/');
-    const isMobile = (page.viewportSize()?.width ?? 1280) < 768;
+    const isMobile = (page.viewportSize()?.width ?? 1280) < 1024;
     if (isMobile) {
-      // Åpne mobilmenyen først
       await page.locator('#menu-btn').click();
       const galleriLink = page.locator('#mobile-menu a[href="/#galleri"]');
       await expect(galleriLink).toBeVisible();
-      await expect(galleriLink).toHaveText('Klinikken vår');
+      await expect(galleriLink).toContainText('Klinikken');
     } else {
       const galleriLink = page.locator('nav a[href="/#galleri"]').first();
       await expect(galleriLink).toBeVisible();
-      await expect(galleriLink).toHaveText('Klinikken vår');
+      await expect(galleriLink).toContainText('Klinikken');
     }
   });
 });

@@ -21,11 +21,11 @@ export const HARD_DEFAULTS: Record<string, string> = {
     tjenesteTekst: "Vi tilbyr et bredt spekter av tannhelsetjenester for å sikre din munnhelse og velvære.",
     businessHours1: "Mandag, Tordag, Fredag: 08:00 - 15:30",
     businessHours2: "Tirsdag, Onsdag: 08:00 - 20:00",
-    forsideBilde: "",
-    forsideBildeScale: "1",
-    forsideBildePosX: "50",
-    forsideBildePosY: "50",
-    galleriTekst: "Ta en titt på klinikken vår — vi ønsker deg velkommen til lyse og moderne lokaler."
+    galleriTekst: "Ta en titt på klinikken vår — vi ønsker deg velkommen til lyse og moderne lokaler.",
+    kontaktTittel: "Kontakt oss",
+    galleriTittel: "Klinikken vår",
+    tjenesterTittel: "Våre Tjenester",
+    tannlegerTittel: "Våre Tannleger",
 };
 
 export async function getSiteSettings() {
