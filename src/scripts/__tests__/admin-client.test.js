@@ -13,6 +13,7 @@ import {
     getStoredUser,
     getSettingsWithNotes,
     updateSettings,
+    updateSettingByKey,
     checkAccess,
     listFiles,
     getFileContent,
@@ -31,7 +32,8 @@ import {
     uploadImage,
     getDriveImageBlob,
     ensureSlettetSheet,
-    backupToSlettetSheet
+    backupToSlettetSheet,
+    getSheetParentFolder
 } from '../admin-client';
 
 describe('admin-client.js', () => {
@@ -803,6 +805,84 @@ describe('admin-client.js', () => {
             await expect(
                 backupToSlettetSheet('sheet-id', 'melding', 'Jul', 'data')
             ).rejects.toThrow('append-fail');
+        });
+    });
+
+    describe('getSheetParentFolder', () => {
+        it('skal returnere første foreldre-mappe-ID', async () => {
+            gapi.client.drive.files.get.mockResolvedValueOnce({
+                result: { parents: ['folder-123', 'folder-456'] }
+            });
+            const result = await getSheetParentFolder('sheet-id');
+            expect(result).toBe('folder-123');
+            expect(gapi.client.drive.files.get).toHaveBeenCalledWith(expect.objectContaining({
+                fileId: 'sheet-id',
+                fields: 'parents'
+            }));
+        });
+
+        it('skal returnere null hvis ingen foreldre-mapper finnes', async () => {
+            gapi.client.drive.files.get.mockResolvedValueOnce({
+                result: { parents: [] }
+            });
+            const result = await getSheetParentFolder('sheet-id');
+            expect(result).toBeNull();
+        });
+
+        it('skal returnere null og logge feil hvis API feiler', async () => {
+            gapi.client.drive.files.get.mockRejectedValueOnce(new Error('Drive API feil'));
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            const result = await getSheetParentFolder('sheet-id');
+            expect(result).toBeNull();
+            expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Kunne ikke hente'), expect.any(Error));
+            consoleSpy.mockRestore();
+        });
+    });
+
+    describe('updateSettingByKey', () => {
+        it('skal oppdatere eksisterende nøkkel ved riktig rad', async () => {
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValueOnce({
+                result: {
+                    values: [
+                        ['header', 'header'],
+                        ['forsideBilde', 'gammel.png', ''],
+                        ['forsideBildeScale', '1', ''],
+                    ]
+                }
+            });
+            gapi.client.sheets.spreadsheets.values.update.mockResolvedValueOnce({});
+
+            await updateSettingByKey('sheet-id', 'forsideBilde', 'ny.png');
+
+            expect(gapi.client.sheets.spreadsheets.values.update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    range: 'Innstillinger!B2',
+                    resource: { values: [['ny.png']] }
+                })
+            );
+        });
+
+        it('skal legge til ny rad hvis nøkkelen ikke finnes', async () => {
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValueOnce({
+                result: { values: [['header', 'header']] }
+            });
+            gapi.client.sheets.spreadsheets.values.append.mockResolvedValueOnce({});
+
+            await updateSettingByKey('sheet-id', 'forsideBildeScale', '1.5');
+
+            expect(gapi.client.sheets.spreadsheets.values.append).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    range: 'Innstillinger!A:C',
+                    resource: { values: [['forsideBildeScale', '1.5', '']] }
+                })
+            );
+        });
+
+        it('skal kaste feil hvis API feiler', async () => {
+            gapi.client.sheets.spreadsheets.values.get.mockRejectedValueOnce(new Error('API-feil'));
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            await expect(updateSettingByKey('sheet-id', 'key', 'val')).rejects.toThrow('API-feil');
+            consoleSpy.mockRestore();
         });
     });
 });

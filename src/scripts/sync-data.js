@@ -236,6 +236,65 @@ async function syncTannleger() {
                             }));
                         }
 
+// Synkroniserer forsidebilde fra Google Drive basert på innstillingen i Sheets
+async function syncForsideBilde() {
+    const config = getConfig();
+    const drive = getDrive();
+    const sheets = getSheets();
+
+    console.log('🚀 Synkroniserer forsidebilde...');
+
+    try {
+        // Hent foreldre-mappen til regnearket – bilder lagres der
+        const sheetMeta = await drive.files.get({
+            fileId: config.spreadsheetId,
+            fields: 'parents',
+            supportsAllDrives: true,
+            includeItemsFromAllDrives: true
+        });
+        const forsideFolderId = sheetMeta.data.parents?.[0];
+
+        if (!forsideFolderId) {
+            logWarning('Missing Parent', 'Kunne ikke bestemme foreldre-mappe for regnearket. Hopper over forsidebilde-synkronisering.');
+            return;
+        }
+
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: config.spreadsheetId,
+            range: 'Innstillinger!A:B',
+        });
+
+        const rows = res.data.values || [];
+        const forsideRow = rows.find(row => row[0] === 'forsideBilde');
+        const bildeFil = forsideRow?.[1] || '';
+
+        if (!bildeFil) {
+            console.log('  ℹ️ Ingen forsidebilde konfigurert, hopper over.');
+            return;
+        }
+
+        const destinationPath = path.join(process.cwd(), 'src/assets/hoofdbilde.png');
+        const driveFile = await findFileMetadataByName(bildeFil, forsideFolderId);
+
+        if (!driveFile) {
+            logWarning('Missing Asset', `Forsidebilde ikke funnet i Drive: ${bildeFil}`);
+            return;
+        }
+
+        if (await shouldDownload(driveFile, destinationPath)) {
+            console.log(`  ⬇️ Laster ned forsidebilde: ${bildeFil}`);
+            await downloadFile(driveFile.id, destinationPath);
+        } else {
+            console.log(`  ⏭️ Skip: forsidebilde er uendret`);
+        }
+
+        console.log('  ✅ Forsidebilde synkronisert.');
+    } catch (err) {
+        console.error('❌ Feil under synkronisering av forsidebilde:', err.message);
+        throw err;
+    }
+}
+
 // --- KJØRER ALT ---
 
 async function runSync() {
@@ -270,7 +329,10 @@ async function runSync() {
         // 1. Synkroniser tannleger fra ark
         await syncTannleger();
 
-        // 2. Synkroniser alle markdown-samlinger fra mapper
+        // 2. Synkroniser forsidebilde (valgfritt – hopper over hvis mappe-ID mangler)
+        await syncForsideBilde();
+
+        // 3. Synkroniser alle markdown-samlinger fra mapper
         for (const col of config.collections) {
             await syncMarkdownCollection(col);
         }
@@ -293,4 +355,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 /* v8 ignore stop */
 
-export { syncTannleger, syncMarkdownCollection, runSync, getConfig, getLocalHash, shouldDownload };
+export { syncTannleger, syncMarkdownCollection, syncForsideBilde, runSync, getConfig, getLocalHash, shouldDownload };

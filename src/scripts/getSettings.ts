@@ -20,7 +20,11 @@ export const HARD_DEFAULTS: Record<string, string> = {
     tannlegerTekst: "Et varmt og erfarent team som setter pasienten i sentrum og tilbyr skreddersydd behandling.",
     tjenesteTekst: "Vi tilbyr et bredt spekter av tannhelsetjenester for å sikre din munnhelse og velvære.",
     businessHours1: "Mandag, Tordag, Fredag: 08:00 - 15:30",
-    businessHours2: "Tirsdag, Onsdag: 08:00 - 20:00"
+    businessHours2: "Tirsdag, Onsdag: 08:00 - 20:00",
+    forsideBilde: "",
+    forsideBildeScale: "1",
+    forsideBildePosX: "50",
+    forsideBildePosY: "50"
 };
 
 export async function getSiteSettings() {

@@ -66,7 +66,7 @@ vi.mock('stream/promises', () => ({
 }));
 
 // Importer etter mocks
-const { syncTannleger, syncMarkdownCollection, runSync } = await import('../sync-data.js');
+const { syncTannleger, syncMarkdownCollection, syncForsideBilde, runSync } = await import('../sync-data.js');
 
 describe('sync-data.js', () => {
     let logSpy;
@@ -85,13 +85,15 @@ describe('sync-data.js', () => {
         fs.existsSync.mockReturnValue(true);
         fs.readFileSync.mockReturnValue(Buffer.from('dummy'));
         fs.readdirSync.mockReturnValue([]);
-        
+
         logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
-        
+
         mockSheets.spreadsheets.values.get.mockResolvedValue({ data: { values: [] } });
         mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
+        // Default for drive.files.get – used by syncForsideBilde for parent-folder lookup
+        mockDrive.files.get.mockResolvedValue({ data: { parents: ['parent-folder-id'] } });
     });
 
     describe('syncTannleger', () => {
@@ -283,6 +285,84 @@ describe('sync-data.js', () => {
             // but here it's "eksisterer.md" vs "skal-slettes.md" so it's fine.
             // Actually the previous error was "ubrukt.jpg" matching "brukt.jpg".
             expect(fs.unlinkSync).not.toHaveBeenCalledWith(expect.stringMatching(/[\/\\]eksisterer\.md$/));
+        });
+    });
+
+    describe('syncForsideBilde', () => {
+        it('bør advare hvis ingen foreldre-mappe finnes for regnearket', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: {} }); // No parents field
+
+            await syncForsideBilde();
+
+            expect(mockSheets.spreadsheets.values.get).not.toHaveBeenCalled();
+            expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Hopper over forsidebilde'));
+        });
+
+        it('bør hoppe over hvis forsideBilde ikke er konfigurert i Sheets', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } });
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({ data: { values: [['annet', 'verdi']] } });
+
+            await syncForsideBilde();
+
+            expect(mockDrive.files.list).not.toHaveBeenCalled();
+            const logs = logSpy.mock.calls.map(c => c[0]);
+            expect(logs.some(l => l.includes('Ingen forsidebilde konfigurert'))).toBe(true);
+        });
+
+        it('bør laste ned bilde hvis det har endret seg', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } }); // parent lookup
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: { values: [['forsideBilde', 'nytt-bilde.jpg']] }
+            });
+            mockDrive.files.list.mockResolvedValueOnce({
+                data: { files: [{ id: 'f1', name: 'nytt-bilde.jpg', md5Checksum: 'different-hash' }] }
+            });
+            mockDrive.files.get.mockResolvedValueOnce({ data: { on: vi.fn() } }); // download stream
+            fs.existsSync.mockReturnValue(false);
+
+            await syncForsideBilde();
+
+            expect(mockDrive.files.list).toHaveBeenCalled();
+            const logs = logSpy.mock.calls.map(c => c[0]);
+            expect(logs.some(l => l.includes('Laster ned forsidebilde'))).toBe(true);
+        });
+
+        it('bør hoppe over nedlasting hvis bildet er uendret', async () => {
+            const dummyHash = crypto.createHash('md5').update(Buffer.from('dummy')).digest('hex');
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } }); // parent lookup
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: { values: [['forsideBilde', 'uendret.jpg']] }
+            });
+            mockDrive.files.list.mockResolvedValueOnce({
+                data: { files: [{ id: 'f2', name: 'uendret.jpg', md5Checksum: dummyHash }] }
+            });
+            fs.existsSync.mockReturnValue(true);
+
+            await syncForsideBilde();
+
+            // Only the parent-folder lookup called files.get; the download was skipped
+            expect(mockDrive.files.get).toHaveBeenCalledTimes(1);
+            const logs = logSpy.mock.calls.map(c => c[0]);
+            expect(logs.some(l => l.includes('forsidebilde er uendret'))).toBe(true);
+        });
+
+        it('bør advare hvis bilde ikke finnes i Drive', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } }); // parent lookup
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: { values: [['forsideBilde', 'mangler.jpg']] }
+            });
+            mockDrive.files.list.mockResolvedValueOnce({ data: { files: [] } });
+
+            await syncForsideBilde();
+
+            expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Forsidebilde ikke funnet'));
+        });
+
+        it('bør kaste feil hvis Sheets API feiler', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } }); // parent lookup
+            mockSheets.spreadsheets.values.get.mockRejectedValueOnce(new Error('Sheets API-feil'));
+
+            await expect(syncForsideBilde()).rejects.toThrow('Sheets API-feil');
         });
     });
 

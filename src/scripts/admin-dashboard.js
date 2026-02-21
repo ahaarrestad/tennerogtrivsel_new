@@ -26,7 +26,8 @@ export async function enforceAccessControl(config) {
         { id: 'settings', resource: config.SHEET_ID, btn: 'btn-open-settings' },
         { id: 'tjenester', resource: config.TJENESTER_FOLDER, btn: 'btn-open-tjenester' },
         { id: 'meldinger', resource: config.MELDINGER_FOLDER, btn: 'btn-open-meldinger' },
-        { id: 'tannleger', resources: [config.TANNLEGER_FOLDER, config.SHEET_ID], btn: 'btn-open-tannleger' }
+        { id: 'tannleger', resources: [config.TANNLEGER_FOLDER, config.SHEET_ID], btn: 'btn-open-tannleger' },
+        { id: 'forsidebilde', resource: config.SHEET_ID, btn: 'btn-open-forsidebilde' }
     ];
 
     let hasAnyAccess = false;

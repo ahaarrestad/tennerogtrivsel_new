@@ -444,6 +444,57 @@ export async function getSettingsWithNotes(spreadsheetId) {
 }
 
 /**
+ * Henter ID-en til foreldremappen for et Google Sheets-regneark.
+ * Brukes for å finne Drive-mappen der bilder skal lagres.
+ */
+export async function getSheetParentFolder(spreadsheetId) {
+    try {
+        const response = await gapi.client.drive.files.get({
+            fileId: spreadsheetId,
+            fields: 'parents',
+            supportsAllDrives: true
+        });
+        return response.result.parents?.[0] || null;
+    } catch (err) {
+        console.error('[Admin] Kunne ikke hente foreldre-mappe for arket:', err);
+        return null;
+    }
+}
+
+/**
+ * Oppdaterer en enkelt innstilling i Google Sheets etter nøkkelnavn.
+ * Oppdaterer eksisterende rad, eller legger til ny rad hvis nøkkelen mangler.
+ */
+export async function updateSettingByKey(spreadsheetId, key, value) {
+    try {
+        const allSettings = await getSettingsWithNotes(spreadsheetId);
+        const existing = allSettings.find(s => s.id === key);
+
+        if (existing) {
+            await gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId,
+                range: `Innstillinger!B${existing.row}`,
+                valueInputOption: 'RAW',
+                resource: { values: [[String(value)]] }
+            });
+        } else {
+            await gapi.client.sheets.spreadsheets.values.append({
+                spreadsheetId,
+                range: 'Innstillinger!A:C',
+                valueInputOption: 'RAW',
+                resource: { values: [[key, String(value), '']] }
+            });
+        }
+
+        console.log(`[Admin] Innstilling "${key}" oppdatert.`);
+        return true;
+    } catch (err) {
+        console.error(`[Admin] Kunne ikke oppdatere innstilling "${key}":`, err);
+        throw err;
+    }
+}
+
+/**
  * Oppdaterer innstillinger i Google Sheets (kun kolonne B).
  */
 export async function updateSettings(spreadsheetId, settings) {

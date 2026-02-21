@@ -59,6 +59,7 @@ describe('admin-dashboard.js', () => {
             <div class="admin-card-interactive"><button id="btn-open-tjenester"></button></div>
             <div class="admin-card-interactive"><button id="btn-open-meldinger"></button></div>
             <div class="admin-card-interactive"><button id="btn-open-tannleger"></button></div>
+            <div class="admin-card-interactive"><button id="btn-open-forsidebilde"></button></div>
         `;
         vi.clearAllMocks();
     });
@@ -474,9 +475,27 @@ describe('admin-dashboard.js', () => {
             window.location = { href: '' };
 
             await enforceAccessControl({ SHEET_ID: 'id' });
-            
+
             expect(adminClient.logout).toHaveBeenCalled();
             expect(window.location.href).toContain('access_denied');
+        });
+
+        it('should show forsidebilde card when user has access to sheet', async () => {
+            adminClient.checkMultipleAccess.mockResolvedValue({ 's': true });
+
+            await enforceAccessControl({ SHEET_ID: 's' });
+
+            const cardForside = document.getElementById('btn-open-forsidebilde').closest('.admin-card-interactive');
+            expect(cardForside.style.display).not.toBe('none');
+        });
+
+        it('should hide forsidebilde card when user lacks sheet access', async () => {
+            adminClient.checkMultipleAccess.mockResolvedValue({ 's': false });
+
+            await enforceAccessControl({ SHEET_ID: 's' });
+
+            const cardForside = document.getElementById('btn-open-forsidebilde').closest('.admin-card-interactive');
+            expect(cardForside.style.display).toBe('none');
         });
     });
 });

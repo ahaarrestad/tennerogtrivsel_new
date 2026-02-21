@@ -133,6 +133,11 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     <p class="admin-description">Oppdater informasjon om ansatte og last opp nye portretter.</p>
                     <button id="btn-open-tannleger" class="btn-primary w-full mt-auto">Start behandlingen</button>
                 </div>
+                <div id="card-forsidebilde" class="admin-card-interactive group">
+                    <h2 class="admin-subtitle group-hover:text-brand-hover">Juster forsidebildet</h2>
+                    <p class="admin-description">Last opp nytt bilde til forsiden og juster zoom og utsnitt.</p>
+                    <button id="btn-open-forsidebilde" class="btn-primary w-full mt-auto">Start behandlingen</button>
+                </div>
             </div>
         </div>
 
@@ -197,9 +202,9 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         </div>
     </dialog>
 
-    <div id="admin-config" 
-         data-tjenester-folder={TJENESTER_FOLDER} 
-         data-tannleger-folder={TANNLEGER_FOLDER} 
+    <div id="admin-config"
+         data-tjenester-folder={TJENESTER_FOLDER}
+         data-tannleger-folder={TANNLEGER_FOLDER}
          data-meldinger-folder={MELDINGER_FOLDER}
          data-sheet-id={import.meta.env.PUBLIC_GOOGLE_SHEET_ID}
          class="hidden"></div>
@@ -208,9 +213,9 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         import {
             initGapi, initGis, login, logout, tryRestoreSession,
             silentLogin, getStoredUser, getSettingsWithNotes, updateSettings,
-            listFiles, getFileContent, saveFile, createFile, deleteFile,
-            parseMarkdown, stringifyMarkdown, updateTannlegeRow,
-            addTannlegeRow, deleteTannlegeRow, getDriveImageBlob,
+            updateSettingByKey, getSheetParentFolder, listFiles, getFileContent,
+            saveFile, createFile, deleteFile, parseMarkdown, stringifyMarkdown,
+            updateTannlegeRow, addTannlegeRow, deleteTannlegeRow, getDriveImageBlob,
             findFileByName, backupToSlettetSheet, getTannlegerRaw
         } from '../../scripts/admin-client.js';
         import { loadGallery, setupUploadHandler } from '../../scripts/admin-gallery.js';
@@ -874,6 +879,221 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         };
         (window as any).openTannlegerModule = () => loadTannlegerModule(SHEET_ID, (window as any).editTannlege, (window as any).deleteTannlege);
 
+        // --- FORSIDEBILDE MODUL ---
+        let forsideSaveTimeout = null;
+
+        async function loadForsideModule() {
+            const inner = document.getElementById('module-inner');
+            const actions = document.getElementById('module-actions');
+            if (!inner || !actions) return;
+
+            actions.innerHTML = '';
+            inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter forsideinnstillinger...</div>';
+
+            try {
+                const [allSettings, parentFolderId] = await Promise.all([
+                    getSettingsWithNotes(SHEET_ID),
+                    getSheetParentFolder(SHEET_ID)
+                ]);
+
+                if (!parentFolderId) {
+                    inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke bestemme Drive-mappen for regnearket.</div>`;
+                    return;
+                }
+
+                const getSetting = (key, defaultVal) => {
+                    const s = allSettings.find(s => s.id === key);
+                    return s?.value ?? defaultVal;
+                };
+
+                const bildeFil = getSetting('forsideBilde', '');
+                const scale = getSetting('forsideBildeScale', '1');
+                const posX = getSetting('forsideBildePosX', '50');
+                const posY = getSetting('forsideBildePosY', '50');
+
+                let previewSrc = '';
+                if (bildeFil) {
+                    try {
+                        const file = await findFileByName(bildeFil, parentFolderId);
+                        if (file) {
+                            const blobUrl = await getDriveImageBlob(file.id);
+                            if (blobUrl) previewSrc = blobUrl;
+                        }
+                    } catch (err) {
+                        console.warn('[Admin] Kunne ikke laste forsidebilde-preview.');
+                    }
+                }
+
+                inner.innerHTML = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 max-w-6xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <!-- VENSTRE: Kontroller -->
+                        <div class="space-y-6">
+                            <div class="admin-field-container">
+                                <label class="admin-label">Forsidebilde</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="text" id="forside-image-name" value="${bildeFil}" class="admin-input flex-grow text-xs text-slate-500 font-mono" placeholder="Ingen bilde valgt" readonly>
+                                    <button id="btn-open-forside-gallery" class="btn-primary py-3 px-4 text-xs shrink-0 whitespace-nowrap">Velg bilde</button>
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-1 italic">Lastes fra Google Drive (mappe: forside). Endringer gjelder neste gang siden bygges.</p>
+                            </div>
+
+                            <div class="space-y-6 pt-4 border-t border-slate-100">
+                                <h4 class="text-brand font-black text-xs uppercase tracking-widest">Bildeutsnitt (Zoom & Pan)</h4>
+
+                                <div class="space-y-4">
+                                    <div>
+                                        <div class="flex justify-between mb-2">
+                                            <label class="admin-label !mb-0">Zoom (Skala)</label>
+                                            <span id="forside-val-scale" class="text-[10px] font-bold text-brand">${scale}x</span>
+                                        </div>
+                                        <input type="range" id="forside-scale" min="1" max="3.0" step="0.01" value="${scale}" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                    </div>
+
+                                    <div>
+                                        <div class="flex justify-between mb-2">
+                                            <label class="admin-label !mb-0">Fokuspunkt Horisontalt (X)</label>
+                                            <span id="forside-val-x" class="text-[10px] font-bold text-brand">${posX}%</span>
+                                        </div>
+                                        <input type="range" id="forside-x" min="0" max="100" value="${posX}" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                    </div>
+
+                                    <div>
+                                        <div class="flex justify-between mb-2">
+                                            <label class="admin-label !mb-0">Fokuspunkt Vertikalt (Y)</label>
+                                            <span id="forside-val-y" class="text-[10px] font-bold text-brand">${posY}%</span>
+                                        </div>
+                                        <input type="range" id="forside-y" min="0" max="100" value="${posY}" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="forside-save-status" class="h-6 text-[10px] font-black uppercase tracking-widest text-slate-400 italic"></div>
+                        </div>
+
+                        <!-- HØYRE: Preview -->
+                        <div class="space-y-4">
+                            <h3 class="text-brand font-black uppercase tracking-tighter text-center lg:text-left">Live Preview (16:10)</h3>
+                            <div class="rounded-2xl border-4 border-white shadow-md overflow-hidden aspect-[16/10] bg-slate-100 relative">
+                                <div id="forside-no-image" class="absolute inset-0 flex flex-col items-center justify-center text-slate-300 ${previewSrc ? 'hidden' : ''}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                    <span class="text-xs font-black uppercase tracking-widest mt-2">Velg bilde</span>
+                                </div>
+                                <img id="forside-preview-img"
+                                     src="${previewSrc}"
+                                     class="absolute inset-0 w-full h-full object-cover transition-all duration-75 ${previewSrc ? '' : 'hidden'}"
+                                     style="object-position: ${posX}% ${posY}%; transform: scale(${scale}); transform-origin: ${posX}% ${posY}%;"
+                                >
+                            </div>
+                            <p class="text-[10px] text-slate-400 italic">Slik vil bildet se ut på forsiden. Zoom og pan påvirker kun utsnitt – bildet fyller alltid hele rammen.</p>
+                        </div>
+                    </div>
+                `;
+
+                // --- BILDEGALLLERI ---
+                const btnGallery = document.getElementById('btn-open-forside-gallery');
+                const modal = document.getElementById('image-picker-modal') as HTMLDialogElement;
+
+                if (btnGallery && modal) {
+                    btnGallery.onclick = () => {
+                        modal.showModal();
+                        loadGallery(parentFolderId, async (fileId, fileName) => {
+                            const nameInput = document.getElementById('forside-image-name') as HTMLInputElement;
+                            const previewImg = document.getElementById('forside-preview-img') as HTMLImageElement;
+                            const noImage = document.getElementById('forside-no-image');
+
+                            if (nameInput) {
+                                nameInput.value = fileName;
+                                const blobUrl = await getDriveImageBlob(fileId);
+                                if (blobUrl && previewImg) {
+                                    previewImg.src = blobUrl;
+                                    previewImg.classList.remove('hidden');
+                                    noImage?.classList.add('hidden');
+                                }
+                                nameInput.dispatchEvent(new Event('input'));
+                            }
+                            modal.close();
+                        });
+                    };
+                }
+
+                setupUploadHandler(parentFolderId, async (newFile) => {
+                    if (newFile) {
+                        const nameInput = document.getElementById('forside-image-name') as HTMLInputElement;
+                        const previewImg = document.getElementById('forside-preview-img') as HTMLImageElement;
+                        const noImage = document.getElementById('forside-no-image');
+
+                        if (nameInput) {
+                            nameInput.value = newFile.name;
+                            const blobUrl = await getDriveImageBlob(newFile.id);
+                            if (blobUrl && previewImg) {
+                                previewImg.src = blobUrl;
+                                previewImg.classList.remove('hidden');
+                                noImage?.classList.add('hidden');
+                            }
+                            nameInput.dispatchEvent(new Event('input'));
+                        }
+                        modal.close();
+                    }
+                });
+
+                // --- AUTO-LAGRING ---
+                const updateForsidePreview = () => {
+                    const scaleInput = document.getElementById('forside-scale') as HTMLInputElement;
+                    const xInput = document.getElementById('forside-x') as HTMLInputElement;
+                    const yInput = document.getElementById('forside-y') as HTMLInputElement;
+                    const nameInput = document.getElementById('forside-image-name') as HTMLInputElement;
+
+                    const s = scaleInput.value;
+                    const x = xInput.value;
+                    const y = yInput.value;
+
+                    const previewImg = document.getElementById('forside-preview-img') as HTMLImageElement;
+                    if (previewImg) {
+                        previewImg.style.objectPosition = `${x}% ${y}%`;
+                        previewImg.style.transform = `scale(${parseFloat(s)})`;
+                        previewImg.style.transformOrigin = `${x}% ${y}%`;
+                    }
+
+                    const valScale = document.getElementById('forside-val-scale');
+                    const valX = document.getElementById('forside-val-x');
+                    const valY = document.getElementById('forside-val-y');
+                    if (valScale) valScale.textContent = `${s}x`;
+                    if (valX) valX.textContent = `${x}%`;
+                    if (valY) valY.textContent = `${y}%`;
+
+                    const statusEl = document.getElementById('forside-save-status');
+                    if (statusEl) statusEl.textContent = '⏳ Endringer oppdaget...';
+
+                    clearTimeout(forsideSaveTimeout);
+                    forsideSaveTimeout = setTimeout(async () => {
+                        if (statusEl) statusEl.textContent = '💾 Lagrer til Google Sheets...';
+                        try {
+                            await Promise.all([
+                                updateSettingByKey(SHEET_ID, 'forsideBilde', nameInput.value),
+                                updateSettingByKey(SHEET_ID, 'forsideBildeScale', s),
+                                updateSettingByKey(SHEET_ID, 'forsideBildePosX', x),
+                                updateSettingByKey(SHEET_ID, 'forsideBildePosY', y),
+                            ]);
+                            if (statusEl) statusEl.textContent = '✅ Lagret!';
+                            setTimeout(() => { if (statusEl && statusEl.textContent === '✅ Lagret!') statusEl.textContent = ''; }, 3000);
+                        } catch (e) {
+                            if (statusEl) statusEl.textContent = '❌ Feil ved lagring!';
+                        }
+                    }, 1500);
+                };
+
+                ['forside-image-name', 'forside-scale', 'forside-x', 'forside-y'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.addEventListener('input', updateForsidePreview);
+                });
+
+            } catch (e) {
+                console.error('Forsideinnstillinger feilet:', e);
+                inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste forsideinnstillinger.</div>`;
+            }
+        }
+
         function openModule(id, title) {
             document.getElementById('dashboard')?.classList.add('hidden');
             document.getElementById('module-container')?.classList.remove('hidden');
@@ -886,6 +1106,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             else if (id === 'meldinger') (window as any).loadMeldingerModule();
             else if (id === 'tjenester') (window as any).loadTjenesterModule();
             else if (id === 'tannleger') (window as any).openTannlegerModule();
+            else if (id === 'forsidebilde') loadForsideModule();
             else {
                 const inner = document.getElementById('module-inner');
                 if (inner) inner.innerHTML = `<p class="text-slate-600 italic">Denne modulen er under utvikling.</p>`;
@@ -936,17 +1157,20 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 document.getElementById('btn-open-tjenester')?.addEventListener('click', () => openModule('tjenester', 'Tjenester'));
                 document.getElementById('btn-open-meldinger')?.addEventListener('click', () => openModule('meldinger', 'Meldinger'));
                 document.getElementById('btn-open-tannleger')?.addEventListener('click', () => openModule('tannleger', 'Tannleger'));
+                document.getElementById('btn-open-forsidebilde')?.addEventListener('click', () => openModule('forsidebilde', 'Forsidebilde'));
 
                 // Hele kortet skal være klikkbart
                 const cardModules: [string, string, string][] = [
-                    ['card-settings',  'btn-open-settings',  'settings'],
-                    ['card-tjenester', 'btn-open-tjenester', 'tjenester'],
-                    ['card-meldinger', 'btn-open-meldinger', 'meldinger'],
-                    ['card-tannleger', 'btn-open-tannleger', 'tannleger'],
+                    ['card-settings',     'btn-open-settings',     'settings'],
+                    ['card-tjenester',    'btn-open-tjenester',    'tjenester'],
+                    ['card-meldinger',    'btn-open-meldinger',    'meldinger'],
+                    ['card-tannleger',    'btn-open-tannleger',    'tannleger'],
+                    ['card-forsidebilde', 'btn-open-forsidebilde', 'forsidebilde'],
                 ];
                 const moduleTitles: Record<string, string> = {
                     settings: 'Innstillinger', tjenester: 'Tjenester',
                     meldinger: 'Meldinger', tannleger: 'Tannleger',
+                    forsidebilde: 'Forsidebilde',
                 };
                 for (const [cardId, btnId, moduleId] of cardModules) {
                     document.getElementById(cardId)?.addEventListener('click', (e) => {
