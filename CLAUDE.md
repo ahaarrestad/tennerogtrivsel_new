@@ -54,3 +54,11 @@ vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
 ```
 npx playwright test csp-check --project=chromium
 ```
+
+### Web Storage og modul-tilstand i tester
+- Når kode under test bruker Web Storage, SKAL **begge** `localStorage.clear()` og
+  `sessionStorage.clear()` kalles i `beforeEach` – ikke bare én av dem.
+- `admin-client.js` har modul-nivå-variabler (`tokenClient`, `_rememberMe`, `gapiInited`,
+  `gisInited`) som **ikke** nullstilles av `vi.clearAllMocks()`. Tester som er sensitive
+  for denne tilstanden MÅ eksplisitt kalle de eksporterte setter-funksjonene
+  (f.eks. `setRememberMe(false)`) i `beforeEach`.
