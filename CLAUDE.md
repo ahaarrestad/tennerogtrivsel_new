@@ -11,6 +11,7 @@ This document outlines the operational guidelines and expectations for the Claud
 5.  **Proactive Fulfillment:** Fulfill requests thoroughly, including adding tests for new features or bug fixes.
 6.  **Confirmation for Ambiguity/Expansion:** Do not take significant actions beyond the clear scope of a request without explicit confirmation.
 7.  **Security and Safety:** Prioritize security best practices. Never introduce code that exposes sensitive information.
+8.  **TODO-liste:** Prosjektet har en `TODO.md` i roten som sporer oppgaver. Før en oppgave startes, lag alltid en plan og still avklarende spørsmål. Hold listen oppdatert underveis — flytt oppgaver mellom seksjonene og noter fremgang.
 
 ## Kvalitetssikring (Quality Gates)
 
