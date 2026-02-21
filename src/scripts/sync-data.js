@@ -273,7 +273,7 @@ async function syncForsideBilde() {
             return;
         }
 
-        const destinationPath = path.join(process.cwd(), 'src/assets/hoofdbilde.png');
+        const destinationPath = path.join(process.cwd(), 'src/assets/hovedbilde.png');
         const driveFile = await findFileMetadataByName(bildeFil, forsideFolderId);
 
         if (!driveFile) {
