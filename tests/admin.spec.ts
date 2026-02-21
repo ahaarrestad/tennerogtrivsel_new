@@ -39,6 +39,8 @@ test.describe('Admin-panel Fase 1', () => {
         });
       };
 
+      let deletedFileIds: string[] = [];
+
       (window as any).gapi = {
         load: (name, cb) => cb(),
         client: {
@@ -46,23 +48,34 @@ test.describe('Admin-panel Fase 1', () => {
           load: () => Promise.resolve(),
           setToken: () => {},
           getToken: () => ({ access_token: 'mock_token' }),
-          drive: { 
-            files: { 
-                list: () => Promise.resolve({ result: { files: [...messages, ...services] } }),
-                get: mockDriveGet
+          drive: {
+            files: {
+                list: () => {
+                    const remaining = services.filter(s => !deletedFileIds.includes(s.id));
+                    return Promise.resolve({ result: { files: [...messages, ...remaining] } });
+                },
+                get: mockDriveGet,
+                update: (params) => {
+                    if (params.resource?.trashed) deletedFileIds.push(params.fileId);
+                    return Promise.resolve({});
+                }
             }
           },
-          sheets: { 
-            spreadsheets: { 
-                values: { 
+          sheets: {
+            spreadsheets: {
+                get: () => Promise.resolve({ result: { sheets: [{ properties: { title: 'Slettet' } }] } }),
+                batchUpdate: () => Promise.resolve({}),
+                values: {
                     get: (params) => {
                         if (params.range.includes('tannleger')) {
                             return Promise.resolve({ result: { values: dentists } });
                         }
                         return Promise.resolve({ result: { values: [["id", "value", "note"], ["dummy", "val", "note"]] } });
-                    } 
-                } 
-            } 
+                    },
+                    update: () => Promise.resolve({}),
+                    append: () => Promise.resolve({})
+                }
+            }
           }
         }
       };
@@ -133,10 +146,28 @@ test.describe('Admin-panel Fase 1', () => {
     await page.goto('/admin');
     await expect(page.locator('#dashboard')).toBeVisible();
     await page.click('#btn-open-tannleger');
-    
+
     await expect(page.locator('#module-inner h3').filter({ hasText: 'Ape' })).toBeVisible();
     await page.click('.edit-tannlege-btn');
     await expect(page.locator('h3:has-text("Rediger profil")')).toBeVisible();
     await expect(page.locator('#preview-name')).toHaveText('Ape');
+  });
+
+  test('skal kunne slette en tjeneste', async ({ page }) => {
+    await setupMocks(page, {
+        services: [
+            { id: 'svc1', name: 'bleking.md', content: '---\ntitle: Bleking\ningress: Hvitere tenner\n---\nBleking body' }
+        ]
+    });
+
+    await page.goto('/admin');
+    await expect(page.locator('#dashboard')).toBeVisible();
+    await page.locator('#btn-open-tjenester').click();
+    await expect(page.locator('#module-inner h3').filter({ hasText: 'Bleking' })).toBeVisible();
+
+    await page.evaluate(() => { (window as any).confirm = () => true; });
+    await page.locator('.delete-btn').first().click();
+
+    await expect(page.locator('#module-inner h3').filter({ hasText: 'Bleking' })).not.toBeVisible();
   });
 });

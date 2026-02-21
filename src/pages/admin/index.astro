@@ -211,7 +211,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             listFiles, getFileContent, saveFile, createFile, deleteFile,
             parseMarkdown, stringifyMarkdown, updateTannlegeRow,
             addTannlegeRow, deleteTannlegeRow, getDriveImageBlob,
-            findFileByName
+            findFileByName, backupToSlettetSheet, getTannlegerRaw
         } from '../../scripts/admin-client.js';
         import { loadGallery, setupUploadHandler } from '../../scripts/admin-gallery.js';
         import { formatDate, stripStackEditData, sortMessages, slugify } from '../../scripts/textFormatter.js';
@@ -338,9 +338,11 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         // --- TJENESTER MODUL ---
         (window as any).deleteTjeneste = async (id, name) => {
             if (confirm(`Vil du slette tjenesten "${name}"?`)) {
-                try { 
-                    await deleteFile(id); 
-                    (window as any).loadTjenesterModule(); 
+                try {
+                    const content = await getFileContent(id);
+                    await backupToSlettetSheet(SHEET_ID, 'tjeneste', name, content);
+                    await deleteFile(id);
+                    (window as any).loadTjenesterModule();
                 } catch (e) { alert("Sletting feilet."); }
             }
         };
@@ -429,9 +431,11 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
 
         (window as any).deleteMelding = async (id, name) => {
             if (confirm(`Vil du slette "${name}"?`)) {
-                try { 
-                    await deleteFile(id); 
-                    (window as any).loadMeldingerModule(); 
+                try {
+                    const content = await getFileContent(id);
+                    await backupToSlettetSheet(SHEET_ID, 'melding', name, content);
+                    await deleteFile(id);
+                    (window as any).loadMeldingerModule();
                 } catch (e) { alert("Sletting feilet."); }
             }
         };
@@ -572,6 +576,11 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         (window as any).deleteTannlege = async (rowIndex, name) => {
             if (confirm(`Vil du fjerne "${name}" fra nettsiden?`)) {
                 try {
+                    const allRows = await getTannlegerRaw(SHEET_ID);
+                    const rowData = allRows.find(r => r.rowIndex === rowIndex);
+                    if (rowData) {
+                        await backupToSlettetSheet(SHEET_ID, 'tannlege', rowData.name, JSON.stringify(rowData));
+                    }
                     await deleteTannlegeRow(SHEET_ID, rowIndex);
                     (window as any).openTannlegerModule();
                 } catch (e) { alert("Feil ved sletting."); }

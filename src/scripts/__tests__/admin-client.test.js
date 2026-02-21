@@ -3,13 +3,13 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { 
-    initGapi, 
-    initGis, 
-    login, 
-    silentLogin, 
-    logout, 
-    tryRestoreSession, 
+import {
+    initGapi,
+    initGis,
+    login,
+    silentLogin,
+    logout,
+    tryRestoreSession,
     getStoredUser,
     getSettingsWithNotes,
     updateSettings,
@@ -29,7 +29,9 @@ import {
     findFileByName,
     listImages,
     uploadImage,
-    getDriveImageBlob
+    getDriveImageBlob,
+    ensureSlettetSheet,
+    backupToSlettetSheet
 } from '../admin-client';
 
 describe('admin-client.js', () => {
@@ -68,6 +70,7 @@ describe('admin-client.js', () => {
                 sheets: {
                     spreadsheets: {
                         get: vi.fn(),
+                        batchUpdate: vi.fn(),
                         values: {
                             get: vi.fn(),
                             update: vi.fn(),
@@ -727,6 +730,79 @@ describe('admin-client.js', () => {
         it('deleteTannlegeRow skal kaste feil hvis API feiler', async () => {
             gapi.client.sheets.spreadsheets.values.update.mockRejectedValue(new Error('fail'));
             await expect(deleteTannlegeRow('id', 1)).rejects.toThrow('fail');
+        });
+    });
+
+    describe('Backup (Slettet-ark)', () => {
+        it('ensureSlettetSheet: arket finnes → kun get kalles, ikke batchUpdate', async () => {
+            gapi.client.sheets.spreadsheets.get.mockResolvedValueOnce({
+                result: { sheets: [{ properties: { title: 'Slettet' } }] }
+            });
+
+            await ensureSlettetSheet('sheet-id');
+
+            expect(gapi.client.sheets.spreadsheets.get).toHaveBeenCalledWith({
+                spreadsheetId: 'sheet-id',
+                fields: 'sheets.properties.title'
+            });
+            expect(gapi.client.sheets.spreadsheets.batchUpdate).not.toHaveBeenCalled();
+            expect(gapi.client.sheets.spreadsheets.values.update).not.toHaveBeenCalled();
+        });
+
+        it('ensureSlettetSheet: arket mangler → batchUpdate og values.update (headers) kalles', async () => {
+            gapi.client.sheets.spreadsheets.get.mockResolvedValueOnce({
+                result: { sheets: [{ properties: { title: 'tannleger' } }] }
+            });
+            gapi.client.sheets.spreadsheets.batchUpdate.mockResolvedValueOnce({});
+            gapi.client.sheets.spreadsheets.values.update.mockResolvedValueOnce({});
+
+            await ensureSlettetSheet('sheet-id');
+
+            expect(gapi.client.sheets.spreadsheets.batchUpdate).toHaveBeenCalledWith({
+                spreadsheetId: 'sheet-id',
+                resource: { requests: [{ addSheet: { properties: { title: 'Slettet' } } }] }
+            });
+            expect(gapi.client.sheets.spreadsheets.values.update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    spreadsheetId: 'sheet-id',
+                    range: 'Slettet!A1:D1',
+                    resource: { values: [['Type', 'Tittel/Navn', 'Dato slettet', 'Data']] }
+                })
+            );
+        });
+
+        it('ensureSlettetSheet: API-feil kaster videre', async () => {
+            gapi.client.sheets.spreadsheets.get.mockRejectedValueOnce(new Error('api-error'));
+            await expect(ensureSlettetSheet('sheet-id')).rejects.toThrow('api-error');
+        });
+
+        it('backupToSlettetSheet: appender korrekt rad [type, title, date, data]', async () => {
+            gapi.client.sheets.spreadsheets.get.mockResolvedValueOnce({
+                result: { sheets: [{ properties: { title: 'Slettet' } }] }
+            });
+            gapi.client.sheets.spreadsheets.values.append.mockResolvedValueOnce({});
+
+            await backupToSlettetSheet('sheet-id', 'tjeneste', 'Bleking', 'markdown innhold');
+
+            const appendCall = gapi.client.sheets.spreadsheets.values.append.mock.calls[0][0];
+            expect(appendCall.spreadsheetId).toBe('sheet-id');
+            expect(appendCall.range).toBe('Slettet!A:D');
+            expect(appendCall.insertDataOption).toBe('INSERT_ROWS');
+            const row = appendCall.resource.values[0];
+            expect(row[0]).toBe('tjeneste');
+            expect(row[1]).toBe('Bleking');
+            expect(row[2]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+            expect(row[3]).toBe('markdown innhold');
+        });
+
+        it('backupToSlettetSheet: API-feil kaster videre', async () => {
+            gapi.client.sheets.spreadsheets.get.mockResolvedValueOnce({
+                result: { sheets: [{ properties: { title: 'Slettet' } }] }
+            });
+            gapi.client.sheets.spreadsheets.values.append.mockRejectedValueOnce(new Error('append-fail'));
+            await expect(
+                backupToSlettetSheet('sheet-id', 'melding', 'Jul', 'data')
+            ).rejects.toThrow('append-fail');
         });
     });
 });

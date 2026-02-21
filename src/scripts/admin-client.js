@@ -639,6 +639,47 @@ export async function addTannlegeRow(spreadsheetId, data) {
 }
 
 /**
+ * Sikrer at «Slettet»-arket finnes i regnearket.
+ * Oppretter arket og header-rad hvis det mangler.
+ */
+export async function ensureSlettetSheet(spreadsheetId) {
+    const resp = await gapi.client.sheets.spreadsheets.get({
+        spreadsheetId,
+        fields: 'sheets.properties.title'
+    });
+    const exists = (resp.result.sheets || []).some(
+        s => s.properties.title === 'Slettet'
+    );
+    if (!exists) {
+        await gapi.client.sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: { requests: [{ addSheet: { properties: { title: 'Slettet' } } }] }
+        });
+        await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: 'Slettet!A1:D1',
+            valueInputOption: 'RAW',
+            resource: { values: [['Type', 'Tittel/Navn', 'Dato slettet', 'Data']] }
+        });
+    }
+}
+
+/**
+ * Tar backup av slettet innhold til «Slettet»-arket.
+ */
+export async function backupToSlettetSheet(spreadsheetId, type, title, data) {
+    await ensureSlettetSheet(spreadsheetId);
+    const date = new Date().toISOString().split('T')[0];
+    await gapi.client.sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: 'Slettet!A:D',
+        valueInputOption: 'RAW',
+        insertDataOption: 'INSERT_ROWS',
+        resource: { values: [[type, title, date, data]] }
+    });
+}
+
+/**
  * Logisk sletting av en tannlege (setter Aktiv til 'nei').
  */
 export async function deleteTannlegeRow(spreadsheetId, rowIndex) {
