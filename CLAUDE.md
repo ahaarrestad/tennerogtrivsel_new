@@ -25,6 +25,96 @@ For å sikre stabilitet og unngå regresjoner, SKAL følgende sjekkliste følges
 
 **AGENT-REGEL:** Du har ikke lov til å si deg ferdig eller foreslå en commit før du har presentert en fersk testrapport som viser at kravene er møtt for alle berørte filer. Enhver "ferdig"-melding uten tallgrunnlag er et brudd på instruksene. Hvis dekningsgraden faller på grunn av nye funksjoner, SKAL du skrive tester for disse før du går videre. Ved innføring av nye avhengigheter eller miljøvariabler SKAL du eksplisitt sjekke og oppdatere CI-konfigurasjonen.
 
+## Arkitektur: Bildehåndtering (Galleri + Forsidebilde)
+
+### Samlet galleri-ark med Type-kolonne
+
+Forsidebildet og galleribilder deler ett Google Sheets-ark (`galleri`) med kolonner `A:I`:
+
+| A | B | C | D | E | F | G | H | I |
+|---|---|---|---|---|---|---|---|---|
+| Tittel | Bildefil | AltTekst | Aktiv | Rekkefølge | Skala | PosX | PosY | Type |
+
+- **`Type`-kolonnen** skiller mellom `'galleri'` (standard) og `'forsidebilde'` (hero-bilde på forsiden).
+- Kun **én rad** kan ha `type='forsidebilde'` om gangen — `setForsideBildeInGalleri()` nedgraderer automatisk den eksisterende.
+- Rader uten Type-verdi tolkes som `'galleri'` (bakoverkompatibilitet).
+
+### Dataflyt
+
+```
+Google Sheets (galleri-ark)
+  ↓ sync-data.js
+  ├── syncGalleri()        → src/content/galleri.json  (filtrerer UT forsidebilde-rader)
+  └── syncForsideBilde()   → src/assets/hovedbilde.png (leser KUN forsidebilde-rad)
+                           → public/hovedbilde.png     (beskjært OG-bilde 1200×630)
+```
+
+**Forsidebilde-fallback:** `syncForsideBilde()` prøver galleri-arket først. Hvis det ikke finnes en forsidebilde-rad (eller arket mangler), faller den tilbake til Innstillinger-arket (`forsideBilde`, `forsideBildeScale`, `forsideBildePosX`, `forsideBildePosY`).
+
+### Admin-panelet (bilder-modul)
+
+Nøkkelfunksjoner i `admin-client.js`:
+
+| Funksjon | Formål |
+|----------|--------|
+| `getGalleriRaw()` | Henter alle rader fra galleri-arket (A:I) |
+| `updateGalleriRow()` | Oppdaterer én rad inkl. type |
+| `addGalleriRow()` | Legger til ny rad, sikrer at arket finnes (`ensureGalleriSheet`) |
+| `setForsideBildeInGalleri()` | Setter én rad som forsidebilde, nedgraderer evt. eksisterende |
+| `migrateForsideBildeToGalleri()` | One-time migrering fra Innstillinger-ark til galleri-ark |
+
+Nøkkelfunksjoner i `admin-dashboard.js`:
+
+| Funksjon | Formål |
+|----------|--------|
+| `loadGalleriListeModule()` | Viser bildeoversikt med thumbnails, badges og reorder-knapper |
+| `reorderGalleriItem()` | Bytter rekkefølge mellom to naboer (opp/ned-knapper) |
+
+**Thumbnails** lastes asynkront via `findFileByName()` + `getDriveImageBlob()` (best-effort, blokkerer ikke UI). Blob-URLer krever `blob:` i CSP `connect-src`.
+
+### Gitignore for synkroniserte filer
+
+Bilder og JSON-filer som lastes ned fra Google Drive er **gitignored** og synkroniseres ved bygg:
+
+```gitignore
+/src/assets/tannleger/       # Tannlege-bilder fra Drive
+!src/assets/tannleger/.gitkeep
+/src/assets/galleri/          # Galleribilder fra Drive
+!src/assets/galleri/.gitkeep
+/public/hovedbilde.png        # Generert OG-bilde
+src/content/tannleger.json    # Synkronisert fra Sheets
+src/content/galleri.json      # Synkronisert fra Sheets
+```
+
+`.gitkeep`-filer bevarer mappestrukturen i git.
+
+## Arkitektur: Seksjonsbakgrunner (variant-prop)
+
+Seksjonskomponentene (`Kontakt`, `Galleri`, `Tjenester`, `Tannleger`) tar en `variant`-prop for å kontrollere bakgrunnsfarge:
+
+```astro
+interface Props { variant?: 'white' | 'brand' }
+```
+
+- `'brand'` → `bg-brand-light` på section, `bg-brand-light/95 md:bg-transparent` på sticky header
+- `'white'` → `bg-white` på section, `bg-white/95` på sticky header
+
+### Forsiden (index.astro): Annenhver-mønster
+
+`index.astro` beregner variant dynamisk basert på om galleriet er synlig:
+
+```
+Forside:   hvit (hero, ingen variant)
+Kontakt:   brand (alltid #1)
+Galleri:   white (alltid #2, betinget synlig)
+Tjenester: brand hvis galleri synlig, white hvis ikke
+Tannleger: motsatt av Tjenester
+```
+
+### Standalone-sider: Alltid hvit
+
+Egne sider (`/kontakt`, `/tjenester`, `/tannleger`) bruker **alltid `variant="white"`** for konsistent hvit bakgrunn. Annenhver-mønsteret gjelder kun forsiden.
+
 ## Sikkerhet
 
 ### DOMPurify og innerHTML
@@ -49,6 +139,8 @@ vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
 ### Middleware og produksjonsmiljø
 `src/middleware.ts` setter HTTP-sikkerhetsheadere (CSP, X-Frame-Options, m.fl.) og kjører i Astro dev-server og for SSR-endepunkter. **Prosjektet deployes som statiske filer til AWS S3 og har ingen kjørende server i produksjon.** Middleware påvirker derfor ikke produksjon. Dersom disse headerne skal gjelde i prod, må de konfigureres i CloudFront (Response Headers Policy) eller S3.
 
+CSP inkluderer `blob:` i `connect-src` for å støtte thumbnail-forhåndsvisning (blob-URLer fra `getDriveImageBlob()`) i admin-panelet.
+
 ### CSP-verifisering
 `tests/csp-check.spec.ts` er et manuelt verktøy for å avdekke CSP-brudd på tvers av nøkkelsider. Kjør det når `src/middleware.ts` endres, mens dev-server kjører:
 ```
@@ -62,3 +154,11 @@ npx playwright test csp-check --project=chromium
   `gisInited`) som **ikke** nullstilles av `vi.clearAllMocks()`. Tester som er sensitive
   for denne tilstanden MÅ eksplisitt kalle de eksporterte setter-funksjonene
   (f.eks. `setRememberMe(false)`) i `beforeEach`.
+
+## Testing
+
+### E2E: Sitemap-sider
+`tests/sitemap-pages.spec.ts` verifiserer at alle sider i sitemapen laster korrekt (200 OK), har riktig tittel, og at standalone-sider har hvit bakgrunn. Nye sider SKAL legges til i denne testfilen.
+
+### Galleri-tester (sync-data)
+`syncForsideBilde()`-tester MÅ mocke **to** `sheets.values.get`-kall: først galleri-arket, deretter Innstillinger-fallback. Eldre tester som kun mocker Innstillinger-kallet vil feile fordi koden nå prøver galleri-arket først.
