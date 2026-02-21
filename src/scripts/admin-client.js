@@ -3,6 +3,11 @@
 let tokenClient;
 let gapiInited = false;
 let gisInited = false;
+let _rememberMe = false;
+
+export function setRememberMe(val) {
+    _rememberMe = !!val;
+}
 
 const SCOPES = 'openid profile email https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets';
 
@@ -314,11 +319,14 @@ export function initGis(callback) {
 
             // Lagre token og utløpstidspunkt
             const expiry = Date.now() + (resp.expires_in * 1000);
-            localStorage.setItem('admin_google_token', JSON.stringify({
+            const storage    = _rememberMe ? localStorage  : sessionStorage;
+            const otherStore = _rememberMe ? sessionStorage : localStorage;
+            storage.setItem('admin_google_token', JSON.stringify({
                 access_token: resp.access_token,
                 expiry: expiry,
                 user: userInfo
             }));
+            otherStore.removeItem('admin_google_token');
 
             callback(userInfo);
         },
@@ -328,46 +336,39 @@ export function initGis(callback) {
 }
 
 /**
- * Henter lagret brukerinfo fra localStorage uten å røre GAPI
+ * Henter lagret brukerinfo fra localStorage eller sessionStorage uten å røre GAPI
  */
 export function getStoredUser() {
-    const stored = localStorage.getItem('admin_google_token');
-    if (!stored) return null;
-    try {
-        const { expiry, user } = JSON.parse(stored);
-        if (Date.now() < (expiry - 60000)) return user;
-    } catch (e) {
-        localStorage.removeItem('admin_google_token');
+    for (const storage of [localStorage, sessionStorage]) {
+        const stored = storage.getItem('admin_google_token');
+        if (!stored) continue;
+        try {
+            const { expiry, user } = JSON.parse(stored);
+            if (Date.now() < expiry - 60000) return user;
+        } catch { /* fall through */ }
+        storage.removeItem('admin_google_token');
     }
     return null;
 }
 
 /**
- * Prøver å gjenopprette pålogging fra localStorage inn i GAPI
+ * Prøver å gjenopprette pålogging fra localStorage eller sessionStorage inn i GAPI
  */
 export function tryRestoreSession() {
-    const stored = localStorage.getItem('admin_google_token');
-    if (!stored) return false;
-
-    try {
-        const { access_token, expiry } = JSON.parse(stored);
-        
-        // Sjekk om tokenet fortsatt er gyldig (med 1 minutts margin)
-        if (Date.now() < (expiry - 60000)) {
-            if (import.meta.env.DEV) console.log("[Admin] Gjenoppretter sesjon i GAPI");
-            if (gapi.client) {
+    for (const storage of [localStorage, sessionStorage]) {
+        const stored = storage.getItem('admin_google_token');
+        if (!stored) continue;
+        try {
+            const { access_token, expiry } = JSON.parse(stored);
+            if (Date.now() < expiry - 60000) {
+                console.log("[Admin] Gjenoppretter sesjon i GAPI");
                 gapi.client.setToken({ access_token });
                 return true;
-            } else {
-                console.warn("[Admin] gapi.client ikke klar for setToken");
             }
-        } else {
-            console.log("[Admin] Lagret token er utløpt");
-            localStorage.removeItem('admin_google_token');
+        } catch (e) {
+            console.error("[Admin] Feil ved lesing av lagret sesjon:", e);
         }
-    } catch (e) {
-        console.error("[Admin] Feil ved lesing av lagret sesjon:", e);
-        localStorage.removeItem('admin_google_token');
+        storage.removeItem('admin_google_token');
     }
     return false;
 }
@@ -409,6 +410,7 @@ export function logout() {
         }
     }
     localStorage.removeItem('admin_google_token');
+    sessionStorage.removeItem('admin_google_token');
 }
 
 /**

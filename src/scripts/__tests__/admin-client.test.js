@@ -11,6 +11,7 @@ import {
     logout,
     tryRestoreSession,
     getStoredUser,
+    setRememberMe,
     getSettingsWithNotes,
     updateSettings,
     updateSettingByKey,
@@ -107,6 +108,8 @@ describe('admin-client.js', () => {
         });
 
         localStorage.clear();
+        sessionStorage.clear();
+        setRememberMe(false);
         vi.clearAllMocks();
     });
 
@@ -425,7 +428,8 @@ describe('admin-client.js', () => {
             const callback = google.accounts.oauth2.initTokenClient.mock.calls[0][0].callback;
             await callback({ access_token: 'abc', expires_in: 3600 });
             expect(successCb).toHaveBeenCalled();
-            const stored = JSON.parse(localStorage.getItem('admin_google_token'));
+            // _rememberMe er false (default) → token lagres i sessionStorage
+            const stored = JSON.parse(sessionStorage.getItem('admin_google_token'));
             expect(stored.user).toBeNull();
         });
 
@@ -880,6 +884,54 @@ describe('admin-client.js', () => {
             expect(result).toBeNull();
             expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Kunne ikke hente'), expect.any(Error));
             consoleSpy.mockRestore();
+        });
+    });
+
+    describe('setRememberMe og lagringsstrategi', () => {
+        it('setRememberMe(true) → initGis callback lagrer i localStorage og fjerner fra sessionStorage', async () => {
+            setRememberMe(true);
+            sessionStorage.setItem('admin_google_token', 'gammel-sesjon');
+            initGis(() => {});
+            const callback = google.accounts.oauth2.initTokenClient.mock.calls[0][0].callback;
+            await callback({ access_token: 'tok', expires_in: 3600 });
+            expect(localStorage.getItem('admin_google_token')).not.toBeNull();
+            expect(sessionStorage.getItem('admin_google_token')).toBeNull();
+        });
+
+        it('setRememberMe(false) → initGis callback lagrer i sessionStorage og fjerner fra localStorage', async () => {
+            setRememberMe(false);
+            localStorage.setItem('admin_google_token', 'gammel-lokal');
+            initGis(() => {});
+            const callback = google.accounts.oauth2.initTokenClient.mock.calls[0][0].callback;
+            await callback({ access_token: 'tok', expires_in: 3600 });
+            expect(sessionStorage.getItem('admin_google_token')).not.toBeNull();
+            expect(localStorage.getItem('admin_google_token')).toBeNull();
+        });
+
+        it('getStoredUser finner gyldig token i sessionStorage når localStorage er tom', () => {
+            const future = Date.now() + 3600000;
+            const mockUser = { name: 'Kari' };
+            sessionStorage.setItem('admin_google_token', JSON.stringify({ expiry: future, user: mockUser }));
+            expect(getStoredUser()).toEqual(mockUser);
+        });
+
+        it('tryRestoreSession gjenoppretter sesjon fra sessionStorage', async () => {
+            await initGapi();
+            const future = Date.now() + 3600000;
+            sessionStorage.setItem('admin_google_token', JSON.stringify({
+                access_token: 'ses-token',
+                expiry: future
+            }));
+            expect(tryRestoreSession()).toBe(true);
+            expect(gapi.client.setToken).toHaveBeenCalledWith({ access_token: 'ses-token' });
+        });
+
+        it('logout kaller sessionStorage.removeItem i tillegg til localStorage.removeItem', () => {
+            localStorage.setItem('admin_google_token', 'lokal');
+            sessionStorage.setItem('admin_google_token', 'sesjon');
+            logout();
+            expect(localStorage.getItem('admin_google_token')).toBeNull();
+            expect(sessionStorage.getItem('admin_google_token')).toBeNull();
         });
     });
 

@@ -93,7 +93,15 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 <h1 class="admin-title">Velkommen</h1>
                 <p class="text-slate-600">Logg inn for å administrere innholdet på nettsiden.</p>
             </div>
-            
+
+            <div class="flex items-center gap-2">
+                <input type="checkbox" id="remember-me"
+                    class="w-4 h-4 accent-brand cursor-pointer rounded" />
+                <label for="remember-me" class="text-sm text-slate-600 cursor-pointer select-none">
+                    Husk meg i denne nettleseren
+                </label>
+            </div>
+
             <button id="login-btn" class="btn-primary w-full py-4 flex items-center justify-center gap-3">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
                     <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
@@ -212,7 +220,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
     <script>
         import {
             initGapi, initGis, login, logout, tryRestoreSession,
-            silentLogin, getStoredUser, getSettingsWithNotes, updateSettings,
+            silentLogin, getStoredUser, setRememberMe, getSettingsWithNotes, updateSettings,
             updateSettingByKey, getSheetParentFolder, listFiles, getFileContent,
             saveFile, createFile, deleteFile, parseMarkdown, stringifyMarkdown,
             updateTannlegeRow, addTannlegeRow, deleteTannlegeRowPermanently, getDriveImageBlob,
@@ -1173,15 +1181,21 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
 
                 initGis(handleAuth);
 
+                const hadRememberMe = !!localStorage.getItem('admin_google_token');
                 const user = getStoredUser();
                 if (user) {
                     await handleAuth(user);
-                } else {
+                } else if (hadRememberMe) {
+                    // Token fantes i localStorage men er utløpt → prøv stille fornyelse
                     silentLogin();
                 }
+                // Ellers: vis innloggingsskjema, ingen automatisk forsøk
 
                 const loginBtn = document.getElementById('login-btn');
-                if (loginBtn) loginBtn.onclick = login;
+                if (loginBtn) loginBtn.onclick = () => {
+                    setRememberMe((document.getElementById('remember-me') as HTMLInputElement)?.checked ?? false);
+                    login();
+                };
                 
                 const userPill = document.getElementById('user-pill');
                 if (userPill) userPill.onclick = () => { if (confirm("Logge ut?")) { logout(); location.reload(); } };
