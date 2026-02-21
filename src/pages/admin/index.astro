@@ -215,7 +215,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             silentLogin, getStoredUser, getSettingsWithNotes, updateSettings,
             updateSettingByKey, getSheetParentFolder, listFiles, getFileContent,
             saveFile, createFile, deleteFile, parseMarkdown, stringifyMarkdown,
-            updateTannlegeRow, addTannlegeRow, deleteTannlegeRow, getDriveImageBlob,
+            updateTannlegeRow, addTannlegeRow, deleteTannlegeRowPermanently, getDriveImageBlob,
             findFileByName, backupToSlettetSheet, getTannlegerRaw
         } from '../../scripts/admin-client.js';
         import { loadGallery, setupUploadHandler } from '../../scripts/admin-gallery.js';
@@ -340,14 +340,45 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             return easyMDE;
         }
 
+        function showDeletionToast(deletedName: string, recoveryText: string) {
+            document.getElementById('deletion-toast')?.remove();
+            const toast = document.createElement('div');
+            toast.id = 'deletion-toast';
+            toast.className = 'fixed bottom-6 right-6 z-50 max-w-sm w-full';
+            toast.innerHTML = DOMPurify.sanitize(`
+                <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 p-5 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div class="flex items-start gap-3">
+                        <div class="shrink-0 w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p id="toast-deleted-name" class="font-black text-sm text-slate-800"></p>
+                            <p id="toast-recovery-text" class="text-xs text-slate-500 mt-1 leading-relaxed"></p>
+                        </div>
+                        <button class="toast-close shrink-0 p-1 -mr-1 -mt-1 text-slate-300 hover:text-slate-500 transition-colors cursor-pointer" aria-label="Lukk">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
+                </div>
+            `);
+            const nameEl = toast.querySelector('#toast-deleted-name');
+            const recoveryEl = toast.querySelector('#toast-recovery-text');
+            if (nameEl) nameEl.textContent = `«${deletedName}» ble slettet`;
+            if (recoveryEl) recoveryEl.textContent = recoveryText;
+            document.body.appendChild(toast);
+            toast.querySelector('.toast-close')?.addEventListener('click', () => toast.remove());
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 30000);
+        }
+
         // --- TJENESTER MODUL ---
         (window as any).deleteTjeneste = async (id, name) => {
             if (confirm(`Vil du slette tjenesten "${name}"?`)) {
                 try {
-                    const content = await getFileContent(id);
-                    await backupToSlettetSheet(SHEET_ID, 'tjeneste', name, content);
                     await deleteFile(id);
                     (window as any).loadTjenesterModule();
+                    showDeletionToast(name,
+                        'Filen er lagt i Google Drive-papirkurven og kan gjenopprettes derfra innen 30 dager. ' +
+                        'Gå til drive.google.com → Papirkurv for å gjenopprette.');
                 } catch (e) { alert("Sletting feilet."); }
             }
         };
@@ -437,10 +468,11 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         (window as any).deleteMelding = async (id, name) => {
             if (confirm(`Vil du slette "${name}"?`)) {
                 try {
-                    const content = await getFileContent(id);
-                    await backupToSlettetSheet(SHEET_ID, 'melding', name, content);
                     await deleteFile(id);
                     (window as any).loadMeldingerModule();
+                    showDeletionToast(name,
+                        'Filen er lagt i Google Drive-papirkurven og kan gjenopprettes derfra innen 30 dager. ' +
+                        'Gå til drive.google.com → Papirkurv for å gjenopprette.');
                 } catch (e) { alert("Sletting feilet."); }
             }
         };
@@ -579,15 +611,18 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         let tannlegeSaveTimeout = null;
 
         (window as any).deleteTannlege = async (rowIndex, name) => {
-            if (confirm(`Vil du fjerne "${name}" fra nettsiden?`)) {
+            if (confirm(`Vil du slette "${name}" permanent? Dette kan ikke angres.`)) {
                 try {
                     const allRows = await getTannlegerRaw(SHEET_ID);
                     const rowData = allRows.find(r => r.rowIndex === rowIndex);
                     if (rowData) {
                         await backupToSlettetSheet(SHEET_ID, 'tannlege', rowData.name, JSON.stringify(rowData));
                     }
-                    await deleteTannlegeRow(SHEET_ID, rowIndex);
+                    await deleteTannlegeRowPermanently(SHEET_ID, rowIndex);
                     (window as any).openTannlegerModule();
+                    showDeletionToast(name,
+                        'Raden er permanent fjernet fra tannleger-arket. En sikkerhetskopi finnes i «Slettet»-fanen i Google Sheets ' +
+                        'og kan kopieres tilbake manuelt ved behov.');
                 } catch (e) { alert("Feil ved sletting."); }
             }
         };
