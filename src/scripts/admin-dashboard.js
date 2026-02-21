@@ -443,32 +443,36 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                 const isLast = idx === images.length - 1;
 
                 html += `
-                    <div class="admin-card-interactive group flex flex-row items-center gap-4 ${!img.active ? 'opacity-60' : ''} ${isForsidebilde ? 'border-amber-200 bg-amber-50/30' : ''}">
-                        <div class="shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center" data-thumb-row="${img.rowIndex}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        </div>
-                        <div class="min-w-0 flex-grow">
-                            <div class="flex flex-wrap items-center gap-1 sm:gap-2 mb-1">
-                                ${badgeHtml}
-                                <span class="admin-status-pill ${statusClass} text-[8px] shrink-0">${statusText}</span>
-                                <h3 class="font-bold text-brand sm:truncate sm:min-w-0 text-sm">${img.title || img.image || 'Uten tittel'}</h3>
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row sm:items-center gap-3 ${!img.active ? 'opacity-60' : ''} ${isForsidebilde ? 'border-amber-200 bg-amber-50/30' : ''}">
+                        <!-- Thumbnail + tekst -->
+                        <div class="flex items-center gap-3 flex-grow min-w-0">
+                            <div class="shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center" data-thumb-row="${img.rowIndex}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                             </div>
-                            <p class="text-xs text-slate-500 line-clamp-1 italic">${img.image || 'Ingen bilde'}</p>
+                            <div class="min-w-0 flex-grow">
+                                <div class="flex flex-wrap items-center gap-1 mb-1">
+                                    ${badgeHtml}
+                                    <span class="admin-status-pill ${statusClass} text-[8px] shrink-0">${statusText}</span>
+                                </div>
+                                <h3 class="font-bold text-brand text-sm truncate">${img.title || img.image || 'Uten tittel'}</h3>
+                                <p class="text-xs text-slate-500 truncate italic mt-0.5">${img.image || 'Ingen bilde'}</p>
+                            </div>
                         </div>
-                        <div class="flex flex-col gap-1 shrink-0">
-                            <button data-row="${img.rowIndex}" data-dir="-1" class="reorder-btn p-1.5 rounded-lg bg-slate-100 text-slate-400 hover:bg-brand hover:text-white transition-all ${isFirst || isForsidebilde ? 'invisible' : ''}" title="Flytt opp">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                        <!-- Knapper: rekkefølge + rediger + slett -->
+                        <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                            <div class="flex flex-col gap-1">
+                                <button data-row="${img.rowIndex}" data-dir="-1" class="reorder-btn p-1.5 rounded-lg bg-slate-100 text-slate-400 hover:bg-brand hover:text-white transition-all ${isFirst || isForsidebilde ? 'invisible' : ''}" title="Flytt opp">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                </button>
+                                <button data-row="${img.rowIndex}" data-dir="1" class="reorder-btn p-1.5 rounded-lg bg-slate-100 text-slate-400 hover:bg-brand hover:text-white transition-all ${isLast || isForsidebilde ? 'invisible' : ''}" title="Flytt ned">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </button>
+                            </div>
+                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="edit-galleri-btn p-2.5 sm:p-3 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all" title="Rediger">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
-                            <button data-row="${img.rowIndex}" data-dir="1" class="reorder-btn p-1.5 rounded-lg bg-slate-100 text-slate-400 hover:bg-brand hover:text-white transition-all ${isLast || isForsidebilde ? 'invisible' : ''}" title="Flytt ned">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                            </button>
-                        </div>
-                        <div class="flex gap-2 shrink-0">
-                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="edit-galleri-btn p-3 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            </button>
-                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="delete-galleri-btn p-3 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all group/btn" title="Slett">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="delete-galleri-btn p-2.5 sm:p-3 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all" title="Slett">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                             </button>
                         </div>
                     </div>`;
