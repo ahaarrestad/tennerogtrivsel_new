@@ -47,6 +47,9 @@ vi.mock('fs', () => ({
                 if (event === 'finish') cb();
             }),
         }),
+        promises: {
+            copyFile: vi.fn().mockResolvedValue(undefined),
+        },
     },
     existsSync: vi.fn(),
     mkdirSync: vi.fn(),
@@ -59,6 +62,9 @@ vi.mock('fs', () => ({
             if (event === 'finish') cb();
         }),
     }),
+    promises: {
+        copyFile: vi.fn().mockResolvedValue(undefined),
+    },
 }));
 
 vi.mock('stream/promises', () => ({
@@ -85,6 +91,7 @@ describe('sync-data.js', () => {
         fs.existsSync.mockReturnValue(true);
         fs.readFileSync.mockReturnValue(Buffer.from('dummy'));
         fs.readdirSync.mockReturnValue([]);
+        fs.promises.copyFile.mockResolvedValue(undefined);
 
         logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
         vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -344,6 +351,44 @@ describe('sync-data.js', () => {
             expect(mockDrive.files.get).toHaveBeenCalledTimes(1);
             const logs = logSpy.mock.calls.map(c => c[0]);
             expect(logs.some(l => l.includes('forsidebilde er uendret'))).toBe(true);
+        });
+
+        it('bør kopiere bildet til public/ etter nedlasting', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } });
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: { values: [['forsideBilde', 'nytt-bilde.jpg']] }
+            });
+            mockDrive.files.list.mockResolvedValueOnce({
+                data: { files: [{ id: 'f1', name: 'nytt-bilde.jpg', md5Checksum: 'different-hash' }] }
+            });
+            mockDrive.files.get.mockResolvedValueOnce({ data: { on: vi.fn() } });
+            fs.existsSync.mockReturnValue(false);
+
+            await syncForsideBilde();
+
+            expect(fs.promises.copyFile).toHaveBeenCalledWith(
+                expect.stringContaining('src/assets/hovedbilde.png'),
+                expect.stringContaining('public/hovedbilde.png')
+            );
+        });
+
+        it('bør kopiere bildet til public/ selv om det ikke er endret', async () => {
+            const dummyHash = crypto.createHash('md5').update(Buffer.from('dummy')).digest('hex');
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } });
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: { values: [['forsideBilde', 'uendret.jpg']] }
+            });
+            mockDrive.files.list.mockResolvedValueOnce({
+                data: { files: [{ id: 'f2', name: 'uendret.jpg', md5Checksum: dummyHash }] }
+            });
+            fs.existsSync.mockReturnValue(true);
+
+            await syncForsideBilde();
+
+            expect(fs.promises.copyFile).toHaveBeenCalledWith(
+                expect.stringContaining('src/assets/hovedbilde.png'),
+                expect.stringContaining('public/hovedbilde.png')
+            );
         });
 
         it('bør advare hvis bilde ikke finnes i Drive', async () => {

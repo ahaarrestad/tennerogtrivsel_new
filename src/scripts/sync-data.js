@@ -288,6 +288,10 @@ async function syncForsideBilde() {
             console.log(`  ⏭️ Skip: forsidebilde er uendret`);
         }
 
+        // Kopier til public/ slik at OG-meta-taggen alltid peker på admin-valgt bilde
+        const publicPath = path.join(process.cwd(), 'public/hovedbilde.png');
+        await fs.promises.copyFile(destinationPath, publicPath);
+
         console.log('  ✅ Forsidebilde synkronisert.');
     } catch (err) {
         console.error('❌ Feil under synkronisering av forsidebilde:', err.message);

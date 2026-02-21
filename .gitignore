@@ -24,6 +24,7 @@ pnpm-debug.log*
 .idea/
 /src/assets/tannleger/
 !src/assets/tannleger/.gitkeep
+/public/hovedbilde.png
 src/content/tannleger.json
 /src/content/tjenester/
 !/src/content/tjenester/.gitkeep
