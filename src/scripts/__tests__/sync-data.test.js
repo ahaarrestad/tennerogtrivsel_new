@@ -3,6 +3,24 @@ import fs from 'fs';
 import { google } from 'googleapis';
 import crypto from 'crypto';
 
+// sharp-mock – hoisted så factory-funksjonen kan referere til den
+const { mockSharp, mockSharpInstance } = vi.hoisted(() => {
+    const inst = {
+        metadata: vi.fn(),
+        resize: vi.fn(),
+        extract: vi.fn(),
+        png: vi.fn(),
+        toFile: vi.fn(),
+    };
+    // Gjør chain-kallene returnere this som standard
+    inst.resize.mockReturnValue(inst);
+    inst.extract.mockReturnValue(inst);
+    inst.png.mockReturnValue(inst);
+    return { mockSharp: vi.fn().mockReturnValue(inst), mockSharpInstance: inst };
+});
+
+vi.mock('sharp', () => ({ default: mockSharp }));
+
 // Mocks
 const mockSheets = {
     spreadsheets: {
@@ -47,9 +65,6 @@ vi.mock('fs', () => ({
                 if (event === 'finish') cb();
             }),
         }),
-        promises: {
-            copyFile: vi.fn().mockResolvedValue(undefined),
-        },
     },
     existsSync: vi.fn(),
     mkdirSync: vi.fn(),
@@ -62,9 +77,6 @@ vi.mock('fs', () => ({
             if (event === 'finish') cb();
         }),
     }),
-    promises: {
-        copyFile: vi.fn().mockResolvedValue(undefined),
-    },
 }));
 
 vi.mock('stream/promises', () => ({
@@ -72,7 +84,7 @@ vi.mock('stream/promises', () => ({
 }));
 
 // Importer etter mocks
-const { syncTannleger, syncMarkdownCollection, syncForsideBilde, runSync } = await import('../sync-data.js');
+const { syncTannleger, syncMarkdownCollection, syncForsideBilde, runSync, cropToOG } = await import('../sync-data.js');
 
 describe('sync-data.js', () => {
     let logSpy;
@@ -91,7 +103,14 @@ describe('sync-data.js', () => {
         fs.existsSync.mockReturnValue(true);
         fs.readFileSync.mockReturnValue(Buffer.from('dummy'));
         fs.readdirSync.mockReturnValue([]);
-        fs.promises.copyFile.mockResolvedValue(undefined);
+
+        // sharp-mocken må settes opp på nytt etter vi.resetAllMocks()
+        mockSharpInstance.metadata.mockResolvedValue({ width: 2000, height: 1000 });
+        mockSharpInstance.resize.mockReturnValue(mockSharpInstance);
+        mockSharpInstance.extract.mockReturnValue(mockSharpInstance);
+        mockSharpInstance.png.mockReturnValue(mockSharpInstance);
+        mockSharpInstance.toFile.mockResolvedValue({});
+        mockSharp.mockReturnValue(mockSharpInstance);
 
         logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
         vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -353,10 +372,15 @@ describe('sync-data.js', () => {
             expect(logs.some(l => l.includes('forsidebilde er uendret'))).toBe(true);
         });
 
-        it('bør kopiere bildet til public/ etter nedlasting', async () => {
+        it('bør generere beskjært OG-bilde til public/ etter nedlasting', async () => {
             mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } });
             mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
-                data: { values: [['forsideBilde', 'nytt-bilde.jpg']] }
+                data: { values: [
+                    ['forsideBilde', 'nytt-bilde.jpg'],
+                    ['forsideBildeScale', '1.5'],
+                    ['forsideBildePosX', '60'],
+                    ['forsideBildePosY', '40'],
+                ]}
             });
             mockDrive.files.list.mockResolvedValueOnce({
                 data: { files: [{ id: 'f1', name: 'nytt-bilde.jpg', md5Checksum: 'different-hash' }] }
@@ -366,13 +390,11 @@ describe('sync-data.js', () => {
 
             await syncForsideBilde();
 
-            expect(fs.promises.copyFile).toHaveBeenCalledWith(
-                expect.stringContaining('src/assets/hovedbilde.png'),
-                expect.stringContaining('public/hovedbilde.png')
-            );
+            expect(mockSharp).toHaveBeenCalledWith(expect.stringContaining('src/assets/hovedbilde.png'));
+            expect(mockSharpInstance.toFile).toHaveBeenCalledWith(expect.stringContaining('public/hovedbilde.png'));
         });
 
-        it('bør kopiere bildet til public/ selv om det ikke er endret', async () => {
+        it('bør generere OG-bilde selv om bildefilen er uendret', async () => {
             const dummyHash = crypto.createHash('md5').update(Buffer.from('dummy')).digest('hex');
             mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } });
             mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
@@ -385,10 +407,7 @@ describe('sync-data.js', () => {
 
             await syncForsideBilde();
 
-            expect(fs.promises.copyFile).toHaveBeenCalledWith(
-                expect.stringContaining('src/assets/hovedbilde.png'),
-                expect.stringContaining('public/hovedbilde.png')
-            );
+            expect(mockSharpInstance.toFile).toHaveBeenCalledWith(expect.stringContaining('public/hovedbilde.png'));
         });
 
         it('bør advare hvis bilde ikke finnes i Drive', async () => {
@@ -408,6 +427,38 @@ describe('sync-data.js', () => {
             mockSheets.spreadsheets.values.get.mockRejectedValueOnce(new Error('Sheets API-feil'));
 
             await expect(syncForsideBilde()).rejects.toThrow('Sheets API-feil');
+        });
+    });
+
+    describe('cropToOG', () => {
+        it('bør lage et 1200×630 bilde sentrert på fokuspunktet', async () => {
+            // 2000×1000 bilde, scale=1, posX=50, posY=50 (standard sentrum)
+            await cropToOG('/src/bilde.png', '/public/bilde.png', 1, 50, 50);
+
+            // cover-scale: max(1200/2000, 630/1000) = max(0.6, 0.63) = 0.63
+            // totalScale = 0.63 * 1 = 0.63 → scaledW=1260, scaledH=630
+            expect(mockSharp).toHaveBeenCalledWith('/src/bilde.png');
+            expect(mockSharpInstance.resize).toHaveBeenCalledWith(1260, 630, { fit: 'fill' });
+            expect(mockSharpInstance.extract).toHaveBeenCalledWith({ left: 30, top: 0, width: 1200, height: 630 });
+            expect(mockSharpInstance.toFile).toHaveBeenCalledWith('/public/bilde.png');
+        });
+
+        it('bør bruke brukerzoom på toppen av cover-skalaen', async () => {
+            // 2000×1000, scale=2 → totalScale=0.63*2=1.26 → scaledW=2520, scaledH=1260
+            await cropToOG('/src/bilde.png', '/public/bilde.png', 2, 50, 50);
+
+            expect(mockSharpInstance.resize).toHaveBeenCalledWith(2520, 1260, { fit: 'fill' });
+            // focusX=1260, focusY=630 → left=660, top=315
+            expect(mockSharpInstance.extract).toHaveBeenCalledWith({ left: 660, top: 315, width: 1200, height: 630 });
+        });
+
+        it('bør klemme utsnitt til bildegrensen hvis fokuspunkt er nær kanten', async () => {
+            // posX=0, posY=0 → fokus i øvre venstre hjørne → left/top skal bli 0
+            await cropToOG('/src/bilde.png', '/public/bilde.png', 1, 0, 0);
+
+            const extractCall = mockSharpInstance.extract.mock.calls[0][0];
+            expect(extractCall.left).toBe(0);
+            expect(extractCall.top).toBe(0);
         });
     });
 

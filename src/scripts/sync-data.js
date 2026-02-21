@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { pipeline } from 'stream/promises';
 import crypto from 'crypto';
+import sharp from 'sharp';
 
 // --- KONFIGURASJON ---
 function getConfig() {
@@ -236,6 +237,39 @@ async function syncTannleger() {
                             }));
                         }
 
+/**
+ * Genererer et beskjært OG-bilde (1200×630) som replikerer CSS-en i Forside.astro:
+ * object-fit:cover + scale(scale) sentrert på (posX%, posY%).
+ */
+export async function cropToOG(sourcePath, outputPath, scale = 1, posX = 50, posY = 50) {
+    const OG_W = 1200;
+    const OG_H = 630;
+
+    const { width: origW, height: origH } = await sharp(sourcePath).metadata();
+
+    // Repliker object-fit:cover: skalér bildet til å dekke OG-rammen
+    const coverScale = Math.max(OG_W / origW, OG_H / origH);
+    // Legg på brukerzoom oppå cover-skalaen
+    const totalScale = coverScale * scale;
+
+    const scaledW = Math.round(origW * totalScale);
+    const scaledH = Math.round(origH * totalScale);
+
+    // Fokuspunkt i det skalerte bildet
+    const focusX = Math.round(scaledW * posX / 100);
+    const focusY = Math.round(scaledH * posY / 100);
+
+    // Klipp ut OG-rammen sentrert på fokuspunktet, begrenset til bildets grenser
+    const left = Math.max(0, Math.min(scaledW - OG_W, focusX - Math.round(OG_W / 2)));
+    const top  = Math.max(0, Math.min(scaledH - OG_H, focusY - Math.round(OG_H / 2)));
+
+    await sharp(sourcePath)
+        .resize(scaledW, scaledH, { fit: 'fill' })
+        .extract({ left, top, width: OG_W, height: OG_H })
+        .png()
+        .toFile(outputPath);
+}
+
 // Synkroniserer forsidebilde fra Google Drive basert på innstillingen i Sheets
 async function syncForsideBilde() {
     const config = getConfig();
@@ -265,8 +299,12 @@ async function syncForsideBilde() {
         });
 
         const rows = res.data.values || [];
-        const forsideRow = rows.find(row => row[0] === 'forsideBilde');
-        const bildeFil = forsideRow?.[1] || '';
+        const getRow = (key, def) => parseFloat(rows.find(r => r[0] === key)?.[1]) || def;
+
+        const bildeFil = rows.find(r => r[0] === 'forsideBilde')?.[1] || '';
+        const scale    = getRow('forsideBildeScale', 1);
+        const posX     = getRow('forsideBildePosX',  50);
+        const posY     = getRow('forsideBildePosY',  50);
 
         if (!bildeFil) {
             console.log('  ℹ️ Ingen forsidebilde konfigurert, hopper over.');
@@ -288,9 +326,10 @@ async function syncForsideBilde() {
             console.log(`  ⏭️ Skip: forsidebilde er uendret`);
         }
 
-        // Kopier til public/ slik at OG-meta-taggen alltid peker på admin-valgt bilde
+        // Generer beskjært OG-bilde (1200×630) til public/ med samme utsnitt som forsiden
         const publicPath = path.join(process.cwd(), 'public/hovedbilde.png');
-        await fs.promises.copyFile(destinationPath, publicPath);
+        console.log(`  ✂️ Genererer OG-bilde (scale=${scale}, x=${posX}%, y=${posY}%)...`);
+        await cropToOG(destinationPath, publicPath, scale, posX, posY);
 
         console.log('  ✅ Forsidebilde synkronisert.');
     } catch (err) {
