@@ -83,6 +83,14 @@ test.describe('Admin-panel Fase 1', () => {
     }, options);
   };
 
+  test('innloggingssiden skal vise «Husk meg»-checkbox, unchecked som standard', async ({ page }) => {
+    await page.goto('/admin');
+    const checkbox = page.locator('#remember-me');
+    await expect(checkbox).toBeVisible();
+    await expect(checkbox).not.toBeChecked();
+    await expect(page.locator('label[for="remember-me"]')).toBeVisible();
+  });
+
   test('skal laste admin-siden og vise innloggingsknapp uten JS-feil', async ({ page }) => {
     const consoleErrors: string[] = [];
     page.on('console', msg => {

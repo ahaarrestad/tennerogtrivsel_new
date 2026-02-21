@@ -361,6 +361,10 @@ export function tryRestoreSession() {
         try {
             const { access_token, expiry } = JSON.parse(stored);
             if (Date.now() < expiry - 60000) {
+                if (!gapi.client) {
+                    console.warn("[Admin] gapi.client ikke klar for setToken");
+                    return false;
+                }
                 console.log("[Admin] Gjenoppretter sesjon i GAPI");
                 gapi.client.setToken({ access_token });
                 return true;

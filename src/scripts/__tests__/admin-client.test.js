@@ -293,7 +293,7 @@ describe('admin-client.js', () => {
             expect(localStorage.getItem('admin_google_token')).toBeNull();
         });
 
-        it('tryRestoreSession skal returnere false hvis gapi.client ikke er klar', async () => {
+        it('tryRestoreSession skal returnere false og BEVARE token hvis gapi.client ikke er klar', async () => {
             const future = Date.now() + 3600000;
             localStorage.setItem('admin_google_token', JSON.stringify({
                 access_token: 'test-token',
@@ -303,6 +303,8 @@ describe('admin-client.js', () => {
             vi.stubGlobal('gapi', { client: null });
 
             expect(tryRestoreSession()).toBe(false);
+            // Tokenet skal IKKE slettes – det kan brukes når gapi er klart
+            expect(localStorage.getItem('admin_google_token')).not.toBeNull();
         });
 
         it('logout skal fjerne token hvis gapi.client finnes', () => {
@@ -884,6 +886,24 @@ describe('admin-client.js', () => {
             expect(result).toBeNull();
             expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Kunne ikke hente'), expect.any(Error));
             consoleSpy.mockRestore();
+        });
+    });
+
+    describe('login()-flyt med setRememberMe', () => {
+        it('login() med _rememberMe=false lagrer token i sessionStorage', async () => {
+            setRememberMe(false);
+            initGis(() => {});
+            login();
+            await vi.waitFor(() => expect(sessionStorage.getItem('admin_google_token')).not.toBeNull());
+            expect(localStorage.getItem('admin_google_token')).toBeNull();
+        });
+
+        it('login() med _rememberMe=true lagrer token i localStorage', async () => {
+            setRememberMe(true);
+            initGis(() => {});
+            login();
+            await vi.waitFor(() => expect(localStorage.getItem('admin_google_token')).not.toBeNull());
+            expect(sessionStorage.getItem('admin_google_token')).toBeNull();
         });
     });
 
