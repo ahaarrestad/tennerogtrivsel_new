@@ -23,3 +23,6 @@ For å teste lokalt, brukt "npm run dev" og se siden på http://localhost:4321/
 
 ### Kontakt utvikler
 For spørsmål om løsningen, kontakt Asbjørn Aarrestad
+
+### ai-context
+CLAUDE.md inneholder detaljerte instruksjoner for hvordan en AI-agent (Claude Code) skal operere når den interagerer med dette prosjektet. Det dekker alt fra koding og testing til sikkerhetspraksis og kvalitetskontroll, og er essensielt for å sikre at alle endringer i koden er i tråd med prosjektets standarder og krav.
