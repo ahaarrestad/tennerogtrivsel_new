@@ -731,20 +731,41 @@ export async function backupToSlettetSheet(spreadsheetId, type, title, data) {
 }
 
 /**
- * Logisk sletting av en tannlege (setter Aktiv til 'nei').
+ * Permanent sletting av en tannlege-rad fra arket (fysisk fjerning).
  */
-export async function deleteTannlegeRow(spreadsheetId, rowIndex) {
+export async function deleteTannlegeRowPermanently(spreadsheetId, rowIndex) {
     try {
-        await gapi.client.sheets.spreadsheets.values.update({
-            spreadsheetId: spreadsheetId,
-            range: `tannleger!E${rowIndex}`, // Kolonne E er 'Aktiv'
-            valueInputOption: 'RAW',
-            resource: { values: [['nei']] }
+        const sheetResp = await gapi.client.sheets.spreadsheets.get({
+            spreadsheetId,
+            fields: 'sheets.properties'
         });
-        console.log(`[Admin] Tannlege rad ${rowIndex} deaktivert.`);
+        const sheet = (sheetResp.result.sheets || []).find(
+            s => s.properties.title === 'tannleger'
+        );
+        if (!sheet) {
+            throw new Error("Fant ikke 'tannleger'-arket i regnearket.");
+        }
+        const sheetId = sheet.properties.sheetId;
+
+        await gapi.client.sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: {
+                requests: [{
+                    deleteDimension: {
+                        range: {
+                            sheetId,
+                            dimension: 'ROWS',
+                            startIndex: rowIndex - 1,
+                            endIndex: rowIndex
+                        }
+                    }
+                }]
+            }
+        });
+        console.log(`[Admin] Tannlege rad ${rowIndex} permanent slettet.`);
         return true;
     } catch (err) {
-        console.error("[Admin] Kunne ikke slette tannlege:", err);
+        console.error("[Admin] Kunne ikke slette tannlege permanent:", err);
         throw err;
     }
 }

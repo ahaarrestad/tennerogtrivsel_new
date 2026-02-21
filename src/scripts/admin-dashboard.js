@@ -3,7 +3,7 @@ import {
     listFiles, getFileContent, saveFile, createFile, deleteFile,
     parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
     checkMultipleAccess, logout, getTannlegerRaw, updateTannlegeRow,
-    addTannlegeRow, deleteTannlegeRow
+    addTannlegeRow
 } from './admin-client.js';
 import { formatDate, sortMessages } from './textFormatter.js';
 import DOMPurify from 'dompurify';

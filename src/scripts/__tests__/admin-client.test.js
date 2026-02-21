@@ -26,7 +26,7 @@ import {
     getTannlegerRaw,
     updateTannlegeRow,
     addTannlegeRow,
-    deleteTannlegeRow,
+    deleteTannlegeRowPermanently,
     findFileByName,
     listImages,
     uploadImage,
@@ -705,15 +705,6 @@ describe('admin-client.js', () => {
             expect(gapi.client.sheets.spreadsheets.values.append).toHaveBeenCalled();
         });
 
-        it('deleteTannlegeRow skal sette Aktiv til nei', async () => {
-            gapi.client.sheets.spreadsheets.values.update.mockResolvedValue({});
-            await deleteTannlegeRow(spreadsheetId, 3);
-            expect(gapi.client.sheets.spreadsheets.values.update).toHaveBeenCalledWith(expect.objectContaining({
-                range: 'tannleger!E3',
-                resource: { values: [['nei']] }
-            }));
-        });
-
         it('skal kaste feil hvis API feiler i CRUD', async () => {
             gapi.client.sheets.spreadsheets.values.get.mockRejectedValue(new Error('fail'));
             await expect(getTannlegerRaw('id')).rejects.toThrow('fail');
@@ -728,10 +719,63 @@ describe('admin-client.js', () => {
             gapi.client.sheets.spreadsheets.values.append.mockRejectedValue(new Error('fail'));
             await expect(addTannlegeRow('id', {})).rejects.toThrow('fail');
         });
+    });
 
-        it('deleteTannlegeRow skal kaste feil hvis API feiler', async () => {
-            gapi.client.sheets.spreadsheets.values.update.mockRejectedValue(new Error('fail'));
-            await expect(deleteTannlegeRow('id', 1)).rejects.toThrow('fail');
+    describe('deleteTannlegeRowPermanently', () => {
+        const spreadsheetId = 'sheet-123';
+
+        it('skal hente sheetId og kalle batchUpdate med deleteDimension', async () => {
+            gapi.client.sheets.spreadsheets.get.mockResolvedValueOnce({
+                result: {
+                    sheets: [
+                        { properties: { title: 'tannleger', sheetId: 42 } },
+                        { properties: { title: 'Slettet', sheetId: 99 } }
+                    ]
+                }
+            });
+            gapi.client.sheets.spreadsheets.batchUpdate.mockResolvedValueOnce({});
+
+            const result = await deleteTannlegeRowPermanently(spreadsheetId, 3);
+
+            expect(result).toBe(true);
+            expect(gapi.client.sheets.spreadsheets.get).toHaveBeenCalledWith({
+                spreadsheetId,
+                fields: 'sheets.properties'
+            });
+            expect(gapi.client.sheets.spreadsheets.batchUpdate).toHaveBeenCalledWith({
+                spreadsheetId,
+                resource: {
+                    requests: [{
+                        deleteDimension: {
+                            range: {
+                                sheetId: 42,
+                                dimension: 'ROWS',
+                                startIndex: 2,
+                                endIndex: 3
+                            }
+                        }
+                    }]
+                }
+            });
+        });
+
+        it("skal kaste feil hvis 'tannleger'-arket ikke finnes", async () => {
+            gapi.client.sheets.spreadsheets.get.mockResolvedValueOnce({
+                result: { sheets: [{ properties: { title: 'Slettet', sheetId: 99 } }] }
+            });
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            await expect(deleteTannlegeRowPermanently(spreadsheetId, 3)).rejects.toThrow(
+                "Fant ikke 'tannleger'-arket i regnearket."
+            );
+            consoleSpy.mockRestore();
+        });
+
+        it('skal kaste feil og logge ved API-feil', async () => {
+            gapi.client.sheets.spreadsheets.get.mockRejectedValueOnce(new Error('api-feil'));
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            await expect(deleteTannlegeRowPermanently(spreadsheetId, 3)).rejects.toThrow('api-feil');
+            expect(consoleSpy).toHaveBeenCalled();
+            consoleSpy.mockRestore();
         });
     });
 
