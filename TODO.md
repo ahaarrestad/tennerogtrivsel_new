@@ -17,7 +17,7 @@
 ## Backlog
 
 - [ ] **UX/design-gjennomgang av den offentlige nettsiden**
-  - Bruk et team med Senior UX-designer, UX-designer og Senior Utvikler til å lage planen
+  - Bruk et team med Senior UX-designer, UX-designer, frontend-designer og Senior Utvikler til å lage planen
   - Skriv et design-dokument (f.eks. `docs/design-guide.md`) som beskriver prinsipper for layout, typografi, farger, spacing og responsivt design
   - Link design-dokumentet fra `CLAUDE.md` slik at det alltid følges ved fremtidige endringer
   - Lag deretter en konkret plan for å oppdatere layout/UX basert på best practice og målene i dokumentet
