@@ -16,11 +16,6 @@
 
 ## Backlog
 
-- [ ] **Egen side for Galleri / Klinikken**
-  - Lag en standalone-side (`/galleri` eller `/klinikken`) på samme måte som `/kontakt`, `/tjenester` og `/tannleger`
-  - Skal bruke `variant="white"` (konsistent med andre standalone-sider)
-  - Legg til i sitemap-tester (`sitemap-pages.spec.ts`)
-
 - [ ] **UX/design-gjennomgang av den offentlige nettsiden**
   - Bruk et team med Senior UX-designer, UX-designer og Senior Utvikler til å lage planen
   - Skriv et design-dokument (f.eks. `docs/design-guide.md`) som beskriver prinsipper for layout, typografi, farger, spacing og responsivt design
@@ -36,6 +31,12 @@
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
 ## Fullført
+
+- [x] **Egen side for Galleri / Klinikken**
+  - Standalone-side `/galleri` med `variant="white"` (samme mønster som /kontakt, /tjenester, /tannleger)
+  - `standalone`-prop på Galleri-komponenten viser alle bilder på mobil (ikke bare 2)
+  - Navbar `mobileHref` peker til `/galleri` i stedet for `/#galleri`
+  - Lagt til i sitemap-tester og hvit-bakgrunn-test
 
 - [x] **Refaktorere inline-klasser til global.css**
   - Ny `getSectionClasses()` hjelpefunksjon erstatter duplisert variant-logikk i 4 komponenter

@@ -9,7 +9,7 @@ const { settings = {} } = Astro.props;
 const navLinks = [
     { name: 'Forside', href: '/', mobileHref: '/' },
     { name: settings.kontaktTittel || 'Kontakt', href: '/#kontakt', mobileHref: '/#kontakt' },
-    { name: settings.galleriTittel || 'Klinikken vår', href: '/#galleri', mobileHref: '/#galleri' },
+    { name: settings.galleriTittel || 'Klinikken vår', href: '/#galleri', mobileHref: '/galleri' },
     { name: settings.tjenesterTittel || 'Tjenester', href: '/#tjenester', mobileHref: '/tjenester' },
     { name: settings.tannlegerTittel || 'Om oss', href: '/#tannleger', mobileHref: '/tannleger' },
 ];
