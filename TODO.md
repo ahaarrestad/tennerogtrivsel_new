@@ -48,17 +48,14 @@
   - Status-kode-sjekker overlapper mellom sitemap-pages.spec.ts og links.spec.ts
   - Potensial: ~48 færre nettleser-instanser, raskere E2E-suite
 
-- [ ] **Robust feilhåndtering ved tapt Google-tilkobling i admin**
-  - Ved redeploy eller større oppdateringer mistes noen ganger kontakten til Google API
-  - Admin viser da feilmeldinger ("får ikke tak i filene") i stedet for å prøve å gjenopprette
-  - Mulige løsninger å utrede:
-    1. Automatisk re-autentisering (silent token refresh) ved 401/403-feil
-    2. Retry-logikk med eksponentiell backoff på API-kall som feiler
-    3. Automatisk side-reload etter et visst antall feilede forsøk
-    4. Graceful degradation — vis sist cachede data med varsel om at tilkoblingen er nede
-  - Undersøk rotårsaken: er det OAuth-tokenet som utløper, GAPI-scriptet som mistes, eller noe annet?
 
 ## Fullført
+
+- [x] **Robust feilhåndtering ved tapt Google-tilkobling i admin**
+  - Ny `admin-api-retry.js` med `classifyError`, `withRetry` (eksponentiell backoff) og `createAuthRefresher`
+  - Automatisk token-refresh ved 401/403 via `silentLogin()` og custom events
+  - «Prøv igjen»-knapper i alle feilmeldinger (meldinger, tjenester, tannleger, galleri, innstillinger)
+  - 34 nye tester for retry-modul + 10 nye tester for dashboard/client
 
 - [x] **Reduser antall/størrelse på dependencies 2**
   - Byttet `googleapis` (196 MB) til `@googleapis/sheets` + `@googleapis/drive` + `google-auth-library`
