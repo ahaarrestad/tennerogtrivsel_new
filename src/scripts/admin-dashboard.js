@@ -104,9 +104,29 @@ export function autoResizeTextarea(el) {
 }
 
 /**
- * Lagrer en enkelt innstilling
+ * Formaterer en Date til norsk kort-format: "22. feb kl. 14:32"
  */
-export async function saveSingleSetting(index, inputEl, currentSettings, sheetId) {
+export function formatTimestamp(date) {
+    const months = ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des'];
+    const d = date.getDate();
+    const m = months[date.getMonth()];
+    const h = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    return `${d}. ${m} kl. ${h}:${min}`;
+}
+
+/**
+ * Oppdaterer "Sist hentet"-tidspunkt i modul-headeren
+ */
+export function updateLastFetchedTime(date) {
+    const el = document.getElementById('settings-last-fetched');
+    if (el) el.textContent = formatTimestamp(date);
+}
+
+/**
+ * Lagrer en enkelt innstilling med stille verifisering mot Google Sheets
+ */
+export async function saveSingleSetting(index, inputEl, currentSettings, sheetId, onReload) {
     const statusEl = document.getElementById(`status-${index}`);
     if (!statusEl) return;
 
@@ -115,7 +135,7 @@ export async function saveSingleSetting(index, inputEl, currentSettings, sheetId
     if (newValue === originalValue) return;
 
     statusEl.innerHTML = '<svg class="animate-spin h-4 w-4 text-slate-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
-    
+
     try {
         const setting = currentSettings[index];
         if (setting.isVirtual) {
@@ -129,11 +149,29 @@ export async function saveSingleSetting(index, inputEl, currentSettings, sheetId
             await updateSettings(sheetId, updatedList);
         }
         currentSettings[index].value = newValue;
-        statusEl.innerHTML = '<span class="text-green-600 text-[10px] font-bold" title="Publiseres automatisk om noen minutter">✅</span>';
-        setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 3000);
+
+        // Stille verifisering: hent tilbake fra Sheets og sammenlign
+        const savedTime = new Date();
+        try {
+            const freshSettings = await getSettingsWithNotes(sheetId);
+            updateLastFetchedTime(new Date());
+            const freshSetting = freshSettings.find(s => s.id === setting.id);
+            if (freshSetting && freshSetting.value !== newValue) {
+                console.warn(`[Admin] Mismatch etter lagring av "${setting.id}": forventet "${newValue}", fikk "${freshSetting.value}"`);
+                statusEl.innerHTML = '<span class="text-amber-600 text-[10px] font-bold">⚠️ Laster på nytt…</span>';
+                if (onReload) onReload();
+                return;
+            }
+        } catch (verifyErr) {
+            console.warn("[Admin] Verifisering feilet, men lagring gikk OK:", verifyErr);
+        }
+
+        const ts = formatTimestamp(savedTime);
+        statusEl.innerHTML = `<span class="text-green-600 text-[10px] font-bold" title="Publiseres automatisk om noen minutter">✅ ${ts}</span>`;
+        setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 5000);
     } catch (e) {
         console.error("Save failed", e);
-        if (statusEl) statusEl.innerHTML = '<span class="text-red-500 text-[10px] font-bold">❌</span>';
+        if (statusEl) statusEl.innerHTML = '<span class="text-red-500 text-[10px] font-bold">❌ Lagring feilet</span>';
     }
 }
 

@@ -15,9 +15,6 @@
 (Ingen oppgaver pågår akkurat nå.)
 
 ## Backlog
-
-- [ ] **Utrede backend-alternativer for mer «live» oppdatering**
-  - Undersøk muligheter for å erstatte eller supplere Google Sheets som backend
   - Krav: Google-innlogging beholdes, løsningen skal kunne kjøre gratis
   - Viktigst at admin-siden oppleves responsiv og «live» — nettsiden kan henge litt etter
   - Vurder alternativer som Firebase, Supabase, Cloudflare D1/KV, eller hybrid (live admin + statisk site)
@@ -43,6 +40,13 @@
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
 ## Fullført
+
+- [x] **Utrede backend-alternativer for mer «live» oppdatering**
+  - Konklusjon: Beholdt Google Sheets — admin er allerede live nok, nettsiden kan henge litt etter
+  - Implementert stille verifisering etter lagring (re-fetch fra Sheets + sammenligning)
+  - Tidspunkt i lagremeldinger ("✅ 22. feb kl. 14:32") og "Sist hentet"-tid i modul-header
+  - Mismatch → automatisk reload av modulen
+  - Fase 1 ferdig (innstillinger), galleri/tannleger kan utvides senere
 
 - [x] **Sikre at Dependabot-PRer ikke merges ved feilet bygg**
   - Auto-merge begrenset til minor/patch (major krever manuell gjennomgang)

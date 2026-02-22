@@ -49,7 +49,7 @@ const {
     enforceAccessControl, updateUIWithUser, autoResizeTextarea,
     saveSingleSetting, loadMeldingerModule, loadTjenesterModule,
     loadTannlegerModule, loadGalleriListeModule, reorderGalleriItem,
-    mergeSettingsWithDefaults
+    mergeSettingsWithDefaults, formatTimestamp, updateLastFetchedTime
 } = adminDashboard;
 
 describe('admin-dashboard.js', () => {
@@ -90,7 +90,7 @@ describe('admin-dashboard.js', () => {
     });
 
     describe('saveSingleSetting', () => {
-        it('should call updateSettings if value changed', async () => {
+        it('should call updateSettings if value changed and verify against Sheets', async () => {
             const settings = [{ id: 'siteTitle', value: 'Old' }];
             const input = document.createElement('input');
             input.value = 'New';
@@ -99,11 +99,69 @@ describe('admin-dashboard.js', () => {
             document.body.appendChild(status);
 
             adminClient.updateSettings.mockResolvedValue(true);
-            
+            adminClient.getSettingsWithNotes.mockResolvedValue([{ id: 'siteTitle', value: 'New' }]);
+
             await saveSingleSetting(0, input, settings, 'sheet-123');
-            
+
             expect(adminClient.updateSettings).toHaveBeenCalled();
+            expect(adminClient.getSettingsWithNotes).toHaveBeenCalledWith('sheet-123');
             expect(settings[0].value).toBe('New');
+            expect(status.innerHTML).toContain('✅');
+        });
+
+        it('should reload module on mismatch after verification', async () => {
+            const settings = [{ id: 'siteTitle', value: 'Old' }];
+            const input = document.createElement('input');
+            input.value = 'New';
+            const status = document.createElement('div');
+            status.id = 'status-0';
+            document.body.appendChild(status);
+
+            adminClient.updateSettings.mockResolvedValue(true);
+            adminClient.getSettingsWithNotes.mockResolvedValue([{ id: 'siteTitle', value: 'SomethingElse' }]);
+            const onReload = vi.fn();
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+            await saveSingleSetting(0, input, settings, 'sheet-123', onReload);
+
+            expect(onReload).toHaveBeenCalled();
+            expect(status.innerHTML).toContain('⚠️');
+            warnSpy.mockRestore();
+        });
+
+        it('should still show success if verification fetch fails', async () => {
+            const settings = [{ id: 'siteTitle', value: 'Old' }];
+            const input = document.createElement('input');
+            input.value = 'New';
+            const status = document.createElement('div');
+            status.id = 'status-0';
+            document.body.appendChild(status);
+
+            adminClient.updateSettings.mockResolvedValue(true);
+            adminClient.getSettingsWithNotes.mockRejectedValue(new Error('network'));
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+            await saveSingleSetting(0, input, settings, 'sheet-123');
+
+            expect(settings[0].value).toBe('New');
+            expect(status.innerHTML).toContain('✅');
+            warnSpy.mockRestore();
+        });
+
+        it('should include timestamp in success message', async () => {
+            const settings = [{ id: 'siteTitle', value: 'Old' }];
+            const input = document.createElement('input');
+            input.value = 'New';
+            const status = document.createElement('div');
+            status.id = 'status-0';
+            document.body.appendChild(status);
+
+            adminClient.updateSettings.mockResolvedValue(true);
+            adminClient.getSettingsWithNotes.mockResolvedValue([{ id: 'siteTitle', value: 'New' }]);
+
+            await saveSingleSetting(0, input, settings, 'sheet-123');
+
+            expect(status.innerHTML).toMatch(/kl\. \d{2}:\d{2}/);
         });
 
         it('should handle save error', async () => {
@@ -116,7 +174,7 @@ describe('admin-dashboard.js', () => {
 
             adminClient.updateSettings.mockRejectedValue(new Error('fail'));
             const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-            
+
             await saveSingleSetting(0, input, settings, 'sheet-123');
             expect(status.innerHTML).toContain('❌');
             spy.mockRestore();
@@ -813,6 +871,10 @@ describe('admin-dashboard.js', () => {
             document.body.appendChild(status);
 
             adminClient.updateSettingByKey.mockResolvedValue(true);
+            adminClient.getSettingsWithNotes.mockResolvedValue([
+                { id: 'phone1', value: 'Old' },
+                { id: 'kontaktTittel', value: 'Ny Kontakt' }
+            ]);
 
             await saveSingleSetting(1, input, settings, 'sheet-123');
 
@@ -834,6 +896,7 @@ describe('admin-dashboard.js', () => {
             document.body.appendChild(status);
 
             adminClient.updateSettings.mockResolvedValue(true);
+            adminClient.getSettingsWithNotes.mockResolvedValue([{ id: 'phone1', value: 'New' }]);
 
             await saveSingleSetting(0, input, settings, 'sheet-123');
 
@@ -841,6 +904,35 @@ describe('admin-dashboard.js', () => {
             const callArg = adminClient.updateSettings.mock.calls[0][1];
             expect(callArg.every(s => !s.isVirtual)).toBe(true);
             expect(adminClient.updateSettingByKey).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('formatTimestamp', () => {
+        it('should format date in Norwegian short format', () => {
+            const date = new Date(2026, 1, 22, 14, 5); // 22. feb 2026 14:05
+            expect(formatTimestamp(date)).toBe('22. feb kl. 14:05');
+        });
+
+        it('should pad single-digit hours and minutes', () => {
+            const date = new Date(2026, 0, 3, 8, 7); // 3. jan 2026 08:07
+            expect(formatTimestamp(date)).toBe('3. jan kl. 08:07');
+        });
+    });
+
+    describe('updateLastFetchedTime', () => {
+        it('should update the settings-last-fetched element', () => {
+            const el = document.createElement('span');
+            el.id = 'settings-last-fetched';
+            document.body.appendChild(el);
+
+            updateLastFetchedTime(new Date(2026, 1, 22, 14, 32));
+
+            expect(el.textContent).toBe('22. feb kl. 14:32');
+        });
+
+        it('should do nothing if element does not exist', () => {
+            // No element in DOM — should not throw
+            expect(() => updateLastFetchedTime(new Date())).not.toThrow();
         });
     });
 

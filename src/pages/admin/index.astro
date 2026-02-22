@@ -234,7 +234,8 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             updateUIWithUser, autoResizeTextarea, saveSingleSetting,
             loadMeldingerModule, enforceAccessControl,
             loadTjenesterModule, loadTannlegerModule, loadGalleriListeModule,
-            reorderGalleriItem, mergeSettingsWithDefaults
+            reorderGalleriItem, mergeSettingsWithDefaults,
+            formatTimestamp, updateLastFetchedTime
         } from '../../scripts/admin-dashboard.js';
         import snarkdown from 'snarkdown';
         import DOMPurify from 'dompurify';
@@ -264,7 +265,9 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     ));
                 }
 
+                const fetchedAt = formatTimestamp(new Date());
                 let html = `<div class="space-y-4 max-w-4xl">`;
+                html += `<p class="text-xs text-slate-400">Sist hentet: <span id="settings-last-fetched">${fetchedAt}</span></p>`;
                 allSettings.forEach((setting, i) => {
                     const label = setting.description || setting.id;
                     const isLong = (setting.value && setting.value.length > 60) || setting.id.toLowerCase().includes('tekst');
@@ -286,7 +289,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         autoResizeTextarea(input);
                         input.addEventListener('input', (e) => autoResizeTextarea(e.target as HTMLTextAreaElement));
                     }
-                    input.addEventListener('blur', (e) => saveSingleSetting(parseInt((e.target as any).dataset.index), e.target as HTMLInputElement, allSettings, SHEET_ID));
+                    input.addEventListener('blur', (e) => saveSingleSetting(parseInt((e.target as any).dataset.index), e.target as HTMLInputElement, allSettings, SHEET_ID, loadSettingsModule));
                 });
                 allSettings.forEach((_, i) => {
                     document.getElementById(`setting-container-${i}`)?.addEventListener('click', () => {
