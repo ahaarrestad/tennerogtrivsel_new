@@ -33,10 +33,20 @@
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
 
-- [ ] **Vurdere byggetid og test-tid på nytt**
-  - Må få raskere feedback loop og deploy-tid
-  - Mål nåværende tider og identifiser flaskehalser
-  - Vurder caching, parallelisering og andre optimaliseringer
+- [ ] **Vurdere byggetid og test-tid på nytt** ([plan](docs/plan-byggetid-test-tid.md))
+  - Nåværende pipeline: ~4 min (e2e-tests er flaskehalsen med ~195s)
+  - Plan klar med 3 tiltak:
+    1. Playwright Docker-container (spar 25-45s)
+    2. Slå sammen build inn i e2e-jobben (spar 15-20s)
+    3. Øk Playwright workers 2→4, retries 2→1 (spar 30-40s)
+  - Forventet resultat: ~2:30-3:00 min (25-35% raskere)
+
+- [ ] **Konsolidere og rydde i E2E-tester**
+  - homepage.spec.ts er nesten helt redundant (tittel, h1, seksjoner dekkes av seo + sitemap-pages)
+  - Metadata-tester (seo.spec.ts, links.spec.ts) kjører i 3 nettlesere unødvendig — begrens til kun Chromium
+  - Tjeneste-navigasjon testes i 4 forskjellige filer — konsolider
+  - Status-kode-sjekker overlapper mellom sitemap-pages.spec.ts og links.spec.ts
+  - Potensial: ~48 færre nettleser-instanser, raskere E2E-suite
 
 - [ ] **Robust feilhåndtering ved tapt Google-tilkobling i admin**
   - Ved redeploy eller større oppdateringer mistes noen ganger kontakten til Google API
