@@ -33,11 +33,6 @@
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
 
-- [ ] **Raskere bygg ved Google Drive-oppdatering (repository_dispatch)**
-  - `repository_dispatch: google_drive_update` trigger bygger alltid main — koden er allerede testet
-  - Vurder å hoppe over unit-tests og e2e-tests for denne triggeren (kun sync → build → deploy)
-  - Kan potensielt kutte fra ~4 min til under 1 min for innholdsoppdateringer
-
 - [ ] **Vurdere byggetid og test-tid på nytt** ([plan](docs/plan-byggetid-test-tid.md))
   - Nåværende pipeline: ~4 min (e2e-tests er flaskehalsen med ~195s)
   - Plan klar med 3 tiltak:
@@ -55,6 +50,11 @@
 
 
 ## Fullført
+
+- [x] **Raskere bygg ved Google Drive-oppdatering (repository_dispatch)** ([plan](docs/plan-raskere-drive-bygg.md))
+  - Testjobber (`unit-tests`, `e2e-tests`) hoppes over ved `repository_dispatch`-trigger
+  - `build`-jobb bruker `always()` med eksplisitt sjekk for `success` eller `skipped`
+  - Forventet byggetid for innholdsoppdateringer: ~1 min (ned fra ~4 min)
 
 - [x] **Robust feilhåndtering ved tapt Google-tilkobling i admin**
   - Ny `admin-api-retry.js` med `classifyError`, `withRetry` (eksponentiell backoff) og `createAuthRefresher`
