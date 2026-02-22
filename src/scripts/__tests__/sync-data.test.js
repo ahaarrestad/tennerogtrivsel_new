@@ -246,8 +246,8 @@ describe('sync-data.js', () => {
             // Kari: Defaults (1.0, 50, 50)
             expect(writtenData[1].imageConfig).toEqual({ scale: 1.0, positionX: 50, positionY: 50 });
             
-            // Per: Skala clamped (0.5), X/Y fallback (50) siden 150 og -10 er utenfor 0-100
-            expect(writtenData[2].imageConfig.scale).toBe(0.5); // 0.1 blir clamped til 0.5
+            // Per: Skala ugyldig (0.1 < 1.0 → default 1.0), X/Y fallback (50) siden 150 og -10 er utenfor 0-100
+            expect(writtenData[2].imageConfig.scale).toBe(1.0); // 0.1 er under min (1.0) → default
             expect(writtenData[2].imageConfig.positionX).toBe(50); // 150 er ugyldig -> default 50
             expect(writtenData[2].imageConfig.positionY).toBe(50); // -10 er ugyldig -> default 50
         });
@@ -618,9 +618,9 @@ describe('sync-data.js', () => {
             expect(writtenData).toHaveLength(2);
             expect(writtenData[0].title).toBe('Venterom');
             expect(writtenData[0].imageConfig).toEqual({ scale: 1.2, positionX: 30, positionY: 40 });
-            // Fasade: ugyldig scale (0.1 → clamped 0.5), posX (150 → default 50), posY (-10 → default 50)
+            // Fasade: ugyldig scale (0.1 < 1.0 → default 1.0), posX (150 → default 50), posY (-10 → default 50)
             expect(writtenData[1].title).toBe('Fasade');
-            expect(writtenData[1].imageConfig.scale).toBe(0.5);
+            expect(writtenData[1].imageConfig.scale).toBe(1.0);
             expect(writtenData[1].imageConfig.positionX).toBe(50);
             expect(writtenData[1].imageConfig.positionY).toBe(50);
         });

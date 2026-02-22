@@ -129,9 +129,8 @@ async function syncTannleger() {
             
             // Pars og valider bilde-justeringer med trygge defaults
             let scale = parseFloat(skala);
-            scale = (!isNaN(scale) && scale >= 0.5 && scale <= 2.0) ? scale : 1.0;
-            if (!isNaN(parseFloat(skala)) && parseFloat(skala) < 0.5) scale = 0.5; // Clamp min
-            if (!isNaN(parseFloat(skala)) && parseFloat(skala) > 2.0) scale = 2.0; // Clamp max
+            scale = (!isNaN(scale) && scale >= 1.0 && scale <= 3.0) ? scale : 1.0;
+            if (!isNaN(parseFloat(skala)) && parseFloat(skala) > 3.0) scale = 3.0;
             
             const parsedX = parseInt(posX);
             const positionX = (!isNaN(parsedX) && parsedX >= 0 && parsedX <= 100) ? parsedX : 50;
@@ -428,8 +427,7 @@ async function syncGalleri() {
 
             // Pars og valider bilde-justeringer med trygge defaults (identisk mønster som syncTannleger)
             let scale = parseFloat(skala);
-            scale = (!isNaN(scale) && scale >= 0.5 && scale <= 3.0) ? scale : 1.0;
-            if (!isNaN(parseFloat(skala)) && parseFloat(skala) < 0.5) scale = 0.5;
+            scale = (!isNaN(scale) && scale >= 1.0 && scale <= 3.0) ? scale : 1.0;
             if (!isNaN(parseFloat(skala)) && parseFloat(skala) > 3.0) scale = 3.0;
 
             const parsedX = parseInt(posX);
