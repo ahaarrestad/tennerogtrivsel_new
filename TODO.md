@@ -33,6 +33,11 @@
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
 
+- [ ] **Vurdere byggetid og test-tid på nytt**
+  - Må få raskere feedback loop og deploy-tid
+  - Mål nåværende tider og identifiser flaskehalser
+  - Vurder caching, parallelisering og andre optimaliseringer
+
 - [ ] **Robust feilhåndtering ved tapt Google-tilkobling i admin**
   - Ved redeploy eller større oppdateringer mistes noen ganger kontakten til Google API
   - Admin viser da feilmeldinger ("får ikke tak i filene") i stedet for å prøve å gjenopprette
