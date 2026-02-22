@@ -27,6 +27,7 @@ vi.mock('../admin-client.js', () => ({
     getSettingsWithNotes: vi.fn(),
     checkMultipleAccess: vi.fn(),
     logout: vi.fn(),
+    silentLogin: vi.fn(),
     getTannlegerRaw: vi.fn(),
     updateTannlegeRow: vi.fn(),
     addTannlegeRow: vi.fn(),
@@ -35,6 +36,12 @@ vi.mock('../admin-client.js', () => ({
     updateGalleriRow: vi.fn(),
     findFileByName: vi.fn(),
     getDriveImageBlob: vi.fn()
+}));
+
+// Mock admin-api-retry (pass-through)
+vi.mock('../admin-api-retry.js', () => ({
+    withRetry: vi.fn((fn) => fn()),
+    createAuthRefresher: vi.fn(() => () => Promise.resolve(true))
 }));
 
 // Mock textFormatter
@@ -1059,6 +1066,99 @@ describe('admin-dashboard.js', () => {
         it('should do nothing if element does not exist', () => {
             // No element in DOM — should not throw
             expect(() => updateLastFetchedTime(new Date())).not.toThrow();
+        });
+    });
+
+    describe('retry buttons', () => {
+        it('should render retry button when loadMeldingerModule fails', async () => {
+            adminClient.listFiles.mockRejectedValue(new Error('Fail'));
+            await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            const retryBtn = inner.querySelector('.retry-btn');
+            expect(retryBtn).not.toBeNull();
+            expect(retryBtn.textContent).toContain('Prøv igjen');
+        });
+
+        it('should re-call loadMeldingerModule when retry button is clicked', async () => {
+            adminClient.listFiles.mockRejectedValueOnce(new Error('Fail'))
+                .mockResolvedValue([]);
+            await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            inner.querySelector('.retry-btn').click();
+
+            await vi.waitFor(() => {
+                expect(adminClient.listFiles).toHaveBeenCalledTimes(2);
+            });
+        });
+
+        it('should render retry button when loadTjenesterModule fails', async () => {
+            adminClient.listFiles.mockRejectedValue(new Error('Fail'));
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            const retryBtn = inner.querySelector('.retry-btn');
+            expect(retryBtn).not.toBeNull();
+        });
+
+        it('should re-call loadTjenesterModule when retry button is clicked', async () => {
+            adminClient.listFiles.mockRejectedValueOnce(new Error('Fail'))
+                .mockResolvedValue([]);
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            inner.querySelector('.retry-btn').click();
+
+            await vi.waitFor(() => {
+                expect(adminClient.listFiles).toHaveBeenCalledTimes(2);
+            });
+        });
+
+        it('should render retry button when loadTannlegerModule fails', async () => {
+            adminClient.getTannlegerRaw.mockRejectedValue(new Error('Fail'));
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            const retryBtn = inner.querySelector('.retry-btn');
+            expect(retryBtn).not.toBeNull();
+        });
+
+        it('should re-call loadTannlegerModule when retry button is clicked', async () => {
+            adminClient.getTannlegerRaw.mockRejectedValueOnce(new Error('Fail'))
+                .mockResolvedValue([]);
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            inner.querySelector('.retry-btn').click();
+
+            await vi.waitFor(() => {
+                expect(adminClient.getTannlegerRaw).toHaveBeenCalledTimes(2);
+            });
+        });
+
+        it('should render retry button when loadGalleriListeModule fails', async () => {
+            document.body.innerHTML += `<div id="galleri-liste-container"></div>`;
+            adminClient.getGalleriRaw.mockRejectedValue(new Error('Fail'));
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null);
+
+            const container = document.getElementById('galleri-liste-container');
+            const retryBtn = container.querySelector('.retry-btn');
+            expect(retryBtn).not.toBeNull();
+        });
+
+        it('should re-call loadGalleriListeModule when retry button is clicked', async () => {
+            document.body.innerHTML += `<div id="galleri-liste-container"></div>`;
+            adminClient.getGalleriRaw.mockRejectedValueOnce(new Error('Fail'))
+                .mockResolvedValue([]);
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null);
+
+            const container = document.getElementById('galleri-liste-container');
+            container.querySelector('.retry-btn').click();
+
+            await vi.waitFor(() => {
+                expect(adminClient.getGalleriRaw).toHaveBeenCalledTimes(2);
+            });
         });
     });
 

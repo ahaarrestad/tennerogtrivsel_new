@@ -229,6 +229,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             getGalleriRaw, updateGalleriRow, addGalleriRow, deleteGalleriRowPermanently,
             setForsideBildeInGalleri, migrateForsideBildeToGalleri
         } from '../../scripts/admin-client.js';
+        import { withRetry, createAuthRefresher } from '../../scripts/admin-api-retry.js';
         import { loadGallery, setupUploadHandler } from '../../scripts/admin-gallery.js';
         import { showToast, showConfirm } from '../../scripts/admin-dialog.js';
         import { formatDate, stripStackEditData, sortMessages, slugify } from '../../scripts/textFormatter.js';
@@ -249,12 +250,18 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         const SHEET_ID = configEl?.dataset.sheetId;
         const HARD_DEFAULTS_DATA = JSON.parse(configEl?.dataset.defaults || '{}');
 
+        let _refreshAuth = null;
+        function getRefreshAuth() {
+            if (!_refreshAuth) _refreshAuth = createAuthRefresher(silentLogin);
+            return _refreshAuth;
+        }
+
         async function loadSettingsModule() {
             const inner = document.getElementById('module-inner');
             if (!inner) return;
             inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter innstillinger...</div>';
             try {
-                const sheetSettings = await getSettingsWithNotes(SHEET_ID);
+                const sheetSettings = await withRetry(() => getSettingsWithNotes(SHEET_ID), { refreshAuth: getRefreshAuth() });
                 const allSettings = mergeSettingsWithDefaults(sheetSettings, HARD_DEFAULTS_DATA);
 
                 // Skriv manglende nøkler til Google Sheets med en gang
@@ -300,7 +307,9 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 });
             } catch (e) {
                 console.error("Settings load failed", e);
-                inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste innstillinger.</div>`;
+                inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste innstillinger.</div>
+                    <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
+                inner.querySelector('.retry-btn')?.addEventListener('click', () => loadSettingsModule());
             }
         }
 
