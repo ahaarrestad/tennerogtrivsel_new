@@ -1,4 +1,4 @@
-import 'dotenv/config';
+try { process.loadEnvFile(); } catch { /* .env not found — env vars set externally (CI) */ }
 import { google } from 'googleapis';
 import fs from 'fs';
 import path from 'path';
