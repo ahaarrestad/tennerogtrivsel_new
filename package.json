@@ -15,7 +15,6 @@
   "dependencies": {
     "@astrojs/sitemap": "^3.7.0",
     "@tailwindcss/vite": "^4.2.0",
-    "@types/dompurify": "^3.2.0",
     "astro": "^5.17.3",
     "dompurify": "^3.3.1",
     "googleapis": "^171.4.0",
@@ -26,6 +25,7 @@
     "@axe-core/playwright": "^4.11.1",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/typography": "^0.5.19",
+    "@types/dompurify": "^3.0.5",
     "@vitest/coverage-v8": "^4.0.18",
     "jsdom": "^28.1.0",
     "vitest": "^4.0.18"
