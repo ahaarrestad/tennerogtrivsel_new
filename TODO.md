@@ -30,11 +30,13 @@
   - Bruk et team med sikkerhetsekspert, arkitekt og senior utvikler til å legge planen
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
-- [ ] **Reduser antall/størrelse på dependencies**
-  - `googleapis` er 196 MB (42% av node_modules) — kun `sheets` og `drive` brukes. Bytt til `@googleapis/sheets` + `@googleapis/drive`
+- [ ] **Reduser antall/størrelse på dependencies 1**
   - `dotenv` brukes kun i `sync-data.js` — Astro og Node 20+ har innebygd `.env`-støtte, kan fjernes
   - `@types/dompurify` er listet som `dependency` — flytt til `devDependencies`
   - `sharp` brukes i `sync-data.js` men er ikke i `package.json` — legg til eksplisitt
+
+- [ ] **Reduser antall/størrelse på dependencies 2**
+  - `googleapis` er 196 MB (42% av node_modules) — kun `sheets` og `drive` brukes. Bytt til `@googleapis/sheets` + `@googleapis/drive`
 
 - [ ] **CI/CD-forbedringer 1**
   - Playwright kjører kun `--project=chromium` i CI — WebKit og Mobile Chrome testes aldri
