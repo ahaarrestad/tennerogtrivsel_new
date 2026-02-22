@@ -15,7 +15,11 @@
 (Ingen oppgaver pågår akkurat nå.)
 
 ## Backlog
-  
+
+- [ ] **Vurdere "Start behandling"-knappene på admin-kortene**
+  - Hele kortet er allerede klikkbart, så knappen kan virke overflødig
+  - Kortet ser ut som en stor knapp — bør vi fjerne knappen og tydeliggjøre klikkbarhet på en annen måte?
+  - Vurdere alternativer: subtil hover-effekt, ikon i hjørnet, eller beholde knappen men style den annerledes
 - [ ] **Refaktorere inline-klasser til global.css**
   - Gå gjennom HTML-templates og identifisere gjentatte Tailwind-klassekombinasjoner
   - Flytte gjenbrukbare mønstre til `global.css` som egne klasser/variabler
