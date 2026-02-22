@@ -14,12 +14,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create PR and enable auto-merge
+      - name: Create PR
+        id: create-pr
         run: |
-          # Check if a PR already exists for this branch
           EXISTING=$(gh pr list --head "$GITHUB_REF_NAME" --json url --jq '.[0].url' 2>/dev/null || true)
           if [ -n "$EXISTING" ]; then
             echo "PR already exists: $EXISTING"
+            echo "pr_url=$EXISTING" >> $GITHUB_OUTPUT
             exit 0
           fi
 
@@ -27,8 +28,20 @@ jobs:
             --title "$(git log -1 --format=%s)" \
             --body "Auto-generated from \`git review\`.")
           echo "Created PR: $PR_URL"
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
 
-          gh pr merge --auto --rebase "$PR_URL"
+      - name: Auto-approve PR
+        if: steps.create-pr.outputs.pr_url && github.actor == 'ahaarrestad'
+        run: gh pr review --approve "${{ steps.create-pr.outputs.pr_url }}"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Enable auto-merge
+        if: steps.create-pr.outputs.pr_url && github.actor == 'ahaarrestad'
+        run: |
+          gh pr merge --auto --rebase "${{ steps.create-pr.outputs.pr_url }}"
           echo "Auto-merge enabled"
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
