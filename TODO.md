@@ -12,35 +12,34 @@
 
 ## Pågående
 
-(Ingen oppgaver pågår akkurat nå.)
-
-## Backlog
-
-- [ ] **UX/design-gjennomgang av den offentlige nettsiden**
-  - Bruk et team med Senior UX-designer, UX-designer, frontend-designer og Senior Utvikler til å lage planen
-  - Skriv et design-dokument (f.eks. `docs/design-guide.md`) som beskriver prinsipper for layout, typografi, farger, spacing og responsivt design
-  - Link design-dokumentet fra `CLAUDE.md` slik at det alltid følges ved fremtidige endringer
-  - Lag deretter en konkret plan for å oppdatere layout/UX basert på best practice og målene i dokumentet
-  - Husk å inkludere alle sidene, også 404-siden og alt som ligger i sitemap siden dette er det som blir vist til brukerne
-  - Ønsker gjennomført design på alle sider. Vurder fonter opp mot det som er i logoen.
-  - Vurder: lesbarhet, visuelt hierarki, tilgjengelighet (a11y), mobil-først, konsistens mellom seksjoner
-
-- [ ] **Grundig sikkerhetssjekk av hele prosjektet**
-  - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
-  - Bruk et team med sikkerhetsekspert, arkitekt og senior utvikler til å legge planen
-  - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
-
-- [ ] **CI/CD-forbedringer 2**
-  - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
-
-
-
 - [ ] **Konsolidere og rydde i E2E-tester** ([plan](docs/plan-konsolidere-e2e.md))
   - homepage.spec.ts er nesten helt redundant (tittel, h1, seksjoner dekkes av seo + sitemap-pages)
   - Metadata-tester (seo.spec.ts, links.spec.ts) kjører i 3 nettlesere unødvendig — begrens til kun Chromium
   - Tjeneste-navigasjon testes i 4 forskjellige filer — konsolider
   - Status-kode-sjekker overlapper mellom sitemap-pages.spec.ts og links.spec.ts
   - Potensial: ~24–26 færre nettleser-instanser, raskere E2E-suite
+
+## Backlog
+
+- [ ] **UX/design-gjennomgang av den offentlige nettsiden** ([design-guide](docs/design-guide.md)) ([plan](docs/plan-ux-redesign.md))
+  - Retning: Profesjonell & tillitvekkende, full redesign
+  - Fonter: Montserrat (headings) + Inter (body) fra Google Fonts
+  - Farger: Slate-palett + teal aksentfarge for CTA-er
+  - 14 implementeringssteg i planen, klare til å starte
+  - Kritisk: Tjenester/Tannleger skjult på mobil, feil seksjon-rekkefølge, svake CTA-knapper
+
+- [ ] **Grundig sikkerhetssjekk av hele prosjektet**
+  - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
+  - Bruk et team med sikkerhetsekspert, arkitekt og senior utvikler til å legge planen
+  - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
+
+- [ ] **"Legg til snarvei"-lenke i admin på mobil (PWA / Add to Home Screen)**
+  - Vise en lenke/knapp i admin-UI på mobil som lar brukeren legge til en snarvei på hjem-skjermen
+  - Slik at admin-panelet kan åpnes som en app-lignende snarvei fra telefonen
+  - Vurdere Web App Manifest / PWA-tilnærming vs. enkel instruksjonsguide
+
+- [ ] **CI/CD-forbedringer 2**
+  - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
 
 
 ## Fullført
