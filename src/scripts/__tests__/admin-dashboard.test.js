@@ -440,9 +440,9 @@ describe('admin-dashboard.js', () => {
             expect(thumbContainer.querySelector('svg')).not.toBeNull();
         });
 
-        it('should load thumbnails when parentFolderId is provided', async () => {
+        it('should load thumbnails with crop parameters when parentFolderId is provided', async () => {
             adminClient.getTannlegerRaw.mockResolvedValue([
-                { rowIndex: 2, name: 'Ola', title: 'Tannlege', active: true, image: 'ola.jpg' }
+                { rowIndex: 2, name: 'Ola', title: 'Tannlege', active: true, image: 'ola.jpg', scale: 1.5, positionX: 30, positionY: 20 }
             ]);
             adminClient.findFileByName.mockResolvedValue({ id: 'file-abc' });
             adminClient.getDriveImageBlob.mockResolvedValue('blob:thumb-url');
@@ -454,6 +454,14 @@ describe('admin-dashboard.js', () => {
             });
             await vi.waitFor(() => {
                 expect(adminClient.getDriveImageBlob).toHaveBeenCalledWith('file-abc');
+            });
+            await vi.waitFor(() => {
+                const inner = document.getElementById('module-inner');
+                const img = inner.querySelector('[data-thumb-row="2"] img');
+                expect(img).not.toBeNull();
+                expect(img.style.objectPosition).toBe('30% 20%');
+                expect(img.style.transform).toBe('scale(1.5)');
+                expect(img.style.transformOrigin).toBe('30% 20%');
             });
         });
 
@@ -637,18 +645,25 @@ describe('admin-dashboard.js', () => {
             expect(container.innerHTML).toContain('bilde.jpg');
         });
 
-        it('should load thumbnails when parentFolderId is provided', async () => {
+        it('should load thumbnails with crop parameters when parentFolderId is provided', async () => {
             adminClient.getGalleriRaw.mockResolvedValue([
-                { rowIndex: 2, title: 'Bilde', image: 'bilde.jpg', active: true, order: 1, type: 'galleri' }
+                { rowIndex: 2, title: 'Bilde', image: 'bilde.jpg', active: true, order: 1, type: 'galleri', scale: 1.3, positionX: 40, positionY: 60 }
             ]);
             adminClient.findFileByName.mockResolvedValue({ id: 'file-123' });
             adminClient.getDriveImageBlob.mockResolvedValue('blob:thumb-url');
 
             await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), 'parent-folder-id');
 
-            // Wait for async thumbnail loading
             await vi.waitFor(() => {
                 expect(adminClient.findFileByName).toHaveBeenCalledWith('bilde.jpg', 'parent-folder-id');
+            });
+            await vi.waitFor(() => {
+                const container = document.getElementById('galleri-liste-container');
+                const img = container.querySelector('[data-thumb-row="2"] img');
+                expect(img).not.toBeNull();
+                expect(img.style.objectPosition).toBe('40% 60%');
+                expect(img.style.transform).toBe('scale(1.3)');
+                expect(img.style.transformOrigin).toBe('40% 60%');
             });
         });
 

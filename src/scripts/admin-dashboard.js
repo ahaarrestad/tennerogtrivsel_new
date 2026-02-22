@@ -410,7 +410,10 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
                         if (file) {
                             const blobUrl = await getDriveImageBlob(file.id);
                             if (blobUrl) {
-                                thumbContainer.innerHTML = `<img src="${blobUrl}" class="w-full h-full object-cover" alt="">`;
+                                const pX = t.positionX ?? 50;
+                                const pY = t.positionY ?? 50;
+                                const sc = t.scale ?? 1.0;
+                                thumbContainer.innerHTML = `<img src="${blobUrl}" class="w-full h-full object-cover" alt="" style="object-position:${pX}% ${pY}%;transform:scale(${sc});transform-origin:${pX}% ${pY}%">`;
                             }
                         }
                     } catch (_) { /* thumbnail er best-effort */ }
@@ -486,11 +489,13 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                 const isFirst = idx === 0 || (idx === 1 && images[0].type === 'forsidebilde');
                 const isLast = idx === images.length - 1;
 
+                const thumbAspect = isForsidebilde ? 'aspect-[16/10]' : 'aspect-[4/3]';
+
                 html += `
                     <div class="admin-card-interactive group flex flex-col sm:flex-row sm:items-center gap-3 ${!img.active ? 'opacity-60' : ''} ${isForsidebilde ? 'border-amber-200 bg-amber-50/30' : ''}">
                         <!-- Thumbnail + tekst -->
                         <div class="flex items-center gap-3 flex-grow min-w-0">
-                            <div class="shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center" data-thumb-row="${img.rowIndex}">
+                            <div class="shrink-0 w-20 sm:w-24 ${thumbAspect} rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center" data-thumb-row="${img.rowIndex}">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                             </div>
                             <div class="min-w-0 flex-grow">
@@ -553,7 +558,10 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                         if (file) {
                             const blobUrl = await getDriveImageBlob(file.id);
                             if (blobUrl) {
-                                thumbContainer.innerHTML = `<img src="${blobUrl}" class="w-full h-full object-cover" alt="">`;
+                                const pX = img.positionX ?? 50;
+                                const pY = img.positionY ?? 50;
+                                const sc = img.scale ?? 1.0;
+                                thumbContainer.innerHTML = `<img src="${blobUrl}" class="w-full h-full object-cover" alt="" style="object-position:${pX}% ${pY}%;transform:scale(${sc});transform-origin:${pX}% ${pY}%">`;
                             }
                         }
                     } catch (_) { /* thumbnail er best-effort */ }
