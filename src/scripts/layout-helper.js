@@ -31,18 +31,27 @@ export function initLayoutHelper() {
     window.addEventListener('resize', updateLayout);
     window.addEventListener('load', updateLayout);
 
-    // Observer endringer i dokumentet (f.eks. når banneret bytter 'hidden' klasse)
-    const observer = new MutationObserver((mutations) => {
-        // Vi sjekker om det er endringer som påvirker layout
+    // Observer endringer på banner og main (f.eks. når banneret bytter 'hidden' klasse)
+    const observer = new MutationObserver(() => {
         updateLayout();
     });
 
-    observer.observe(document.body, { 
-        childList: true, 
-        subtree: true, 
-        attributes: true, 
-        attributeFilter: ['class', 'style'] 
-    });
+    const bannerRoot = document.getElementById('banner-root');
+    const mainEl = document.querySelector('main');
+    if (bannerRoot) {
+        observer.observe(bannerRoot, {
+            childList: true,
+            attributes: true,
+            attributeFilter: ['class', 'style']
+        });
+    }
+    if (mainEl) {
+        observer.observe(mainEl, {
+            childList: true,
+            attributes: true,
+            attributeFilter: ['class', 'style']
+        });
+    }
 
     // Første kjøring
     updateLayout();
