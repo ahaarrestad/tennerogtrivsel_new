@@ -14,8 +14,8 @@ const sortert = [...galleri]
     .filter(item => (item.data.type ?? 'galleri') !== 'forsidebilde')
     .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
 
-interface Props { variant?: SectionVariant }
-const { variant = 'white' } = Astro.props;
+interface Props { variant?: SectionVariant; standalone?: boolean }
+const { variant = 'white', standalone = false } = Astro.props;
 const { sectionBg, headerBg } = getSectionClasses(variant);
 ---
 {sortert.length > 0 && (
@@ -27,7 +27,7 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
             {sortert.map((item, index) => {
                 const imgPath = `/src/assets/galleri/${item.data.image}`;
                 const hasImage = item.data.image && images[imgPath];
-                const mobileHidden = index >= 2 ? 'hidden md:block' : '';
+                const mobileHidden = !standalone && index >= 2 ? 'hidden md:block' : '';
                 const pX = item.data.imageConfig?.positionX ?? 50;
                 const pY = item.data.imageConfig?.positionY ?? 50;
                 const sc = item.data.imageConfig?.scale ?? 1.0;

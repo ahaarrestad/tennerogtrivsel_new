@@ -11,6 +11,7 @@ const sitemapPages = [
   { path: '/kontakt/', name: 'Kontakt' },
   { path: '/tannleger/', name: 'Om oss / Tannleger' },
   { path: '/tjenester/', name: 'Tjenester' },
+  { path: '/galleri/', name: 'Galleri / Klinikken' },
 ];
 
 test.describe('Sitemap-sider', () => {
@@ -44,7 +45,7 @@ test.describe('Sitemap-sider', () => {
 
   test('standalone-sider skal ha hvit bakgrunn (ikke brand-light)', async ({ page }) => {
     // Kontakt, Tjenester og Tannleger på egne sider skal ha hvit bakgrunn
-    for (const path of ['/kontakt/', '/tannleger/', '/tjenester/']) {
+    for (const path of ['/kontakt/', '/tannleger/', '/tjenester/', '/galleri/']) {
       await page.goto(path);
       const section = page.locator('section').first();
       const hasWhiteBg = await section.evaluate(el => el.classList.contains('bg-white'));
@@ -57,7 +58,7 @@ test.describe('Sitemap-sider', () => {
     const isMobile = (page.viewportSize()?.width ?? 1280) < 1024;
     if (isMobile) {
       await page.locator('#menu-btn').click();
-      const galleriLink = page.locator('#mobile-menu a[href="/#galleri"]');
+      const galleriLink = page.locator('#mobile-menu a[href="/galleri"]');
       await expect(galleriLink).toBeVisible();
       await expect(galleriLink).toContainText('Klinikken');
     } else {
