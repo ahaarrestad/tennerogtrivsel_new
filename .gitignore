@@ -36,6 +36,7 @@ src/content/galleri.json
 
 # Test coverage reports
 coverage/
+!.claude/skills/coverage/
 playwright-report/
 test-results/
 /.claude/settings.local.json
