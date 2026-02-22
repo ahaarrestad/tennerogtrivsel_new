@@ -1519,6 +1519,38 @@ describe('admin-client.js', () => {
         });
     });
 
+    describe('initGis auth events', () => {
+        it('skal dispatche admin-auth-refreshed event ved vellykket callback', async () => {
+            const eventSpy = vi.fn();
+            window.addEventListener('admin-auth-refreshed', eventSpy);
+
+            initGis(() => {});
+            const callback = google.accounts.oauth2.initTokenClient.mock.calls[0][0].callback;
+            await callback({ access_token: 'tok', expires_in: 3600 });
+
+            expect(eventSpy).toHaveBeenCalledTimes(1);
+            window.removeEventListener('admin-auth-refreshed', eventSpy);
+        });
+
+        it('skal dispatche admin-auth-failed event ved feil-callback', async () => {
+            const eventSpy = vi.fn();
+            window.addEventListener('admin-auth-failed', eventSpy);
+
+            let capturedCallback;
+            google.accounts.oauth2.initTokenClient.mockImplementation(({ callback }) => {
+                capturedCallback = callback;
+                return { requestAccessToken: vi.fn() };
+            });
+            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            initGis(() => {});
+            await capturedCallback({ error: 'access_denied' });
+
+            expect(eventSpy).toHaveBeenCalledTimes(1);
+            window.removeEventListener('admin-auth-failed', eventSpy);
+            consoleSpy.mockRestore();
+        });
+    });
+
     describe('updateSettingByKey', () => {
         it('skal oppdatere eksisterende nøkkel ved riktig rad', async () => {
             gapi.client.sheets.spreadsheets.values.get.mockResolvedValueOnce({

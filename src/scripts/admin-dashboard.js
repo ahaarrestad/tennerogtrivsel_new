@@ -4,10 +4,17 @@ import {
     parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
     checkMultipleAccess, logout, getTannlegerRaw, updateTannlegeRow,
     addTannlegeRow, getGalleriRaw, updateGalleriRow, findFileByName, getDriveImageBlob,
-    updateSettingByKey
+    updateSettingByKey, silentLogin
 } from './admin-client.js';
+import { withRetry, createAuthRefresher } from './admin-api-retry.js';
 import { formatDate, sortMessages } from './textFormatter.js';
 import DOMPurify from 'dompurify';
+
+let _refreshAuth = null;
+function getRefreshAuth() {
+    if (!_refreshAuth) _refreshAuth = createAuthRefresher(silentLogin);
+    return _refreshAuth;
+}
 
 /**
  * Slår sammen innstillinger fra Google Sheets med HARD_DEFAULTS.
@@ -138,14 +145,14 @@ export async function saveSingleSetting(index, inputEl, currentSettings, sheetId
     try {
         const setting = currentSettings[index];
         if (setting.isVirtual) {
-            await updateSettingByKey(sheetId, setting.id, newValue);
+            await withRetry(() => updateSettingByKey(sheetId, setting.id, newValue), { refreshAuth: getRefreshAuth() });
             setting.isVirtual = false;
         } else {
             const sheetOnly = currentSettings.filter(s => !s.isVirtual);
             const sheetIndex = sheetOnly.indexOf(setting);
             const updatedList = [...sheetOnly];
             updatedList[sheetIndex] = { ...setting, value: newValue };
-            await updateSettings(sheetId, updatedList);
+            await withRetry(() => updateSettings(sheetId, updatedList), { refreshAuth: getRefreshAuth() });
         }
         currentSettings[index].value = newValue;
 
@@ -186,7 +193,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
     inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter oppslag...</div>';
 
     try {
-        const files = await listFiles(folderId);
+        const files = await withRetry(() => listFiles(folderId), { refreshAuth: getRefreshAuth() });
         const today = new Date();
         const nowUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -301,9 +308,13 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
             });
         }
         document.getElementById('btn-new-melding').onclick = () => onEdit(null, null);
-    } catch (e) { 
+    } catch (e) {
         console.error("Load failed", e);
-        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste oppslag.</div>`; 
+        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste oppslag.</div>
+            <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
+        inner.querySelector('.retry-btn')?.addEventListener('click', () => {
+            loadMeldingerModule(folderId, onEdit, onDelete);
+        });
     }
 }
 
@@ -319,7 +330,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
     inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter behandlinger...</div>';
 
     try {
-        const files = await listFiles(folderId);
+        const files = await withRetry(() => listFiles(folderId), { refreshAuth: getRefreshAuth() });
         if (files.length === 0) {
             inner.innerHTML = `<div class="text-center py-12 text-slate-400 italic">Ingen behandlinger funnet.</div>`;
         } else {
@@ -368,7 +379,11 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
         document.getElementById('btn-new-tjeneste').onclick = () => onEdit(null, null);
     } catch (e) {
         console.error("Load failed", e);
-        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste behandlinger.</div>`;
+        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste behandlinger.</div>
+            <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
+        inner.querySelector('.retry-btn')?.addEventListener('click', () => {
+            loadTjenesterModule(folderId, onEdit, onDelete);
+        });
     }
 }
 
@@ -384,8 +399,8 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
     inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter teamet...</div>';
 
     try {
-        const dentists = await getTannlegerRaw(sheetId);
-        
+        const dentists = await withRetry(() => getTannlegerRaw(sheetId), { refreshAuth: getRefreshAuth() });
+
         if (dentists.length === 0) {
             inner.innerHTML = `<div class="text-center py-12 text-slate-400 italic">Ingen team-medlemmer funnet.</div>`;
         } else {
@@ -461,7 +476,11 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
         document.getElementById('btn-new-tannlege').onclick = () => onEdit(null, null);
     } catch (e) {
         console.error("Load failed", e);
-        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste teamet.</div>`;
+        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste teamet.</div>
+            <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
+        inner.querySelector('.retry-btn')?.addEventListener('click', () => {
+            loadTannlegerModule(sheetId, onEdit, onDelete, parentFolderId);
+        });
     }
 }
 
@@ -488,8 +507,8 @@ export async function reorderGalleriItem(sheetId, items, rowIndex, direction) {
     }
 
     await Promise.all([
-        updateGalleriRow(sheetId, current.rowIndex, current),
-        updateGalleriRow(sheetId, neighbor.rowIndex, neighbor)
+        withRetry(() => updateGalleriRow(sheetId, current.rowIndex, current), { refreshAuth: getRefreshAuth() }),
+        withRetry(() => updateGalleriRow(sheetId, neighbor.rowIndex, neighbor), { refreshAuth: getRefreshAuth() })
     ]);
     return true;
 }
@@ -504,7 +523,7 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
     container.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter galleribilder...</div>';
 
     try {
-        const images = await getGalleriRaw(sheetId);
+        const images = await withRetry(() => getGalleriRaw(sheetId), { refreshAuth: getRefreshAuth() });
 
         if (images.length === 0) {
             container.innerHTML = `<div class="text-center py-8 text-slate-400 italic">Ingen galleribilder funnet.</div>`;
@@ -631,6 +650,10 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
         }
     } catch (e) {
         console.error("Load galleri failed", e);
-        container.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste galleribilder.</div>`;
+        container.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste galleribilder.</div>
+            <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
+        container.querySelector('.retry-btn')?.addEventListener('click', () => {
+            loadGalleriListeModule(sheetId, onEdit, onDelete, onReorder, parentFolderId, onToggleActive);
+        });
     }
 }

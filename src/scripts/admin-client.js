@@ -310,6 +310,7 @@ export function initGis(callback) {
             if (import.meta.env.DEV) console.log("[GIS] Callback mottatt", resp);
             if (resp.error !== undefined) {
                 console.warn("[GIS] Autorisasjonsfeil:", resp.error);
+                window.dispatchEvent(new Event('admin-auth-failed'));
                 return;
             }
             
@@ -329,6 +330,7 @@ export function initGis(callback) {
             otherStore.removeItem('admin_google_token');
 
             callback(userInfo);
+            window.dispatchEvent(new Event('admin-auth-refreshed'));
         },
     });
     gisInited = true;
