@@ -16,12 +16,6 @@
 
 ## Backlog
 
-- [ ] **Erstatt `alert()`/`confirm()` med tilgjengelige dialoger i admin**
-  - 15+ forekomster av blokkerende `alert()` og `confirm()` i admin-panelet
-  - Erstatt med modale dialoger eller toast-meldinger
-  - Sikre at dialoger er tilgjengelige (fokushåndtering, `aria-modal`, Escape-lukking)
-  - Fjern også `alert()` i `Forside.astro` (tilgangsnektelse-melding)
-
 - [ ] **Tilgjengelighet (a11y) — småfiks**
   - Hamburger-knapp mangler `aria-expanded` og `aria-controls` — `mobile-menu.js` oppdaterer `data-state` men ikke ARIA
   - SVG-ikoner i Kontakt, TelefonKnapp, EpostKnapp mangler `aria-hidden="true"` (dekorative)
@@ -68,6 +62,13 @@
   - E2E: a11y-test (`accessibility.spec.ts`) dekker kun forsiden — standalone-sider mangler
 
 ## Fullført
+
+- [x] **Erstatt `alert()`/`confirm()` med tilgjengelige dialoger i admin**
+  - Ny modul `admin-dialog.js` med `showToast()`, `showConfirm()` og `showBanner()`
+  - 10 `alert()` → `showToast(..., 'error')`, 5 `confirm()` → `await showConfirm()`
+  - `Forside.astro`: `alert()` → dynamisk `import()` + `showBanner()`
+  - Tilgjengelig: `aria-live`, `role="alert"`, Escape-lukking, fokus på avbryt-knapp
+  - 29 nye enhetstester, 87% branch coverage, alle E2E-tester oppdatert og bestått
 
 - [x] **Egen side for Galleri / Klinikken**
   - Standalone-side `/galleri` med `variant="white"` (samme mønster som /kontakt, /tjenester, /tannleger)
