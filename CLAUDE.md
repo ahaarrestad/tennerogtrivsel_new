@@ -15,14 +15,10 @@ This document outlines the operational guidelines and expectations for the Claud
 
 ## Kvalitetssikring (Quality Gates)
 
-For å sikre stabilitet og unngå regresjoner, SKAL følgende sjekkliste følges før en oppgave eller endring kan markeres som ferdig:
+Fullstendig prosedyre finnes i `/quality-gate`-skill. Kjernekrav:
 
-1.  **Unit-tester:** Kjør `npm test`. Alle tester SKAL passere 100%.
-2.  **Dekningsgrad (Per fil):** Sjekk coverage-rapporten fra `npm test`. **Hver enkelt fil** som inneholder kjerne-logikk (scripts og API) SKAL ha minst **80% branch coverage**. Det er ikke tilstrekkelig at totalen er over 80% hvis enkeltfiler ligger under.
-3.  **E2E-tester:** Kjør `npm run test:e2e`. "Happy path" for berørt funksjonalitet SKAL verifiseres i Chromium.
-4.  **Rapporteringskrav:** Før en oppgave markeres som ferdig, SKAL du liste opp de faktiske dekningsgradene (% Branch) for alle filer du har endret.
-5.  **Build-sjekk:** Kjør `npm run build` lokalt for å bekrefte at prosjektet lar seg kompilere uten feil.
-6.  **CI/CD Konsistens:** Hvis du har lagt til en ny miljøvariabel (i `.env`, `src/env.d.ts` eller `sync-data.js`), SKAL du verifisere at denne også er lagt til i relevante workflow-filer i `.github/workflows/` (både for `test` og `build` steg).
+- **80% branch coverage per fil** (ikke bare totalt) for kjerne-logikk (scripts og API).
+- Ved nye miljøvariabler: sjekk og oppdater `.github/workflows/`-filer.
 
 **AGENT-REGEL:** Du har ikke lov til å si deg ferdig eller foreslå en commit før du har presentert en fersk testrapport som viser at kravene er møtt for alle berørte filer. Enhver "ferdig"-melding uten tallgrunnlag er et brudd på instruksene. Hvis dekningsgraden faller på grunn av nye funksjoner, SKAL du skrive tester for disse før du går videre. Ved innføring av nye avhengigheter eller miljøvariabler SKAL du eksplisitt sjekke og oppdatere CI-konfigurasjonen.
 
@@ -156,10 +152,7 @@ vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
 CSP inkluderer `blob:` i `connect-src` for å støtte thumbnail-forhåndsvisning (blob-URLer fra `getDriveImageBlob()`) i admin-panelet.
 
 ### CSP-verifisering
-`tests/csp-check.spec.ts` er et manuelt verktøy for å avdekke CSP-brudd på tvers av nøkkelsider. Kjør det når `src/middleware.ts` endres, mens dev-server kjører:
-```
-npx playwright test csp-check --project=chromium
-```
+`tests/csp-check.spec.ts` verifiserer CSP-brudd på tvers av nøkkelsider. Kjør ved endringer i `src/middleware.ts` (se `/security-audit`-skill).
 
 ### Web Storage og modul-tilstand i tester
 - Når kode under test bruker Web Storage, SKAL **begge** `localStorage.clear()` og
