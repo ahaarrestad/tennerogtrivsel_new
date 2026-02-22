@@ -1063,7 +1063,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                             <button id="btn-galleri-pick-image" class="btn-primary py-3 px-4 text-xs shrink-0 whitespace-nowrap">Velg bilde</button>
                                         </div>
                                     </div>
-                                    <div class="admin-field-container flex items-center gap-3">
+                                    <div id="galleri-active-field" class="admin-field-container flex items-center gap-3">
                                         <label class="admin-label !mb-0">Aktiv</label>
                                         <select id="galleri-edit-active" class="admin-input w-24">
                                             <option value="ja">Ja</option>
@@ -1157,6 +1157,14 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     if (altInput) altInput.value = item.altText || '';
                     if (imageInput) imageInput.value = item.image || '';
                     if (activeSelect) activeSelect.value = item.active ? 'ja' : 'nei';
+                    // Forsidebilde er alltid aktivt — skjul aktiv-feltet
+                    const activeField = document.getElementById('galleri-active-field');
+                    if (isForsidebilde) {
+                        if (activeField) activeField.classList.add('hidden');
+                        if (activeSelect) activeSelect.value = 'ja';
+                    } else {
+                        if (activeField) activeField.classList.remove('hidden');
+                    }
                     if (forsideCheckbox) forsideCheckbox.checked = isForsidebilde;
                     if (scaleInput) scaleInput.value = String(item.scale ?? 1);
                     if (xInput) xInput.value = String(item.positionX ?? 50);
@@ -1189,10 +1197,16 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     // Forsidebilde toggle
                     if (forsideCheckbox) {
                         forsideCheckbox.addEventListener('change', async () => {
+                            // Skjul/vis aktiv-feltet basert på forsidebilde-status
+                            if (forsideCheckbox.checked) {
+                                if (activeField) activeField.classList.add('hidden');
+                                if (activeSelect) activeSelect.value = 'ja';
+                            } else {
+                                if (activeField) activeField.classList.remove('hidden');
+                            }
                             if (forsideCheckbox.checked) {
                                 try {
                                     await setForsideBildeInGalleri(SHEET_ID, rowIndex);
-                                    // Update preview aspect
                                     if (previewContainer) {
                                         previewContainer.classList.remove('aspect-[4/3]');
                                         previewContainer.classList.add('aspect-[16/10]');
@@ -1201,9 +1215,9 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                 } catch (e) {
                                     alert('Kunne ikke sette forsidebilde: ' + e.message);
                                     forsideCheckbox.checked = false;
+                                    if (activeField) activeField.classList.remove('hidden');
                                 }
                             } else {
-                                // Nedgrader til galleri
                                 try {
                                     await updateGalleriRow(SHEET_ID, rowIndex, {
                                         ...item,
@@ -1224,6 +1238,8 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                 } catch (e) {
                                     alert('Kunne ikke endre type: ' + e.message);
                                     forsideCheckbox.checked = true;
+                                    if (activeField) activeField.classList.add('hidden');
+                                    if (activeSelect) activeSelect.value = 'ja';
                                 }
                             }
                         });
@@ -1377,8 +1393,61 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     reloadGalleriListe();
                 };
 
+                const toggleGalleriActive = async (rowIndex, img) => {
+                    const newActive = !img.active;
+                    // Optimistisk UI-oppdatering
+                    const btn = document.querySelector(`.toggle-active-btn[data-row="${rowIndex}"]`) as HTMLElement;
+                    const card = btn?.closest('.admin-card-interactive') as HTMLElement;
+                    if (btn) {
+                        const track = btn.querySelector('.toggle-track') as HTMLElement;
+                        const dot = btn.querySelector('.toggle-dot') as HTMLElement;
+                        const label = btn.querySelector('.toggle-label') as HTMLElement;
+                        if (track) {
+                            track.classList.toggle('bg-green-500', newActive);
+                            track.classList.toggle('bg-slate-300', !newActive);
+                        }
+                        if (dot) {
+                            dot.classList.toggle('translate-x-5', newActive);
+                            dot.classList.toggle('translate-x-0', !newActive);
+                        }
+                        if (label) {
+                            label.textContent = newActive ? 'Aktiv' : 'Inaktiv';
+                            label.classList.toggle('text-green-700', newActive);
+                            label.classList.toggle('text-slate-500', !newActive);
+                        }
+                    }
+                    if (card) card.classList.toggle('opacity-60', !newActive);
+
+                    try {
+                        await updateGalleriRow(SHEET_ID, rowIndex, { ...img, active: newActive });
+                        img.active = newActive;
+                    } catch (e) {
+                        // Reverser ved feil
+                        if (btn) {
+                            const track = btn.querySelector('.toggle-track') as HTMLElement;
+                            const dot = btn.querySelector('.toggle-dot') as HTMLElement;
+                            const label = btn.querySelector('.toggle-label') as HTMLElement;
+                            if (track) {
+                                track.classList.toggle('bg-green-500', img.active);
+                                track.classList.toggle('bg-slate-300', !img.active);
+                            }
+                            if (dot) {
+                                dot.classList.toggle('translate-x-5', img.active);
+                                dot.classList.toggle('translate-x-0', !img.active);
+                            }
+                            if (label) {
+                                label.textContent = img.active ? 'Aktiv' : 'Inaktiv';
+                                label.classList.toggle('text-green-700', img.active);
+                                label.classList.toggle('text-slate-500', !img.active);
+                            }
+                        }
+                        if (card) card.classList.toggle('opacity-60', !img.active);
+                        reloadGalleriListe();
+                    }
+                };
+
                 const reloadGalleriListe = () => {
-                    loadGalleriListeModule(SHEET_ID, editGalleriBilde, deleteGalleriBilde, handleReorder, parentFolderId);
+                    loadGalleriListeModule(SHEET_ID, editGalleriBilde, deleteGalleriBilde, handleReorder, parentFolderId, toggleGalleriActive);
                 };
 
                 reloadGalleriListe();
