@@ -37,12 +37,12 @@
 - [ ] **Vurder størrelsen på boksene i admin-panelet**
   - Er kortene/boksene unødvendig store? Vurder om de kan komprimeres for bedre oversikt
 
-- [ ] **Konsolidere og rydde i E2E-tester**
+- [ ] **Konsolidere og rydde i E2E-tester** ([plan](docs/plan-konsolidere-e2e.md))
   - homepage.spec.ts er nesten helt redundant (tittel, h1, seksjoner dekkes av seo + sitemap-pages)
   - Metadata-tester (seo.spec.ts, links.spec.ts) kjører i 3 nettlesere unødvendig — begrens til kun Chromium
   - Tjeneste-navigasjon testes i 4 forskjellige filer — konsolider
   - Status-kode-sjekker overlapper mellom sitemap-pages.spec.ts og links.spec.ts
-  - Potensial: ~48 færre nettleser-instanser, raskere E2E-suite
+  - Potensial: ~24–26 færre nettleser-instanser, raskere E2E-suite
 
 
 ## Fullført
