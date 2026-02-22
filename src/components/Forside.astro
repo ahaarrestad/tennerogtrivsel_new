@@ -95,7 +95,9 @@ const forsidePosY = forsideEntry?.data.imageConfig?.positionY ?? 50;
             
             // Sjekk om brukeren ble sendt hit pga manglende tilgang
             if (new URLSearchParams(window.location.search).has('access_denied')) {
-                alert("Du har ikke tilgang til noen av admin-modulene med din Google-konto.");
+                import('../scripts/admin-dialog.js').then(({ showBanner }) => {
+                    showBanner('forside', 'Du har ikke tilgang til noen av admin-modulene med din Google-konto.', 'error');
+                });
                 // Fjern parameteren fra URL uten å refreshe
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
