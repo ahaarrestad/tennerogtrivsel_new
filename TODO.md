@@ -22,6 +22,9 @@
   - Farger: Slate-palett + teal aksentfarge for CTA-er
   - 14 implementeringssteg i planen, klare til å starte
   - Kritisk: Tjenester/Tannleger skjult på mobil, feil seksjon-rekkefølge, svake CTA-knapper
+  - Oppdater design guide og plan med faktiske versjon er av rammeverk. Vi bruker for eksempel Astro v5 og Tailwind CSS v4, så sørg for at alle kodeeksempler og anbefalinger er kompatible med disse versjonene. Sjekk package.json for andre dependencies som kan påvirke design- eller implementasjonsvalg, og oppdater dokumentasjonen deretter.
+  - Oppdater design guide og plan til å også ta hensyn til melding er som vil være aktive på visse tidspunkt. Disse må hensyntas på en god måte. Hvordan de vises er opp til designerne.
+  - Ser ikke noe i design guide om hvordan kortene oppfører seg på mobil. Beskriv om kortstokk-animasjonen beholdes eller endres.
 
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet**
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
@@ -36,6 +39,15 @@
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
 
+- [ ] **Legg til toggling for tjenester**
+    - Mulighet for å toggle hver tjeneste aktiv/inaktiv i admin-panelet, på samme måte som galleri.
+    - Jeg tror vi skal vurdere å ikke bruke google sheets for dette - kun markdown filene, men er åpen for diskusjon
+    - Ønsker samme visuelle funksjonalitet i tjeneste listen som for for galleriet.
+
+- [ ] **Legg til toggling for tannleger**]
+    - Mulighet for å toggle hver tannlege aktiv/inaktiv i admin-panelet, på samme måte som galleri.
+    - Bruk samme visuelle mønster som galleri-listen, med thumbnail og toggle-knapp i hver rad.
+    - Siden info her lagres i google sheets, så bruker vi bare eksisterende funksjonalitet.
 
 ## Fullført
 
