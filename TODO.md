@@ -12,12 +12,7 @@
 
 ## Pågående
 
-- [ ] **Refaktorere inline-klasser til global.css**
-  - [ ] Steg 1: Ny hjelpefunksjon `sectionVariant.ts` + unit-test
-  - [ ] Steg 2: Nye CSS-klasser `.image-frame` og `.card-grid` i global.css
-  - [ ] Steg 3: Ny komponent `SectionHeader.astro`
-  - [ ] Steg 4: Oppdater seksjonskomponenter (Galleri, Kontakt, Tjenester, Tannleger)
-  - [ ] Steg 5: Anvend `.image-frame` i Forside.astro og Card.astro
+(Ingen oppgaver pågår akkurat nå.)
 
 ## Backlog
 
@@ -41,6 +36,13 @@
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
 ## Fullført
+
+- [x] **Refaktorere inline-klasser til global.css**
+  - Ny `getSectionClasses()` hjelpefunksjon erstatter duplisert variant-logikk i 4 komponenter
+  - Ny `SectionHeader.astro` komponent erstatter identisk header-blokk i 4 seksjoner
+  - `.card-grid` CSS-klasse for responsivt kort-rutenett (Tjenester, Tannleger)
+  - `.image-frame` CSS-klasse for bildramme med kant og skygge (Forside, Card)
+  - 5 commits, 10 filer endret, 100% testdekning på ny kode
 
 - [x] **Vurdere "Start behandling"-knappene på admin-kortene**
   - Fjernet redundante knapper, erstattet med chevron-pil (›) for navigasjonsindikator
