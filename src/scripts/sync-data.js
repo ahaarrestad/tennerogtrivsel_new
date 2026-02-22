@@ -416,13 +416,15 @@ async function syncGalleri() {
         }
 
         const rows = res.data.values || [];
-        // Filtrer ut forsidebilde-rader (de hører til syncForsideBilde) og kun vis aktive
-        const activeRows = rows.filter(([tittel, bildeFil, altTekst, aktiv, rekkefølge, skala, posX, posY, type]) =>
-            aktiv?.toLowerCase() === 'ja' && (type || 'galleri').toLowerCase() !== 'forsidebilde'
+        // Kun aktive rader – forsidebilde inkluderes for metadata (utsnitt), men bildet lastes av syncForsideBilde
+        const activeRows = rows.filter(([tittel, bildeFil, altTekst, aktiv]) =>
+            aktiv?.toLowerCase() === 'ja'
         );
 
         const galleriData = await Promise.all(activeRows.map(async ([tittel, bildeFil, altTekst, aktiv, rekkefølge, skala, posX, posY, type]) => {
-            console.log(`  🔄 Behandler: ${tittel || bildeFil}`);
+            const rowType = (type || 'galleri').toLowerCase();
+            const isForsidebilde = rowType === 'forsidebilde';
+            console.log(`  🔄 Behandler: ${tittel || bildeFil}${isForsidebilde ? ' (forsidebilde)' : ''}`);
 
             // Pars og valider bilde-justeringer med trygge defaults (identisk mønster som syncTannleger)
             let scale = parseFloat(skala);
@@ -439,7 +441,8 @@ async function syncGalleri() {
             const parsedOrder = parseInt(rekkefølge);
             const order = (!isNaN(parsedOrder)) ? parsedOrder : 99;
 
-            if (bildeFil) {
+            // Forsidebilde-filen lastes ned av syncForsideBilde(), ikke her
+            if (bildeFil && !isForsidebilde) {
                 try {
                     const destinationPath = path.join(config.paths.galleriAssets, bildeFil);
                     const driveFile = await findFileMetadataByName(bildeFil, folderId);
@@ -465,6 +468,7 @@ async function syncGalleri() {
                 image: bildeFil || '',
                 altText: altTekst || '',
                 order,
+                type: rowType,
                 imageConfig: {
                     scale,
                     positionX,

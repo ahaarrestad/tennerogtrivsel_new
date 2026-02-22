@@ -5,16 +5,17 @@ import {getSiteSettings} from '../scripts/getSettings';
 import KontaktKnapp from "./KontaktKnapp.astro";
 
 import {Image} from 'astro:assets';
-import hovedBilde from '../assets/hovedbilde.png'; // Importer bildefilen direkte
+import {getCollection} from 'astro:content';
+import hovedBilde from '../assets/hovedbilde.png';
 
 const settings = await getSiteSettings();
 
-const _scale = parseFloat(settings.forsideBildeScale);
-const _posX = parseInt(settings.forsideBildePosX);
-const _posY = parseInt(settings.forsideBildePosY);
-const forsideScale = (!isNaN(_scale) && _scale > 0) ? _scale : 1;
-const forsidePosX = !isNaN(_posX) ? _posX : 50;
-const forsidePosY = !isNaN(_posY) ? _posY : 50;
+// Les utsnitt fra galleri-collectionen (forsidebilde-raden er autoritativ kilde)
+const galleri = await getCollection('galleri');
+const forsideEntry = galleri.find(item => item.data.type === 'forsidebilde');
+const forsideScale = forsideEntry?.data.imageConfig?.scale ?? 1;
+const forsidePosX = forsideEntry?.data.imageConfig?.positionX ?? 50;
+const forsidePosY = forsideEntry?.data.imageConfig?.positionY ?? 50;
 ---
 <section id="forside" class="section-container bg-white scroll-mt-20 md:scroll-mt-28">
     <div class="section-content">

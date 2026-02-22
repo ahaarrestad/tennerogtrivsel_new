@@ -686,13 +686,13 @@ describe('sync-data.js', () => {
             expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Galleribilde ikke funnet'));
         });
 
-        it('bør filtrere ut forsidebilde-rader fra galleri-output', async () => {
+        it('bør inkludere forsidebilde-rad i galleri-output med type-felt', async () => {
             mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
             mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
                 data: {
                     values: [
                         // Tittel, Bildefil, AltTekst, Aktiv, Rekkefølge, Skala, PosX, PosY, Type
-                        ['Forside', 'hero.jpg', 'Hero', 'ja', '0', '1', '50', '50', 'forsidebilde'],
+                        ['Forside', 'hero.jpg', 'Hero', 'ja', '0', '1.5', '30', '20', 'forsidebilde'],
                         ['Venterom', 'venterom.jpg', 'Vent', 'ja', '1', '1', '50', '50', 'galleri'],
                         ['Fasade', 'fasade.jpg', 'Fas', 'ja', '2', '1', '50', '50', '']
                     ]
@@ -704,10 +704,28 @@ describe('sync-data.js', () => {
 
             expect(fs.writeFileSync).toHaveBeenCalled();
             const writtenData = JSON.parse(fs.writeFileSync.mock.calls[0][1]);
-            // Forsidebilde-raden skal ikke være med, kun Venterom og Fasade (tom type = galleri)
-            expect(writtenData).toHaveLength(2);
-            expect(writtenData[0].title).toBe('Venterom');
-            expect(writtenData[1].title).toBe('Fasade');
+            expect(writtenData).toHaveLength(3);
+            expect(writtenData[0].title).toBe('Forside');
+            expect(writtenData[0].type).toBe('forsidebilde');
+            expect(writtenData[0].imageConfig).toEqual({ scale: 1.5, positionX: 30, positionY: 20 });
+            expect(writtenData[1].type).toBe('galleri');
+            expect(writtenData[2].type).toBe('galleri');
+        });
+
+        it('bør ikke laste ned bilde for forsidebilde-rader (håndteres av syncForsideBilde)', async () => {
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: {
+                    values: [
+                        ['Forside', 'hero.jpg', 'Hero', 'ja', '0', '1', '50', '50', 'forsidebilde'],
+                    ]
+                }
+            });
+
+            await syncGalleri();
+
+            // findFileMetadataByName skal ikke kalles for forsidebilde
+            expect(mockDrive.files.list).not.toHaveBeenCalled();
         });
 
         it('bør behandle rader uten type-kolonne som galleri', async () => {
