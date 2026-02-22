@@ -16,6 +16,11 @@
 
 ## Backlog
 
+- [ ] **Tydeliggjøre i admin at endringer ikke vises umiddelbart**
+  - Vise info/banner generelt i admin om at data synces fra Google Sheets via bygg til nettside
+  - Vise tydelig melding ved lagring/endringer om at det tar tid før endringene er synlige på nettsiden
+  - Brukeren må forstå flyten: admin → Google Sheets → bygg/deploy → nettside oppdatert
+
 - [ ] **Optimalisere bygg, tester og deploy for raskere feedback-loop**
   - Kartlegge nåværende tidsbruk for unit-tester, E2E-tester, bygg og deploy
   - Identifisere flaskehalser og muligheter for parallellisering/caching
