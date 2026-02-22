@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "node src/scripts/sync-data.js && astro dev",
+    "dev:nosync": "astro dev",
     "sync": "node src/scripts/sync-data.js",
     "build": "node src/scripts/sync-data.js && astro build",
     "preview": "astro preview",

@@ -1,36 +1,53 @@
-name: Deploy Tenner og Trivsel
+name: CI/CD
 
 on:
   push:
     branches: [ main ]
-  pull_request: # Gjør at Dependabot-PRs trigger build-sjekken
+  pull_request:
     branches: [ main ]
   repository_dispatch:
-    types: [google_drive_update] # Sjekk at denne teksten er identisk med event_type i curl
+    types: [google_drive_update]
   workflow_dispatch:
 
-# Legg til dette for å fjerne sikkerhetsadvarselen
 permissions:
   contents: read
-  pages: write      # Legg til denne hvis du bruker GitHub Pages
-  id-token: write   # Trengs ofte for sikker autentisering mot sky-tjenester
+  pages: write
+  id-token: write
+
+env:
+  GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+  GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+  PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.PUBLIC_GOOGLE_CLIENT_ID }}
+  PUBLIC_GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+  PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TJENESTER_FOLDER_ID }}
+  PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_MELDINGER_FOLDER_ID }}
+  PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TANNLEGER_FOLDER_ID }}
+  PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
 
 jobs:
-  build:
+  unit-tests:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
           cache: 'npm'
+      - run: npm ci
+      - name: Run unit tests
+        run: npm test
+      - name: Security audit
+        run: npm audit --audit-level=high
 
-      - name: Install dependencies
-        run: npm ci
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
 
       - name: Get Playwright version
         id: playwright-version
@@ -47,6 +64,23 @@ jobs:
         if: steps.cache-playwright.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
 
+      - name: Sync data
+        run: npm run sync
+
+      - name: Run E2E tests
+        run: npm run test:e2e -- --project=chromium
+
+  build:
+    needs: [unit-tests, e2e-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+
       - name: Cache Astro data
         uses: actions/cache@v4
         with:
@@ -55,45 +89,17 @@ jobs:
           restore-keys: |
             astro-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
 
-      - name: Run tests
-        run: npm test
-        env:
-          PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
-
-      - name: Run E2E tests
-        run: npm run test:e2e -- --project=chromium
-        env:
-          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
-          PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.PUBLIC_GOOGLE_CLIENT_ID }}
-          PUBLIC_GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-          PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TJENESTER_FOLDER_ID }}
-          PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_MELDINGER_FOLDER_ID }}
-          PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TANNLEGER_FOLDER_ID }}
-          PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
-
       - name: Build Astro site
         run: npm run build
-        env:
-          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
-          PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.PUBLIC_GOOGLE_CLIENT_ID }}
-          PUBLIC_GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-          PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TJENESTER_FOLDER_ID }}
-          PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_MELDINGER_FOLDER_ID }}
-          PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TANNLEGER_FOLDER_ID }}
-          PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
 
-
-      # Vi lagrer "dist"-mappen midlertidig slik at deploy-jobben kan bruke den
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: dist/
+
   deploy:
     needs: build
-    # Denne jobben kjører KUN på push til main, Google Drive-oppdatering eller manuelt
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -108,14 +114,8 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1 # Endre til din region (f.eks. eu-west-1)
+          aws-region: eu-west-1
 
       - name: Deploy to S3
         run: |
           aws s3 sync dist/ s3://test2.aarrestad.com --acl public-read --delete
-
-#        - name: Invalidate CloudFront Cache
-#          run: |
-#            aws cloudfront create-invalidation \
-#              --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-#              --paths "/*"

@@ -15,11 +15,20 @@
 (Ingen oppgaver pågår akkurat nå.)
 
 ## Backlog
+  
+- [ ] **Sikre at Dependabot-PRer ikke merges ved feilet bygg**
+  - Gå gjennom GitHub Actions-oppsettet og Dependabot-konfigurasjon
+  - Sørg for at auto-merge kun skjer hvis bygg + tester passerer
+  - Ved feil skal PR-en bli liggende uten merge — ingen automatisk handling
+  - Verifiser branch protection rules og required status checks
 
-- [ ] **Optimalisere bygg, tester og deploy for raskere feedback-loop**
-  - Kartlegge nåværende tidsbruk for unit-tester, E2E-tester, bygg og deploy
-  - Identifisere flaskehalser og muligheter for parallellisering/caching
-  - Vurdere tiltak i CI/CD-pipeline (GitHub Actions) og lokalt utviklingsmiljø
+- [ ] **Utrede backend-alternativer for mer «live» oppdatering**
+  - Undersøk muligheter for å erstatte eller supplere Google Sheets som backend
+  - Krav: Google-innlogging beholdes, løsningen skal kunne kjøre gratis
+  - Viktigst at admin-siden oppleves responsiv og «live» — nettsiden kan henge litt etter
+  - Vurder alternativer som Firebase, Supabase, Cloudflare D1/KV, eller hybrid (live admin + statisk site)
+  - Kartlegg hva som må endres i dataflyt, admin-klient og bygg/deploy-pipeline
+  - Lever en anbefaling med fordeler/ulemper og migrasjonsplan
   
 - [ ] **Refaktorere inline-klasser til global.css**
   - Gå gjennom HTML-templates og identifisere gjentatte Tailwind-klassekombinasjoner
@@ -34,20 +43,19 @@
   - Lag deretter en konkret plan for å oppdatere layout/UX basert på best practice og målene i dokumentet
   - Vurder: lesbarhet, visuelt hierarki, tilgjengelighet (a11y), mobil-først, konsistens mellom seksjoner
 
-- [ ] **Utrede backend-alternativer for mer «live» oppdatering**
-  - Undersøk muligheter for å erstatte eller supplere Google Sheets som backend
-  - Krav: Google-innlogging beholdes, løsningen skal kunne kjøre gratis
-  - Viktigst at admin-siden oppleves responsiv og «live» — nettsiden kan henge litt etter
-  - Vurder alternativer som Firebase, Supabase, Cloudflare D1/KV, eller hybrid (live admin + statisk site)
-  - Kartlegg hva som må endres i dataflyt, admin-klient og bygg/deploy-pipeline
-  - Lever en anbefaling med fordeler/ulemper og migrasjonsplan
-
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet**
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
   - Bruk et team med sikkerhetsekspert, arkitekt og senior utvikler til å legge planen
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
 ## Fullført
+
+- [x] **Optimalisere bygg, tester og deploy for raskere feedback-loop**
+  - Slått sammen ci.yml og deploy.yml til én workflow med parallelle jobber (unit-tests + e2e-tests parallelt → build → deploy)
+  - Ekskludert csp-check.spec.ts fra CI via testIgnore (manuell test)
+  - Økt Playwright-workers fra 1 til 2 i CI
+  - Nytt `dev:nosync`-script; E2E i CI bruker dette + eksplisitt sync-steg
+  - npm audit flyttet inn i unit-tests-jobben
 
 - [x] **Tydeliggjøre i admin at endringer ikke vises umiddelbart**
   - Info-tekst på dashboard-header om at endringer publiseres automatisk
