@@ -16,13 +16,6 @@
 
 ## Backlog
 
-- [ ] **Tilgjengelighet (a11y) — småfiks**
-  - Hamburger-knapp mangler `aria-expanded` og `aria-controls` — `mobile-menu.js` oppdaterer `data-state` men ikke ARIA
-  - SVG-ikoner i Kontakt, TelefonKnapp, EpostKnapp mangler `aria-hidden="true"` (dekorative)
-  - InfoBanner og dynamisk meldingsinnhold (Forside) mangler `aria-live="polite"`
-  - Breadcrumb-nav i `/tjenester/[id].astro` mangler `aria-label` (to `<nav>` uten distinkte labels)
-  - Admin: range-slidere for zoom/posisjon mangler `aria-label` / `for`/`id`-kobling
-
 - [ ] **Kodekvalitet / småfiks**
   - Skrivefeil `troke-linecap` i Kontakt.astro — mangler `s` (`stroke-linecap`)
   - Gammel debug-kommentar i `tjenester/[id].astro` (`// --- DENNE LINJEN MANGLER SANNSYNLIGVIS: ---`)
@@ -62,6 +55,13 @@
   - E2E: a11y-test (`accessibility.spec.ts`) dekker kun forsiden — standalone-sider mangler
 
 ## Fullført
+
+- [x] **Tilgjengelighet (a11y) — småfiks**
+  - Hamburger-knapp: `aria-expanded` og `aria-controls` i `mobile-menu.js`
+  - SVG-ikoner: `aria-hidden="true"` på dekorative ikoner i Kontakt, TelefonKnapp, EpostKnapp
+  - InfoBanner og dynamisk innhold: `aria-live="polite"`
+  - Breadcrumb-nav i `/tjenester/[id].astro`: `aria-label` for distinkte nav-elementer
+  - Admin range-slidere: `for`/`id`-kobling mellom labels og inputs
 
 - [x] **Erstatt `alert()`/`confirm()` med tilgjengelige dialoger i admin**
   - Ny modul `admin-dialog.js` med `showToast()`, `showConfirm()` og `showBanner()`
