@@ -12,12 +12,7 @@
 
 ## Pågående
 
-- [ ] **Konsolidere og rydde i E2E-tester** ([plan](docs/plan-konsolidere-e2e.md))
-  - homepage.spec.ts er nesten helt redundant (tittel, h1, seksjoner dekkes av seo + sitemap-pages)
-  - Metadata-tester (seo.spec.ts, links.spec.ts) kjører i 3 nettlesere unødvendig — begrens til kun Chromium
-  - Tjeneste-navigasjon testes i 4 forskjellige filer — konsolider
-  - Status-kode-sjekker overlapper mellom sitemap-pages.spec.ts og links.spec.ts
-  - Potensial: ~24–26 færre nettleser-instanser, raskere E2E-suite
+(Ingen oppgaver pågår akkurat nå.)
 
 ## Backlog
 
@@ -43,6 +38,12 @@
 
 
 ## Fullført
+
+- [x] **Konsolidere og rydde i E2E-tester** ([plan](docs/plan-konsolidere-e2e.md))
+  - Slettet `homepage.spec.ts` — mobilmeny-test flyttet til `sitemap-pages.spec.ts`
+  - Slettet `services.spec.ts` — tjeneste-navigasjon og sidebar-test flyttet til `sitemap-pages.spec.ts`
+  - `seo.spec.ts` og `links.spec.ts` begrenset til kun chromium-prosjektet (24 nettleser-instanser skippet)
+  - Redusert fra ~99 til ~84 reelle nettleser-instanser (~15% reduksjon)
 
 - [x] **Komprimere bokser i admin-panelet**
   - Redusert padding, gap og border-radius på admin-kort (`.admin-card`, `.admin-card-interactive`, `.admin-card-header`)

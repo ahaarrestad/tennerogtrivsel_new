@@ -66,4 +66,45 @@ test.describe('Sitemap-sider', () => {
       await expect(galleriLink).toContainText('Klinikken');
     }
   });
+
+  test('mobilmeny skal fungere', async ({ page }) => {
+    await page.goto('/');
+    const isMobile = (page.viewportSize()?.width ?? 1280) < 1024;
+    if (isMobile) {
+      const menuBtn = page.locator('#menu-btn');
+      const mobileMenu = page.locator('#mobile-menu');
+
+      await expect(mobileMenu).toBeHidden();
+      await menuBtn.click();
+      await expect(mobileMenu).toBeVisible();
+      await menuBtn.click();
+      await expect(mobileMenu).toBeHidden();
+    }
+  });
+
+  test('skal kunne navigere til en tjeneste og se innholdet', async ({ page }) => {
+    await page.goto('/tjenester/');
+    await page.setViewportSize({ width: 1280, height: 800 });
+
+    const tjenesteKort = page.locator('.card-base').first();
+    const tittel = await tjenesteKort.locator('.h3').innerText();
+
+    await tjenesteKort.click();
+
+    await expect(page).toHaveURL(/\/tjenester\//);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(tittel);
+
+    // Sjekk at innholdet faktisk er der (prose-klassen brukes for markdown)
+    await expect(page.locator('.markdown-content')).toBeVisible();
+    await expect(page.locator('.markdown-content p')).not.toHaveCount(0);
+  });
+
+  test('kontakt-info i sidebaren skal være synlig på tjeneste-sider', async ({ page }) => {
+    await page.goto('/tjenester/');
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.locator('.card-base').first().click();
+
+    await expect(page.locator('aside')).toBeVisible();
+    await expect(page.locator('aside')).toContainText('Ta kontakt');
+  });
 });
