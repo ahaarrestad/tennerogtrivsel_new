@@ -36,11 +36,13 @@
   - `@types/dompurify` er listet som `dependency` — flytt til `devDependencies`
   - `sharp` brukes i `sync-data.js` men er ikke i `package.json` — legg til eksplisitt
 
-- [ ] **CI/CD-forbedringer**
-  - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
+- [ ] **CI/CD-forbedringer 1**
   - Playwright kjører kun `--project=chromium` i CI — WebKit og Mobile Chrome testes aldri
   - E2E: a11y-test (`accessibility.spec.ts`) dekker kun forsiden — standalone-sider mangler
 
+- [ ] **CI/CD-forbedringer 2**
+  - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
+  
 ## Fullført
 
 - [x] **SEO-forbedringer**
