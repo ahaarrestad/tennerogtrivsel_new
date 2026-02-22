@@ -27,6 +27,8 @@
   - Skriv et design-dokument (f.eks. `docs/design-guide.md`) som beskriver prinsipper for layout, typografi, farger, spacing og responsivt design
   - Link design-dokumentet fra `CLAUDE.md` slik at det alltid følges ved fremtidige endringer
   - Lag deretter en konkret plan for å oppdatere layout/UX basert på best practice og målene i dokumentet
+  - Husk å inkludere alle sidene, også 404-siden og alt som ligger i sitemap siden dette er det som blir vist til brukerne
+  - Ønsker gjennomført design på alle sider. Vurder fonter opp mot det som er i logoen.
   - Vurder: lesbarhet, visuelt hierarki, tilgjengelighet (a11y), mobil-først, konsistens mellom seksjoner
 
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet**
