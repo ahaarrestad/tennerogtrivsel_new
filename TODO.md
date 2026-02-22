@@ -33,9 +33,6 @@
 - [ ] **Reduser antall/størrelse på dependencies 2**
   - `googleapis` er 196 MB (42% av node_modules) — kun `sheets` og `drive` brukes. Bytt til `@googleapis/sheets` + `@googleapis/drive`
 
-- [ ] **CI/CD-forbedringer 1**
-  - Playwright kjører kun `--project=chromium` i CI — WebKit og Mobile Chrome testes aldri
-  - E2E: a11y-test (`accessibility.spec.ts`) dekker kun forsiden — standalone-sider mangler
 
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
@@ -153,6 +150,11 @@
   - Thumbnail-bilder ved siden av hver tannlege i admin-panelet
   - Responsiv layout med flex-container (identisk mønster som galleri)
   - Asynkron lasting via `findFileByName` + `getDriveImageBlob`
+
+- [x] **CI/CD-forbedringer 1**
+  - Alle 3 Playwright-prosjekter (chromium, webkit, Mobile Chrome) kjøres i CI
+  - A11y-tester utvidet til 5 standalone-sider (kontakt, tannleger, tjenester, galleri, admin)
+  - Fikset manglende `aria-label` på hjem-lenke i admin (WCAG link-name)
 
 - [x] **Sjekk utsnitt/visning av hovedbilde og bildegalleri**
   - Admin-thumbnails bruker nå riktig utsnitt (scale, posX, posY) fra data
