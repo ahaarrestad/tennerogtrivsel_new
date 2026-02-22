@@ -934,7 +934,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 }
             });
         };
-        (window as any).openTannlegerModule = () => loadTannlegerModule(SHEET_ID, (window as any).editTannlege, (window as any).deleteTannlege);
+        (window as any).openTannlegerModule = () => loadTannlegerModule(SHEET_ID, (window as any).editTannlege, (window as any).deleteTannlege, TANNLEGER_FOLDER);
 
         // --- BILDER MODUL (samlet galleri + forsidebilde) ---
 

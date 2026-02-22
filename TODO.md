@@ -7,16 +7,24 @@
 - Planen skrives som notater under oppgaven før implementering begynner.
 - Flytt oppgaven til «Pågående» når planen er godkjent og arbeidet starter.
 - **Lever i små, iterative forbedringer** — minst én commit per oppgave. Store oppgaver brytes ned i deloppgaver som hver committes for seg.
+- **Planer lagres under `/docs`** i prosjektet, både når de er utarbeidet og etter eventuelle revisjoner.
+- Flytt oppgaven til «Fullført» når den er ferdig.
 
 ## Pågående
 
-
 ## Backlog
 
-- [ ] **Thumbnails på tannleger-listen i admin**
-  - Vise thumbnail-bilder ved siden av hver tannlege i admin-panelet
-  - Sørge for responsiv layout som fungerer godt på både desktop og mobil
+- [ ] **Sjekk utsnitt/visning av hovedbilde og bildegalleri**
+  - Hovedbildet (forsidebildet) ser ut til å ha et annet utsnitt enn det som vises i bildegalleri-admin
+  - Undersøk hvordan skala/posisjon (Scale, PosX, PosY) anvendes på forsiden vs. admin-preview
+  - Gå gjennom resten av bildegalleriet for å se om tilsvarende avvik finnes
+  - Sørg for at admin-preview gjenspeiler det faktiske utsnittet på nettsiden
 
+- [ ] **Optimalisere bygg, tester og deploy for raskere feedback-loop**
+  - Kartlegge nåværende tidsbruk for unit-tester, E2E-tester, bygg og deploy
+  - Identifisere flaskehalser og muligheter for parallellisering/caching
+  - Vurdere tiltak i CI/CD-pipeline (GitHub Actions) og lokalt utviklingsmiljø
+  - 
 - [ ] **Refaktorere inline-klasser til global.css**
   - Gå gjennom HTML-templates og identifisere gjentatte Tailwind-klassekombinasjoner
   - Flytte gjenbrukbare mønstre til `global.css` som egne klasser/variabler
@@ -36,4 +44,9 @@
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
 ## Fullført
+
+- [x] **Thumbnails på tannleger-listen i admin**
+  - Thumbnail-bilder ved siden av hver tannlege i admin-panelet
+  - Responsiv layout med flex-container (identisk mønster som galleri)
+  - Asynkron lasting via `findFileByName` + `getDriveImageBlob`
 

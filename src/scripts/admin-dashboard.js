@@ -338,7 +338,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
 /**
  * Henter og viser tannleger-listen fra Sheets
  */
-export async function loadTannlegerModule(sheetId, onEdit, onDelete) {
+export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolderId) {
     const inner = document.getElementById('module-inner');
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
@@ -361,12 +361,17 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete) {
 
                 html += `
                     <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!t.active ? 'opacity-60' : ''}" onclick="this.querySelector('.edit-tannlege-btn').click()">
-                        <div class="min-w-0 flex-grow w-full">
-                            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 mb-1">
-                                <span class="admin-status-pill ${statusClass} text-[8px] shrink-0">${statusText}</span>
-                                <h3 class="font-bold text-brand sm:truncate sm:min-w-0">${t.name}</h3>
+                        <div class="flex items-center gap-3 flex-grow min-w-0 w-full">
+                            <div class="shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center" data-thumb-row="${t.rowIndex}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                             </div>
-                            <p class="text-xs text-slate-500 line-clamp-1 italic">${t.title || 'Ingen tittel'}</p>
+                            <div class="min-w-0 flex-grow">
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 mb-1">
+                                    <span class="admin-status-pill ${statusClass} text-[8px] shrink-0">${statusText}</span>
+                                    <h3 class="font-bold text-brand sm:truncate sm:min-w-0">${t.name}</h3>
+                                </div>
+                                <p class="text-xs text-slate-500 line-clamp-1 italic">${t.title || 'Ingen tittel'}</p>
+                            </div>
                         </div>
                         <div class="flex gap-2 shrink-0" onclick="event.stopPropagation()">
                             <button data-row="${t.rowIndex}" data-name="${t.name}" class="edit-tannlege-btn p-3 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
@@ -393,6 +398,24 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete) {
             inner.querySelectorAll('.admin-card-interactive').forEach(card => {
                 card.onclick = () => card.querySelector('.edit-tannlege-btn')?.click();
             });
+
+            // Asynkron lasting av thumbnails
+            if (parentFolderId) {
+                dentists.forEach(async (t) => {
+                    if (!t.image) return;
+                    const thumbContainer = inner.querySelector(`[data-thumb-row="${t.rowIndex}"]`);
+                    if (!thumbContainer) return;
+                    try {
+                        const file = await findFileByName(t.image, parentFolderId);
+                        if (file) {
+                            const blobUrl = await getDriveImageBlob(file.id);
+                            if (blobUrl) {
+                                thumbContainer.innerHTML = `<img src="${blobUrl}" class="w-full h-full object-cover" alt="">`;
+                            }
+                        }
+                    } catch (_) { /* thumbnail er best-effort */ }
+                });
+            }
         }
         document.getElementById('btn-new-tannlege').onclick = () => onEdit(null, null);
     } catch (e) {

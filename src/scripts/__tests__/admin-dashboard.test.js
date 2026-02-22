@@ -426,6 +426,72 @@ describe('admin-dashboard.js', () => {
 
             expect(onEdit).toHaveBeenCalledWith(2, expect.objectContaining({ name: 'Anna' }));
         });
+
+        it('should render thumbnail container with data-thumb-row attribute', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 5, name: 'Kari', title: 'Tannlege', active: true, image: 'kari.jpg' }
+            ]);
+
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            const thumbContainer = inner.querySelector('[data-thumb-row="5"]');
+            expect(thumbContainer).not.toBeNull();
+            expect(thumbContainer.querySelector('svg')).not.toBeNull();
+        });
+
+        it('should load thumbnails when parentFolderId is provided', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 2, name: 'Ola', title: 'Tannlege', active: true, image: 'ola.jpg' }
+            ]);
+            adminClient.findFileByName.mockResolvedValue({ id: 'file-abc' });
+            adminClient.getDriveImageBlob.mockResolvedValue('blob:thumb-url');
+
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn(), 'parent-folder-id');
+
+            await vi.waitFor(() => {
+                expect(adminClient.findFileByName).toHaveBeenCalledWith('ola.jpg', 'parent-folder-id');
+            });
+            await vi.waitFor(() => {
+                expect(adminClient.getDriveImageBlob).toHaveBeenCalledWith('file-abc');
+            });
+        });
+
+        it('should not load thumbnails when parentFolderId is not provided', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 2, name: 'Ola', title: 'Tannlege', active: true, image: 'ola.jpg' }
+            ]);
+
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn());
+
+            expect(adminClient.findFileByName).not.toHaveBeenCalled();
+        });
+
+        it('should handle thumbnail loading errors gracefully', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 2, name: 'Ola', title: 'Tannlege', active: true, image: 'ola.jpg' }
+            ]);
+            adminClient.findFileByName.mockRejectedValue(new Error('Drive error'));
+
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn(), 'parent-folder-id');
+
+            await vi.waitFor(() => {
+                expect(adminClient.findFileByName).toHaveBeenCalled();
+            });
+            // List should still be rendered despite thumbnail error
+            const inner = document.getElementById('module-inner');
+            expect(inner.innerHTML).toContain('Ola');
+        });
+
+        it('should skip thumbnail loading for dentists without image', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 2, name: 'Ola', title: 'Tannlege', active: true }
+            ]);
+
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn(), 'parent-folder-id');
+
+            expect(adminClient.findFileByName).not.toHaveBeenCalled();
+        });
     });
 
     describe('loadGalleriListeModule', () => {
