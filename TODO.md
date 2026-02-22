@@ -34,8 +34,6 @@
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
 
 
-- [ ] **Vurder størrelsen på boksene i admin-panelet**
-  - Er kortene/boksene unødvendig store? Vurder om de kan komprimeres for bedre oversikt
 
 - [ ] **Konsolidere og rydde i E2E-tester** ([plan](docs/plan-konsolidere-e2e.md))
   - homepage.spec.ts er nesten helt redundant (tittel, h1, seksjoner dekkes av seo + sitemap-pages)
@@ -46,6 +44,12 @@
 
 
 ## Fullført
+
+- [x] **Komprimere bokser i admin-panelet**
+  - Redusert padding, gap og border-radius på admin-kort (`.admin-card`, `.admin-card-interactive`, `.admin-card-header`)
+  - Mindre fontstørrelser på overskrifter (`.admin-subtitle`) og tettere spacing (`.admin-description`)
+  - Kompaktere dashboard-grid (`gap-8` → `gap-5`) og container-spacing
+  - Mindre knapper i lister (p-3 → p-2.5, ikoner 18px → 16px) og redusert module-content min-height
 
 - [x] **Vurdere byggetid og test-tid på nytt** ([plan](docs/plan-byggetid-test-tid.md))
   - Playwright Docker-container (`mcr.microsoft.com/playwright:v1.58.2-noble`) — eliminerer browser-install/cache-steg
