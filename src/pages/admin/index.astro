@@ -734,15 +734,23 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                         <label class="admin-label !mb-0">Zoom (Skala)</label>
                                         <span id="val-scale" class="text-[10px] font-bold text-brand">${t.scale}x</span>
                                     </div>
-                                    <input type="range" id="edit-t-scale" min="1.0" max="3.0" step="0.01" value="${t.scale}" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" class="slider-step-btn" data-target="edit-t-scale" data-step="-0.1">&minus;</button>
+                                        <input type="range" id="edit-t-scale" min="1.0" max="3.0" step="0.01" value="${t.scale}" class="flex-grow h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                        <button type="button" class="slider-step-btn" data-target="edit-t-scale" data-step="0.1">+</button>
+                                    </div>
                                 </div>
-                                
+
                                 <div>
                                     <div class="flex justify-between mb-2">
                                         <label class="admin-label !mb-0">Fokuspunkt Horisontalt (X)</label>
                                         <span id="val-x" class="text-[10px] font-bold text-brand">${t.positionX}%</span>
                                     </div>
-                                    <input type="range" id="edit-t-x" min="0" max="100" value="${t.positionX}" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" class="slider-step-btn" data-target="edit-t-x" data-step="-1">&minus;</button>
+                                        <input type="range" id="edit-t-x" min="0" max="100" value="${t.positionX}" class="flex-grow h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                        <button type="button" class="slider-step-btn" data-target="edit-t-x" data-step="1">+</button>
+                                    </div>
                                 </div>
 
                                 <div>
@@ -750,7 +758,11 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                         <label class="admin-label !mb-0">Fokuspunkt Vertikalt (Y)</label>
                                         <span id="val-y" class="text-[10px] font-bold text-brand">${t.positionY}%</span>
                                     </div>
-                                    <input type="range" id="edit-t-y" min="0" max="100" value="${t.positionY}" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" class="slider-step-btn" data-target="edit-t-y" data-step="-1">&minus;</button>
+                                        <input type="range" id="edit-t-y" min="0" max="100" value="${t.positionY}" class="flex-grow h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                        <button type="button" class="slider-step-btn" data-target="edit-t-y" data-step="1">+</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -933,6 +945,19 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     el.addEventListener('input', updatePreview);
                 }
             });
+
+            inner.querySelectorAll('.slider-step-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const target = document.getElementById(btn.dataset.target);
+                    if (!target) return;
+                    const step = parseFloat(btn.dataset.step);
+                    const min = parseFloat(target.min);
+                    const max = parseFloat(target.max);
+                    const current = parseFloat(target.value);
+                    target.value = String(Math.min(max, Math.max(min, +(current + step).toFixed(2))));
+                    target.dispatchEvent(new Event('input'));
+                });
+            });
         };
         (window as any).openTannlegerModule = () => loadTannlegerModule(SHEET_ID, (window as any).editTannlege, (window as any).deleteTannlege, TANNLEGER_FOLDER);
 
@@ -1035,21 +1060,33 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                                     <label class="admin-label !mb-0">Zoom (Skala)</label>
                                                     <span id="galleri-val-scale" class="text-[10px] font-bold text-brand">1x</span>
                                                 </div>
-                                                <input type="range" id="galleri-edit-scale" min="1.0" max="3.0" step="0.01" value="1" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                                <div class="flex items-center gap-2">
+                                                    <button type="button" class="slider-step-btn" data-target="galleri-edit-scale" data-step="-0.1">&minus;</button>
+                                                    <input type="range" id="galleri-edit-scale" min="1.0" max="3.0" step="0.01" value="1" class="flex-grow h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                                    <button type="button" class="slider-step-btn" data-target="galleri-edit-scale" data-step="0.1">+</button>
+                                                </div>
                                             </div>
                                             <div>
                                                 <div class="flex justify-between mb-2">
                                                     <label class="admin-label !mb-0">Fokuspunkt Horisontalt (X)</label>
                                                     <span id="galleri-val-x" class="text-[10px] font-bold text-brand">50%</span>
                                                 </div>
-                                                <input type="range" id="galleri-edit-x" min="0" max="100" value="50" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                                <div class="flex items-center gap-2">
+                                                    <button type="button" class="slider-step-btn" data-target="galleri-edit-x" data-step="-1">&minus;</button>
+                                                    <input type="range" id="galleri-edit-x" min="0" max="100" value="50" class="flex-grow h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                                    <button type="button" class="slider-step-btn" data-target="galleri-edit-x" data-step="1">+</button>
+                                                </div>
                                             </div>
                                             <div>
                                                 <div class="flex justify-between mb-2">
                                                     <label class="admin-label !mb-0">Fokuspunkt Vertikalt (Y)</label>
                                                     <span id="galleri-val-y" class="text-[10px] font-bold text-brand">50%</span>
                                                 </div>
-                                                <input type="range" id="galleri-edit-y" min="0" max="100" value="50" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                                <div class="flex items-center gap-2">
+                                                    <button type="button" class="slider-step-btn" data-target="galleri-edit-y" data-step="-1">&minus;</button>
+                                                    <input type="range" id="galleri-edit-y" min="0" max="100" value="50" class="flex-grow h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand">
+                                                    <button type="button" class="slider-step-btn" data-target="galleri-edit-y" data-step="1">+</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1254,6 +1291,19 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         if (el instanceof HTMLInputElement && (el.type === 'text' || el.type === 'number')) {
                             el.addEventListener('input', updateGalleriPreview);
                         }
+                    });
+
+                    inner2.querySelectorAll('.slider-step-btn').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const target = document.getElementById(btn.dataset.target);
+                            if (!target) return;
+                            const step = parseFloat(btn.dataset.step);
+                            const min = parseFloat(target.min);
+                            const max = parseFloat(target.max);
+                            const current = parseFloat(target.value);
+                            target.value = String(Math.min(max, Math.max(min, +(current + step).toFixed(2))));
+                            target.dispatchEvent(new Event('input'));
+                        });
                     });
                 };
 

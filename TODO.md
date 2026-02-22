@@ -12,14 +12,11 @@
 
 ## Pågående
 
-(Ingen oppgaver pågår akkurat nå.)
+- [ ] **Forbedre UX for zoom/posisjon-kontroller i admin**
+  - [x] Deloppgave 1: +/- knapper for finjustering av zoom, h-pos og v-pos
+  - [ ] Deloppgave 2: Hindre utilsiktet endring ved scrolling på mobil (range-slidere fanger scroll-events)
 
 ## Backlog
-
-- [ ] **Forbedre UX for zoom/posisjon-kontroller i admin**
-  - Legge til +/- knapper (tap) for zoom, h-pos og v-pos så man kan justere i små steg
-  - Hindre utilsiktet endring ved scrolling på mobil (range-slidere fanger scroll-events)
-  - Vurdere `touch-action: none` eller lignende for å skille scroll fra slider-interaksjon
 
 - [ ] **Optimalisere bygg, tester og deploy for raskere feedback-loop**
   - Kartlegge nåværende tidsbruk for unit-tester, E2E-tester, bygg og deploy
