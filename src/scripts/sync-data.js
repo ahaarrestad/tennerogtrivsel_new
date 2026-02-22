@@ -1,5 +1,7 @@
 try { process.loadEnvFile(); } catch { /* .env not found — env vars set externally (CI) */ }
-import { google } from 'googleapis';
+import { sheets as sheetsFactory } from '@googleapis/sheets';
+import { drive as driveFactory } from '@googleapis/drive';
+import { GoogleAuth } from 'google-auth-library';
 import fs from 'fs';
 import path from 'path';
 import { pipeline } from 'stream/promises';
@@ -34,7 +36,7 @@ function getConfig() {
 
 // --- GOOGLE AUTH ---
 function getAuth() {
-    return new google.auth.GoogleAuth({
+    return new GoogleAuth({
         credentials: {
             client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
             private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
@@ -44,11 +46,11 @@ function getAuth() {
 }
 
 function getDrive() {
-    return google.drive({ version: 'v3', auth: getAuth() });
+    return driveFactory({ version: 'v3', auth: getAuth() });
 }
 
 function getSheets() {
-    return google.sheets({ version: 'v4', auth: getAuth() });
+    return sheetsFactory({ version: 'v4', auth: getAuth() });
 }
 
 // --- HJELPEFUNKSJONER ---
