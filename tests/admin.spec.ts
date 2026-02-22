@@ -115,7 +115,7 @@ test.describe('Admin-panel Fase 1', () => {
 
     await page.goto('/admin');
     await expect(page.locator('#dashboard')).toBeVisible();
-    await page.locator('#btn-open-meldinger').click();
+    await page.locator('#card-meldinger').click();
     
     const titles = page.locator('#module-inner h3');
     await expect(titles.first()).toHaveText('Ny');
@@ -133,7 +133,7 @@ test.describe('Admin-panel Fase 1', () => {
 
     await page.goto('/admin');
     await expect(page.locator('#dashboard')).toBeVisible();
-    await page.locator('#btn-open-tjenester').click();
+    await page.locator('#card-tjenester').click();
     
     const titles = page.locator('#module-inner h3');
     await expect(titles.first()).toHaveText('Ape');
@@ -153,7 +153,7 @@ test.describe('Admin-panel Fase 1', () => {
 
     await page.goto('/admin');
     await expect(page.locator('#dashboard')).toBeVisible();
-    await page.click('#btn-open-tannleger');
+    await page.click('#card-tannleger');
 
     await expect(page.locator('#module-inner h3').filter({ hasText: 'Ape' })).toBeVisible();
     await page.click('.edit-tannlege-btn');
@@ -170,7 +170,7 @@ test.describe('Admin-panel Fase 1', () => {
 
     await page.goto('/admin');
     await expect(page.locator('#dashboard')).toBeVisible();
-    await page.locator('#btn-open-tjenester').click();
+    await page.locator('#card-tjenester').click();
     await expect(page.locator('#module-inner h3').filter({ hasText: 'Bleking' })).toBeVisible();
 
     await page.evaluate(() => { (window as any).confirm = () => true; });

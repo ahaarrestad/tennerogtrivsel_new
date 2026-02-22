@@ -350,6 +350,19 @@
 
     .admin-card-interactive {
         @apply bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-brand-border transition-all duration-300 hover:shadow-md hover:border-brand-active flex flex-col cursor-pointer;
+
+        &:focus-visible {
+            @apply outline-2 outline-offset-2 outline-brand;
+        }
+    }
+
+    .admin-card-chevron {
+        @apply mt-auto self-end text-3xl leading-none text-brand/40 transition-all duration-300;
+    }
+
+    .group:hover .admin-card-chevron,
+    .group:focus-visible .admin-card-chevron {
+        @apply text-brand translate-x-1;
     }
 
     .admin-card-header {
