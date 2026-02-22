@@ -12,12 +12,7 @@
 
 ## Pågående
 
-- [ ] **Gjennomgang av innstillinger og opplesing**
-  - Sjekk at alle innstillinger bruker de rette property-navnene konsistent (Sheets, getSettings, admin, komponenter)
-  - Verifiser at HARD_DEFAULTS har fornuftige standardverdier for alle nøkler
-  - Sjekk at opplesing fra Google Sheets og fallback-logikk er konsistent på tvers av kodebasen
-  - [x] Zoom/utsnitt: unifisert scale-range 1.0–3.0, verifisert hel dataflyt fra Sheets → admin → sync → frontend
-  - [ ] Gjenstår: gjennomgå øvrige innstillinger (telefon, adresse, titler, tekster, etc.)
+(Ingen oppgaver pågår akkurat nå.)
 
 ## Backlog
 
@@ -50,6 +45,12 @@
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
 ## Fullført
+
+- [x] **Gjennomgang av innstillinger og opplesing**
+  - Zoom/utsnitt: unifisert scale-range 1.0–3.0, verifisert hel dataflyt fra Sheets → admin → sync → frontend
+  - Alle 24 innstillingsnøkler gjennomgått: konsistente mellom HARD_DEFAULTS, Google Sheets, admin og komponenter
+  - Fikset locale-bug: `valueRenderOption: 'UNFORMATTED_VALUE'` på alle Sheets API-kall som leser desimaltall
+  - Ingen inkonsekvenser funnet i property-navn, standardverdier eller fallback-logikk
 
 - [x] **Thumbnails på tannleger-listen i admin**
   - Thumbnail-bilder ved siden av hver tannlege i admin-panelet

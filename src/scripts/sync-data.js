@@ -119,6 +119,7 @@ async function syncTannleger() {
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: config.spreadsheetId,
             range: 'tannleger!A2:H',
+            valueRenderOption: 'UNFORMATTED_VALUE',
         });
 
         const rows = res.data.values || [];
@@ -306,6 +307,7 @@ async function syncForsideBilde() {
             const galleriRes = await sheets.spreadsheets.values.get({
                 spreadsheetId: config.spreadsheetId,
                 range: 'galleri!A2:I',
+                valueRenderOption: 'UNFORMATTED_VALUE',
             });
             const galleriRows = galleriRes.data.values || [];
             const forsideRow = galleriRows.find(row =>
@@ -330,6 +332,7 @@ async function syncForsideBilde() {
             const res = await sheets.spreadsheets.values.get({
                 spreadsheetId: config.spreadsheetId,
                 range: 'Innstillinger!A:B',
+                valueRenderOption: 'UNFORMATTED_VALUE',
             });
 
             const rows = res.data.values || [];
@@ -402,6 +405,7 @@ async function syncGalleri() {
             res = await sheets.spreadsheets.values.get({
                 spreadsheetId: config.spreadsheetId,
                 range: 'galleri!A2:I',
+                valueRenderOption: 'UNFORMATTED_VALUE',
             });
         } catch (sheetErr) {
             if (sheetErr.code === 400 || sheetErr.message?.includes('Unable to parse range')) {

@@ -605,6 +605,7 @@ export async function getTannlegerRaw(spreadsheetId) {
         const response = await gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId: spreadsheetId,
             range: 'tannleger!A:H',
+            valueRenderOption: 'UNFORMATTED_VALUE',
         });
 
         const rows = response.result.values;
@@ -806,6 +807,7 @@ export async function getGalleriRaw(spreadsheetId) {
         const response = await gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId: spreadsheetId,
             range: 'galleri!A:I',
+            valueRenderOption: 'UNFORMATTED_VALUE',
         });
 
         const rows = response.result.values;
