@@ -36,22 +36,21 @@ export async function enforceAccessControl(config) {
     const accessMap = await checkMultipleAccess(ids);
     
     const modules = [
-        { id: 'settings', resource: config.SHEET_ID, btn: 'btn-open-settings' },
-        { id: 'tjenester', resource: config.TJENESTER_FOLDER, btn: 'btn-open-tjenester' },
-        { id: 'meldinger', resource: config.MELDINGER_FOLDER, btn: 'btn-open-meldinger' },
-        { id: 'tannleger', resources: [config.TANNLEGER_FOLDER, config.SHEET_ID], btn: 'btn-open-tannleger' },
-        { id: 'bilder', resource: config.SHEET_ID, btn: 'btn-open-bilder' }
+        { id: 'settings', resource: config.SHEET_ID, card: 'card-settings' },
+        { id: 'tjenester', resource: config.TJENESTER_FOLDER, card: 'card-tjenester' },
+        { id: 'meldinger', resource: config.MELDINGER_FOLDER, card: 'card-meldinger' },
+        { id: 'tannleger', resources: [config.TANNLEGER_FOLDER, config.SHEET_ID], card: 'card-tannleger' },
+        { id: 'bilder', resource: config.SHEET_ID, card: 'card-bilder' }
     ];
 
     let hasAnyAccess = false;
 
     modules.forEach(mod => {
-        const hasAccess = mod.resources 
+        const hasAccess = mod.resources
             ? mod.resources.every(res => accessMap[res])
             : accessMap[mod.resource];
-            
-        const btn = document.getElementById(mod.btn);
-        const card = btn?.closest('.admin-card-interactive');
+
+        const card = document.getElementById(mod.card);
 
         if (hasAccess) {
             hasAnyAccess = true;

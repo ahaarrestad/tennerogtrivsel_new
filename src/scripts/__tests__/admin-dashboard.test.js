@@ -61,11 +61,11 @@ describe('admin-dashboard.js', () => {
             <div id="nav-user-info"></div>
             <div id="module-inner"></div>
             <div id="module-actions"></div>
-            <div class="admin-card-interactive"><button id="btn-open-settings"></button></div>
-            <div class="admin-card-interactive"><button id="btn-open-tjenester"></button></div>
-            <div class="admin-card-interactive"><button id="btn-open-meldinger"></button></div>
-            <div class="admin-card-interactive"><button id="btn-open-tannleger"></button></div>
-            <div class="admin-card-interactive"><button id="btn-open-bilder"></button></div>
+            <div id="card-settings" class="admin-card-interactive"></div>
+            <div id="card-tjenester" class="admin-card-interactive"></div>
+            <div id="card-meldinger" class="admin-card-interactive"></div>
+            <div id="card-tannleger" class="admin-card-interactive"></div>
+            <div id="card-bilder" class="admin-card-interactive"></div>
         `;
         vi.clearAllMocks();
     });
@@ -1081,10 +1081,10 @@ describe('admin-dashboard.js', () => {
 
             await enforceAccessControl(config);
             
-            const cardSettings = document.getElementById('btn-open-settings').closest('.admin-card-interactive');
-            const cardTjenester = document.getElementById('btn-open-tjenester').closest('.admin-card-interactive');
-            const cardMeldinger = document.getElementById('btn-open-meldinger').closest('.admin-card-interactive');
-            const cardTannleger = document.getElementById('btn-open-tannleger').closest('.admin-card-interactive');
+            const cardSettings = document.getElementById('card-settings');
+            const cardTjenester = document.getElementById('card-tjenester');
+            const cardMeldinger = document.getElementById('card-meldinger');
+            const cardTannleger = document.getElementById('card-tannleger');
 
             expect(cardSettings.style.display).not.toBe('none');
             expect(cardTjenester.style.display).toBe('none');
@@ -1104,7 +1104,7 @@ describe('admin-dashboard.js', () => {
             });
 
             await enforceAccessControl(config);
-            const cardTannleger = document.getElementById('btn-open-tannleger').closest('.admin-card-interactive');
+            const cardTannleger = document.getElementById('card-tannleger');
             expect(cardTannleger.style.display).toBe('none');
         });
 
@@ -1125,7 +1125,7 @@ describe('admin-dashboard.js', () => {
 
             await enforceAccessControl({ SHEET_ID: 's' });
 
-            const cardBilder = document.getElementById('btn-open-bilder').closest('.admin-card-interactive');
+            const cardBilder = document.getElementById('card-bilder');
             expect(cardBilder.style.display).not.toBe('none');
         });
 
@@ -1134,7 +1134,7 @@ describe('admin-dashboard.js', () => {
 
             await enforceAccessControl({ SHEET_ID: 's' });
 
-            const cardBilder = document.getElementById('btn-open-bilder').closest('.admin-card-interactive');
+            const cardBilder = document.getElementById('card-bilder');
             expect(cardBilder.style.display).toBe('none');
         });
     });

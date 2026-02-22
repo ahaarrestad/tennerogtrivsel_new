@@ -15,10 +15,6 @@
 (Ingen oppgaver pågår akkurat nå.)
 
 ## Backlog
-- [ ] **Vurdere "Start behandling"-knappene på admin-kortene**
-  - Hele kortet er allerede klikkbart, så knappen kan virke overflødig
-  - Kortet ser ut som en stor knapp — bør vi fjerne knappen og tydeliggjøre klikkbarhet på en annen måte?
-  - Vurdere alternativer: subtil hover-effekt, ikon i hjørnet, eller beholde knappen men style den annerledes
 - [ ] **Refaktorere inline-klasser til global.css**
   - Gå gjennom HTML-templates og identifisere gjentatte Tailwind-klassekombinasjoner
   - Flytte gjenbrukbare mønstre til `global.css` som egne klasser/variabler
@@ -40,6 +36,12 @@
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
 ## Fullført
+
+- [x] **Vurdere "Start behandling"-knappene på admin-kortene**
+  - Fjernet redundante knapper, erstattet med chevron-pil (›) for navigasjonsindikator
+  - Forbedret a11y: role="link", tabindex, aria-label, keyboard-støtte (Enter/Space)
+  - Forenklet JS fra dobbel event-håndtering til én klikk-handler per kort
+  - focus-visible-styling for tastaturnavigasjon
 
 - [x] **Rask aktiv/inaktiv-toggle på galleri-oversikten**
   - Klikkbar status-pill i galleri-listen — toggle uten å åpne editoren

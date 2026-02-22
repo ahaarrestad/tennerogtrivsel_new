@@ -120,30 +120,30 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             </header>
 
             <div class="admin-module-grid">
-                <div id="card-settings" class="admin-card-interactive group">
+                <div id="card-settings" class="admin-card-interactive group" role="link" tabindex="0" aria-label="Gå til innstillinger">
                     <h2 class="admin-subtitle group-hover:text-brand-hover">Ta en rutinesjekk</h2>
                     <p class="admin-description">Administrer telefonnumre, åpningstider og nettsidetitler.</p>
-                    <button id="btn-open-settings" class="btn-primary w-full mt-auto">Start behandlingen</button>
+                    <span class="admin-card-chevron" aria-hidden="true">&rsaquo;</span>
                 </div>
-                <div id="card-tjenester" class="admin-card-interactive group">
+                <div id="card-tjenester" class="admin-card-interactive group" role="link" tabindex="0" aria-label="Gå til tjenester">
                     <h2 class="admin-subtitle group-hover:text-brand-hover">Finpuss behandlingene</h2>
                     <p class="admin-description">Rediger tekst og innhold for alle tannhelsetjenester.</p>
-                    <button id="btn-open-tjenester" class="btn-primary w-full mt-auto">Start behandlingen</button>
+                    <span class="admin-card-chevron" aria-hidden="true">&rsaquo;</span>
                 </div>
-                <div id="card-meldinger" class="admin-card-interactive group">
+                <div id="card-meldinger" class="admin-card-interactive group" role="link" tabindex="0" aria-label="Gå til meldinger">
                     <h2 class="admin-subtitle group-hover:text-brand-hover">Heng opp oppslag</h2>
                     <p class="admin-description">Lag og administrer aktive meldinger og infobannere.</p>
-                    <button id="btn-open-meldinger" class="btn-primary w-full mt-auto">Start behandlingen</button>
+                    <span class="admin-card-chevron" aria-hidden="true">&rsaquo;</span>
                 </div>
-                <div id="card-tannleger" class="admin-card-interactive group">
+                <div id="card-tannleger" class="admin-card-interactive group" role="link" tabindex="0" aria-label="Gå til tannleger">
                     <h2 class="admin-subtitle group-hover:text-brand-hover">Puss på profilene</h2>
                     <p class="admin-description">Oppdater informasjon om ansatte og last opp nye portretter.</p>
-                    <button id="btn-open-tannleger" class="btn-primary w-full mt-auto">Start behandlingen</button>
+                    <span class="admin-card-chevron" aria-hidden="true">&rsaquo;</span>
                 </div>
-                <div id="card-bilder" class="admin-card-interactive group">
+                <div id="card-bilder" class="admin-card-interactive group" role="link" tabindex="0" aria-label="Gå til bilder">
                     <h2 class="admin-subtitle group-hover:text-brand-hover">Røntgengalleriet</h2>
                     <p class="admin-description">Administrer forsidebilde og galleribilder med zoom og utsnitt.</p>
-                    <button id="btn-open-bilder" class="btn-primary w-full mt-auto">Start behandlingen</button>
+                    <span class="admin-card-chevron" aria-hidden="true">&rsaquo;</span>
                 </div>
             </div>
         </div>
@@ -1580,29 +1580,20 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 
                 document.getElementById('back-to-dashboard')?.addEventListener('click', () => closeModule());
                 
-                document.getElementById('btn-open-settings')?.addEventListener('click', () => openModule('settings', 'Innstillinger'));
-                document.getElementById('btn-open-tjenester')?.addEventListener('click', () => openModule('tjenester', 'Tjenester'));
-                document.getElementById('btn-open-meldinger')?.addEventListener('click', () => openModule('meldinger', 'Meldinger'));
-                document.getElementById('btn-open-tannleger')?.addEventListener('click', () => openModule('tannleger', 'Tannleger'));
-                document.getElementById('btn-open-bilder')?.addEventListener('click', () => openModule('bilder', 'Bilder'));
-
-                // Hele kortet skal være klikkbart
                 const cardModules: [string, string, string][] = [
-                    ['card-settings',     'btn-open-settings',     'settings'],
-                    ['card-tjenester',    'btn-open-tjenester',    'tjenester'],
-                    ['card-meldinger',    'btn-open-meldinger',    'meldinger'],
-                    ['card-tannleger',    'btn-open-tannleger',    'tannleger'],
-                    ['card-bilder', 'btn-open-bilder', 'bilder'],
+                    ['card-settings',  'settings',  'Innstillinger'],
+                    ['card-tjenester', 'tjenester', 'Tjenester'],
+                    ['card-meldinger', 'meldinger', 'Meldinger'],
+                    ['card-tannleger', 'tannleger', 'Tannleger'],
+                    ['card-bilder',    'bilder',    'Bilder'],
                 ];
-                const moduleTitles: Record<string, string> = {
-                    settings: 'Innstillinger', tjenester: 'Tjenester',
-                    meldinger: 'Meldinger', tannleger: 'Tannleger',
-                    bilder: 'Bilder',
-                };
-                for (const [cardId, btnId, moduleId] of cardModules) {
-                    document.getElementById(cardId)?.addEventListener('click', (e) => {
-                        if (!(e.target as HTMLElement).closest(`#${btnId}`)) {
-                            openModule(moduleId, moduleTitles[moduleId]);
+                for (const [cardId, moduleId, title] of cardModules) {
+                    const card = document.getElementById(cardId);
+                    card?.addEventListener('click', () => openModule(moduleId, title));
+                    card?.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            openModule(moduleId, title);
                         }
                     });
                 }
