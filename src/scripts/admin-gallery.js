@@ -1,5 +1,6 @@
 // src/scripts/admin-gallery.js
 import { checkAccess, listImages, uploadImage } from './admin-client.js';
+import { showToast } from './admin-dialog.js';
 
 /**
  * Laster bildegalleri fra Google Drive og rendrer thumbnails i grid-elementet.
@@ -86,7 +87,7 @@ export function setupUploadHandler(folderId, onUploaded) {
             const result = await uploadImage(folderId, file);
             if (onUploaded) onUploaded(result);
         } catch (err) {
-            alert("Opplasting feilet!");
+            showToast("Opplasting feilet!", "error");
             console.error(err);
         } finally {
             if (preview) preview.classList.remove('opacity-0');
