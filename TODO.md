@@ -12,12 +12,7 @@
 
 ## Pågående
 
-- [ ] **Kodekvalitet / småfiks** ([plan](docs/plan-kodekvalitet-smafiks.md))
-  - Skrivefeil `troke-linecap` i Kontakt.astro — mangler `s` (`stroke-linecap`)
-  - Gammel debug-kommentar i `tjenester/[id].astro` (`// --- DENNE LINJEN MANGLER SANNSYNLIGVIS: ---`)
-  - `MutationObserver` i `layout-helper.js` observerer hele `document.body` med `subtree: true` — bør begrenses
-  - `Button.astro` har `[key: string]: any` i Props-interface — bryter typesikkerheten
-  - `noindex`-meta mangler på `/admin` — søkemotorer kan indeksere innloggingssiden
+(Ingen oppgaver pågår akkurat nå.)
 
 ## Backlog
 
@@ -53,6 +48,13 @@
   - E2E: a11y-test (`accessibility.spec.ts`) dekker kun forsiden — standalone-sider mangler
 
 ## Fullført
+
+- [x] **Kodekvalitet / småfiks** ([plan](docs/plan-kodekvalitet-smafiks.md))
+  - Skrivefeil `troke-linecap` → `stroke-linecap` i Kontakt.astro
+  - Fjernet debug-kommentar i `tjenester/[id].astro`
+  - Begrenset `MutationObserver` i `layout-helper.js` til `banner-root` og `main` (var `document.body` med `subtree: true`)
+  - Fjernet `[key: string]: any` fra `Button.astro`, la til eksplisitte HTML-attributter
+  - La til `<meta name="robots" content="noindex, nofollow">` på admin-siden
 
 - [x] **Tilgjengelighet (a11y) — småfiks**
   - Hamburger-knapp: `aria-expanded` og `aria-controls` i `mobile-menu.js`
