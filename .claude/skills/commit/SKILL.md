@@ -57,7 +57,10 @@ Present the proposed commit message to the user and ask for confirmation before 
 
 ## Step 3: Stage Files
 
-Stage the relevant changed files individually by name.
+Stage **only** the files that are relevant to the current task/conversation. If `git status`
+shows previously staged changes or modifications from other tasks, **unstage them first** with
+`git restore --staged <file>` before staging the correct files. Never blindly commit what
+happens to be in the staging area — verify that every staged file belongs to the current work.
 
 **Never stage these files:**
 - `.env`, `.env.*`
