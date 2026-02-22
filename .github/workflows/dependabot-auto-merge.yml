@@ -17,6 +17,7 @@ jobs:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Approve and Enable Auto-Merge
+        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
         run: |
           gh pr review --approve "$PR_URL"
           gh pr merge --auto --merge "$PR_URL"

@@ -15,12 +15,6 @@
 (Ingen oppgaver pågår akkurat nå.)
 
 ## Backlog
-  
-- [ ] **Sikre at Dependabot-PRer ikke merges ved feilet bygg**
-  - Gå gjennom GitHub Actions-oppsettet og Dependabot-konfigurasjon
-  - Sørg for at auto-merge kun skjer hvis bygg + tester passerer
-  - Ved feil skal PR-en bli liggende uten merge — ingen automatisk handling
-  - Verifiser branch protection rules og required status checks
 
 - [ ] **Utrede backend-alternativer for mer «live» oppdatering**
   - Undersøk muligheter for å erstatte eller supplere Google Sheets som backend
@@ -49,6 +43,11 @@
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
 ## Fullført
+
+- [x] **Sikre at Dependabot-PRer ikke merges ved feilet bygg**
+  - Auto-merge begrenset til minor/patch (major krever manuell gjennomgang)
+  - Ruleset oppdatert: required status check endret fra «build-and-deploy» til «build»
+  - `build`-jobben har `needs: [unit-tests, e2e-tests]` — feilet test → build skipped → merge blokkert
 
 - [x] **Optimalisere bygg, tester og deploy for raskere feedback-loop**
   - Slått sammen ci.yml og deploy.yml til én workflow med parallelle jobber (unit-tests + e2e-tests parallelt → build → deploy)
