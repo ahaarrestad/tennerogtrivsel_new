@@ -20,11 +20,16 @@
   - Gå gjennom resten av bildegalleriet for å se om tilsvarende avvik finnes
   - Sørg for at admin-preview gjenspeiler det faktiske utsnittet på nettsiden
 
+- [ ] **Gjennomgang av innstillinger og opplesing**
+  - Sjekk at alle innstillinger bruker de rette property-navnene konsistent (Sheets, getSettings, admin, komponenter)
+  - Verifiser at HARD_DEFAULTS har fornuftige standardverdier for alle nøkler
+  - Sjekk at opplesing fra Google Sheets og fallback-logikk er konsistent på tvers av kodebasen
+
 - [ ] **Optimalisere bygg, tester og deploy for raskere feedback-loop**
   - Kartlegge nåværende tidsbruk for unit-tester, E2E-tester, bygg og deploy
   - Identifisere flaskehalser og muligheter for parallellisering/caching
   - Vurdere tiltak i CI/CD-pipeline (GitHub Actions) og lokalt utviklingsmiljø
-  - 
+  
 - [ ] **Refaktorere inline-klasser til global.css**
   - Gå gjennom HTML-templates og identifisere gjentatte Tailwind-klassekombinasjoner
   - Flytte gjenbrukbare mønstre til `global.css` som egne klasser/variabler
