@@ -250,7 +250,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         async function loadSettingsModule() {
             const inner = document.getElementById('module-inner');
             if (!inner) return;
-            inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter data...</div>';
+            inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter innstillinger...</div>';
             try {
                 const sheetSettings = await getSettingsWithNotes(SHEET_ID);
                 const allSettings = mergeSettingsWithDefaults(sheetSettings, HARD_DEFAULTS_DATA);
@@ -398,14 +398,14 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
 
         // --- TJENESTER MODUL ---
         (window as any).deleteTjeneste = async (id, name) => {
-            if (confirm(`Vil du slette tjenesten "${name}"?`)) {
+            if (confirm(`Vil du slette «${name}»?`)) {
                 try {
                     await deleteFile(id);
                     (window as any).loadTjenesterModule();
                     showDeletionToast(name,
                         'Filen er lagt i Google Drive-papirkurven og kan gjenopprettes derfra innen 30 dager. ' +
                         'Gå til drive.google.com → Papirkurv for å gjenopprette.');
-                } catch (e) { alert("Sletting feilet."); }
+                } catch (e) { alert("Kunne ikke slette tjenesten."); }
             }
         };
 
@@ -472,11 +472,11 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         if (id) await saveFile(id, newFileName, stringifyMarkdown(frontmatter, content));
                         else await createFile(TJENESTER_FOLDER, newFileName, stringifyMarkdown(frontmatter, content));
                         (window as any).loadTjenesterModule();
-                    } catch (e) { 
+                    } catch (e) {
                         console.error("Lagring feilet:", e);
-                        alert("Feil ved lagring."); 
+                        alert("Kunne ikke lagre endringene.");
                         saveBtn.disabled = false;
-                        saveBtn.textContent = "Lagre tjeneste"; 
+                        saveBtn.textContent = "Lagre tjeneste";
                     }
                 };
 
@@ -492,14 +492,14 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         // --- MELDINGER MODUL ---
 
         (window as any).deleteMelding = async (id, name) => {
-            if (confirm(`Vil du slette "${name}"?`)) {
+            if (confirm(`Vil du slette «${name}»?`)) {
                 try {
                     await deleteFile(id);
                     (window as any).loadMeldingerModule();
                     showDeletionToast(name,
                         'Filen er lagt i Google Drive-papirkurven og kan gjenopprettes derfra innen 30 dager. ' +
                         'Gå til drive.google.com → Papirkurv for å gjenopprette.');
-                } catch (e) { alert("Sletting feilet."); }
+                } catch (e) { alert("Kunne ikke slette oppslaget."); }
             }
         };
 
@@ -552,7 +552,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                             <div id="date-error" class="hidden animate-in fade-in slide-in-from-top-1">
                                 <div class="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                                    <span class="text-sm font-black uppercase tracking-tight">Ugyldig dato-rekkefølge: Sluttdato må være etter startdato!</span>
+                                    <span class="text-sm font-black uppercase tracking-tight">Sluttdato må være etter startdato.</span>
                                 </div>
                             </div>
                         </div>
@@ -613,11 +613,11 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         if (id) await saveFile(id, newFileName, stringifyMarkdown(data, body));
                         else await createFile(MELDINGER_FOLDER, newFileName, stringifyMarkdown(data, body));
                         (window as any).loadMeldingerModule();
-                    } catch (e) { 
+                    } catch (e) {
                         console.error("Lagring feilet:", e);
-                        alert("Feil ved lagring."); 
+                        alert("Kunne ikke lagre endringene.");
                         saveBtn.disabled = false;
-                        saveBtn.textContent = "Lagre melding"; 
+                        saveBtn.textContent = "Lagre melding";
                     }
                 };
 
@@ -637,7 +637,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         let tannlegeSaveTimeout = null;
 
         (window as any).deleteTannlege = async (rowIndex, name) => {
-            if (confirm(`Vil du slette "${name}" permanent? Dette kan ikke angres.`)) {
+            if (confirm(`Vil du slette «${name}» permanent? Dette kan ikke angres.`)) {
                 try {
                     const allRows = await getTannlegerRaw(SHEET_ID);
                     const rowData = allRows.find(r => r.rowIndex === rowIndex);
@@ -649,7 +649,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     showDeletionToast(name,
                         'Raden er permanent fjernet fra tannleger-arket. En sikkerhetskopi finnes i «Slettet»-fanen i Google Sheets ' +
                         'og kan kopieres tilbake manuelt ved behov.');
-                } catch (e) { alert("Feil ved sletting."); }
+                } catch (e) { alert("Kunne ikke slette profilen."); }
             }
         };
 
@@ -661,7 +661,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             actions.innerHTML = `
                 <button onclick="window.openTannlegerModule()" class="admin-btn-secondary text-xs py-2 px-4 shadow-md flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    Tilbake til liste
+                    Tilbake til oversikten
                 </button>
             `;
             inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Henter profil og bilde fra Google...</div>';
@@ -730,7 +730,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         </div>
 
                         <div class="space-y-6 pt-4 border-t border-slate-100">
-                            <h4 class="text-brand font-black text-xs uppercase tracking-widest">Bildeutsnitt (Zoom & Pan)</h4>
+                            <h4 class="text-brand font-black text-xs uppercase tracking-widest">Bildeutsnitt (Zoom og posisjon)</h4>
                             
                             <div class="space-y-4">
                                 <div>
@@ -776,14 +776,14 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         <div class="pt-6 border-t border-slate-100">
                             <button onclick="window.openTannlegerModule()" class="btn-primary w-full py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs flex items-center justify-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                Ferdig / Tilbake til liste
+                                Lagre og gå tilbake
                             </button>
                         </div>
                     </div>
 
                     <!-- HØYRE: Preview -->
                     <div class="space-y-6">
-                        <h3 class="text-brand font-black uppercase tracking-tighter text-center lg:text-left">Live Preview</h3>
+                        <h3 class="text-brand font-black uppercase tracking-tighter text-center lg:text-left">Forhåndsvisning</h3>
                         <div class="flex justify-center lg:justify-start">
                             <div class="card-base w-full max-w-[350px] min-h-[320px] sm:min-h-[450px] items-center text-center justify-center">
                                 <div class="card-accent-corner"></div>
@@ -1028,7 +1028,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
 
                     const isForsidebilde = item.type === 'forsidebilde';
                     const previewAspect = isForsidebilde ? 'aspect-[16/10]' : 'aspect-[4/3]';
-                    const previewLabel = isForsidebilde ? 'Live Preview (16:10)' : 'Live Preview (4:3)';
+                    const previewLabel = isForsidebilde ? 'Forhåndsvisning (16:10)' : 'Forhåndsvisning (4:3)';
 
                     let itemPreviewSrc = '';
                     if (item.image) {
@@ -1045,7 +1045,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     if (!inner2) return;
                     inner2.innerHTML = DOMPurify.sanitize(`
                         <div class="max-w-4xl animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <button id="btn-back-to-bilder" class="text-xs text-brand font-bold uppercase tracking-widest mb-6 hover:underline cursor-pointer">&larr; Tilbake til bildeoversikt</button>
+                            <button id="btn-back-to-bilder" class="text-xs text-brand font-bold uppercase tracking-widest mb-6 hover:underline cursor-pointer">&larr; Tilbake til oversikten</button>
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                                 <div class="space-y-6">
                                     <div class="admin-field-container">
@@ -1078,7 +1078,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                         <input type="checkbox" id="galleri-edit-forsidebilde" class="w-5 h-5 accent-amber-500 cursor-pointer">
                                     </div>
                                     <div class="space-y-6 pt-4 border-t border-slate-100">
-                                        <h4 class="text-brand font-black text-xs uppercase tracking-widest">Bildeutsnitt (Zoom &amp; Pan)</h4>
+                                        <h4 class="text-brand font-black text-xs uppercase tracking-widest">Bildeutsnitt (Zoom og posisjon)</h4>
                                         <div class="space-y-4">
                                             <div>
                                                 <div class="flex justify-between mb-2">
@@ -1119,7 +1119,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                     <div class="pt-6 border-t border-slate-100">
                                         <button id="btn-ferdig-galleri" class="btn-primary w-full py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs flex items-center justify-center gap-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                            Ferdig / Tilbake til liste
+                                            Lagre og gå tilbake
                                         </button>
                                     </div>
                                 </div>
@@ -1197,7 +1197,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                         previewContainer.classList.remove('aspect-[4/3]');
                                         previewContainer.classList.add('aspect-[16/10]');
                                     }
-                                    if (previewLabelEl) previewLabelEl.textContent = 'Live Preview (16:10)';
+                                    if (previewLabelEl) previewLabelEl.textContent = 'Forhåndsvisning (16:10)';
                                 } catch (e) {
                                     alert('Kunne ikke sette forsidebilde: ' + e.message);
                                     forsideCheckbox.checked = false;
@@ -1220,7 +1220,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                         previewContainer.classList.remove('aspect-[16/10]');
                                         previewContainer.classList.add('aspect-[4/3]');
                                     }
-                                    if (previewLabelEl) previewLabelEl.textContent = 'Live Preview (4:3)';
+                                    if (previewLabelEl) previewLabelEl.textContent = 'Forhåndsvisning (4:3)';
                                 } catch (e) {
                                     alert('Kunne ikke endre type: ' + e.message);
                                     forsideCheckbox.checked = true;
@@ -1355,13 +1355,13 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 };
 
                 const deleteGalleriBilde = async (rowIndex, title) => {
-                    if (!confirm(`Er du sikker på at du vil slette «${title}»?`)) return;
+                    if (!confirm(`Vil du slette «${title}» permanent? Dette kan ikke angres.`)) return;
                     try {
                         await deleteGalleriRowPermanently(SHEET_ID, rowIndex);
-                        showDeletionToast(title, 'Galleribildet ble slettet permanent fra regnearket.');
+                        showDeletionToast(title, 'Bildet ble permanent slettet fra regnearket.');
                         reloadGalleriListe();
                     } catch (e) {
-                        alert('Feil ved sletting: ' + e.message);
+                        alert('Kunne ikke slette bildet: ' + e.message);
                     }
                 };
 
