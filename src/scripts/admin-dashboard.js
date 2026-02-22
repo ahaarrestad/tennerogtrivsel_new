@@ -129,7 +129,7 @@ export async function saveSingleSetting(index, inputEl, currentSettings, sheetId
             await updateSettings(sheetId, updatedList);
         }
         currentSettings[index].value = newValue;
-        statusEl.innerHTML = '<span class="text-green-600 text-[10px] font-bold">✅</span>';
+        statusEl.innerHTML = '<span class="text-green-600 text-[10px] font-bold" title="Publiseres automatisk om noen minutter">✅</span>';
         setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 3000);
     } catch (e) {
         console.error("Save failed", e);

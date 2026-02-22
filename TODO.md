@@ -16,11 +16,6 @@
 
 ## Backlog
 
-- [ ] **Tydeliggjøre i admin at endringer ikke vises umiddelbart**
-  - Vise info/banner generelt i admin om at data synces fra Google Sheets via bygg til nettside
-  - Vise tydelig melding ved lagring/endringer om at det tar tid før endringene er synlige på nettsiden
-  - Brukeren må forstå flyten: admin → Google Sheets → bygg/deploy → nettside oppdatert
-
 - [ ] **Optimalisere bygg, tester og deploy for raskere feedback-loop**
   - Kartlegge nåværende tidsbruk for unit-tester, E2E-tester, bygg og deploy
   - Identifisere flaskehalser og muligheter for parallellisering/caching
@@ -39,12 +34,25 @@
   - Lag deretter en konkret plan for å oppdatere layout/UX basert på best practice og målene i dokumentet
   - Vurder: lesbarhet, visuelt hierarki, tilgjengelighet (a11y), mobil-først, konsistens mellom seksjoner
 
+- [ ] **Utrede backend-alternativer for mer «live» oppdatering**
+  - Undersøk muligheter for å erstatte eller supplere Google Sheets som backend
+  - Krav: Google-innlogging beholdes, løsningen skal kunne kjøre gratis
+  - Viktigst at admin-siden oppleves responsiv og «live» — nettsiden kan henge litt etter
+  - Vurder alternativer som Firebase, Supabase, Cloudflare D1/KV, eller hybrid (live admin + statisk site)
+  - Kartlegg hva som må endres i dataflyt, admin-klient og bygg/deploy-pipeline
+  - Lever en anbefaling med fordeler/ulemper og migrasjonsplan
+
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet**
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
   - Bruk et team med sikkerhetsekspert, arkitekt og senior utvikler til å legge planen
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
 ## Fullført
+
+- [x] **Tydeliggjøre i admin at endringer ikke vises umiddelbart**
+  - Info-tekst på dashboard-header om at endringer publiseres automatisk
+  - Lagremeldinger (tannleger + galleri) viser undertekst om publiseringstid
+  - Innstillinger-checkmark har tooltip om publiseringstid
 
 - [x] **Forbedre UX for zoom/posisjon-kontroller i admin**
   - +/- knapper for finjustering (zoom ±0.1, posisjon ±1%)

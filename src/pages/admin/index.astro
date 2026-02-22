@@ -116,6 +116,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             <header class="admin-card-header">
                 <h1 class="admin-title">Behandlingsrommet</h1>
                 <p class="admin-info-text">Her pleier vi innholdet slik at nettsiden alltid viser seg fra sin beste side.</p>
+                <p class="admin-info-text !not-italic text-xs text-slate-400 mt-1">Endringer lagres i Google Sheets og publiseres automatisk innen noen minutter.</p>
             </header>
 
             <div class="admin-module-grid">
@@ -767,7 +768,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                             </div>
                         </div>
 
-                        <div id="save-status" class="h-6 text-[10px] font-black uppercase tracking-widest text-slate-400 italic"></div>
+                        <div id="save-status" class="min-h-6 text-[10px] font-black uppercase tracking-widest text-slate-400 italic"></div>
                         
                         <div class="pt-6 border-t border-slate-100">
                             <button onclick="window.openTannlegerModule()" class="btn-primary w-full py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs flex items-center justify-center gap-2">
@@ -929,8 +930,8 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                             await addTannlegeRow(SHEET_ID, updateData);
                             return (window as any).openTannlegerModule();
                         }
-                        if (statusEl) statusEl.textContent = "✅ Lagret!";
-                        setTimeout(() => { if(statusEl && statusEl.textContent === "✅ Lagret!") statusEl.textContent = ""; }, 3000);
+                        if (statusEl) statusEl.innerHTML = '✅ Lagret! <span class="block text-slate-400 not-italic">Publiseres automatisk om noen minutter.</span>';
+                        setTimeout(() => { if(statusEl) statusEl.innerHTML = ""; }, 5000);
                     } catch (e) {
                         if (statusEl) statusEl.textContent = "❌ Feil ved lagring!";
                     }
@@ -1094,7 +1095,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                             </div>
                                         </div>
                                     </div>
-                                    <div id="galleri-save-status" class="h-6 text-[10px] font-black uppercase tracking-widest text-slate-400 italic"></div>
+                                    <div id="galleri-save-status" class="min-h-6 text-[10px] font-black uppercase tracking-widest text-slate-400 italic"></div>
                                     <div class="pt-6 border-t border-slate-100">
                                         <button id="btn-ferdig-galleri" class="btn-primary w-full py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs flex items-center justify-center gap-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -1280,8 +1281,8 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                     positionY: parseInt(yInput?.value || '50'),
                                     type: forsideCheckbox?.checked ? 'forsidebilde' : 'galleri'
                                 });
-                                if (statusEl) statusEl.textContent = '✅ Lagret!';
-                                setTimeout(() => { if (statusEl && statusEl.textContent === '✅ Lagret!') statusEl.textContent = ''; }, 3000);
+                                if (statusEl) statusEl.innerHTML = '✅ Lagret! <span class="block text-slate-400 not-italic">Publiseres automatisk om noen minutter.</span>';
+                                setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 5000);
                             } catch (e) {
                                 if (statusEl) statusEl.textContent = '❌ Feil ved lagring!';
                             }
