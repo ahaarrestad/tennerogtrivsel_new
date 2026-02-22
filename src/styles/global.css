@@ -347,19 +347,19 @@
     }
 
     .admin-dashboard-container {
-        @apply container mx-auto px-4 space-y-6 md:space-y-12 py-6 md:py-12 w-full;
+        @apply container mx-auto px-4 space-y-4 md:space-y-8 py-4 md:py-8 w-full;
     }
 
     .admin-module-grid {
-        @apply grid grid-cols-1 md:grid-cols-2 gap-8;
+        @apply grid grid-cols-1 md:grid-cols-2 gap-5;
     }
 
     .admin-card {
-        @apply bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-brand-border transition-all duration-300;
+        @apply bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-brand-border transition-all duration-300;
     }
 
     .admin-card-interactive {
-        @apply bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-brand-border transition-all duration-300 hover:shadow-md hover:border-brand-active flex flex-col cursor-pointer;
+        @apply bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-brand-border transition-all duration-300 hover:shadow-md hover:border-brand-active flex flex-col cursor-pointer;
 
         &:focus-visible {
             @apply outline-2 outline-offset-2 outline-brand;
@@ -376,7 +376,7 @@
     }
 
     .admin-card-header {
-        @apply bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-brand-border transition-all duration-300 text-center;
+        @apply bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-brand-border transition-all duration-300 text-center;
     }
 
     /* TYPOGRAPHY */
@@ -385,11 +385,11 @@
     }
 
     .admin-subtitle {
-        @apply text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-brand leading-snug mb-4 transition-colors;
+        @apply text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-brand leading-snug mb-2 transition-colors;
     }
 
     .admin-description {
-        @apply text-slate-600 mb-6 grow;
+        @apply text-slate-600 mb-3 grow;
     }
 
     .admin-info-text {
