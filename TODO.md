@@ -12,16 +12,14 @@
 
 ## Pågående
 
-(Ingen oppgaver pågår akkurat nå.)
-
-## Backlog
-
-- [ ] **Kodekvalitet / småfiks**
+- [ ] **Kodekvalitet / småfiks** ([plan](docs/plan-kodekvalitet-smafiks.md))
   - Skrivefeil `troke-linecap` i Kontakt.astro — mangler `s` (`stroke-linecap`)
   - Gammel debug-kommentar i `tjenester/[id].astro` (`// --- DENNE LINJEN MANGLER SANNSYNLIGVIS: ---`)
   - `MutationObserver` i `layout-helper.js` observerer hele `document.body` med `subtree: true` — bør begrenses
   - `Button.astro` har `[key: string]: any` i Props-interface — bryter typesikkerheten
   - `noindex`-meta mangler på `/admin` — søkemotorer kan indeksere innloggingssiden
+
+## Backlog
 
 - [ ] **UX/design-gjennomgang av den offentlige nettsiden**
   - Bruk et team med Senior UX-designer, UX-designer og Senior Utvikler til å lage planen
