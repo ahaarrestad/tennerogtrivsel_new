@@ -14,12 +14,6 @@
 
 ## Backlog
 
-- [ ] **Sjekk utsnitt/visning av hovedbilde og bildegalleri**
-  - Hovedbildet (forsidebildet) ser ut til å ha et annet utsnitt enn det som vises i bildegalleri-admin
-  - Undersøk hvordan skala/posisjon (Scale, PosX, PosY) anvendes på forsiden vs. admin-preview
-  - Gå gjennom resten av bildegalleriet for å se om tilsvarende avvik finnes
-  - Sørg for at admin-preview gjenspeiler det faktiske utsnittet på nettsiden
-
 - [ ] **Gjennomgang av innstillinger og opplesing**
   - Sjekk at alle innstillinger bruker de rette property-navnene konsistent (Sheets, getSettings, admin, komponenter)
   - Verifiser at HARD_DEFAULTS har fornuftige standardverdier for alle nøkler
@@ -54,4 +48,10 @@
   - Thumbnail-bilder ved siden av hver tannlege i admin-panelet
   - Responsiv layout med flex-container (identisk mønster som galleri)
   - Asynkron lasting via `findFileByName` + `getDriveImageBlob`
+
+- [x] **Sjekk utsnitt/visning av hovedbilde og bildegalleri**
+  - Admin-thumbnails bruker nå riktig utsnitt (scale, posX, posY) fra data
+  - Forsidebilde-thumbnail har aspect-[16/10], galleri aspect-[4/3], tannleger kvadratisk
+  - Forside.astro leser utsnitt fra galleri-arket (ikke Innstillinger) — én autoritativ kilde
+  - syncGalleri() inkluderer forsidebilde i galleri.json med type-felt
 
