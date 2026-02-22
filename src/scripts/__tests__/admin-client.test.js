@@ -179,6 +179,18 @@ describe('admin-client.js', () => {
             await expect(listImages('123')).rejects.toThrow('Drive API ikke initialisert');
             gapi.client.drive = originalDrive;
         });
+
+        it('skal returnere tom liste når API returnerer undefined files', async () => {
+            gapi.client.drive.files.list.mockResolvedValue({ result: {} });
+            const images = await listImages('folder-123');
+            expect(images).toEqual([]);
+        });
+
+        it('skal falle tilbake til err.message når result.error mangler', async () => {
+            const simpleError = new Error('Nettverksfeil');
+            gapi.client.drive.files.list.mockRejectedValue(simpleError);
+            await expect(listImages('123')).rejects.toThrow('Nettverksfeil');
+        });
     });
 
     describe('uploadImage', () => {
@@ -380,6 +392,22 @@ describe('admin-client.js', () => {
             });
         });
 
+        it('getSettingsWithNotes skal bruke tomme strenger som fallback for manglende celler', async () => {
+            const mockValues = [
+                ['ID', 'Verdi', 'Beskrivelse'],
+                ['key1'],           // bare kolonne A, B og C mangler
+                ['key2', 'val2'],   // kolonne C mangler
+            ];
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
+                result: { values: mockValues }
+            });
+
+            const settings = await getSettingsWithNotes('sheet-123');
+            expect(settings).toHaveLength(2);
+            expect(settings[0]).toEqual({ row: 2, id: 'key1', value: '', description: '' });
+            expect(settings[1]).toEqual({ row: 3, id: 'key2', value: 'val2', description: '' });
+        });
+
         it('updateSettings skal sende korrekte verdier til APIet', async () => {
             const settings = [{ value: 'new-val' }];
             gapi.client.sheets.spreadsheets.values.update.mockResolvedValue({ result: {} });
@@ -509,6 +537,12 @@ describe('admin-client.js', () => {
             }));
         });
 
+        it('listFiles skal returnere tom liste når API returnerer undefined files', async () => {
+            gapi.client.drive.files.list.mockResolvedValue({ result: {} });
+            const files = await listFiles('folder-123');
+            expect(files).toEqual([]);
+        });
+
         it('listFiles skal håndtere feil', async () => {
             gapi.client.drive.files.list.mockRejectedValue(new Error('Drive error'));
             await expect(listFiles('123')).rejects.toThrow('Drive error');
@@ -597,6 +631,13 @@ describe('admin-client.js', () => {
             expect(result).toContain('title: Hei');
             expect(result).toContain('id: 123');
             expect(result).toContain('---\nInnhold');
+        });
+
+        it('stringifyMarkdown skal håndtere null/undefined body', () => {
+            const data = { title: 'Test' };
+            const result = stringifyMarkdown(data, null);
+            expect(result).toContain('title: Test');
+            expect(result.endsWith('---\n')).toBe(true);
         });
     });
 
@@ -783,6 +824,17 @@ describe('admin-client.js', () => {
             consoleSpy.mockRestore();
         });
 
+        it('skal håndtere undefined sheets i respons', async () => {
+            gapi.client.sheets.spreadsheets.get.mockResolvedValueOnce({
+                result: {} // sheets er undefined
+            });
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            await expect(deleteTannlegeRowPermanently(spreadsheetId, 3)).rejects.toThrow(
+                "Fant ikke 'tannleger'-arket i regnearket."
+            );
+            consoleSpy.mockRestore();
+        });
+
         it('skal kaste feil og logge ved API-feil', async () => {
             gapi.client.sheets.spreadsheets.get.mockRejectedValueOnce(new Error('api-feil'));
             const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -828,6 +880,18 @@ describe('admin-client.js', () => {
                     resource: { values: [['Type', 'Tittel/Navn', 'Dato slettet', 'Data']] }
                 })
             );
+        });
+
+        it('ensureSlettetSheet: undefined sheets → oppretter arket', async () => {
+            gapi.client.sheets.spreadsheets.get.mockResolvedValueOnce({
+                result: { /* sheets er undefined */ }
+            });
+            gapi.client.sheets.spreadsheets.batchUpdate.mockResolvedValueOnce({});
+            gapi.client.sheets.spreadsheets.values.update.mockResolvedValueOnce({});
+
+            await ensureSlettetSheet('sheet-id');
+
+            expect(gapi.client.sheets.spreadsheets.batchUpdate).toHaveBeenCalled();
         });
 
         it('ensureSlettetSheet: API-feil kaster videre', async () => {
@@ -993,6 +1057,18 @@ describe('admin-client.js', () => {
             expect(gapi.client.sheets.spreadsheets.values.update).not.toHaveBeenCalled();
         });
 
+        it('skal opprette arket når sheets er undefined i responsen', async () => {
+            gapi.client.sheets.spreadsheets.get.mockResolvedValueOnce({
+                result: { /* sheets er undefined */ }
+            });
+            gapi.client.sheets.spreadsheets.batchUpdate.mockResolvedValueOnce({});
+            gapi.client.sheets.spreadsheets.values.update.mockResolvedValueOnce({});
+
+            await ensureGalleriSheet('sheet-123');
+
+            expect(gapi.client.sheets.spreadsheets.batchUpdate).toHaveBeenCalled();
+        });
+
         it('skal kaste feil ved API-feil', async () => {
             gapi.client.sheets.spreadsheets.get.mockRejectedValueOnce(new Error('API-feil'));
             await expect(ensureGalleriSheet('sheet-123')).rejects.toThrow('API-feil');
@@ -1055,6 +1131,27 @@ describe('admin-client.js', () => {
             expect(result[0].scale).toBe(1.0);
             expect(result[0].positionX).toBe(50);
             expect(result[0].positionY).toBe(50);
+        });
+
+        it('getGalleriRaw skal bruke fallbacks for ufullstendig rad (kort array)', async () => {
+            const mockValues = [
+                ['Tittel', 'Bildefil', 'AltTekst', 'Aktiv', 'Rekkefølge', 'Skala', 'PosX', 'PosY', 'Type'],
+                ['Kort']  // bare tittel, resten er undefined
+            ];
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
+                result: { values: mockValues }
+            });
+
+            const result = await getGalleriRaw(spreadsheetId);
+            expect(result[0].title).toBe('Kort');
+            expect(result[0].image).toBe('');
+            expect(result[0].altText).toBe('');
+            expect(result[0].active).toBe(false);
+            expect(result[0].order).toBe(99);
+            expect(result[0].scale).toBe(1.0);
+            expect(result[0].positionX).toBe(50);
+            expect(result[0].positionY).toBe(50);
+            expect(result[0].type).toBe('galleri');
         });
 
         it('getGalleriRaw skal returnere tom liste når ingen data finnes', async () => {
@@ -1222,6 +1319,17 @@ describe('admin-client.js', () => {
             consoleSpy.mockRestore();
         });
 
+        it('deleteGalleriRowPermanently skal håndtere undefined sheets i respons', async () => {
+            gapi.client.sheets.spreadsheets.get.mockResolvedValueOnce({
+                result: {} // sheets er undefined
+            });
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            await expect(deleteGalleriRowPermanently(spreadsheetId, 3)).rejects.toThrow(
+                "Fant ikke 'galleri'-arket i regnearket."
+            );
+            consoleSpy.mockRestore();
+        });
+
         it('deleteGalleriRowPermanently skal kaste feil ved API-feil', async () => {
             gapi.client.sheets.spreadsheets.get.mockRejectedValueOnce(new Error('api-feil'));
             const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -1278,6 +1386,23 @@ describe('admin-client.js', () => {
             expect(gapi.client.sheets.spreadsheets.values.update).toHaveBeenCalledTimes(1);
             const call = gapi.client.sheets.spreadsheets.values.update.mock.calls[0][0];
             expect(call.resource.values[0][8]).toBe('forsidebilde');
+        });
+
+        it('skal ikke oppdatere target når rowIndex ikke finnes i galleri', async () => {
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValueOnce({
+                result: {
+                    values: [
+                        ['Tittel', 'Bildefil', 'AltTekst', 'Aktiv', 'Rekkefølge', 'Skala', 'PosX', 'PosY', 'Type'],
+                        ['Bilde1', 'bilde1.jpg', '', 'ja', '1', '1', '50', '50', 'galleri']
+                    ]
+                }
+            });
+
+            const result = await setForsideBildeInGalleri(spreadsheetId, 999);
+
+            expect(result).toBe(true);
+            // updateGalleriRow skal IKKE kalles (target finnes ikke)
+            expect(gapi.client.sheets.spreadsheets.values.update).not.toHaveBeenCalled();
         });
 
         it('skal kaste feil ved API-feil', async () => {
@@ -1354,6 +1479,36 @@ describe('admin-client.js', () => {
             expect(values[0]).toBe('Forsidebilde'); // title
             expect(values[1]).toBe('hero.jpg');      // image
             expect(values[8]).toBe('forsidebilde');   // type
+        });
+
+        it('skal bruke fallback-verdier når scale/posX/posY mangler i Innstillinger', async () => {
+            // getGalleriRaw: ingen forsidebilde-rad
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValueOnce({
+                result: { values: [['Tittel', 'Bildefil', 'AltTekst', 'Aktiv', 'Rekkefølge', 'Skala', 'PosX', 'PosY', 'Type']] }
+            });
+            // getSettingsWithNotes: forsideBilde finnes, men uten scale/pos
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValueOnce({
+                result: {
+                    values: [
+                        ['ID', 'Verdi', 'Beskrivelse'],
+                        ['forsideBilde', 'hero.jpg', '']
+                        // forsideBildeScale, forsideBildePosX, forsideBildePosY mangler
+                    ]
+                }
+            });
+            // ensureGalleriSheet: arket finnes
+            gapi.client.sheets.spreadsheets.get.mockResolvedValueOnce({
+                result: { sheets: [{ properties: { title: 'galleri' } }] }
+            });
+            gapi.client.sheets.spreadsheets.values.append.mockResolvedValueOnce({});
+
+            const result = await migrateForsideBildeToGalleri(spreadsheetId);
+
+            expect(result).toBe(true);
+            const values = gapi.client.sheets.spreadsheets.values.append.mock.calls[0][0].resource.values[0];
+            expect(values[5]).toBe(1.0);  // scale fallback
+            expect(values[6]).toBe(50);   // posX fallback
+            expect(values[7]).toBe(50);   // posY fallback
         });
 
         it('skal kaste feil ved API-feil', async () => {

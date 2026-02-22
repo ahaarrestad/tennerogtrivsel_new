@@ -38,6 +38,12 @@
 
 ## Fullført
 
+- [x] **Gjennomgå testdekning mot faktisk kode**
+  - Analysert coverage-rapport og identifisert udekte grener med Python-parsing av v8 coverage JSON
+  - sync-data.js: 85% → 97% branch coverage (11 nye tester for edge cases og feilhåndtering)
+  - admin-client.js: 88% → 96% branch coverage (12 nye tester for fallback-verdier, undefined-håndtering, feilscenarier)
+  - Alle filer over 80% branch coverage-kravet
+
 - [x] **Utrede backend-alternativer for mer «live» oppdatering**
   - Konklusjon: Beholdt Google Sheets — admin er allerede live nok, nettsiden kan henge litt etter
   - Implementert stille verifisering etter lagring (re-fetch fra Sheets + sammenligning)
