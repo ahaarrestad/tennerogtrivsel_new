@@ -12,10 +12,7 @@
 
 ## Pågående
 
-- [ ] **Reduser antall/størrelse på dependencies 1**
-  - `dotenv` brukes kun i `sync-data.js` — Astro og Node 20+ har innebygd `.env`-støtte, kan fjernes
-  - `@types/dompurify` er listet som `dependency` — flytt til `devDependencies`
-  - `sharp` brukes i `sync-data.js` men er ikke i `package.json` — legg til eksplisitt
+(Ingen oppgaver pågår akkurat nå.)
 
 ## Backlog
 
@@ -44,6 +41,11 @@
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
   
 ## Fullført
+
+- [x] **Reduser antall/størrelse på dependencies 1**
+  - Fjernet `dotenv` — erstattet med innebygd `process.loadEnvFile()` (Node 20.12+)
+  - Flyttet `@types/dompurify` fra `dependencies` til `devDependencies`
+  - Lagt til `sharp` som eksplisitt `devDependency` (var kun transitiv via Astro)
 
 - [x] **SEO-forbedringer**
   - Fjernet `/forside/` duplikat-side, lagt til `<link rel="canonical">` på alle sider
