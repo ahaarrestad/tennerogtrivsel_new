@@ -12,14 +12,14 @@
 
 ## Pågående
 
-(Ingen oppgaver pågår akkurat nå.)
+- [ ] **Refaktorere inline-klasser til global.css**
+  - [ ] Steg 1: Ny hjelpefunksjon `sectionVariant.ts` + unit-test
+  - [ ] Steg 2: Nye CSS-klasser `.image-frame` og `.card-grid` i global.css
+  - [ ] Steg 3: Ny komponent `SectionHeader.astro`
+  - [ ] Steg 4: Oppdater seksjonskomponenter (Galleri, Kontakt, Tjenester, Tannleger)
+  - [ ] Steg 5: Anvend `.image-frame` i Forside.astro og Card.astro
 
 ## Backlog
-- [ ] **Refaktorere inline-klasser til global.css**
-  - Gå gjennom HTML-templates og identifisere gjentatte Tailwind-klassekombinasjoner
-  - Flytte gjenbrukbare mønstre til `global.css` som egne klasser/variabler
-  - Være forsiktig — verifisere visuelt at ingenting går i stykker underveis
-  - Kjøre E2E-tester etter hver større endring for å fange regresjoner
 
 - [ ] **UX/design-gjennomgang av den offentlige nettsiden**
   - Bruk et team med Senior UX-designer, UX-designer og Senior Utvikler til å lage planen
