@@ -18,7 +18,7 @@ const galleriSynlig = (await getCollection('galleri')).length > 0;
 const tjenesterVariant = galleriSynlig ? 'brand' : 'white';
 const tannlegerVariant = galleriSynlig ? 'white' : 'brand';
 ---
-<Layout title="Tenner og Trivsel | Din Tannlege i Stavanger">
+<Layout>
     <main>
         <Forside/>
         <Kontakt variant="brand" />

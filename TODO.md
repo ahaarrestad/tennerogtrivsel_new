@@ -36,18 +36,19 @@
   - `@types/dompurify` er listet som `dependency` — flytt til `devDependencies`
   - `sharp` brukes i `sync-data.js` men er ikke i `package.json` — legg til eksplisitt
 
-- [ ] **SEO-forbedringer**
-  - Manglende `<link rel="canonical">` — `/` og `/forside` har identisk innhold (duplikatproblem)
-  - Standalone-sider har generisk `<title>` — bør ha unike, sidespesifikke titler
-  - Manglende Schema.org/JSON-LD (`Dentist`/`LocalBusiness`) — viktig for tannklinikker i Google
-  - Manglende `og:locale` (`nb_NO`), `og:image:width/height`, Twitter Card-tags
-
 - [ ] **CI/CD-forbedringer**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
   - Playwright kjører kun `--project=chromium` i CI — WebKit og Mobile Chrome testes aldri
   - E2E: a11y-test (`accessibility.spec.ts`) dekker kun forsiden — standalone-sider mangler
 
 ## Fullført
+
+- [x] **SEO-forbedringer**
+  - Fjernet `/forside/` duplikat-side, lagt til `<link rel="canonical">` på alle sider
+  - Standalone-sider har unike `<title>` og `<meta description>` via settings
+  - Schema.org/JSON-LD (`Dentist`) med adresse, telefon, åpningstider
+  - Komplett OpenGraph (`og:locale`, `og:site_name`, `og:image:width/height`) og Twitter Card
+  - 10 nye E2E-tester for SEO-metadata
 
 - [x] **Kodekvalitet / småfiks** ([plan](docs/plan-kodekvalitet-smafiks.md))
   - Skrivefeil `troke-linecap` → `stroke-linecap` i Kontakt.astro
