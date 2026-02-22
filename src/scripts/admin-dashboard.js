@@ -392,7 +392,8 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
         } else {
             dentists.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'nb'));
 
-            let html = `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
+            let html = `<p class="text-xs text-slate-400 mb-3">Sist hentet: <span id="tannleger-last-fetched">${formatTimestamp(new Date())}</span></p>`;
+            html += `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
             dentists.forEach((t) => {
                 const statusClass = t.active ? "bg-green-100 text-green-700 border-green-200" : "bg-slate-100 text-slate-500 border-slate-200";
                 const statusText = t.active ? "Aktiv" : "Inaktiv";
@@ -516,7 +517,8 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                 return (a.order ?? 99) - (b.order ?? 99);
             });
 
-            let html = `<div class="grid grid-cols-1 gap-4">`;
+            let html = `<p class="text-xs text-slate-400 mb-3">Sist hentet: <span id="galleri-last-fetched">${formatTimestamp(new Date())}</span></p>`;
+            html += `<div class="grid grid-cols-1 gap-4">`;
             images.forEach((img, idx) => {
                 const isForsidebilde = img.type === 'forsidebilde';
                 const statusClass = img.active ? "bg-green-100 text-green-700 border-green-200" : "bg-slate-100 text-slate-500 border-slate-200";

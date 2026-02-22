@@ -15,11 +15,6 @@
 (Ingen oppgaver pågår akkurat nå.)
 
 ## Backlog
-  - Krav: Google-innlogging beholdes, løsningen skal kunne kjøre gratis
-  - Viktigst at admin-siden oppleves responsiv og «live» — nettsiden kan henge litt etter
-  - Vurder alternativer som Firebase, Supabase, Cloudflare D1/KV, eller hybrid (live admin + statisk site)
-  - Kartlegg hva som må endres i dataflyt, admin-klient og bygg/deploy-pipeline
-  - Lever en anbefaling med fordeler/ulemper og migrasjonsplan
   
 - [ ] **Refaktorere inline-klasser til global.css**
   - Gå gjennom HTML-templates og identifisere gjentatte Tailwind-klassekombinasjoner
@@ -46,7 +41,7 @@
   - Implementert stille verifisering etter lagring (re-fetch fra Sheets + sammenligning)
   - Tidspunkt i lagremeldinger ("✅ 22. feb kl. 14:32") og "Sist hentet"-tid i modul-header
   - Mismatch → automatisk reload av modulen
-  - Fase 1 ferdig (innstillinger), galleri/tannleger kan utvides senere
+  - Implementert for alle tre moduler: innstillinger, galleri og tannleger
 
 - [x] **Sikre at Dependabot-PRer ikke merges ved feilet bygg**
   - Auto-merge begrenset til minor/patch (major krever manuell gjennomgang)

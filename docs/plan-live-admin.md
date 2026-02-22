@@ -32,16 +32,16 @@ Oppgaven var å utrede backend-alternativer for mer «live» oppdatering. Etter 
 
 | Fase | Modul | Status |
 |------|-------|--------|
-| 1 | Innstillinger | Pågår |
-| 2 | Galleri | Fremtidig |
-| 3 | Tannleger | Fremtidig |
+| 1 | Innstillinger | Ferdig |
+| 2 | Galleri | Ferdig |
+| 3 | Tannleger | Ferdig |
 
-## Filer som endres (fase 1)
+## Filer som ble endret
 
 | Fil | Endring |
 |-----|---------|
-| `src/scripts/admin-dashboard.js` | `formatTimestamp()`, `updateLastFetchedTime()`, oppdatert `saveSingleSetting()` |
-| `src/pages/admin/index.astro` | Import + "Sist hentet"-header + `onReload`-callback |
+| `src/scripts/admin-dashboard.js` | `formatTimestamp()`, `updateLastFetchedTime()`, oppdatert `saveSingleSetting()`, "Sist hentet" i tannleger- og galleri-lister |
+| `src/pages/admin/index.astro` | Import, "Sist hentet"-header i innstillinger, stille verifisering i tannlege- og galleri-lagring |
 | Tester | Nye/oppdaterte tester for verifisering og tidspunkt |
 
 ## Tekniske detaljer

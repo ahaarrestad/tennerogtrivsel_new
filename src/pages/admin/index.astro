@@ -933,7 +933,24 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                             await addTannlegeRow(SHEET_ID, updateData);
                             return (window as any).openTannlegerModule();
                         }
-                        if (statusEl) statusEl.innerHTML = '✅ Lagret! <span class="block text-slate-400 not-italic">Publiseres automatisk om noen minutter.</span>';
+                        // Stille verifisering
+                        const savedTime = new Date();
+                        try {
+                            const freshData = await getTannlegerRaw(SHEET_ID);
+                            const fetchedEl = document.getElementById('tannleger-last-fetched');
+                            if (fetchedEl) fetchedEl.textContent = formatTimestamp(new Date());
+                            const freshRow = freshData.find(d => d.rowIndex === rowIndex);
+                            if (freshRow && freshRow.name !== name) {
+                                console.warn(`[Admin] Tannlege-mismatch etter lagring: forventet "${name}", fikk "${freshRow.name}"`);
+                                if (statusEl) statusEl.innerHTML = '⚠️ Laster på nytt…';
+                                (window as any).openTannlegerModule();
+                                return;
+                            }
+                        } catch (verifyErr) {
+                            console.warn("[Admin] Tannlege-verifisering feilet, men lagring gikk OK:", verifyErr);
+                        }
+                        const ts = formatTimestamp(savedTime);
+                        if (statusEl) statusEl.innerHTML = `✅ Lagret ${ts} <span class="block text-slate-400 not-italic">Publiseres automatisk om noen minutter.</span>`;
                         setTimeout(() => { if(statusEl) statusEl.innerHTML = ""; }, 5000);
                     } catch (e) {
                         if (statusEl) statusEl.textContent = "❌ Feil ved lagring!";
@@ -1273,7 +1290,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         galleriSaveTimeout = setTimeout(async () => {
                             if (statusEl) statusEl.textContent = '💾 Lagrer til Google Sheets...';
                             try {
-                                await updateGalleriRow(SHEET_ID, rowIndex, {
+                                const saveData = {
                                     title: titleInput?.value || '',
                                     image: imageInput?.value || '',
                                     altText: altInput?.value || '',
@@ -1283,8 +1300,26 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                     positionX: parseInt(xInput?.value || '50'),
                                     positionY: parseInt(yInput?.value || '50'),
                                     type: forsideCheckbox?.checked ? 'forsidebilde' : 'galleri'
-                                });
-                                if (statusEl) statusEl.innerHTML = '✅ Lagret! <span class="block text-slate-400 not-italic">Publiseres automatisk om noen minutter.</span>';
+                                };
+                                await updateGalleriRow(SHEET_ID, rowIndex, saveData);
+                                // Stille verifisering
+                                const savedTime = new Date();
+                                try {
+                                    const freshData = await getGalleriRaw(SHEET_ID);
+                                    const fetchedEl = document.getElementById('galleri-last-fetched');
+                                    if (fetchedEl) fetchedEl.textContent = formatTimestamp(new Date());
+                                    const freshRow = freshData.find(r => r.rowIndex === rowIndex);
+                                    if (freshRow && freshRow.title !== saveData.title) {
+                                        console.warn(`[Admin] Galleri-mismatch etter lagring: forventet "${saveData.title}", fikk "${freshRow.title}"`);
+                                        if (statusEl) statusEl.innerHTML = '⚠️ Laster på nytt…';
+                                        loadBilderModule();
+                                        return;
+                                    }
+                                } catch (verifyErr) {
+                                    console.warn("[Admin] Galleri-verifisering feilet, men lagring gikk OK:", verifyErr);
+                                }
+                                const ts = formatTimestamp(savedTime);
+                                if (statusEl) statusEl.innerHTML = `✅ Lagret ${ts} <span class="block text-slate-400 not-italic">Publiseres automatisk om noen minutter.</span>`;
                                 setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 5000);
                             } catch (e) {
                                 if (statusEl) statusEl.textContent = '❌ Feil ved lagring!';
