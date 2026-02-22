@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import fs from 'fs';
-import { google } from 'googleapis';
 import crypto from 'crypto';
 
 // sharp-mock – hoisted så factory-funksjonen kan referere til den
@@ -36,21 +35,15 @@ const mockDrive = {
     },
 };
 
-vi.mock('googleapis', () => {
-    return {
-        google: {
-            auth: {
-                GoogleAuth: vi.fn().mockImplementation(function() {
-                    return {
-                        authorize: vi.fn(),
-                    };
-                }),
-            },
-            sheets: vi.fn(() => mockSheets),
-            drive: vi.fn(() => mockDrive),
-        },
-    };
-});
+vi.mock('@googleapis/sheets', () => ({
+    sheets: vi.fn(() => mockSheets),
+}));
+vi.mock('@googleapis/drive', () => ({
+    drive: vi.fn(() => mockDrive),
+}));
+vi.mock('google-auth-library', () => ({
+    GoogleAuth: vi.fn().mockImplementation(() => ({ authorize: vi.fn() })),
+}));
 
 vi.mock('fs', () => ({
     default: {

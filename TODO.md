@@ -30,10 +30,6 @@
   - Bruk et team med sikkerhetsekspert, arkitekt og senior utvikler til å legge planen
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
-- [ ] **Reduser antall/størrelse på dependencies 2**
-  - `googleapis` er 196 MB (42% av node_modules) — kun `sheets` og `drive` brukes. Bytt til `@googleapis/sheets` + `@googleapis/drive`
-
-
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
 
@@ -48,6 +44,10 @@
   - Undersøk rotårsaken: er det OAuth-tokenet som utløper, GAPI-scriptet som mistes, eller noe annet?
 
 ## Fullført
+
+- [x] **Reduser antall/størrelse på dependencies 2**
+  - Byttet `googleapis` (196 MB) til `@googleapis/sheets` + `@googleapis/drive` + `google-auth-library`
+  - node_modules redusert fra 461 MB til 269 MB (−42%)
 
 - [x] **Reduser antall/størrelse på dependencies 1**
   - Fjernet `dotenv` — erstattet med innebygd `process.loadEnvFile()` (Node 20.12+)
