@@ -28,9 +28,9 @@ For å sikre stabilitet og unngå regresjoner, SKAL følgende sjekkliste følges
 
 ## Arkitektur: Bildehåndtering (Galleri + Forsidebilde)
 
-### Samlet galleri-ark med Type-kolonne
+### Google Sheets-ark
 
-Forsidebildet og galleribilder deler ett Google Sheets-ark (`galleri`) med kolonner `A:I`:
+**Galleri** (`galleri!A:I`):
 
 | A | B | C | D | E | F | G | H | I |
 |---|---|---|---|---|---|---|---|---|
@@ -40,17 +40,30 @@ Forsidebildet og galleribilder deler ett Google Sheets-ark (`galleri`) med kolon
 - Kun **én rad** kan ha `type='forsidebilde'` om gangen — `setForsideBildeInGalleri()` nedgraderer automatisk den eksisterende.
 - Rader uten Type-verdi tolkes som `'galleri'` (bakoverkompatibilitet).
 
+**Tannleger** (`tannleger!A:H`):
+
+| A | B | C | D | E | F | G | H |
+|---|---|---|---|---|---|---|---|
+| Navn | Tittel | Beskrivelse | Bildefil | Aktiv | Skala | PosX | PosY |
+
 ### Dataflyt
 
 ```
 Google Sheets (galleri-ark)
   ↓ sync-data.js
-  ├── syncGalleri()        → src/content/galleri.json  (filtrerer UT forsidebilde-rader)
+  ├── syncGalleri()        → src/content/galleri.json  (inkluderer forsidebilde med type-felt)
   └── syncForsideBilde()   → src/assets/hovedbilde.png (leser KUN forsidebilde-rad)
                            → public/hovedbilde.png     (beskjært OG-bilde 1200×630)
 ```
 
+- `Forside.astro` leser utsnitt (scale, posX, posY) fra **galleri-collectionen** (forsidebilde-raden), ikke fra Innstillinger.
+- `Galleri.astro` filtrerer ut forsidebilde-rader ved rendering.
+
 **Forsidebilde-fallback:** `syncForsideBilde()` prøver galleri-arket først. Hvis det ikke finnes en forsidebilde-rad (eller arket mangler), faller den tilbake til Innstillinger-arket (`forsideBilde`, `forsideBildeScale`, `forsideBildePosX`, `forsideBildePosY`).
+
+### Google Sheets API: valueRenderOption
+
+Alle `sheets.values.get`-kall som leser numeriske felter (scale, posX, posY, order) **SKAL** bruke `valueRenderOption: 'UNFORMATTED_VALUE'`. Uten dette returnerer API-et tall i spreadsheetets lokale format — med norsk locale blir f.eks. `1.5` til `"1,5"`, og `parseFloat("1,5")` gir `1`. Heltall er upåvirket, men desimaltall (som zoom/scale) mister desimaldelen.
 
 ### Admin-panelet (bilder-modul)
 
@@ -71,7 +84,7 @@ Nøkkelfunksjoner i `admin-dashboard.js`:
 | `loadGalleriListeModule()` | Viser bildeoversikt med thumbnails, badges og reorder-knapper |
 | `reorderGalleriItem()` | Bytter rekkefølge mellom to naboer (opp/ned-knapper) |
 
-**Thumbnails** lastes asynkront via `findFileByName()` + `getDriveImageBlob()` (best-effort, blokkerer ikke UI). Blob-URLer krever `blob:` i CSP `connect-src`.
+**Thumbnails** (galleri og tannleger) lastes asynkront via `findFileByName()` + `getDriveImageBlob()` (best-effort, blokkerer ikke UI). Thumbnails viser utsnitt (scale, posX, posY) via CSS `object-position`, `transform: scale()` og `transform-origin`. Blob-URLer krever `blob:` i CSP `connect-src`.
 
 ### Gitignore for synkroniserte filer
 
