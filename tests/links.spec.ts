@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Link Crawler', () => {
+  // Lenkesjekk er serverside og identisk uavhengig av nettleser
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'Lenkesjekk er nettleser-uavhengig');
+  });
+
   test('alle interne lenker på forsiden skal fungere', async ({ page }) => {
     await page.goto('/');
     

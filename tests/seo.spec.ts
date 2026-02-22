@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('SEO og Metadata', () => {
+  // Metadata er serverside-generert og identisk uavhengig av nettleser
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'Metadata er nettleser-uavhengig');
+  });
+
   test('forsiden skal ha korrekt SEO-metadata', async ({ page }) => {
     await page.goto('/');
 
