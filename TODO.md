@@ -12,12 +12,19 @@
 
 ## Pågående
 
-## Backlog
-
 - [ ] **Gjennomgang av innstillinger og opplesing**
   - Sjekk at alle innstillinger bruker de rette property-navnene konsistent (Sheets, getSettings, admin, komponenter)
   - Verifiser at HARD_DEFAULTS har fornuftige standardverdier for alle nøkler
   - Sjekk at opplesing fra Google Sheets og fallback-logikk er konsistent på tvers av kodebasen
+  - [x] Zoom/utsnitt: unifisert scale-range 1.0–3.0, verifisert hel dataflyt fra Sheets → admin → sync → frontend
+  - [ ] Gjenstår: gjennomgå øvrige innstillinger (telefon, adresse, titler, tekster, etc.)
+
+## Backlog
+
+- [ ] **Forbedre UX for zoom/posisjon-kontroller i admin**
+  - Legge til +/- knapper (tap) for zoom, h-pos og v-pos så man kan justere i små steg
+  - Hindre utilsiktet endring ved scrolling på mobil (range-slidere fanger scroll-events)
+  - Vurdere `touch-action: none` eller lignende for å skille scroll fra slider-interaksjon
 
 - [ ] **Optimalisere bygg, tester og deploy for raskere feedback-loop**
   - Kartlegge nåværende tidsbruk for unit-tester, E2E-tester, bygg og deploy
