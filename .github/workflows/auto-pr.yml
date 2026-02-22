@@ -28,7 +28,7 @@ jobs:
             --body "Auto-generated from \`git review\`.")
           echo "Created PR: $PR_URL"
 
-          gh pr merge --auto --merge "$PR_URL"
+          gh pr merge --auto --rebase "$PR_URL"
           echo "Auto-merge enabled"
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
