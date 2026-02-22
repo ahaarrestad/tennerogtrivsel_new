@@ -34,6 +34,9 @@
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
 
 
+- [ ] **Vurder størrelsen på boksene i admin-panelet**
+  - Er kortene/boksene unødvendig store? Vurder om de kan komprimeres for bedre oversikt
+
 - [ ] **Konsolidere og rydde i E2E-tester**
   - homepage.spec.ts er nesten helt redundant (tittel, h1, seksjoner dekkes av seo + sitemap-pages)
   - Metadata-tester (seo.spec.ts, links.spec.ts) kjører i 3 nettlesere unødvendig — begrens til kun Chromium
