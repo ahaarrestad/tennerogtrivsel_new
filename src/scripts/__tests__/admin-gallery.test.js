@@ -9,8 +9,13 @@ vi.mock('../admin-client', () => ({
     uploadImage: vi.fn(),
 }));
 
+vi.mock('../admin-dialog', () => ({
+    showToast: vi.fn(),
+}));
+
 import { loadGallery, setupUploadHandler } from '../admin-gallery';
 import { checkAccess, listImages, uploadImage } from '../admin-client';
+import { showToast } from '../admin-dialog';
 
 describe('admin-gallery.js', () => {
     beforeEach(() => {
@@ -185,16 +190,15 @@ describe('admin-gallery.js', () => {
             expect(spinner.classList.contains('hidden')).toBe(true);
         });
 
-        it('skal vise alert og skjule spinner ved feil under opplasting', async () => {
+        it('skal vise toast og skjule spinner ved feil under opplasting', async () => {
             uploadImage.mockRejectedValueOnce(new Error('Nettverksfeil'));
-            const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
             vi.spyOn(console, 'error').mockImplementation(() => {});
 
             const mockFile = new File(['data'], 'test.jpg', { type: 'image/jpeg' });
             const handler = captureChangeHandler('folder-123', vi.fn());
             await handler({ target: { files: [mockFile] } });
 
-            expect(alertSpy).toHaveBeenCalledWith('Opplasting feilet!');
+            expect(showToast).toHaveBeenCalledWith('Opplasting feilet!', 'error');
             expect(spinner.classList.contains('hidden')).toBe(true);
         });
 
