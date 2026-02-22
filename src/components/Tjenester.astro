@@ -1,8 +1,9 @@
 ---
 import {getCollection} from 'astro:content';
-import Layout from '../layouts/Layout.astro';
 import Card from './Card.astro';
 import { getSiteSettings } from '../scripts/getSettings';
+import { getSectionClasses, type SectionVariant } from '../scripts/sectionVariant';
+import SectionHeader from './SectionHeader.astro';
 
 // 1. Hent alle filene fra src/content/tjenester/
 const allServices = await getCollection('tjenester');
@@ -13,20 +14,15 @@ const sortedServices = allServices.sort((a, b) =>
 );
 const settings = await getSiteSettings();
 
-interface Props { variant?: 'white' | 'brand' }
+interface Props { variant?: SectionVariant }
 const { variant = 'white' } = Astro.props;
-const sectionBg = variant === 'brand' ? 'bg-brand-light' : 'bg-white';
-const headerBg = variant === 'brand' ? 'bg-brand-light/95 md:bg-transparent' : 'bg-white/95';
+const { sectionBg, headerBg } = getSectionClasses(variant);
 ---
 <section id="tjenester" class={`section-container ${sectionBg}`}>
     <div class="section-content">
-        <div class={`section-header section-header-centered ${headerBg} section-header-sticky`}>
-            <h2 class="section-heading">{settings.tjenesterTittel}</h2>
-            <p class="section-intro">{settings.tjenesteTekst}</p>
-            <div class="heading-accent"></div>
-        </div>
+        <SectionHeader title={settings.tjenesterTittel} intro={settings.tjenesteTekst} headerBg={headerBg} sticky />
 
-        <div class="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div class="card-grid gap-6 md:gap-8">
             {sortedServices.map((service, index) => (
                     <Card
                             index={index}
