@@ -39,7 +39,17 @@
 
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
-  
+
+- [ ] **Robust feilhåndtering ved tapt Google-tilkobling i admin**
+  - Ved redeploy eller større oppdateringer mistes noen ganger kontakten til Google API
+  - Admin viser da feilmeldinger ("får ikke tak i filene") i stedet for å prøve å gjenopprette
+  - Mulige løsninger å utrede:
+    1. Automatisk re-autentisering (silent token refresh) ved 401/403-feil
+    2. Retry-logikk med eksponentiell backoff på API-kall som feiler
+    3. Automatisk side-reload etter et visst antall feilede forsøk
+    4. Graceful degradation — vis sist cachede data med varsel om at tilkoblingen er nede
+  - Undersøk rotårsaken: er det OAuth-tokenet som utløper, GAPI-scriptet som mistes, eller noe annet?
+
 ## Fullført
 
 - [x] **Reduser antall/størrelse på dependencies 1**
