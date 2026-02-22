@@ -1,9 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { getSiteSettings } from '../scripts/getSettings';
 
 import GalleriSide from '../components/Galleri.astro';
+
+const settings = await getSiteSettings();
 ---
-<Layout title="Tenner og Trivsel | Din Tannlege i Stavanger">
+<Layout
+    title={`${settings.galleriTittel} | Tenner og Trivsel`}
+    description={settings.galleriBeskrivelse}
+>
     <main>
         <div class="pb-[35vh] md:mb-0">
             <GalleriSide variant="white" standalone />

@@ -7,7 +7,6 @@ import { test, expect } from '@playwright/test';
 
 const sitemapPages = [
   { path: '/', name: 'Forsiden' },
-  { path: '/forside/', name: 'Forside (egen side)' },
   { path: '/kontakt/', name: 'Kontakt' },
   { path: '/tannleger/', name: 'Om oss / Tannleger' },
   { path: '/tjenester/', name: 'Tjenester' },

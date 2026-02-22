@@ -26,6 +26,10 @@ export const HARD_DEFAULTS: Record<string, string> = {
     galleriTittel: "Klinikken vår",
     tjenesterTittel: "Våre Tjenester",
     tannlegerTittel: "Våre Tannleger",
+    kontaktBeskrivelse: "Kontakt Tenner og Trivsel tannklinikk i Stavanger. Telefon, åpningstider og veibeskrivelse.",
+    galleriBeskrivelse: "Se bilder fra Tenner og Trivsel tannklinikk i Stavanger. Moderne lokaler ved SUS.",
+    tjenesterBeskrivelse: "Oversikt over tannhelsetjenester hos Tenner og Trivsel i Stavanger.",
+    tannlegerBeskrivelse: "Møt tannlegene hos Tenner og Trivsel i Stavanger. Erfarne tannleger med bred kompetanse.",
 };
 
 export async function getSiteSettings() {

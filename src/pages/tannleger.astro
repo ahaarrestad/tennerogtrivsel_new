@@ -1,9 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { getSiteSettings } from '../scripts/getSettings';
 
 import TannlegerSide from '../components/Tannleger.astro';
+
+const settings = await getSiteSettings();
 ---
-<Layout title="Tenner og Trivsel | Din Tannlege i Stavanger">
+<Layout
+    title={`${settings.tannlegerTittel} | Tenner og Trivsel`}
+    description={settings.tannlegerBeskrivelse}
+>
     <main>
         <div class="pb-[35vh] md:mb-0">
             <TannlegerSide variant="white" />
