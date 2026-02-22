@@ -498,7 +498,7 @@ export async function reorderGalleriItem(sheetId, items, rowIndex, direction) {
 /**
  * Henter og viser galleri-listen fra Sheets med thumbnails, badges og reorder-knapper.
  */
-export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorder, parentFolderId) {
+export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorder, parentFolderId, onToggleActive) {
     const container = document.getElementById('galleri-liste-container');
     if (!container) return;
 
@@ -521,11 +521,25 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
             html += `<div class="grid grid-cols-1 gap-4">`;
             images.forEach((img, idx) => {
                 const isForsidebilde = img.type === 'forsidebilde';
-                const statusClass = img.active ? "bg-green-100 text-green-700 border-green-200" : "bg-slate-100 text-slate-500 border-slate-200";
-                const statusText = img.active ? "Aktiv" : "Inaktiv";
+                const toggleTrackClass = img.active
+                    ? "bg-green-500"
+                    : "bg-slate-300";
+                const toggleDotTransform = img.active
+                    ? "translate-x-5"
+                    : "translate-x-0";
+                const toggleLabel = img.active ? "Aktiv" : "Inaktiv";
+                const toggleLabelClass = img.active ? "text-green-700" : "text-slate-500";
                 const badgeHtml = isForsidebilde
                     ? `<span class="admin-status-pill bg-amber-100 text-amber-700 border-amber-300 text-[8px] shrink-0 font-black">Forsidebilde</span>`
                     : '';
+                const toggleHtml = isForsidebilde
+                    ? ''
+                    : `<button data-row="${img.rowIndex}" class="toggle-active-btn flex items-center gap-1.5 shrink-0 cursor-pointer group/toggle" title="Klikk for å endre synlighet" type="button">
+                                        <span class="toggle-track relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 ${toggleTrackClass}">
+                                            <span class="toggle-dot inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ml-0.5 ${toggleDotTransform}"></span>
+                                        </span>
+                                        <span class="toggle-label text-[10px] font-semibold ${toggleLabelClass}">${toggleLabel}</span>
+                                    </button>`;
                 const isFirst = idx === 0 || (idx === 1 && images[0].type === 'forsidebilde');
                 const isLast = idx === images.length - 1;
 
@@ -541,7 +555,7 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                             <div class="min-w-0 flex-grow">
                                 <div class="flex flex-wrap items-center gap-1 mb-1">
                                     ${badgeHtml}
-                                    <span class="admin-status-pill ${statusClass} text-[8px] shrink-0">${statusText}</span>
+                                    ${toggleHtml}
                                 </div>
                                 <h3 class="font-bold text-brand text-sm truncate">${img.title || img.image || 'Uten tittel'}</h3>
                                 <p class="text-xs text-slate-500 truncate italic mt-0.5">${img.image || 'Ingen bilde'}</p>
@@ -580,7 +594,15 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                     if (onReorder) onReorder(parseInt(btn.dataset.row), parseInt(btn.dataset.dir));
                 };
             });
-            container.querySelectorAll('.edit-galleri-btn, .delete-galleri-btn, .reorder-btn').forEach(btn => {
+            container.querySelectorAll('.toggle-active-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const row = parseInt(btn.dataset.row);
+                    const img = images.find(i => i.rowIndex === row);
+                    if (img && onToggleActive) onToggleActive(row, img);
+                };
+            });
+            container.querySelectorAll('.edit-galleri-btn, .delete-galleri-btn, .reorder-btn, .toggle-active-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => e.stopPropagation());
             });
             container.querySelectorAll('.admin-card-interactive').forEach(card => {

@@ -739,6 +739,132 @@ describe('admin-dashboard.js', () => {
 
             expect(onEdit).toHaveBeenCalledWith(2, expect.objectContaining({ title: 'Bilde' }));
         });
+
+        it('should trigger toggle-active callback on toggle switch click', async () => {
+            const mockImages = [
+                { rowIndex: 2, title: 'Bilde', image: 'b.jpg', active: true, order: 1, type: 'galleri' }
+            ];
+            adminClient.getGalleriRaw.mockResolvedValue(mockImages);
+
+            const onToggleActive = vi.fn();
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null, onToggleActive);
+
+            const toggleBtn = document.querySelector('.toggle-active-btn');
+            expect(toggleBtn).not.toBeNull();
+            // Verify toggle switch structure
+            expect(toggleBtn.querySelector('.toggle-track')).not.toBeNull();
+            expect(toggleBtn.querySelector('.toggle-dot')).not.toBeNull();
+            expect(toggleBtn.querySelector('.toggle-label').textContent).toBe('Aktiv');
+            // Active state: green track, translated dot
+            expect(toggleBtn.querySelector('.toggle-track').classList.contains('bg-green-500')).toBe(true);
+            expect(toggleBtn.querySelector('.toggle-dot').classList.contains('translate-x-5')).toBe(true);
+            toggleBtn.click();
+
+            expect(onToggleActive).toHaveBeenCalledWith(2, expect.objectContaining({ title: 'Bilde', active: true }));
+        });
+
+        it('should render inactive toggle switch correctly', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 2, title: 'Bilde', image: 'b.jpg', active: false, order: 1, type: 'galleri' }
+            ]);
+
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null, vi.fn());
+
+            const toggleBtn = document.querySelector('.toggle-active-btn');
+            expect(toggleBtn.querySelector('.toggle-label').textContent).toBe('Inaktiv');
+            expect(toggleBtn.querySelector('.toggle-track').classList.contains('bg-slate-300')).toBe(true);
+            expect(toggleBtn.querySelector('.toggle-dot').classList.contains('translate-x-0')).toBe(true);
+        });
+
+        it('should not trigger edit when toggle switch is clicked', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 2, title: 'Bilde', image: 'b.jpg', active: true, order: 1, type: 'galleri' }
+            ]);
+
+            const onEdit = vi.fn();
+            const onToggleActive = vi.fn();
+            await loadGalleriListeModule('sheet-id', onEdit, vi.fn(), vi.fn(), null, onToggleActive);
+
+            const toggleBtn = document.querySelector('.toggle-active-btn');
+            toggleBtn.click();
+
+            expect(onToggleActive).toHaveBeenCalled();
+            expect(onEdit).not.toHaveBeenCalled();
+        });
+
+        it('should not show toggle switch for forsidebilde', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 2, title: 'Forside', image: 'f.jpg', active: true, order: 1, type: 'forsidebilde' }
+            ]);
+
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null, vi.fn());
+
+            const toggleBtn = document.querySelector('.toggle-active-btn');
+            expect(toggleBtn).toBeNull();
+            // Should still show the forsidebilde badge
+            expect(document.querySelector('.admin-status-pill').textContent).toBe('Forsidebilde');
+        });
+
+        it('should pass img object with current active value to callback', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 2, title: 'Inaktivt', image: 'b.jpg', active: false, order: 1, type: 'galleri' }
+            ]);
+
+            const onToggleActive = vi.fn();
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null, onToggleActive);
+
+            document.querySelector('.toggle-active-btn').click();
+
+            expect(onToggleActive).toHaveBeenCalledWith(2, expect.objectContaining({ active: false }));
+        });
+
+        it('should apply opacity-60 to card when image is inactive', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 2, title: 'Bilde', image: 'b.jpg', active: false, order: 1, type: 'galleri' }
+            ]);
+
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null, vi.fn());
+
+            const container = document.getElementById('galleri-liste-container');
+            const card = container.querySelector('.admin-card-interactive');
+            expect(card.classList.contains('opacity-60')).toBe(true);
+        });
+
+        it('should not apply opacity-60 to card when image is active', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 2, title: 'Bilde', image: 'b.jpg', active: true, order: 1, type: 'galleri' }
+            ]);
+
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null, vi.fn());
+
+            const container = document.getElementById('galleri-liste-container');
+            const card = container.querySelector('.admin-card-interactive');
+            expect(card.classList.contains('opacity-60')).toBe(false);
+        });
+
+        it('should show toggle for gallery items alongside forsidebilde', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 2, title: 'Forside', image: 'f.jpg', active: true, order: 1, type: 'forsidebilde' },
+                { rowIndex: 3, title: 'Galleri', image: 'g.jpg', active: true, order: 2, type: 'galleri' }
+            ]);
+
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null, vi.fn());
+
+            const toggleBtns = document.querySelectorAll('.toggle-active-btn');
+            expect(toggleBtns.length).toBe(1);
+            expect(toggleBtns[0].dataset.row).toBe('3');
+        });
+
+        it('should not call onToggleActive when callback is not provided', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 2, title: 'Bilde', image: 'b.jpg', active: true, order: 1, type: 'galleri' }
+            ]);
+
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null, null);
+
+            const toggleBtn = document.querySelector('.toggle-active-btn');
+            expect(() => toggleBtn.click()).not.toThrow();
+        });
     });
 
     describe('reorderGalleriItem', () => {

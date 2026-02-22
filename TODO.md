@@ -15,7 +15,6 @@
 (Ingen oppgaver pågår akkurat nå.)
 
 ## Backlog
-
 - [ ] **Vurdere "Start behandling"-knappene på admin-kortene**
   - Hele kortet er allerede klikkbart, så knappen kan virke overflødig
   - Kortet ser ut som en stor knapp — bør vi fjerne knappen og tydeliggjøre klikkbarhet på en annen måte?
@@ -41,6 +40,11 @@
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
 ## Fullført
+
+- [x] **Rask aktiv/inaktiv-toggle på galleri-oversikten**
+  - Klikkbar status-pill i galleri-listen — toggle uten å åpne editoren
+  - Optimistisk UI-oppdatering med rollback ved feil
+  - Responsivt design (fungerer på mobil og desktop)
 
 - [x] **Gjennomgå testdekning mot faktisk kode**
   - Analysert coverage-rapport og identifisert udekte grener med Python-parsing av v8 coverage JSON
