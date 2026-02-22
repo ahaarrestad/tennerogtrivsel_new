@@ -10,12 +10,14 @@ export function initMobileMenu() {
 
     function toggleMenu() {
         const isOpen = menuBtn?.getAttribute('data-state') === 'open';
-        
+
         if (isOpen) {
             menuBtn?.setAttribute('data-state', 'closed');
+            menuBtn?.setAttribute('aria-expanded', 'false');
             mobileMenu?.classList.add('hidden');
         } else {
             menuBtn?.setAttribute('data-state', 'open');
+            menuBtn?.setAttribute('aria-expanded', 'true');
             mobileMenu?.classList.remove('hidden');
         }
     }
@@ -26,6 +28,7 @@ export function initMobileMenu() {
     mobileLinks.forEach(link => {
         link.addEventListener('click', () => {
             menuBtn?.setAttribute('data-state', 'closed');
+            menuBtn?.setAttribute('aria-expanded', 'false');
             mobileMenu?.classList.add('hidden');
         });
     });
