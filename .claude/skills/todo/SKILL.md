@@ -29,7 +29,9 @@ Hvis brukeren bare sier "todo", "oppgaveliste" eller lignende uten spesifikk han
 - (liste eller "Ingen oppgaver pågår")
 
 ### Backlog (X oppgaver)
-- Kort tittel for hver oppgave
+1. Kort tittel for første oppgave
+2. Kort tittel for andre oppgave
+3. ...
 
 ### Fullført (Y oppgaver)
 - Vis kun antall, ikke hele listen
