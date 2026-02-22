@@ -173,8 +173,8 @@ test.describe('Admin-panel Fase 1', () => {
     await page.locator('#card-tjenester').click();
     await expect(page.locator('#module-inner h3').filter({ hasText: 'Bleking' })).toBeVisible();
 
-    await page.evaluate(() => { (window as any).confirm = () => true; });
     await page.locator('.delete-btn').first().click();
+    await page.locator('#admin-confirm-ok').click();
 
     await expect(page.locator('#module-inner h3').filter({ hasText: 'Bleking' })).not.toBeVisible();
   });
