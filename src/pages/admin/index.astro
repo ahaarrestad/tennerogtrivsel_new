@@ -229,6 +229,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             setForsideBildeInGalleri, migrateForsideBildeToGalleri
         } from '../../scripts/admin-client.js';
         import { loadGallery, setupUploadHandler } from '../../scripts/admin-gallery.js';
+        import { showToast, showConfirm } from '../../scripts/admin-dialog.js';
         import { formatDate, stripStackEditData, sortMessages, slugify } from '../../scripts/textFormatter.js';
         import {
             updateUIWithUser, autoResizeTextarea, saveSingleSetting,
@@ -398,14 +399,14 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
 
         // --- TJENESTER MODUL ---
         (window as any).deleteTjeneste = async (id, name) => {
-            if (confirm(`Vil du slette «${name}»?`)) {
+            if (await showConfirm(`Vil du slette «${name}»?`, { destructive: true })) {
                 try {
                     await deleteFile(id);
                     (window as any).loadTjenesterModule();
                     showDeletionToast(name,
                         'Filen er lagt i Google Drive-papirkurven og kan gjenopprettes derfra innen 30 dager. ' +
                         'Gå til drive.google.com → Papirkurv for å gjenopprette.');
-                } catch (e) { alert("Kunne ikke slette tjenesten."); }
+                } catch (e) { showToast("Kunne ikke slette tjenesten.", "error"); }
             }
         };
 
@@ -474,7 +475,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         (window as any).loadTjenesterModule();
                     } catch (e) {
                         console.error("Lagring feilet:", e);
-                        alert("Kunne ikke lagre endringene.");
+                        showToast("Kunne ikke lagre endringene.", "error");
                         saveBtn.disabled = false;
                         saveBtn.textContent = "Lagre tjeneste";
                     }
@@ -492,14 +493,14 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         // --- MELDINGER MODUL ---
 
         (window as any).deleteMelding = async (id, name) => {
-            if (confirm(`Vil du slette «${name}»?`)) {
+            if (await showConfirm(`Vil du slette «${name}»?`, { destructive: true })) {
                 try {
                     await deleteFile(id);
                     (window as any).loadMeldingerModule();
                     showDeletionToast(name,
                         'Filen er lagt i Google Drive-papirkurven og kan gjenopprettes derfra innen 30 dager. ' +
                         'Gå til drive.google.com → Papirkurv for å gjenopprette.');
-                } catch (e) { alert("Kunne ikke slette oppslaget."); }
+                } catch (e) { showToast("Kunne ikke slette oppslaget.", "error"); }
             }
         };
 
@@ -615,7 +616,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         (window as any).loadMeldingerModule();
                     } catch (e) {
                         console.error("Lagring feilet:", e);
-                        alert("Kunne ikke lagre endringene.");
+                        showToast("Kunne ikke lagre endringene.", "error");
                         saveBtn.disabled = false;
                         saveBtn.textContent = "Lagre melding";
                     }
@@ -637,7 +638,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         let tannlegeSaveTimeout = null;
 
         (window as any).deleteTannlege = async (rowIndex, name) => {
-            if (confirm(`Vil du slette «${name}» permanent? Dette kan ikke angres.`)) {
+            if (await showConfirm(`Vil du slette «${name}» permanent? Dette kan ikke angres.`, { destructive: true })) {
                 try {
                     const allRows = await getTannlegerRaw(SHEET_ID);
                     const rowData = allRows.find(r => r.rowIndex === rowIndex);
@@ -649,7 +650,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     showDeletionToast(name,
                         'Raden er permanent fjernet fra tannleger-arket. En sikkerhetskopi finnes i «Slettet»-fanen i Google Sheets ' +
                         'og kan kopieres tilbake manuelt ved behov.');
-                } catch (e) { alert("Kunne ikke slette profilen."); }
+                } catch (e) { showToast("Kunne ikke slette profilen.", "error"); }
             }
         };
 
@@ -1213,7 +1214,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                     }
                                     if (previewLabelEl) previewLabelEl.textContent = 'Forhåndsvisning (16:10)';
                                 } catch (e) {
-                                    alert('Kunne ikke sette forsidebilde: ' + e.message);
+                                    showToast('Kunne ikke sette forsidebilde: ' + e.message, 'error');
                                     forsideCheckbox.checked = false;
                                     if (activeField) activeField.classList.remove('hidden');
                                 }
@@ -1236,7 +1237,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                     }
                                     if (previewLabelEl) previewLabelEl.textContent = 'Forhåndsvisning (4:3)';
                                 } catch (e) {
-                                    alert('Kunne ikke endre type: ' + e.message);
+                                    showToast('Kunne ikke endre type: ' + e.message, 'error');
                                     forsideCheckbox.checked = true;
                                     if (activeField) activeField.classList.add('hidden');
                                     if (activeSelect) activeSelect.value = 'ja';
@@ -1371,13 +1372,13 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 };
 
                 const deleteGalleriBilde = async (rowIndex, title) => {
-                    if (!confirm(`Vil du slette «${title}» permanent? Dette kan ikke angres.`)) return;
+                    if (!await showConfirm(`Vil du slette «${title}» permanent? Dette kan ikke angres.`, { destructive: true })) return;
                     try {
                         await deleteGalleriRowPermanently(SHEET_ID, rowIndex);
                         showDeletionToast(title, 'Bildet ble permanent slettet fra regnearket.');
                         reloadGalleriListe();
                     } catch (e) {
-                        alert('Kunne ikke slette bildet: ' + e.message);
+                        showToast('Kunne ikke slette bildet: ' + e.message, 'error');
                     }
                 };
 
@@ -1477,7 +1478,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                             if (newest) editGalleriBilde(newest.rowIndex);
                             else reloadGalleriListe();
                         } catch (e) {
-                            alert('Kunne ikke legge til galleribilde: ' + e.message);
+                            showToast('Kunne ikke legge til galleribilde: ' + e.message, 'error');
                             modal.close();
                         }
                     });
@@ -1502,7 +1503,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                 if (newest) editGalleriBilde(newest.rowIndex);
                                 else reloadGalleriListe();
                             } catch (e) {
-                                alert('Kunne ikke legge til galleribilde: ' + e.message);
+                                showToast('Kunne ikke legge til galleribilde: ' + e.message, 'error');
                                 modal.close();
                             }
                         }
@@ -1576,7 +1577,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 };
                 
                 const userPill = document.getElementById('user-pill');
-                if (userPill) userPill.onclick = () => { if (confirm("Logge ut?")) { logout(); location.reload(); } };
+                if (userPill) userPill.onclick = async () => { if (await showConfirm("Logge ut?")) { logout(); location.reload(); } };
                 
                 document.getElementById('back-to-dashboard')?.addEventListener('click', () => closeModule());
                 
