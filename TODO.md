@@ -6,6 +6,7 @@
 - **Før vi starter på en oppgave:** Lag alltid en plan først. Still avklarende spørsmål hvis noe er uklart.
 - Planen skrives som notater under oppgaven før implementering begynner.
 - Flytt oppgaven til «Pågående» når planen er godkjent og arbeidet starter.
+- **Lever i små, iterative forbedringer** — minst én commit per oppgave. Store oppgaver brytes ned i deloppgaver som hver committes for seg.
 
 ## Pågående
 
@@ -21,6 +22,13 @@
   - Flytte gjenbrukbare mønstre til `global.css` som egne klasser/variabler
   - Være forsiktig — verifisere visuelt at ingenting går i stykker underveis
   - Kjøre E2E-tester etter hver større endring for å fange regresjoner
+
+- [ ] **UX/design-gjennomgang av den offentlige nettsiden**
+  - Bruk et team med Senior UX-designer, UX-designer og Senior Utvikler til å lage planen
+  - Skriv et design-dokument (f.eks. `docs/design-guide.md`) som beskriver prinsipper for layout, typografi, farger, spacing og responsivt design
+  - Link design-dokumentet fra `CLAUDE.md` slik at det alltid følges ved fremtidige endringer
+  - Lag deretter en konkret plan for å oppdatere layout/UX basert på best practice og målene i dokumentet
+  - Vurder: lesbarhet, visuelt hierarki, tilgjengelighet (a11y), mobil-først, konsistens mellom seksjoner
 
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet**
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
