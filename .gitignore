@@ -39,3 +39,21 @@ coverage/
 playwright-report/
 test-results/
 /.claude/settings.local.json
+
+# Shell/system config files (leaks from home dir)
+.bash_profile
+.bashrc
+.profile
+.zprofile
+.zshrc
+.gitconfig
+.gitmodules
+.ripgreprc
+.mcp.json
+
+# Git internals (should not appear in working tree)
+HEAD
+config
+hooks/
+objects/
+refs/
