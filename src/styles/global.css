@@ -418,6 +418,12 @@
                select-none;
     }
 
+    /* SLIDER SCROLL PREVENTION */
+    /* Hindrer utilsiktet verdiendring ved scrolling over range-slidere */
+    input[type="range"] {
+        touch-action: pan-y;
+    }
+
     /* EASYMDE PREVIEW FIX */
     /* Vi tvinger forhåndsvisningen til å være hvit og solid så den dekker editoren */
     .editor-preview {

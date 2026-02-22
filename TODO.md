@@ -12,9 +12,7 @@
 
 ## Pågående
 
-- [ ] **Forbedre UX for zoom/posisjon-kontroller i admin**
-  - [x] Deloppgave 1: +/- knapper for finjustering av zoom, h-pos og v-pos
-  - [ ] Deloppgave 2: Hindre utilsiktet endring ved scrolling på mobil (range-slidere fanger scroll-events)
+(Ingen oppgaver pågår akkurat nå.)
 
 ## Backlog
 
@@ -42,6 +40,10 @@
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
 ## Fullført
+
+- [x] **Forbedre UX for zoom/posisjon-kontroller i admin**
+  - +/- knapper for finjustering (zoom ±0.1, posisjon ±1%)
+  - `touch-action: pan-y` på slidere + `wheel`-event blokkering for å hindre utilsiktet scrolling
 
 - [x] **Gjennomgang av innstillinger og opplesing**
   - Zoom/utsnitt: unifisert scale-range 1.0–3.0, verifisert hel dataflyt fra Sheets → admin → sync → frontend

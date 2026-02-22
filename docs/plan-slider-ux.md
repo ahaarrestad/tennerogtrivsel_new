@@ -37,6 +37,14 @@ Minus-knapp (venstre) og pluss-knapp (høyre) rundt hver slider:
 3. `src/pages/admin/index.astro` — Event-binding: `.slider-step-btn` click-lyttere (begge skjemaer)
 4. `src/styles/global.css` — `.slider-step-btn`-klasse
 
-## Deloppgave 2: Hindre utilsiktet scrolling (TODO)
+## Deloppgave 2: Hindre utilsiktet scrolling (FERDIG)
 
-Vurdere `touch-action: none` eller lignende for å skille scroll fra slider-interaksjon på mobil.
+### Tiltak
+
+1. **CSS `touch-action: pan-y`** på `input[type="range"]` — lar nettleseren håndtere vertikal scroll selv om fingeren er over en slider (mobil)
+2. **`wheel`-event blokkering** — `e.preventDefault()` med `{ passive: false }` på alle range-inputs, hindrer at musescroll endrer slider-verdien (desktop)
+
+### Endringer
+
+1. `src/styles/global.css` — `touch-action: pan-y` på `input[type="range"]`
+2. `src/pages/admin/index.astro` — `wheel` event listener på range-inputs (begge skjemaer)

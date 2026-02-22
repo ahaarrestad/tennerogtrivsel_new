@@ -958,6 +958,10 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     target.dispatchEvent(new Event('input'));
                 });
             });
+
+            inner.querySelectorAll('input[type="range"]').forEach(el => {
+                el.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
+            });
         };
         (window as any).openTannlegerModule = () => loadTannlegerModule(SHEET_ID, (window as any).editTannlege, (window as any).deleteTannlege, TANNLEGER_FOLDER);
 
@@ -1304,6 +1308,10 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                             target.value = String(Math.min(max, Math.max(min, +(current + step).toFixed(2))));
                             target.dispatchEvent(new Event('input'));
                         });
+                    });
+
+                    inner2.querySelectorAll('input[type="range"]').forEach(el => {
+                        el.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
                     });
                 };
 
