@@ -418,6 +418,112 @@ describe('admin-dashboard.js', () => {
 
             expect(onEdit).toHaveBeenCalledWith('s1', 'tjeneste.md');
         });
+
+        it('should render toggle-switch with correct state for active service', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: 's1', name: 'a.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: A\n---');
+            adminClient.parseMarkdown.mockReturnValueOnce({ data: { title: 'A', active: true }, body: '' });
+
+            const onToggleActive = vi.fn();
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), onToggleActive);
+
+            const toggleBtn = document.querySelector('.toggle-active-btn');
+            expect(toggleBtn).not.toBeNull();
+            expect(toggleBtn.querySelector('.toggle-track').classList.contains('bg-green-500')).toBe(true);
+            expect(toggleBtn.querySelector('.toggle-dot').classList.contains('translate-x-5')).toBe(true);
+            expect(toggleBtn.querySelector('.toggle-label').textContent).toBe('Aktiv');
+        });
+
+        it('should render toggle-switch correctly for inactive service', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: 's1', name: 'a.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: A\nactive: false\n---');
+            adminClient.parseMarkdown.mockReturnValueOnce({ data: { title: 'A', active: false }, body: '' });
+
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), vi.fn());
+
+            const toggleBtn = document.querySelector('.toggle-active-btn');
+            expect(toggleBtn.querySelector('.toggle-track').classList.contains('bg-slate-300')).toBe(true);
+            expect(toggleBtn.querySelector('.toggle-dot').classList.contains('translate-x-0')).toBe(true);
+            expect(toggleBtn.querySelector('.toggle-label').textContent).toBe('Inaktiv');
+        });
+
+        it('should call onToggleActive with correct arguments on toggle click', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: 's1', name: 'tjeneste.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: A\n---');
+            adminClient.parseMarkdown.mockReturnValueOnce({ data: { title: 'A', active: true }, body: '' });
+
+            const onToggleActive = vi.fn();
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), onToggleActive);
+
+            document.querySelector('.toggle-active-btn').click();
+
+            expect(onToggleActive).toHaveBeenCalledWith('s1', 'tjeneste.md', expect.objectContaining({ title: 'A' }));
+        });
+
+        it('should not trigger edit when toggle is clicked', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: 's1', name: 'a.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: A\n---');
+
+            const onEdit = vi.fn();
+            const onToggleActive = vi.fn();
+            await loadTjenesterModule('folder-id', onEdit, vi.fn(), onToggleActive);
+
+            document.querySelector('.toggle-active-btn').click();
+
+            expect(onToggleActive).toHaveBeenCalled();
+            expect(onEdit).not.toHaveBeenCalled();
+        });
+
+        it('should treat services without active field as active (default true)', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: 's1', name: 'a.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: A\n---');
+            adminClient.parseMarkdown.mockReturnValueOnce({ data: { title: 'A' }, body: '' });
+
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), vi.fn());
+
+            const toggleBtn = document.querySelector('.toggle-active-btn');
+            expect(toggleBtn.querySelector('.toggle-label').textContent).toBe('Aktiv');
+            expect(toggleBtn.querySelector('.toggle-track').classList.contains('bg-green-500')).toBe(true);
+
+            const card = document.querySelector('.admin-card-interactive');
+            expect(card.classList.contains('opacity-60')).toBe(false);
+        });
+
+        it('should apply opacity-60 on card for inactive service', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: 's1', name: 'a.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: A\nactive: false\n---');
+            adminClient.parseMarkdown.mockReturnValueOnce({ data: { title: 'A', active: false }, body: '' });
+
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), vi.fn());
+
+            const card = document.querySelector('.admin-card-interactive');
+            expect(card.classList.contains('opacity-60')).toBe(true);
+        });
+
+        it('should not throw when onToggleActive is not provided', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: 's1', name: 'a.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: A\n---');
+
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), null);
+
+            const toggleBtn = document.querySelector('.toggle-active-btn');
+            expect(() => toggleBtn.click()).not.toThrow();
+        });
+
+        it('should pass onToggleActive to retry on error', async () => {
+            adminClient.listFiles.mockRejectedValueOnce(new Error('Fail'))
+                .mockResolvedValue([]);
+
+            const onToggleActive = vi.fn();
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), onToggleActive);
+
+            const inner = document.getElementById('module-inner');
+            inner.querySelector('.retry-btn').click();
+
+            await vi.waitFor(() => {
+                expect(adminClient.listFiles).toHaveBeenCalledTimes(2);
+            });
+        });
     });
 
     describe('loadTannlegerModule', () => {

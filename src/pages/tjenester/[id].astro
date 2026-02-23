@@ -8,17 +8,19 @@ import KontaktKnapp from "../../components/KontaktKnapp.astro";
 // 1. Generer stier for alle tjenestene
 export async function getStaticPaths() {
     const tjenesteEntries = await getCollection('tjenester');
-    return tjenesteEntries.map(entry => ({
-        params: {id: entry.id},
-        props: {entry},
-    }));
+    return tjenesteEntries
+        .filter(entry => entry.data.active !== false)
+        .map(entry => ({
+            params: {id: entry.id},
+            props: {entry},
+        }));
 }
 
 // 2. Hent data for den spesifikke siden
 const {entry} = Astro.props;
 const {Content} = await render(entry);
 
-const tjenester = await getCollection('tjenester');
+const tjenester = (await getCollection('tjenester')).filter(s => s.data.active !== false);
 ---
 <Layout title={`${entry.data.title} | Tenner og Trivsel`} description={entry.data.ingress}>
     {/* 1. Vi fjerner 'flex' fra denne ytre diven for å unngå at den krymper innholdet */}

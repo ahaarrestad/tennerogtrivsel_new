@@ -8,10 +8,10 @@ import SectionHeader from './SectionHeader.astro';
 // 1. Hent alle filene fra src/content/tjenester/
 const allServices = await getCollection('tjenester');
 
-// 2. Sorter dem alfabetisk basert på tittelen i frontmatter (nb = norsk)
-const sortedServices = allServices.sort((a, b) =>
-    a.data.title.localeCompare(b.data.title, 'nb')
-);
+// 2. Filtrer ut inaktive og sorter alfabetisk basert på tittelen i frontmatter (nb = norsk)
+const sortedServices = allServices
+    .filter(s => s.data.active !== false)
+    .sort((a, b) => a.data.title.localeCompare(b.data.title, 'nb'));
 const settings = await getSiteSettings();
 
 interface Props { variant?: SectionVariant }

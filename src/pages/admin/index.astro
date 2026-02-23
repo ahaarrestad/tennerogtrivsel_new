@@ -429,19 +429,34 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             inner.innerHTML = '<div class="text-slate-500 italic text-sm animate-pulse">Laster editor...</div>';
             
             try {
-                let data = { title: '', ingress: '', id: '' };
+                let data: any = { title: '', ingress: '', id: '' };
                 let body = '';
 
                 if (id) {
                     const raw = await getFileContent(id);
                     const parsed = parseMarkdown(raw);
-                    data = parsed.data as any;
+                    data = parsed.data;
                     body = stripStackEditData(parsed.body);
                 }
+
+                const isActive = data.active !== false && data.active !== 'false';
+                const editToggleTrack = isActive ? 'bg-green-500' : 'bg-slate-300';
+                const editToggleDot = isActive ? 'translate-x-5' : 'translate-x-0';
+                const editToggleLabel = isActive ? 'Aktiv' : 'Inaktiv';
+                const editToggleLabelClass = isActive ? 'text-green-700' : 'text-slate-500';
 
                 inner.innerHTML = `
                     <div class="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <div class="grid grid-cols-1 gap-6">
+                            <div class="flex items-center justify-between">
+                                <label class="admin-label !mb-0">Synlighet</label>
+                                <button id="edit-active-toggle" type="button" class="flex items-center gap-1.5 cursor-pointer group/toggle" data-active="${isActive}">
+                                    <span class="toggle-track relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 ${editToggleTrack}">
+                                        <span class="toggle-dot inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ml-0.5 ${editToggleDot}"></span>
+                                    </span>
+                                    <span class="toggle-label text-[10px] font-semibold ${editToggleLabelClass}">${editToggleLabel}</span>
+                                </button>
+                            </div>
                             <div class="flex flex-col gap-2">
                                 <label class="admin-label">Tittel</label>
                                 <input type="text" id="edit-title" value="${data.title || ''}" placeholder="Navn på tjenesten..." class="admin-input">
@@ -461,6 +476,32 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         </div>
                     </div>`;
 
+                // Toggle-klikk for synlighet i editor
+                const editToggle = document.getElementById('edit-active-toggle');
+                if (editToggle) {
+                    editToggle.addEventListener('click', () => {
+                        const current = editToggle.dataset.active === 'true';
+                        const next = !current;
+                        editToggle.dataset.active = String(next);
+                        const track = editToggle.querySelector('.toggle-track') as HTMLElement;
+                        const dot = editToggle.querySelector('.toggle-dot') as HTMLElement;
+                        const lbl = editToggle.querySelector('.toggle-label') as HTMLElement;
+                        if (track) {
+                            track.classList.toggle('bg-green-500', next);
+                            track.classList.toggle('bg-slate-300', !next);
+                        }
+                        if (dot) {
+                            dot.classList.toggle('translate-x-5', next);
+                            dot.classList.toggle('translate-x-0', !next);
+                        }
+                        if (lbl) {
+                            lbl.textContent = next ? 'Aktiv' : 'Inaktiv';
+                            lbl.classList.toggle('text-green-700', next);
+                            lbl.classList.toggle('text-slate-500', !next);
+                        }
+                    });
+                }
+
                 const onSave = async (easyMDE) => {
                     const title = (document.getElementById('edit-title') as HTMLInputElement).value;
                     const safeTitle = slugify(title) || 'u-navngitt-tjeneste';
@@ -471,10 +512,13 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     saveBtn.disabled = true;
                     saveBtn.textContent = "Lagrer...";
                     
-                    const frontmatter = {
+                    const toggleBtn = document.getElementById('edit-active-toggle') as HTMLElement;
+                    const activeVal = toggleBtn?.dataset.active === 'true';
+                    const frontmatter: Record<string, any> = {
                         id: entryId,
                         title: title,
-                        ingress: (document.getElementById('edit-ingress') as HTMLTextAreaElement).value
+                        ingress: (document.getElementById('edit-ingress') as HTMLTextAreaElement).value,
+                        active: activeVal
                     };
                     
                     const content = easyMDE ? easyMDE.value() : (document.getElementById('edit-content') as HTMLTextAreaElement).value;
@@ -498,7 +542,69 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             }
         };
 
-        (window as any).loadTjenesterModule = () => loadTjenesterModule(TJENESTER_FOLDER, (window as any).editTjeneste, (window as any).deleteTjeneste);
+        const toggleTjenesteActive = async (driveId: string, fileName: string, service: any) => {
+            const currentActive = service.active !== 'false' && service.active !== false;
+            const newActive = !currentActive;
+
+            // Optimistisk UI-oppdatering
+            const btn = document.querySelector(`.toggle-active-btn[data-id="${driveId}"]`) as HTMLElement;
+            const card = btn?.closest('.admin-card-interactive') as HTMLElement;
+            if (btn) {
+                const track = btn.querySelector('.toggle-track') as HTMLElement;
+                const dot = btn.querySelector('.toggle-dot') as HTMLElement;
+                const label = btn.querySelector('.toggle-label') as HTMLElement;
+                if (track) {
+                    track.classList.toggle('bg-green-500', newActive);
+                    track.classList.toggle('bg-slate-300', !newActive);
+                }
+                if (dot) {
+                    dot.classList.toggle('translate-x-5', newActive);
+                    dot.classList.toggle('translate-x-0', !newActive);
+                }
+                if (label) {
+                    label.textContent = newActive ? 'Aktiv' : 'Inaktiv';
+                    label.classList.toggle('text-green-700', newActive);
+                    label.classList.toggle('text-slate-500', !newActive);
+                }
+            }
+            if (card) card.classList.toggle('opacity-60', !newActive);
+
+            try {
+                const raw = await getFileContent(driveId);
+                const { data, body } = parseMarkdown(raw);
+                const updatedFrontmatter = { ...data, active: newActive };
+                await saveFile(driveId, fileName, stringifyMarkdown(updatedFrontmatter, body));
+                service.active = newActive;
+            } catch (e) {
+                // Reverser ved feil
+                if (btn) {
+                    const track = btn.querySelector('.toggle-track') as HTMLElement;
+                    const dot = btn.querySelector('.toggle-dot') as HTMLElement;
+                    const label = btn.querySelector('.toggle-label') as HTMLElement;
+                    if (track) {
+                        track.classList.toggle('bg-green-500', currentActive);
+                        track.classList.toggle('bg-slate-300', !currentActive);
+                    }
+                    if (dot) {
+                        dot.classList.toggle('translate-x-5', currentActive);
+                        dot.classList.toggle('translate-x-0', !currentActive);
+                    }
+                    if (label) {
+                        label.textContent = currentActive ? 'Aktiv' : 'Inaktiv';
+                        label.classList.toggle('text-green-700', currentActive);
+                        label.classList.toggle('text-slate-500', !currentActive);
+                    }
+                }
+                if (card) card.classList.toggle('opacity-60', !currentActive);
+                showToast("Kunne ikke oppdatere synlighet.", "error");
+                reloadTjenester();
+            }
+        };
+
+        const reloadTjenester = () => {
+            loadTjenesterModule(TJENESTER_FOLDER, (window as any).editTjeneste, (window as any).deleteTjeneste, toggleTjenesteActive);
+        };
+        (window as any).loadTjenesterModule = reloadTjenester;
 
         // --- MELDINGER MODUL ---
 

@@ -16,16 +16,13 @@
   - Retning: Profesjonell & tillitvekkende, full redesign
   - Fonter: Montserrat (headings) + Inter (body) fra Google Fonts
   - Farger: Slate-palett + teal aksentfarge for CTA-er
-  - **Neste steg: Oppdater design-guide og plan** ([oppdateringsplan](.claude/plans/delightful-skipping-pearl.md))
-  - Tre ting som må inn i design-guide og plan:
-    - [x] ~~Rammeverkversjoner~~ — Utredet: Tailwind v4 @theme-syntax allerede korrekt, trenger seksjon 0
-    - [x] ~~Meldinger/bannere~~ — UX-ekspert laget anbefalinger: lysere farger, dismiss-knapp, teal-ikon
-    - [x] ~~Kortstokk-animasjon~~ — Beslutning: Beholdes på standalone-sider, justeres (6vh, teal accent)
+  - Design-guide og plan revidert etter UX-review
   - Beslutninger tatt:
-    - Tjenester/Tannleger forblir `hidden md:block` på forsiden (nås via meny)
-    - Seksjon-rekkefølge på forsiden beholdes som i dag
-    - Kortstokk-animasjon beholdes på standalone-sider med justeringer
-  - Når design-guide og plan er oppdatert, starte på de 14 implementeringsstegene
+    - Kontakt forblir rett etter hero (mest etterspurt av brukere)
+    - Seksjon-rekkefølge uendret: Hero → Kontakt → Galleri → Tjenester → Tannleger
+    - Tjenester/Tannleger forblir `hidden md:block` på forsiden (bevisst — nås via meny på mobil)
+    - Kortstokk-animasjon beholdes på standalone-sider med justeringer (6vh, teal accent)
+  - **Neste steg: Starte implementering** — 14 steg, begynn med steg 1 (typografi)
 
 ## Backlog
 
@@ -34,24 +31,30 @@
   - Bruk et team med sikkerhetsekspert, arkitekt og senior utvikler til å legge planen
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
-- [ ] **"Legg til snarvei"-lenke i admin på mobil (PWA / Add to Home Screen)**
-  - Vise en lenke/knapp i admin-UI på mobil som lar brukeren legge til en snarvei på hjem-skjermen
-  - Slik at admin-panelet kan åpnes som en app-lignende snarvei fra telefonen
-  - Vurdere Web App Manifest / PWA-tilnærming vs. enkel instruksjonsguide
+- [ ] **"Legg til snarvei"-lenke i admin på mobil (PWA / Add to Home Screen)** ([plan](docs/plan-pwa-snarvei.md))
+  - Enkel snarvei: Web App Manifest + install-prompt (ingen service worker)
+  - Toast-melding etter innlogging, kun første gang (lagres i localStorage)
+  - Kun admin-siden — offentlig side berøres ikke
+  - iOS: Instruksjonstekst ("Trykk Del → Legg til på Hjem-skjerm")
+  - Plan klar: 6 steg, 7 filer, ~8 nye tester
 
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
 
-- [ ] **Legg til toggling for tjenester** ([plan](docs/plan-toggling-tjenester.md))
+- [x] **Legg til toggling for tjenester** ([plan](docs/plan-toggling-tjenester.md))
     - Mulighet for å toggle hver tjeneste aktiv/inaktiv i admin-panelet, på samme måte som galleri.
     - Besluttet å bruke markdown-frontmatter (`active: true/false`), ikke Google Sheets
     - Ønsker samme visuelle funksjonalitet i tjeneste listen som for for galleriet.
-    - Plan klar: 5 steg, 6 filer, ~7 nye tester
+    - Implementert: content-schema, frontend-filtrering, admin-dashboard toggle, admin toggle-handler, 8 nye tester
 
-- [ ] **Legg til toggling for tannleger**]
-    - Mulighet for å toggle hver tannlege aktiv/inaktiv i admin-panelet, på samme måte som galleri.
-    - Bruk samme visuelle mønster som galleri-listen, med thumbnail og toggle-knapp i hver rad.
-    - Siden info her lagres i google sheets, så bruker vi bare eksisterende funksjonalitet.
+- [ ] **Fiks wrapping av tekst i tjeneste-listen i admin på mobil**
+  - Tittel og ingress-tekst kan bli avkuttet/wrappet dårlig på smale skjermer
+  - Må se bra ut og vise hele teksten på mobil
+
+- [ ] **Konsistent aktiv/inaktiv-visning i admin på tvers av moduler**
+  - Tjenester-modulen viser nå toggle i både liste og editor — bruk dette som referansemønster
+  - Tannleger og galleri bør vise toggle på samme måte (liste + editor)
+  - Sørg for lik plassering, styling og oppførsel i alle moduler
 
 - [ ] **Legal vurdering av dependencies**
     - Gjennomgå alle dependencies i `package.json` for å identifisere eventuelle med kjente sårbarheter, utdatert vedlikehold eller lisensproblemer.
@@ -60,6 +63,11 @@
     - Vurder om jeg trenger en lisens for dette prosjektet. Hvis ja, hvilken lisens er mest passende for en nettside som denne? MIT, GPL, eller noe annet? Konsulter eventuelt med en juridisk ekspert for å sikre at valget av lisens dekker både mine behov og gir tilstrekkelig beskyttelse.
 
 ## Fullført
+
+- [x] **Legg til toggling for tannleger**
+  - Klikkbar toggle-switch i tannlege-listen (samme mønster som galleri)
+  - Optimistisk UI-oppdatering med revert ved feil
+  - 7 nye enhetstester for toggle-funksjonaliteten
 
 - [x] **Konsolidere og rydde i E2E-tester** ([plan](docs/plan-konsolidere-e2e.md))
   - Slettet `homepage.spec.ts` — mobilmeny-test flyttet til `sitemap-pages.spec.ts`
