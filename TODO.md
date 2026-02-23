@@ -40,8 +40,10 @@
   - [x] **Steg 4: Knapper** — primær/sekundær/accent, variant-prop, hierarki-tilordning
   - [x] **Steg 5: Kort** — rounded-2xl, p-6/p-8, border/60, hover shadow-md, stacking 6vh
   - [x] **Steg 6: Navbar** — glassmorfisme, nav-link underline, fade-in mobilmeny
-  - [ ] **Steg 7: Footer** ← neste
-  - **Steg 7–12 gjenstår (se avhengigheter i plan)**
+  - [x] **Steg 7: Footer** — 3-kolonne layout, mørk bakgrunn, åpningstider, logo invertert
+  - [x] **Steg 8: Galleri** — 4 bilder mobil, rounded-xl, shadow-sm/hover:shadow-md, "Se alle bilder →"
+  - [ ] **Steg 9: Heading accent bar** ← neste
+  - **Steg 9–12 gjenstår (se avhengigheter i plan)**
 
 ## Backlog
 
