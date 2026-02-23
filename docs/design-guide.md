@@ -57,8 +57,8 @@ designet for skjermlesbarhet og gir god kontrast til Montserrat i brødtekst.
 
 | Element | Mobil | Desktop | Font | Vekt | Line-height | Letter-spacing |
 |---------|-------|---------|------|------|-------------|----------------|
-| h1 | text-4xl (36px) | text-6xl (60px) | Montserrat | 900 | 1.1 | -0.025em |
-| h2 / section-heading | text-3xl (30px) | text-5xl (48px) | Montserrat | 800 | 1.1 | -0.025em |
+| h1 | text-4xl (36px) | text-6xl (60px) | Montserrat | 900 | 1.15 | -0.025em |
+| h2 / section-heading | text-3xl (30px) | text-5xl (48px) | Montserrat | 800 | 1.15 | -0.025em |
 | h3 / card-title | text-2xl (24px) | text-3xl (30px) | Montserrat | 700 | 1.25 | normal |
 | h4 | text-lg (18px) | text-lg (18px) | Montserrat | 700 | 1.4 | 0.05em, uppercase |
 | body-lg / section-intro | text-lg (18px) | text-lg (18px) | Inter | 400 | 1.75 | normal |
@@ -80,6 +80,26 @@ designet for skjermlesbarhet og gir god kontrast til Montserrat i brødtekst.
 **Regel:** `.h2` og `.section-heading` er i dag duplisert — konsolider til én klasse.
 Reservér `font-black` (900) kun for h1. H2 bruker `font-extrabold` (800) for tydeligere hierarki.
 
+> **Merk:** `line-height: 1.15` (ikke 1.1) brukes for h1/h2 for å unngå at underkanten av
+> bokstaver som «g», «j», «p» klippes. Nåværende kode bruker `leading-tight` (1.25) — dette
+> er en visuell endring som må implementeres eksplisitt.
+
+### Komplett font-family-tilordning
+
+Alle klasser som trenger eksplisitt `font-family`-deklarasjon:
+
+| Klasse | Font |
+|--------|------|
+| `.h1`, `.h2`, `.h3`, `.h4` | `var(--font-heading)` |
+| `.section-heading` (konsolideres med .h2) | `var(--font-heading)` |
+| `.card-title`, `.card-subtitle` | `var(--font-heading)` |
+| `body` | `var(--font-body)` |
+| `.section-intro`, `.card-text`, `.card-link` | `var(--font-body)` |
+| `.btn-primary`, `.btn-secondary` | `var(--font-body)` |
+| `.nav-link` | `var(--font-body)` |
+
+Uten eksplisitte deklarasjoner har Google Fonts-importen ingen effekt.
+
 ---
 
 ## 3. Fargepalett
@@ -90,12 +110,17 @@ Reservér `font-black` (900) kun for h1. H2 bruker `font-extrabold` (800) for ty
 |-------|-------|-----|------|
 | `--color-brand` | slate-800 | #1e293b | Primærtekst, overskrifter |
 | `--color-brand-dark` | slate-900 | #0f172a | Sterk vekt, footer-bakgrunn |
-| `--color-brand-hover` | slate-600 | #475569 | Hover-tekst (7.58:1 kontrast) |
+| `--color-brand-hover` | slate-600 | #475569 | Hover-tilstand og sekundærtekst (7.58:1 kontrast) |
 | `--color-brand-active` | slate-100 | #f1f5f9 | Aktiv/pressed bakgrunn |
 | `--color-brand-border` | slate-200 | #e2e8f0 | Kantlinjer (synligere enn før) |
 | `--color-brand-light` | slate-50 | #f8fafc | Lys seksjonsbakgrunn |
 | `--color-brand-message-box` | slate-100 | #f1f5f9 | Meldingsboks |
 | `--color-brand-message-banner` | slate-200 | #e2e8f0 | Banner |
+
+> **Sideeffekt på admin-panelet:** Fargetoken-endringer (spesielt `--color-brand-border`
+> fra slate-100 til slate-200) påvirker admin-kort, inputs og nav. Admin-panelet har
+> egne klasser (`.admin-card`, `.admin-input`) men bruker de samme token-variablene.
+> Verifiser visuelt at admin ikke ser feil ut etter fargeendringer.
 
 ### Aksentfarge (teal)
 
@@ -104,11 +129,15 @@ Reservér `font-black` (900) kun for h1. H2 bruker `font-extrabold` (800) for ty
 | `--color-accent` | teal-700 | #0f766e | CTA-knapper, accent bar, aktiv nav |
 | `--color-accent-hover` | teal-800 | #115e59 | CTA hover |
 | `--color-accent-light` | teal-50 | #f0fdfa | Subtil CTA-bakgrunn |
-| `--color-accent-border` | teal-200 | #99f6e4 | Aksentkantlinjer |
+| `--color-accent-border` | teal-200 | #99f6e4 | Aksentkantlinjer (reservert for fremtidig bruk) |
 
 **Begrunnelse:** Teal signaliserer helse og ro, komplementerer slate, og gir 5.47:1
 kontrast mot hvit (WCAG AA). Brukes **kun** for handlinger og aksenter — ikke for
 overskrifter eller brødtekst.
+
+> **Merk:** teal-700 (5.47:1) passerer WCAG AA for normal tekst (≥ 4.5:1), men er
+> tett på grensen for `text-sm` (14px). Bruk teal-700 kun på knapper (≥ 14px semibold)
+> og større elementer. For liten tekst på teal-bakgrunn, bruk hvit tekst.
 
 ### Semantiske farger
 
@@ -127,27 +156,25 @@ overskrifter eller brødtekst.
 
 | Kombinasjon | Ratio | Status |
 |-------------|-------|--------|
-| slate-800 på hvit | 14.63:1 | PASS |
-| slate-800 på slate-50 | 13.98:1 | PASS |
-| slate-600 på hvit (brødtekst) | 7.58:1 | PASS |
+| slate-800 på hvit | ~12.6:1 | PASS |
+| slate-800 på slate-50 | ~12.1:1 | PASS |
+| slate-600 på hvit (hover/sekundærtekst) | 7.58:1 | PASS |
 | teal-700 på hvit (CTA) | 5.47:1 | PASS |
 | hvit på teal-700 (fylt CTA) | 5.47:1 | PASS |
 | hvit på teal-800 (CTA hover) | 7.58:1 | PASS |
-| hvit på slate-800 (footer) | 14.63:1 | PASS |
+| hvit på slate-800 (footer) | ~12.6:1 | PASS |
 
 ### Skygge-system
 
-```css
---shadow-sm:  0 1px 2px 0 rgb(15 23 42 / 0.05);         /* Kort i hvile */
---shadow-md:  0 4px 6px -1px rgb(15 23 42 / 0.08),
-              0 2px 4px -2px rgb(15 23 42 / 0.05);       /* Kort hover, input fokus */
---shadow-lg:  0 10px 15px -3px rgb(15 23 42 / 0.08),
-              0 4px 6px -4px rgb(15 23 42 / 0.03);       /* CTA-knapper */
---shadow-xl:  0 20px 25px -5px rgb(15 23 42 / 0.10),
-              0 8px 10px -6px rgb(15 23 42 / 0.05);      /* Modaler, mobilmeny */
-```
+Bruk Tailwinds innebygde `shadow-sm`, `shadow-md`, `shadow-lg`, `shadow-xl` direkte.
+Ingen egne skygge-tokens — Tailwinds defaults er tilstrekkelige.
 
-Skyggefargen bruker slate-900 (`rgb(15 23 42)`) for konsistens med paletten.
+| Tailwind-klasse | Bruk |
+|-----------------|------|
+| `shadow-sm` | Kort i hvile, knapper |
+| `shadow-md` | Kort hover, input fokus |
+| `shadow-lg` | CTA-knapper, hero-bilde |
+| `shadow-xl` | Modaler, mobilmeny |
 
 ---
 
@@ -212,9 +239,13 @@ Bruk `max-w-6xl` (1152px) for tekst-tungt innhold (tjeneste-detaljsider).
 | Border | border-brand-border | border-brand-border/60 (mykere) |
 | Hover shadow | shadow-sm (uendret) | shadow-md (synlig løft) |
 
-- **Behold** card-accent-corner (reduser fra w-20 h-20 til w-16 h-16)
+- **Behold** card-accent-corner (reduser fra w-20 h-20 til w-16 h-16, juster negativ margin fra `-mr-8 -mt-8` til `-mr-6 -mt-6`)
 - **Behold** card-progress-bar (endre farge til accent/teal)
 - **Mobil stacking:** Behold, men reduser margin-bottom fra 10vh til 6vh
+
+> **Merk `overflow-hidden`:** `.card-base` har `overflow-hidden` som klipper
+> `focus-visible:outline-offset-2`. Løsning: Bruk `outline-offset-[-2px]` (inset)
+> på kort, eller bytt til `ring-2` som ikke påvirkes av overflow.
 
 ### 5.2 Knapper
 
@@ -270,7 +301,8 @@ nav {
 ```
 
 - Glassmorfisme-effekt når sticky
-- Høyde: h-16 (mobil) / h-20 (desktop)
+- Høyde: h-16 (mobil) / h-20 (desktop, fra `lg:` breakpoint)
+- Logo: `h-12` på mobil (plass i h-16 nav), `h-16` fra lg
 - Nav-lenker med underline-animasjon:
 
 ```css
@@ -289,7 +321,8 @@ nav {
 }
 ```
 
-- Mobilmeny: `backdrop-blur-sm` + slideDown-animasjon
+- Mobilmeny: `backdrop-blur-sm` + fade-in animasjon (opacity-overgang via CSS transition,
+  erstatter `hidden`-toggle i `mobile-menu.js`)
 
 ### 5.5 Footer
 
@@ -309,10 +342,10 @@ Trekolonners layout med mørk bakgrunn:
 ```
 
 - 1 kolonne på mobil, 3 kolonner fra md
-- Kolonne 1: Logo (invertert) + kort beskrivelse
-- Kolonne 2: Adresse, telefon, e-post
-- Kolonne 3: Åpningstider
-- Copyright-linje under med border-t
+- Kolonne 1: Logo (invertert via `filter: brightness(0) invert(1)`) + kort beskrivelse (fra settings)
+- Kolonne 2: Adresse, telefon, e-post (fra settings, samme datakilde som Kontakt-seksjonen)
+- Kolonne 3: Åpningstider (fra settings, krever parsing av `businessHours`-feltet)
+- Copyright-linje under med `border-t border-slate-700` — årstall dynamisk (`new Date().getFullYear()`)
 
 ### 5.6 Seksjon-header
 
@@ -398,14 +431,20 @@ focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bra
 
 ### 8.1 Forsiden (index.astro)
 
-**Informasjonsrekkefølge (endret):**
+**Informasjonsrekkefølge (uendret):**
 1. Hero (velkomst + bilde + CTA-er)
-2. Tjenester (hva vi tilbyr — bygger tillit)
-3. Tannleger (hvem vi er — bygger tillit)
-4. Galleri (klinikken visuelt)
-5. Kontakt (nå er brukeren klar til å ta kontakt)
+2. Kontakt (mest etterspurt — skal være umiddelbart tilgjengelig)
+3. Galleri (klinikken visuelt)
+4. Tjenester (kun desktop — tilgjengelig via meny på mobil)
+5. Tannleger (kun desktop — tilgjengelig via meny på mobil)
 
-**Kritisk:** Tjenester og Tannleger SKAL vises på mobil. Fjern `hidden md:block`.
+**Begrunnelse:** Erfaring viser at kontaktinformasjon er det mest etterspurte. Kontakt
+plasseres derfor rett etter hero for å minimere klikk/scroll.
+
+**Mobil-synlighet:** Tjenester og Tannleger forblir `hidden md:block` på forsiden.
+Dette er et bevisst valg — på mobil nås de via navigasjonsmenyen som peker til
+standalone-sidene `/tjenester` og `/tannleger`. Dette holder mobilopplevelsen
+fokusert på det viktigste: kontaktinfo og visuelt inntrykk.
 
 **Galleri på mobil:** Vis 4 bilder (opp fra 2) med "Se alle" CTA-lenke.
 
@@ -418,15 +457,24 @@ Alle standalone-sider bruker `variant="white"` (uendret). Konsistent hvit bakgru
 Profesjonell og enkel:
 - Stor, blek "404" som bakgrunnselement
 - Tydelig overskrift og forklarende tekst
-- To handlingsknapper: "Til forsiden" (primær) + TelefonKnapp
+- To handlingsknapper: "Til forsiden" (primær) + TelefonKnapp (sekundær)
 - Fjern overdrevne dekorative elementer (pulserende sirkler)
+- **Fiks nestet `<main>`:** 404.astro har egen `<main>` inne i Layout.astros `<main>` —
+  ugyldig HTML. Bruk `<section>` eller `<div>` i stedet.
 
 ### 8.4 Tjenester/[id] (detaljside)
 
 - Container: `max-w-6xl` for optimal lesebredde
-- Brødsmulesti med mellomsteg: Forside → Tjenester → [Tittel]
-- Fjern `!important`-overstyrninger — bruk egne CSS-klasser
+- Brødsmulesti med mellomsteg: Forside → Tjenester → [Tittel] (link til `/tjenester`)
+- Fjern `!important`-overstyrninger — bruk egne CSS-klasser (f.eks. `.detail-heading` for venstrejustert h1)
 - Sidebar: `p-6 bg-brand-light rounded-2xl` med CTA-knapper
+- **Fiks h4-bug:** linje 78 har motstridende `text-lg` og `text-sm` — fjern `text-lg`
+
+### 8.5 Komponenter utenfor scope
+
+Følgende komponenter er **uendret** av redesignet og trenger ingen spesifikasjon:
+- **InfoBanner** — beholdes som i dag (påvirkes indirekte av fargetoken-endringer)
+- **Dynamisk meldingsboks** (Forside.astro) — beholdes, bruker `--color-brand-message-box/banner`
 
 ---
 
