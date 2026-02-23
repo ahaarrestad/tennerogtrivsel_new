@@ -78,6 +78,13 @@
     --color-warning: #b45309;         /* amber-700 */
     --color-warning-light: #fffbeb;   /* amber-50 */
 
+    /* ADMIN-PANEL TOKENS (slate-basert, intern bruk) */
+    --color-admin-surface: #f8fafc;     /* slate-50 — sidebakgrunn */
+    --color-admin-hover: #f1f5f9;       /* slate-100 — hover/pill-bakgrunn */
+    --color-admin-border: #e2e8f0;      /* slate-200 — kanter, delere */
+    --color-admin-muted: #475569;       /* slate-600 — sekundærtekst */
+    --color-admin-muted-light: #94a3b8; /* slate-400 — tertiærtekst */
+
     /* SPACING TOKENS */
     --spacing-section-py: calc(var(--spacing) * 16);     /* 64px mobil */
     --spacing-section-py-md: calc(var(--spacing) * 20);  /* 80px desktop */
@@ -447,7 +454,7 @@
 
     /* ADMIN INTERFACE STYLES */
     .admin-layout {
-        @apply h-full flex flex-col bg-slate-50 text-brand;
+        @apply h-full flex flex-col bg-admin-surface text-brand;
     }
 
     .admin-nav {
@@ -463,7 +470,7 @@
     }
 
     .admin-user-pill {
-        @apply bg-slate-100 hover:bg-slate-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-slate-200 transition-colors flex items-center gap-2 shrink-0;
+        @apply bg-admin-hover hover:bg-admin-border px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-admin-border transition-colors flex items-center gap-2 shrink-0;
     }
 
     .admin-login-box {
@@ -519,11 +526,11 @@
     }
 
     .admin-description {
-        @apply text-slate-600 mb-3 grow;
+        @apply text-admin-muted mb-3 grow;
     }
 
     .admin-info-text {
-        @apply text-slate-600 italic mt-2 text-sm sm:text-base;
+        @apply text-admin-muted italic mt-2 text-sm sm:text-base;
     }
 
     .admin-status-pill {
@@ -543,7 +550,7 @@
     }
 
     .admin-input {
-        @apply w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-brand focus:ring-4 focus:ring-brand/5 transition-all text-sm;
+        @apply w-full p-3 rounded-xl border border-admin-border outline-none focus:border-brand focus:ring-4 focus:ring-brand/5 transition-all text-sm;
     }
 
     .admin-field-container {
@@ -555,7 +562,7 @@
     }
 
     .admin-btn-secondary {
-        @apply bg-slate-50 hover:bg-brand hover:text-white border border-slate-200 text-brand text-xs font-bold py-2 px-4 rounded-xl transition-colors;
+        @apply bg-admin-surface hover:bg-brand hover:text-white border border-admin-border text-brand text-xs font-bold py-2 px-4 rounded-xl transition-colors;
     }
 
     .admin-btn-danger {
@@ -565,7 +572,7 @@
     /* SLIDER STEP BUTTONS */
     .slider-step-btn {
         @apply w-8 h-8 flex items-center justify-center rounded-lg
-               bg-slate-100 text-slate-600 font-bold text-sm
+               bg-admin-hover text-admin-muted font-bold text-sm
                hover:bg-brand hover:text-white
                active:scale-95 transition-all shrink-0
                select-none;
