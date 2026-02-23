@@ -3,8 +3,56 @@
 /* Legg til denne linjen for å aktivere typography i v4 */
 @plugin "@tailwindcss/typography";
 
+/* FONT-FACE DEKLARASJONER — self-hosted woff2 */
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/fonts/montserrat-v26-latin-700.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url('/fonts/montserrat-v26-latin-800.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 900;
+    font-display: swap;
+    src: url('/fonts/montserrat-v26-latin-900.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/inter-v18-latin-regular.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('/fonts/inter-v18-latin-500.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('/fonts/inter-v18-latin-600.woff2') format('woff2');
+}
+
 @theme {
-    /* Dette lager klassen 'text-brand' og 'bg-brand' */
+    /* FONT TOKENS */
+    --font-heading: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    /* FARGER */
     --color-brand: var(--color-slate-800);
     --color-brand-dark: var(--color-slate-800);
     --color-brand-hover: var(--color-slate-500);
@@ -21,23 +69,37 @@
     --spacing-header-mb-md: calc(var(--spacing) * 48);
 }
 
+@layer base {
+    body {
+        font-family: var(--font-body);
+    }
+}
+
 @layer components {
     /* TYPOGRAFI BASE-KLASSER */
     /* Kun stil, ingen marginer eller layout */
     .h1 {
-        @apply text-4xl md:text-6xl font-black text-brand tracking-tight leading-tight;
+        @apply text-4xl md:text-6xl font-black text-brand tracking-tight;
+        font-family: var(--font-heading);
+        line-height: 1.15;
+        letter-spacing: -0.025em;
     }
 
     .h2 {
-        @apply text-3xl md:text-5xl font-black text-brand tracking-tight leading-tight;
+        @apply text-3xl md:text-5xl font-extrabold text-brand tracking-tight;
+        font-family: var(--font-heading);
+        line-height: 1.15;
+        letter-spacing: -0.025em;
     }
 
     .h3 {
         @apply text-2xl md:text-3xl font-bold text-brand leading-snug;
+        font-family: var(--font-heading);
     }
 
     .h4 {
         @apply text-lg font-bold text-brand uppercase tracking-wide;
+        font-family: var(--font-heading);
     }
 
     .brand-text {
@@ -81,12 +143,17 @@
         @apply text-center mx-auto max-w-4xl;
     }
 
+    /* .section-heading er konsolidert med .h2 — bruk .h2 i stedet */
     .section-heading {
-        @apply text-3xl md:text-5xl font-black text-brand tracking-tight leading-tight;
+        @apply text-3xl md:text-5xl font-extrabold text-brand tracking-tight;
+        font-family: var(--font-heading);
+        line-height: 1.15;
+        letter-spacing: -0.025em;
     }
 
     .section-intro {
         @apply text-slate-600 max-w-2xl mx-auto mt-2 text-base md:text-lg leading-relaxed;
+        font-family: var(--font-body);
     }
 
     .heading-accent {
@@ -210,42 +277,36 @@
     /* Tittel inni kortet */
     .card-title {
         @apply text-2xl font-bold text-brand mb-2 transition-colors relative z-10;
+        font-family: var(--font-heading);
     }
 
     /* Undertittel (f.eks. tittel for tannleger eller merkelapper) */
     .card-subtitle {
         @apply text-lg text-brand font-semibold italic mb-4 relative z-10;
+        font-family: var(--font-heading);
     }
 
     /* Brødtekst / beskrivelse i kortet */
     .card-text {
         @apply text-slate-600 text-sm md:text-base leading-relaxed relative z-10;
+        font-family: var(--font-body);
     }
 
     /* Spesifikk styling for "Les mer" eller smådetaljer */
     .card-link {
         @apply mt-auto pt-6 flex items-center text-slate-600 font-bold text-xs uppercase tracking-widest relative z-10;
+        font-family: var(--font-body);
     }
 
-    /* Blå knapp (Primær) */
+    /* Primærknapp */
     .btn-primary {
-        /* Layout: Sørger for at tekst og ikoner står på linje og har riktig luft */
         @apply inline-flex items-center justify-center gap-2;
-
-        /* Form og størrelse: Definerer avrunding, padding og at knappen ikke skal knekke tekst */
         @apply px-6 py-3.5 rounded-2xl whitespace-nowrap min-w-fit;
-
-        /* Typografi og kantlinjer: Setter skrifttype og den tynne rammen rundt */
         @apply border border-brand text-brand font-bold;
-
-        /* Effekt og Lagdeling: Skygge og z-index for å ligge over andre elementer */
         @apply shadow-lg relative z-10;
-
-        /* Animasjon: Definerer farten på alle overganger (farge, posisjon, skygge) */
         @apply transition-all duration-300;
-
-        /* Hover-tilstand: Endrer bakgrunn, flytter knappen litt opp og øker skyggen */
         @apply hover:text-brand hover:bg-brand-active hover:shadow-xl hover:-translate-y-0.5;
+        font-family: var(--font-body);
     }
 
     /* Samkjøring av Markdown-innhold */
@@ -268,6 +329,7 @@
     .markdown-content.prose h2,
     .markdown-content.prose h3 {
         @apply text-brand font-bold mt-12 mb-4 tracking-tight;
+        font-family: var(--font-heading);
     }
 
     .markdown-content.prose h2 { @apply text-2xl md:text-3xl; }
@@ -382,10 +444,12 @@
     /* TYPOGRAPHY */
     .admin-title {
         @apply text-xl sm:text-2xl md:text-3xl lg:text-5xl font-black text-brand tracking-tight leading-tight uppercase;
+        font-family: var(--font-heading);
     }
 
     .admin-subtitle {
         @apply text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-brand leading-snug mb-2 transition-colors;
+        font-family: var(--font-heading);
     }
 
     .admin-description {
