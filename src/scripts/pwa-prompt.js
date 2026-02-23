@@ -8,7 +8,8 @@ const STORAGE_KEY = 'tt-admin-pwa-dismissed';
 let deferredPrompt = null;
 
 /**
- * Register beforeinstallprompt listener early (before login).
+ * Register beforeinstallprompt listener early (before login)
+ * and register the service worker needed for mobile installability.
  * Must be called at page load to capture the event.
  */
 export function initPwaPrompt() {
@@ -16,6 +17,10 @@ export function initPwaPrompt() {
         e.preventDefault();
         deferredPrompt = e;
     });
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/admin-sw.js', { scope: '/admin/' }).catch(() => {});
+    }
 }
 
 /**
@@ -27,10 +32,13 @@ function isStandalone() {
 }
 
 /**
- * Detect if the user is on iOS (Safari doesn't support beforeinstallprompt).
+ * Detect if the user is on iOS/iPadOS.
+ * Newer iPadOS reports as "Macintosh" in the UA string,
+ * so we also check for multi-touch support to catch iPads.
  */
 function isIOS() {
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) return true;
+    return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
 }
 
 /**
