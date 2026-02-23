@@ -49,6 +49,12 @@
     - Bruk samme visuelle mønster som galleri-listen, med thumbnail og toggle-knapp i hver rad.
     - Siden info her lagres i google sheets, så bruker vi bare eksisterende funksjonalitet.
 
+- [ ] **Legal vurdering av dependencies**
+    - Gjennomgå alle dependencies i `package.json` for å identifisere eventuelle med kjente sårbarheter, utdatert vedlikehold eller lisensproblemer.
+    - Bruk verktøy som `npm audit`, Snyk eller GitHub's Dependabot-rapporter for å få en oversikt over sikkerhetsstatusen til hver dependency.
+    - Dokumenter funnene i en rapport og foreslå nødvendige oppdateringer, erstatninger eller fjerning av problematiske dependencies.
+    - Vurder om jeg trenger en lisens for dette prosjektet. Hvis ja, hvilken lisens er mest passende for en nettside som denne? MIT, GPL, eller noe annet? Konsulter eventuelt med en juridisk ekspert for å sikre at valget av lisens dekker både mine behov og gir tilstrekkelig beskyttelse.
+
 ## Fullført
 
 - [x] **Konsolidere og rydde i E2E-tester** ([plan](docs/plan-konsolidere-e2e.md))
