@@ -12,12 +12,9 @@
 
 ## Pågående
 
-Ingen oppgaver pågår.
-
-## Backlog
-
-- [ ] **Design- og UX-gjennomgang av admin-panelet**
+- [ ] **Design- og UX-gjennomgang av admin-panelet** ([plan](docs/plan-admin-ux.md))
   - Følg prosjektets design-guide som retning, men med lavere terskel — funksjon og brukervennlighet er viktigst
+  - 10 steg: CLS-fiks, fargetokens, slate→tokens i astro/JS, toggle CSS, status-indikatorer, knapper, fokus/spacing, EasyMDE/PWA, responsiv/a11y
   - Fokus: god opplevelse, enkel og konsistent bruk
   - Konsistens på tvers av moduler (spacing, knapper, farger, fonter, feedback)
   - Responsivt design (admin brukes på mobil via PWA-snarvei)
