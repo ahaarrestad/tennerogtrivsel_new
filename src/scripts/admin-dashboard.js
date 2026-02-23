@@ -274,14 +274,14 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                                     <span class="admin-status-dot ${dotClass}"></span>
                                     ${statusText}
                                 </span>
-                                <h3 class="font-bold text-brand sm:truncate sm:min-w-0">${msg.title || msg.name}</h3>
+                                <h3 class="font-bold text-brand line-clamp-2 sm:line-clamp-1 sm:min-w-0">${msg.title || msg.name}</h3>
                             </div>
                             <p class="text-xs text-slate-500 flex items-center gap-2">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                                 ${formatDate(msg.startDate)} til ${formatDate(msg.endDate || 'Uendelig')}
                             </p>
                         </div>
-                        <div class="flex gap-2 shrink-0" onclick="event.stopPropagation()">
+                        <div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
                             <button data-id="${msg.driveId}" data-name="${msg.name}" class="edit-btn p-2.5 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
@@ -360,11 +360,11 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
                                     </span>
                                     <span class="toggle-label text-[10px] font-semibold ${toggleLabelClass}">${toggleLabel}</span>
                                 </button>
-                                <h3 class="font-bold text-brand sm:truncate sm:min-w-0">${s.title || s.name}</h3>
+                                <h3 class="font-bold text-brand line-clamp-2 sm:line-clamp-1 sm:min-w-0">${s.title || s.name}</h3>
                             </div>
-                            <p class="text-xs text-slate-500 mt-1 line-clamp-1">${s.ingress || ''}</p>
+                            <p class="text-xs text-slate-500 mt-1">${s.ingress || ''}</p>
                         </div>
-                        <div class="flex gap-2 shrink-0" onclick="event.stopPropagation()">
+                        <div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
                             <button data-id="${s.driveId}" data-name="${s.name}" class="edit-btn p-2.5 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
@@ -450,12 +450,12 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
                                         </span>
                                         <span class="toggle-label text-[10px] font-semibold ${toggleLabelClass}">${toggleLabel}</span>
                                     </button>
-                                    <h3 class="font-bold text-brand sm:truncate sm:min-w-0">${t.name}</h3>
+                                    <h3 class="font-bold text-brand line-clamp-2 sm:line-clamp-1 sm:min-w-0">${t.name}</h3>
                                 </div>
-                                <p class="text-xs text-slate-500 line-clamp-1 italic">${t.title || 'Ingen tittel'}</p>
+                                <p class="text-xs text-slate-500 italic">${t.title || 'Ingen tittel'}</p>
                             </div>
                         </div>
-                        <div class="flex gap-2 shrink-0" onclick="event.stopPropagation()">
+                        <div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
                             <button data-row="${t.rowIndex}" data-name="${t.name}" class="edit-tannlege-btn p-2.5 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
@@ -612,7 +612,7 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                                     ${badgeHtml}
                                     ${toggleHtml}
                                 </div>
-                                <h3 class="font-bold text-brand text-sm truncate">${img.title || img.image || 'Uten tittel'}</h3>
+                                <h3 class="font-bold text-brand text-sm">${img.title || img.image || 'Uten tittel'}</h3>
                                 <p class="text-xs text-slate-500 truncate italic mt-0.5">${img.image || 'Ingen bilde'}</p>
                             </div>
                         </div>

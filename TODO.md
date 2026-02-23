@@ -32,6 +32,13 @@
 
 ## Backlog
 
+- [ ] **Design- og UX-gjennomgang av admin-panelet**
+  - Følg prosjektets design-guide som retning, men med lavere terskel — funksjon og brukervennlighet er viktigst
+  - Fokus: god opplevelse, enkel og konsistent bruk
+  - Konsistens på tvers av moduler (spacing, knapper, farger, fonter, feedback)
+  - Responsivt design (admin brukes på mobil via PWA-snarvei)
+  - Tilgjengelighet (a11y) — grunnleggende krav
+
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet**
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
   - Bruk et team med sikkerhetsekspert, arkitekt og senior utvikler til å legge planen
@@ -39,12 +46,6 @@
 
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
-
-- [ ] **Fiks wrapping av tekst i tjeneste-listen i admin på mobil** ([plan](docs/plan-tjeneste-tekst-wrapping.md))
-  - Tittel og ingress-tekst kan bli avkuttet/wrappet dårlig på smale skjermer
-  - Løsning: `line-clamp-2` på tittel (mobil), konsistent knapp-plassering
-  - Gjelder tjenester + tannleger + galleri (samme mønster)
-  - Ren CSS-justering, 1 fil, ingen nye tester
 
 - [ ] **Konsistent aktiv/inaktiv-visning i admin på tvers av moduler** ([plan](docs/plan-konsistent-toggle.md))
   - Tjenester-editoren er referansemønsteret (toggle-switch med "Synlighet"-label)
@@ -54,6 +55,11 @@
   - Plan klar: 4 steg, 2 filer, ~4–6 tester
 
 ## Fullført
+
+- [x] **Fiks wrapping av tekst i tjeneste-listen i admin på mobil** ([plan](docs/plan-tjeneste-tekst-wrapping.md))
+  - `line-clamp-2 sm:line-clamp-none` på h3-titler i meldinger, tjenester og tannleger
+  - `self-end sm:self-auto` på knapp-containere for konsistent plassering på mobil
+  - Galleri allerede OK (hadde `truncate` og `self-end`)
 
 - [x] **Legal vurdering av dependencies** ([rapport](docs/plan-legal-dependencies.md))
     - npm audit: 0 sårbarheter, alle deps aktivt vedlikeholdt
