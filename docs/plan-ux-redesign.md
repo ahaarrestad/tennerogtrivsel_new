@@ -3,6 +3,12 @@
 > Implementeringsplan basert på [design-guide.md](design-guide.md).
 > Hvert steg er en selvstendig commit. Rekkefølgen er prioritert for å minimere
 > merge-konflikter og gi synlig fremgang tidlig.
+>
+> **Viktig prinsipp:** Alle farger, fonter og spacing settes via CSS-variabler
+> (tokens) i `src/styles/global.css`. Komponenter skal bruke token-klasser
+> (`text-brand`, `bg-accent`, `border-brand-border`) — aldri hardkodede hex-verdier
+> eller Tailwind-fargeklasser som `text-stone-600`. Dette gjør det mulig å bytte
+> hele fargepaletten ved å endre ~15 linjer i global.css.
 
 ---
 
@@ -34,31 +40,46 @@
 
 ---
 
-## Steg 2: Fargepalett — tokens og aksentfarge
+## Steg 2: Fargepalett — stone-palett og aksent
 
 **Filer:**
 - `src/styles/global.css` — oppdater `@theme`-fargevariabler
 
 **Endringer:**
-1. `--color-brand-dark`: slate-800 → slate-900
-2. `--color-brand-hover`: slate-500 → slate-600
-3. `--color-brand-border`: slate-100 → slate-200
-4. `--color-brand-message-box`: slate-300 → slate-100
-5. `--color-brand-message-banner`: slate-400 → slate-200
-6. Legg til `--color-accent`, `--color-accent-hover`, `--color-accent-light`, `--color-accent-border`
-7. Legg til semantiske farger (success, error, info, warning)
+1. Bytt hele primærpaletten fra slate til stone (varm grå):
+   - `--color-brand`: slate-800 → stone-800 (`#292524`)
+   - `--color-brand-dark`: → stone-900 (`#1c1917`)
+   - `--color-brand-hover`: → stone-600 (`#57534e`)
+   - `--color-brand-active`: → stone-100 (`#f5f5f4`)
+   - `--color-brand-border`: → stone-200 (`#e7e5e4`)
+   - `--color-brand-light`: → stone-50 (`#fafaf9`)
+   - `--color-brand-message-box`: → stone-100 (`#f5f5f4`)
+   - `--color-brand-message-banner`: → stone-200 (`#e7e5e4`)
+2. Legg til accent-tokens (mørk varm grå, ikke en egen farge):
+   - `--color-accent`: stone-700 (`#44403c`)
+   - `--color-accent-hover`: stone-800 (`#292524`)
+   - `--color-accent-light`: stone-50 (`#fafaf9`)
+   - `--color-accent-border`: stone-300 (`#d6d3d1`)
+3. Legg til semantiske farger (success, error, info, warning) — beholdes med farge
+4. **Fjern alle hardkodede Tailwind-fargeklasser** (`text-slate-*`, `bg-slate-*`, `border-slate-*`)
+   fra komponentfiler — erstatt med token-klasser (`text-brand`, `bg-brand-light`, osv.)
 
 **Tester:** Ingen strukturelle endringer.
 
 **Obligatorisk visuell verifisering etter dette steget:**
 1. Åpne admin-panelet (`/admin`) og sjekk at kort, inputs, navigasjon og modaler ser korrekte ut
-2. `--color-brand-border` endres fra slate-100 til slate-200 — admin-kort får synlig mørkere kantlinjer
-3. Sjekk offentlig side: kontakt-seksjonen, meldingsboks, footer
+2. Sjekk offentlig side: kontakt-seksjonen, meldingsboks, footer
+3. Verifiser at ingen hardkodede fargeverdier gjenstår i `.astro`-filer (søk etter `slate`, `teal`, hardkodede hex)
 4. Bruk Tailwinds innebygde `shadow-sm/md/lg/xl` — ingen egne skygge-tokens
 
 > **Sideeffekt:** Fargetoken-endringer påvirker admin-panelet (`.admin-card`,
 > `.admin-input`, `.admin-nav` bruker `border-brand-border`). Admin har egne klasser
 > men deler token-variablene.
+>
+> **Token-prinsipp:** Etter dette steget skal INGEN komponentfil inneholde
+> hardkodede fargeverdier. Alle farger skal referere til CSS-variabler via
+> Tailwind-klasser (`text-brand`, `bg-accent`, osv.). Dette sikrer at paletten
+> kan byttes i fremtiden ved å endre kun `global.css`.
 
 ---
 
@@ -103,7 +124,7 @@ av visuelle tester.
 1. `.btn-primary`: outline → fylt (`bg-brand text-white font-semibold`)
    - Merk: `font-semibold` (Inter 600) — IKKE `font-bold` (700 er ikke i font-importen)
 2. Ny `.btn-secondary`: outline-stil (den gamle primary-stilen)
-3. Ny `.btn-accent`: fylt teal (`bg-accent text-white font-semibold`) — for primære CTA-er
+3. Ny `.btn-accent`: fylt mørk (`bg-accent text-white font-semibold shadow-md`) — for primære CTA-er, forsterkede skygger
 4. Avrunding: rounded-2xl → rounded-xl
 5. Shadow: shadow-lg → shadow-sm
 6. Legg til focus-visible-stiler (brand for primær/sekundær, accent for accent)
@@ -114,17 +135,17 @@ av visuelle tester.
 
 | Kontekst | Knapp | Variant | Begrunnelse |
 |----------|-------|---------|-------------|
-| Hero | TelefonKnapp | **accent** (teal) | Hovedhandling — ring klinikken |
+| Hero | TelefonKnapp | **accent** | Hovedhandling — ring klinikken |
 | Hero | EpostKnapp | sekundær | Støttehandling |
 | Hero | KontaktKnapp | sekundær | Støttehandling |
 | Navbar | TelefonKnapp | sekundær | `pointer-events-none` desktop, klikkbar mobil |
 | 404-side | "Til forsiden" | primær | Navigasjon |
 | 404-side | TelefonKnapp | sekundær | Støttehandling |
-| Tjeneste-sidebar | TelefonKnapp | **accent** (teal) | CTA — ring for time |
-| Tjeneste-sidebar | EpostKnapp | **accent** (teal) | CTA — send e-post |
+| Tjeneste-sidebar | TelefonKnapp | **accent** | CTA — ring for time |
+| Tjeneste-sidebar | EpostKnapp | **accent** | CTA — send e-post |
 
-> **Visuelt hierarki:** Teal accent-knappen er den tydeligste handlingen på siden.
-> Kun én accent-knapp per synlig «viewport-seksjon» for å unngå konkurranse.
+> **Visuelt hierarki:** Accent-knappen skilles fra primær via forsterkede skygger
+> (shadow-md/lg) og hover-løft. Kun én accent-knapp per synlig «viewport-seksjon».
 
 **Tester:** Enhetstester for Button-komponent hvis de finnes.
 
@@ -153,7 +174,7 @@ av visuelle tester.
 
 ## Steg 6: Navbar — glassmorfisme og underline-animasjon
 
-> **Avhenger av:** Steg 2 (farger — `text-slate-600`, `border-slate-200/60`, `bg-accent` for underline)
+> **Avhenger av:** Steg 2 (farger — `text-brand-hover`, `border-brand-border/60`, `bg-accent` for underline)
 
 **Filer:**
 - `src/components/Navbar.astro` — bakgrunn, høyde, lenke-stil, logo-størrelse
@@ -165,11 +186,11 @@ av visuelle tester.
 1. Bakgrunn: `bg-brand-light` → `bg-white/95 backdrop-blur-sm`
 2. Høyde: `h-20` → `h-16 lg:h-20` (bruker `lg:` breakpoint, ikke `md:`)
 3. Logo: `h-16` → `h-12 lg:h-16` (plass i mobilnav)
-4. Border: `border-brand-border` → `border-slate-200/60`
-5. Nav-lenker: ny `.nav-link`-klasse med underline-animasjon, tekst `text-slate-600 hover:text-brand`
+4. Border: `border-brand-border` → `border-brand-border/60`
+5. Nav-lenker: ny `.nav-link`-klasse med underline-animasjon, tekst `text-brand-hover hover:text-brand`
    - Oppdater også mobilmeny-lenker (linje 53 i Navbar.astro)
    - Koordiner med `menu-highlight.js` for aktiv-indikator
-6. Hamburger-ikon: `text-slate-600` (matcher nav-link-fargen)
+6. Hamburger-ikon: `text-brand-hover` (matcher nav-link-fargen)
 7. Mobilmeny: legg til `backdrop-blur-sm` og **fade-in** (opacity-overgang via CSS transition,
    erstatt `hidden`-class med opacity-0/opacity-100 og pointer-events-none/auto)
 8. Oppdater `scroll-mt-20 md:scroll-mt-28` i `Forside.astro` til `scroll-mt-16 lg:scroll-mt-20`
@@ -184,16 +205,16 @@ av visuelle tester.
 
 ## Steg 7: Footer — trekolonners layout
 
-> **Avhenger av:** Steg 2 (farger — `bg-slate-800`, `border-slate-700`)
+> **Avhenger av:** Steg 2 (farger — `bg-brand-dark`, `border-accent`)
 
 **Filer:**
 - `src/components/Footer.astro` — fullstendig omskriving
 - `src/layouts/Layout.astro` — pass settings til Footer (åpningstider, adresse, etc.)
 
 **Endringer:**
-1. Bakgrunn: `bg-brand-light` → `bg-slate-800 text-white`
+1. Bakgrunn: `bg-brand-light` → `bg-brand-dark text-white`
 2. Layout: enlinje → trekolonners grid (logo+beskrivelse, kontakt, åpningstider)
-3. Copyright-linje med `border-t border-slate-700` — årstall dynamisk (`new Date().getFullYear()`)
+3. Copyright-linje med `border-t border-accent` — årstall dynamisk (`new Date().getFullYear()`)
 4. Logo invertert (`filter: brightness(0) invert(1)`)
 5. Responsive: 1 col mobil → 3 col md
 
@@ -283,8 +304,8 @@ uten nestet-main-feil.
 2. Brødsmulesti: legg til mellomsteg "Tjenester" med lenke til `/tjenester`
 3. Fjern `!important`-overstyrninger — lag egne klasser (f.eks. `.detail-heading` for venstrejustert h1)
 4. **Fiks h4-bug:** linje 78 har motstridende `text-lg` og `text-sm` — fjern `text-lg`
-5. Sidebar: `p-6 bg-brand-light rounded-2xl` med CTA-knapper i **accent-variant** (teal)
-   - TelefonKnapp og EpostKnapp: `variant="accent"` (teal, fylt)
+5. Sidebar: `p-6 bg-brand-light rounded-2xl` med CTA-knapper i **accent-variant**
+   - TelefonKnapp og EpostKnapp: `variant="accent"`
 6. Relaterte tjenester: justere spacing
 
 ---
@@ -334,7 +355,7 @@ Steg 2 (farger)        ─┼─→ Steg 5 (kort)
 Steg 3 (spacing)       ─┤
 Steg 4 (knapper)       ─┘
 
-Steg 2 (farger) ───────→ Steg 6 (navbar — bruker slate-600, slate-200/60, accent)
+Steg 2 (farger) ───────→ Steg 6 (navbar — bruker brand-hover, brand-border/60, accent)
                 ───────→ Steg 7 (footer)
                 ───────→ Steg 8 (galleri)
                 ───────→ Steg 9 (accent bar)
@@ -403,13 +424,15 @@ forventet sluttresultat. Mockupen fungerer som visuell referanse gjennom hele pr
 
 | Beslutning | Valg | Begrunnelse |
 |-----------|------|-------------|
-| Hero CTA-varianter | TelefonKnapp **accent** (teal), EpostKnapp + KontaktKnapp **sekundær** | Tydelig visuelt hierarki — telefon er hovedhandlingen |
-| Sidebar CTA-varianter | TelefonKnapp + EpostKnapp **accent** (teal) | Tydelig «call to action» som skiller seg fra navigasjon |
+| Hero CTA-varianter | TelefonKnapp **accent**, EpostKnapp + KontaktKnapp **sekundær** | Tydelig visuelt hierarki — telefon er hovedhandlingen |
+| Sidebar CTA-varianter | TelefonKnapp + EpostKnapp **accent** | Tydelig «call to action» med forsterkede skygger |
 | TelefonKnapp i nav | Sekundær variant | Ikke klikkbar på desktop, klikkbar på mobil — outline-stil er mer passende |
 | Font-hosting | **Self-hosted** woff2 fra `/public/fonts/` | Raskere (ingen DNS-oppslag), ingen tredjepartsavhengighet, ingen CSP-endring |
 | Mobilmeny-animasjon | Fade-in (opacity) | Enklere enn slideDown, god nok UX-forbedring |
 | Skygge-tokens | Tailwind innebygd | Bruker foretrekker innebygd funksjonalitet, ingen egne tokens |
 | line-height h1/h2 | 1.15 (ikke 1.1) | Unngår klipping av underkant på norske bokstaver — test grundig med Montserrat |
 | Steg 8+13 sammenslåing | Slått sammen til steg 8 | Fjernet duplisering |
-| Steg 6 avhengighet | Avhenger av steg 2 | Navbar bruker farger fra palette (slate-600, slate-200/60, accent) |
+| Fargepalett | Stone (varm grå) uten fargeaksent | Sofistikert, varmt, fargeløst — klient ønsker gråtoner |
+| Token-prinsipp | Alle farger via CSS-variabler i global.css | Enkel å bytte palett i fremtiden — ingen hardkodede farger i komponenter |
+| Steg 6 avhengighet | Avhenger av steg 2 | Navbar bruker farger fra palette (brand-hover, brand-border/60, accent) |
 | Admin-verifisering | Obligatorisk etter steg 2 | Fargetoken-endringer påvirker admin-panelet via delte variabler |

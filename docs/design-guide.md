@@ -15,6 +15,7 @@
 | **Tilgjengelighet (a11y)** | WCAG AA minimum. Kontrast ≥ 4.5:1 for tekst, ≥ 3:1 for store elementer. |
 | **Innhold først** | Vis *hvem vi er* og *hva vi tilbyr* før vi ber om kontakt. |
 | **Mindre er mer** | Reduser visuell støy. Bruk whitespace strategisk, ikke overdrevet. |
+| **Token-drevet design** | Alle farger, fonter og spacing settes via CSS-variabler i `global.css`. Komponenter bruker tokens — aldri hardkodede fargeverdier. |
 
 ### Målgruppe
 Pasienter (eksisterende og potensielle) som søker tannhelsetjenester. Aldersgruppe 25-65+.
@@ -131,43 +132,66 @@ Uten eksplisitte deklarasjoner har `@font-face`-deklarasjonene ingen effekt.
 
 ## 3. Fargepalett
 
-### Primær-palett (slate-basert)
+### Designprinsipp: Token-drevet fargestyring
+
+**Alle farger styres via CSS-variabler (tokens) i `src/styles/global.css`.** Ingen
+komponent skal bruke hardkodede fargeverdier (hex/rgb) eller Tailwind-fargeklasser
+som `text-slate-600` direkte. Bruk i stedet de semantiske token-klassene:
+`text-brand`, `bg-brand-light`, `border-brand-border`, `bg-accent`, osv.
+
+Fordelen er at **hele fargepaletten kan byttes ved å endre ~15 linjer i global.css**,
+uten å røre noen komponentfiler. Dette gjør det enkelt å justere paletten i etterkant.
+
+```css
+/* Eksempel: Alle fargevariabler samlet i @theme i global.css */
+@theme {
+    --color-brand: #292524;
+    --color-accent: #44403c;
+    /* ... osv. */
+}
+```
+
+> **Regel:** Hvis du trenger en farge i en komponent, sjekk om det finnes et token
+> for den. Hvis ikke, vurder om tokenet bør opprettes i global.css. Hardkodede
+> fargeverdier i `.astro`-filer er et code smell.
+
+### Primær-palett (stone — varm grå)
 
 | Token | Verdi | Hex | Bruk |
 |-------|-------|-----|------|
-| `--color-brand` | slate-800 | #1e293b | Primærtekst, overskrifter |
-| `--color-brand-dark` | slate-900 | #0f172a | Sterk vekt, footer-bakgrunn |
-| `--color-brand-hover` | slate-600 | #475569 | Hover-tilstand og sekundærtekst (7.58:1 kontrast) |
-| `--color-brand-active` | slate-100 | #f1f5f9 | Aktiv/pressed bakgrunn |
-| `--color-brand-border` | slate-200 | #e2e8f0 | Kantlinjer (synligere enn før) |
-| `--color-brand-light` | slate-50 | #f8fafc | Lys seksjonsbakgrunn |
-| `--color-brand-message-box` | slate-100 | #f1f5f9 | Meldingsboks |
-| `--color-brand-message-banner` | slate-200 | #e2e8f0 | Banner |
+| `--color-brand` | stone-800 | #292524 | Primærtekst, overskrifter |
+| `--color-brand-dark` | stone-900 | #1c1917 | Sterk vekt, footer-bakgrunn |
+| `--color-brand-hover` | stone-600 | #57534e | Hover-tilstand og sekundærtekst (7.2:1 kontrast) |
+| `--color-brand-active` | stone-100 | #f5f5f4 | Aktiv/pressed bakgrunn |
+| `--color-brand-border` | stone-200 | #e7e5e4 | Kantlinjer |
+| `--color-brand-light` | stone-50 | #fafaf9 | Lys seksjonsbakgrunn |
+| `--color-brand-message-box` | stone-100 | #f5f5f4 | Meldingsboks |
+| `--color-brand-message-banner` | stone-200 | #e7e5e4 | Banner |
 
-> **Sideeffekt på admin-panelet:** Fargetoken-endringer (spesielt `--color-brand-border`
-> fra slate-100 til slate-200) påvirker admin-kort, inputs og nav. Admin-panelet har
-> egne klasser (`.admin-card`, `.admin-input`) men bruker de samme token-variablene.
-> **Eksplisitt verifisering av admin-panelet er påkrevd etter fargeendringer** — sjekk
-> at kort, inputs, navigasjon og modaler ser korrekte ut.
+**Begrunnelse:** Stone-paletten er varm grå — objektivt fargeløs, men med en nesten
+umerkelig varm undertone som gir ro og kvalitet uten å virke klinisk. Inntrykket er
+sofistikert og profesjonelt, passende for en tannklinikk som skal bygge tillit.
 
-### Aksentfarge (teal)
+> **Sideeffekt på admin-panelet:** Fargetoken-endringer påvirker admin-kort, inputs
+> og nav. Admin-panelet har egne klasser (`.admin-card`, `.admin-input`) men bruker
+> de samme token-variablene. **Eksplisitt verifisering av admin-panelet er påkrevd
+> etter fargeendringer** — sjekk at kort, inputs, navigasjon og modaler ser korrekte ut.
+
+### Aksentfarge (stone-700 — mørk varm grå)
 
 | Token | Verdi | Hex | Bruk |
 |-------|-------|-----|------|
-| `--color-accent` | teal-700 | #0f766e | CTA-knapper, accent bar, aktiv nav |
-| `--color-accent-hover` | teal-800 | #115e59 | CTA hover |
-| `--color-accent-light` | teal-50 | #f0fdfa | Subtil CTA-bakgrunn |
-| `--color-accent-border` | teal-200 | #99f6e4 | Aksentkantlinjer (reservert for fremtidig bruk) |
+| `--color-accent` | stone-700 | #44403c | CTA-knapper, accent bar, aktiv nav |
+| `--color-accent-hover` | stone-800 | #292524 | CTA hover |
+| `--color-accent-light` | stone-50 | #fafaf9 | Subtil CTA-bakgrunn |
+| `--color-accent-border` | stone-300 | #d6d3d1 | Aksentkantlinjer |
 
-**Begrunnelse:** Teal signaliserer helse og ro, komplementerer slate, og gir 5.47:1
-kontrast mot hvit (WCAG AA). Brukes **kun** for handlinger og aksenter — ikke for
-overskrifter eller brødtekst.
+**Begrunnelse:** Aksent-fargen er en mørkere variant av samme stone-palett — ikke en
+egen farge. CTA-knapper skilles fra øvrig innhold via mørkere fyllfarge, forsterkede
+skygger (`shadow-md` i hvile, `shadow-lg` på hover), og hover-løft (`-translate-y-px`).
+Kontrasten hvit-på-stone-700 er 8.1:1 (solid WCAG AA).
 
-> **Merk:** teal-700 (5.47:1) passerer WCAG AA for normal tekst (≥ 4.5:1), men er
-> tett på grensen for `text-sm` (14px). Bruk teal-700 kun på knapper (≥ 14px semibold)
-> og større elementer. For liten tekst på teal-bakgrunn, bruk hvit tekst.
-
-### Semantiske farger
+### Semantiske farger (beholdes — funksjonelle, ikke dekorative)
 
 | Token | Verdi | Hex | Kontrast vs. hvit |
 |-------|-------|-----|-------------------|
@@ -184,14 +208,12 @@ overskrifter eller brødtekst.
 
 | Kombinasjon | Ratio | Status |
 |-------------|-------|--------|
-| slate-800 på hvit | ~12.6:1 | PASS |
-| slate-800 på slate-50 | ~12.1:1 | PASS |
-| slate-600 på hvit (hover/sekundærtekst) | 7.58:1 | PASS |
-| teal-700 på hvit (CTA) | 5.47:1 | PASS |
-| hvit på teal-700 (fylt CTA) | 5.47:1 | PASS |
-| hvit på teal-800 (CTA hover) | 7.58:1 | PASS |
-| hvit på slate-800 (footer) | ~12.6:1 | PASS |
-| hvit på slate-900 (footer bg, primærknapp hover) | ~15.4:1 | PASS |
+| stone-800 på hvit | 13.1:1 | PASS |
+| stone-800 på stone-50 | ~12.5:1 | PASS |
+| stone-600 på hvit (hover/sekundærtekst) | 7.2:1 | PASS |
+| hvit på stone-700 (fylt CTA) | 8.1:1 | PASS |
+| hvit på stone-800 (CTA hover, footer) | 13.1:1 | PASS |
+| hvit på stone-900 (footer bg) | ~15.0:1 | PASS |
 
 ### Skygge-system
 
@@ -269,7 +291,7 @@ Bruk `max-w-6xl` (1152px) for tekst-tungt innhold (tjeneste-detaljsider).
 | Hover shadow | shadow-sm (uendret) | shadow-md (synlig løft) |
 
 - **Behold** card-accent-corner (reduser fra w-20 h-20 til w-16 h-16, juster negativ margin fra `-mr-8 -mt-8` til `-mr-6 -mt-6`)
-- **Behold** card-progress-bar (endre farge til accent/teal)
+- **Behold** card-progress-bar (endre farge til `bg-accent`)
 - **Mobil stacking:** Behold, men reduser margin-bottom fra 10vh til 6vh
 
 > **Merk `overflow-hidden`:** `.card-base` har `overflow-hidden` som klipper
@@ -303,22 +325,23 @@ Bruk `max-w-6xl` (1152px) for tekst-tungt innhold (tjeneste-detaljsider).
 }
 ```
 
-**Accent (teal CTA):**
+**Accent (mørk CTA):**
 ```css
 .btn-accent {
   @apply inline-flex items-center justify-center gap-2;
   @apply px-6 py-3 rounded-xl whitespace-nowrap min-w-fit;
   @apply bg-accent text-white font-semibold text-sm;
-  @apply shadow-sm transition-all duration-200;
-  @apply hover:bg-accent-hover hover:shadow-md hover:-translate-y-px;
+  @apply shadow-md transition-all duration-200;
+  @apply hover:bg-accent-hover hover:shadow-lg hover:-translate-y-px;
   @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent;
   @apply active:translate-y-0 active:shadow-sm;
 }
 ```
 
 **Begrunnelse for 3 varianter:** Accent-varianten brukes for primære handlinger
-(ring oss, bestill time) der teal-fargen tydelig signaliserer «gjør dette nå».
-Primær (slate) brukes for navigasjonshandlinger. Sekundær (outline) brukes for
+(ring oss, bestill time). Uten fargekontrast kompenseres visuelt hierarki med
+forsterkede skygger (`shadow-md` i hvile, `shadow-lg` på hover) og hover-løft.
+Primær (stone-800) brukes for navigasjonshandlinger. Sekundær (outline) brukes for
 nedtonet støttehandlinger.
 
 | Egenskap | Før | Etter |
@@ -328,20 +351,20 @@ nedtonet støttehandlinger.
 | Padding | px-6 py-3.5 | px-6 py-3 |
 | Shadow | shadow-lg | shadow-sm (mindre påtrengende) |
 | Focus | Ingen | focus-visible med outline |
-| Ny: accent | — | Fylt teal (bg-accent text-white) for CTA |
+| Ny: accent | — | Fylt stone-700 (bg-accent text-white) med forsterkede skygger for CTA |
 
 **Variant-tilordning:**
 
 | Kontekst | Knapp | Variant |
 |----------|-------|---------|
-| Hero | TelefonKnapp | **accent** (teal — hovedhandling) |
+| Hero | TelefonKnapp | **accent** (hovedhandling) |
 | Hero | EpostKnapp | sekundær |
 | Hero | KontaktKnapp | sekundær |
 | Navbar | TelefonKnapp | sekundær (`pointer-events-none` desktop) |
 | 404-side | "Til forsiden" | primær |
 | 404-side | TelefonKnapp | sekundær |
-| Tjeneste-sidebar | TelefonKnapp | **accent** (teal) |
-| Tjeneste-sidebar | EpostKnapp | **accent** (teal) |
+| Tjeneste-sidebar | TelefonKnapp | **accent** |
+| Tjeneste-sidebar | EpostKnapp | **accent** |
 
 ### 5.3 Bilder
 
@@ -356,7 +379,7 @@ nedtonet støttehandlinger.
 
 ```css
 nav {
-  @apply bg-white/95 backdrop-blur-sm border-b border-slate-200/60;
+  @apply bg-white/95 backdrop-blur-sm border-b border-brand-border/60;
   @apply supports-[backdrop-filter]:bg-white/80;
 }
 ```
@@ -368,7 +391,7 @@ nav {
 
 ```css
 .nav-link {
-  @apply text-base font-medium text-slate-600 hover:text-brand;
+  @apply text-base font-medium text-brand-hover hover:text-brand;
   @apply relative py-1 transition-colors duration-200;
   font-family: var(--font-body);
 }
@@ -384,7 +407,7 @@ nav {
 
 - Mobilmeny: `backdrop-blur-sm` + fade-in animasjon (opacity-overgang via CSS transition,
   erstatter `hidden`-toggle i `mobile-menu.js`)
-- Hamburger-ikon: `text-slate-600` (matcher nav-link-fargen, ikke brand)
+- Hamburger-ikon: `text-brand-hover` (matcher nav-link-fargen, ikke brand)
 
 ### 5.5 Footer
 
@@ -392,13 +415,13 @@ Trekolonners layout med mørk bakgrunn:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  bg-slate-800 text-white py-12 md:py-16             │
+│  bg-brand-dark text-white py-12 md:py-16            │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐          │
 │  │ Logo +   │  │ Kontakt  │  │ Åpnings- │          │
 │  │ Beskriv. │  │ info     │  │ tider    │          │
 │  └──────────┘  └──────────┘  └──────────┘          │
 │─────────────────────────────────────────────────────│
-│  border-t border-slate-700                          │
+│  border-t border-accent                             │
 │  © 2026 Tenner og Trivsel                           │
 └─────────────────────────────────────────────────────┘
 ```
@@ -407,7 +430,7 @@ Trekolonners layout med mørk bakgrunn:
 - Kolonne 1: Logo (invertert via `filter: brightness(0) invert(1)`) + kort beskrivelse (fra settings)
 - Kolonne 2: Adresse, telefon, e-post (fra settings, samme datakilde som Kontakt-seksjonen)
 - Kolonne 3: Åpningstider (fra settings, krever parsing av `businessHours`-feltet)
-- Copyright-linje under med `border-t border-slate-700` — årstall dynamisk (`new Date().getFullYear()`)
+- Copyright-linje under med `border-t border-accent` — årstall dynamisk (`new Date().getFullYear()`)
 
 ### 5.6 Seksjon-header
 
@@ -423,7 +446,7 @@ Trekolonners layout med mørk bakgrunn:
 }
 ```
 
-- Heading accent bar: Endre fra `bg-brand-dark` til `bg-accent` (teal)
+- Heading accent bar: Endre fra `bg-brand-dark` til `bg-accent`
 
 ---
 
@@ -529,7 +552,7 @@ Profesjonell og enkel:
 - Container: `max-w-6xl` for optimal lesebredde
 - Brødsmulesti med mellomsteg: Forside → Tjenester → [Tittel] (link til `/tjenester`)
 - Fjern `!important`-overstyrninger — bruk egne CSS-klasser (f.eks. `.detail-heading` for venstrejustert h1)
-- Sidebar: `p-6 bg-brand-light rounded-2xl` med CTA-knapper i **accent-variant** (teal)
+- Sidebar: `p-6 bg-brand-light rounded-2xl` med CTA-knapper i **accent-variant**
 - **Fiks h4-bug:** linje 78 har motstridende `text-lg` og `text-sm` — fjern `text-lg`
 
 ### 8.5 Komponenter utenfor scope
@@ -547,10 +570,10 @@ Følgende komponenter er **uendret** av redesignet og trenger ingen spesifikasjo
 | Element | Standard | Hover | Fokus | Active |
 |---------|----------|-------|-------|--------|
 | Primærknapp | bg-brand shadow-sm | bg-brand-dark shadow-md -translate-y-px | outline-2 outline-brand | translate-y-0 |
-| Accentknapp | bg-accent shadow-sm | bg-accent-hover shadow-md -translate-y-px | outline-2 outline-accent | translate-y-0 |
+| Accentknapp | bg-accent shadow-md | bg-accent-hover shadow-lg -translate-y-px | outline-2 outline-accent | translate-y-0 |
 | Sekundærknapp | border-brand-border bg-transparent | bg-brand-light border-brand | outline-2 outline-brand | — |
 | Kort | border-brand-border/60 shadow-sm | border-brand-border shadow-md | outline-2 outline-accent | — |
-| Nav-lenke | text-slate-600 | text-brand + underline | outline-2 outline-brand | — |
+| Nav-lenke | text-brand-hover | text-brand + underline | outline-2 outline-brand | — |
 | Galleri-bilde | shadow-sm | shadow-md + scale(1.03) | outline-2 outline-accent | — |
 | Heading accent | bg-accent (statisk) | — | — | — |
 

@@ -14,23 +14,24 @@
 
 - [ ] **UX/design-gjennomgang av den offentlige nettsiden** ([design-guide](docs/design-guide.md)) ([plan](docs/plan-ux-redesign.md))
   - Retning: Profesjonell & tillitvekkende, full redesign
-  - Fonter: Montserrat (headings) + Inter (body) fra Google Fonts
-  - Farger: Slate-palett + teal aksentfarge for CTA-er
-  - Design-guide og plan revidert etter UX-review (2 runder)
+  - Fonter: Montserrat (headings) + Inter (body), self-hosted woff2
+  - Farger: **Stone-palett (varm grå)** uten fargeaksent — kun gråtoner
+  - Alle farger via CSS-variabler i global.css — enkel å bytte palett
+  - Design-guide, plan og mockup (`docs/mockup.html`) revidert etter UX-review
   - Beslutninger tatt:
     - Kontakt forblir rett etter hero (mest etterspurt av brukere)
     - Seksjon-rekkefølge uendret: Hero → Kontakt → Galleri → Tjenester → Tannleger
     - Tjenester/Tannleger forblir `hidden md:block` på forsiden (bevisst — nås via meny på mobil)
-    - Kortstokk-animasjon beholdes på standalone-sider med justeringer (6vh, teal accent)
-    - Hero-knapper: TelefonKnapp **accent** (teal), EpostKnapp + KontaktKnapp **sekundær** (hierarki)
-    - Sidebar CTA-er: TelefonKnapp + EpostKnapp **accent** (teal)
+    - Kortstokk-animasjon beholdes på standalone-sider med justeringer (6vh)
+    - Hero-knapper: TelefonKnapp **accent**, EpostKnapp + KontaktKnapp **sekundær** (hierarki)
+    - Sidebar CTA-er: TelefonKnapp + EpostKnapp **accent** (forsterkede skygger)
     - TelefonKnapp i nav: sekundær variant (ikke klikkbar desktop, klikkbar mobil)
     - Font-hosting: **self-hosted** woff2 fra `/public/fonts/` (ingen Google Fonts CDN)
     - Mobilmeny: fade-in animasjon (opacity-overgang, ikke slideDown)
     - Skygger: bruk Tailwinds innebygde shadow-klasser, ingen egne tokens
     - line-height h1/h2: 1.15 (justert opp fra 1.1 for å unngå bokstavklipping)
     - Admin-verifisering: obligatorisk etter fargeendringer (steg 2)
-    - Steg 6 (navbar) avhenger nå av steg 2 (farger)
+    - Token-drevet design: ingen hardkodede farger i komponenter
   - Plan revidert: 13 steg, 3 knapp-varianter (primær/sekundær/accent), avhengigheter oppdatert
   - Steg 1–4 kan gjøres i vilkårlig rekkefølge (ingen innbyrdes avhengigheter)
   - **Neste steg: Steg 4 (knapper)** — primær, sekundær og accent
