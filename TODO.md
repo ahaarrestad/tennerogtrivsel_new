@@ -45,8 +45,8 @@
   - [x] **Steg 9: Heading accent bar** — bg-accent, w-16
   - [x] **Steg 10: 404-side** — forenklet, fjernet nestet main, blek 404-bakgrunn, beholdt tannlege-humor
   - [x] **Steg 11: Tjenester-detaljside** — max-w-6xl, brødsmulesti med Tjenester-lenke, fjernet !important, h4-bug fikset
-  - [ ] **Steg 12: Tilgjengelighet** ← neste
-  - **Steg 12–13 gjenstår (se avhengigheter i plan)**
+  - [x] **Steg 12: Tilgjengelighet** — skip-link, id="main-content", globale fokus-stiler, ring på kort
+  - [ ] **Steg 13: CLAUDE.md-oppdatering** ← neste
 
 ## Backlog
 
@@ -66,6 +66,11 @@
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
   - 6 steg: CloudFront-headere, input-validering, filopplasting, API-nøkkel, tester, dokumentasjon
   - Steg 1–4 uavhengige, steg 5 avhenger av 2+3, steg 6 sist
+
+- [ ] **Kodelesbarhet — gå gjennom og forenkle koden**
+  - Gjøre koden enklere og lettere å lese
+  - Identifisere komplekse eller uoversiktlige partier og refaktorere dem
+  - Fokus på klarhet, konsistens og vedlikeholdbarhet
 
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy

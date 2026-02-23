@@ -60,6 +60,8 @@ const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).href;
 
 <body class="text-brand flex flex-col min-h-full">
 
+<a href="#main-content" class="skip-link">Hopp til hovedinnhold</a>
+
 <InfoBanner/>
 
 
@@ -67,7 +69,7 @@ const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).href;
     <Navbar settings={settings} />
 </div>
 
-<main class="flex-grow flex flex-col">
+<main id="main-content" class="flex-grow flex flex-col">
     <slot/>
 </main>
 
