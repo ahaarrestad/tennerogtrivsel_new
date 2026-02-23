@@ -10,9 +10,7 @@ const settings = await getSiteSettings();
     title={`${settings.galleriTittel} | Tenner og Trivsel`}
     description={settings.galleriBeskrivelse}
 >
-    <main>
-        <div class="pb-[35vh] md:mb-0">
-            <GalleriSide variant="white" standalone />
-        </div>
+    <main class="min-h-[50vh]">
+        <GalleriSide variant="white" standalone />
     </main>
 </Layout>

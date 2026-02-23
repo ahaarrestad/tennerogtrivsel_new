@@ -23,7 +23,7 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
     <div class="section-content">
         <SectionHeader title={settings.galleriTittel} intro={settings.galleriTekst} headerBg={headerBg} />
 
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
             {sortert.map((item, index) => {
                 const imgPath = `/src/assets/galleri/${item.data.image}`;
                 const hasImage = item.data.image && images[imgPath];

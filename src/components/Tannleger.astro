@@ -23,7 +23,7 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
     <div class="section-content">
         <SectionHeader title={settings.tannlegerTittel} intro={settings.tannlegerTekst} headerBg={headerBg} sticky />
 
-        <div class="card-grid gap-10">
+        <div class="card-grid gap-6 md:gap-8">
             {sorterteTannleger.map((t, index) => {
                 const tannlegeData = t.data;
                 const imagePath = `/src/assets/tannleger/${tannlegeData.image}`;
