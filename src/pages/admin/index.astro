@@ -16,6 +16,12 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
     <meta name="viewport" content="width=device-width"/>
     <title>Admin | Tenner og Trivsel</title>
     <meta name="robots" content="noindex, nofollow">
+    <link rel="manifest" href="/admin-manifest.json">
+    <meta name="theme-color" content="#0d9488">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="TT Admin">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <script src="https://apis.google.com/js/api.js" async defer></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
@@ -232,6 +238,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         import { withRetry, createAuthRefresher } from '../../scripts/admin-api-retry.js';
         import { loadGallery, setupUploadHandler } from '../../scripts/admin-gallery.js';
         import { showToast, showConfirm } from '../../scripts/admin-dialog.js';
+        import { initPwaPrompt, showInstallPromptIfEligible } from '../../scripts/pwa-prompt.js';
         import { formatDate, stripStackEditData, sortMessages, slugify } from '../../scripts/textFormatter.js';
         import {
             updateUIWithUser, autoResizeTextarea, saveSingleSetting,
@@ -1722,11 +1729,14 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     MELDINGER_FOLDER,
                     TANNLEGER_FOLDER
                 });
+                showInstallPromptIfEligible();
             }
         }
 
         const setup = async () => {
             try {
+                initPwaPrompt();
+
                 const gapiSuccess = await initGapi();
                 if (gapiSuccess) tryRestoreSession();
 
