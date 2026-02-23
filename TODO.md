@@ -22,14 +22,18 @@
     - Seksjon-rekkefølge uendret: Hero → Kontakt → Galleri → Tjenester → Tannleger
     - Tjenester/Tannleger forblir `hidden md:block` på forsiden (bevisst — nås via meny på mobil)
     - Kortstokk-animasjon beholdes på standalone-sider med justeringer (6vh, teal accent)
-    - Hero-knapper: alle tre primær (fylt)
+    - Hero-knapper: TelefonKnapp **accent** (teal), EpostKnapp + KontaktKnapp **sekundær** (hierarki)
+    - Sidebar CTA-er: TelefonKnapp + EpostKnapp **accent** (teal)
     - TelefonKnapp i nav: sekundær variant (ikke klikkbar desktop, klikkbar mobil)
+    - Font-hosting: **self-hosted** woff2 fra `/public/fonts/` (ingen Google Fonts CDN)
     - Mobilmeny: fade-in animasjon (opacity-overgang, ikke slideDown)
     - Skygger: bruk Tailwinds innebygde shadow-klasser, ingen egne tokens
     - line-height h1/h2: 1.15 (justert opp fra 1.1 for å unngå bokstavklipping)
-  - Plan revidert: 13 steg (steg 8+13 slått sammen), avhengigheter oppdatert
+    - Admin-verifisering: obligatorisk etter fargeendringer (steg 2)
+    - Steg 6 (navbar) avhenger nå av steg 2 (farger)
+  - Plan revidert: 13 steg, 3 knapp-varianter (primær/sekundær/accent), avhengigheter oppdatert
   - Steg 1–4 kan gjøres i vilkårlig rekkefølge (ingen innbyrdes avhengigheter)
-  - **Neste steg: Steg 4 (knapper)** — primær (fylt) og sekundær (outline)
+  - **Neste steg: Steg 4 (knapper)** — primær, sekundær og accent
 
 ## Backlog
 
@@ -48,14 +52,14 @@
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
 
-- [ ] **Konsistent aktiv/inaktiv-visning i admin på tvers av moduler** ([plan](docs/plan-konsistent-toggle.md))
-  - Tjenester-editoren er referansemønsteret (toggle-switch med "Synlighet"-label)
-  - Tannleger-editor: checkbox → toggle-switch
-  - Galleri-editor: select/dropdown → toggle-switch
-  - Listene er allerede konsistente — kun editorer endres
-  - Plan klar: 4 steg, 2 filer, ~4–6 tester
-
 ## Fullført
+
+- [x] **Konsistent aktiv/inaktiv-visning i admin på tvers av moduler** ([plan](docs/plan-konsistent-toggle.md))
+  - Tannlege-editor: checkbox → toggle-switch med `data-active`
+  - Galleri-editor: select/dropdown → toggle-switch med `data-active`
+  - Felles `setToggleState()` og `renderToggleHtml()` hjelpefunksjoner
+  - Tjeneste-editor refaktorert til å bruke samme hjelpefunksjoner
+  - Alle tre editorer har identisk "Synlighet"-toggle
 
 - [x] **Fiks wrapping av tekst i tjeneste-listen i admin på mobil** ([plan](docs/plan-tjeneste-tekst-wrapping.md))
   - `line-clamp-2 sm:line-clamp-none` på h3-titler i meldinger, tjenester og tannleger
