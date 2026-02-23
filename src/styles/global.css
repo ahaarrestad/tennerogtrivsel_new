@@ -173,7 +173,7 @@
     }
 
     .heading-accent {
-        @apply w-20 h-1 bg-brand-dark mx-auto mt-4;
+        @apply w-16 h-1 bg-accent mx-auto mt-4;
     }
 
     /* Nav-lenker med underline-animasjon */
