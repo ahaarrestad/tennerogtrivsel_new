@@ -33,10 +33,11 @@ Ingen oppgaver pågår.
   - 6 steg: CloudFront-headere, input-validering, filopplasting, API-nøkkel, tester, dokumentasjon
   - Steg 1–4 uavhengige, steg 5 avhenger av 2+3, steg 6 sist
 
-- [ ] **Kodelesbarhet — gå gjennom og forenkle koden**
+- [ ] **Kodelesbarhet — gå gjennom og forenkle koden** ([plan](docs/plan-kodelesbarhet.md))
   - Gjøre koden enklere og lettere å lese
   - Identifisere komplekse eller uoversiktlige partier og refaktorere dem
   - Fokus på klarhet, konsistens og vedlikeholdbarhet
+  - 6 steg: bildeparsing, CRUD-konsolidering, event-binding, HTML-templates, sync-data-rydding, ekstraher inline-script
 
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
