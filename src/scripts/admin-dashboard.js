@@ -390,7 +390,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
 /**
  * Henter og viser tannleger-listen fra Sheets
  */
-export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolderId) {
+export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolderId, onToggleActive) {
     const inner = document.getElementById('module-inner');
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
@@ -409,8 +409,10 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
             let html = `<p class="text-xs text-slate-400 mb-3">Sist hentet: <span id="tannleger-last-fetched">${formatTimestamp(new Date())}</span></p>`;
             html += `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
             dentists.forEach((t) => {
-                const statusClass = t.active ? "bg-green-100 text-green-700 border-green-200" : "bg-slate-100 text-slate-500 border-slate-200";
-                const statusText = t.active ? "Aktiv" : "Inaktiv";
+                const toggleTrackClass = t.active ? "bg-green-500" : "bg-slate-300";
+                const toggleDotTransform = t.active ? "translate-x-5" : "translate-x-0";
+                const toggleLabel = t.active ? "Aktiv" : "Inaktiv";
+                const toggleLabelClass = t.active ? "text-green-700" : "text-slate-500";
 
                 html += `
                     <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!t.active ? 'opacity-60' : ''}" onclick="this.querySelector('.edit-tannlege-btn').click()">
@@ -420,7 +422,12 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
                             </div>
                             <div class="min-w-0 flex-grow">
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 mb-1">
-                                    <span class="admin-status-pill ${statusClass} text-[8px] shrink-0">${statusText}</span>
+                                    <button data-row="${t.rowIndex}" class="toggle-active-btn flex items-center gap-1.5 shrink-0 cursor-pointer group/toggle" title="Klikk for å endre synlighet" type="button">
+                                        <span class="toggle-track relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 ${toggleTrackClass}">
+                                            <span class="toggle-dot inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ml-0.5 ${toggleDotTransform}"></span>
+                                        </span>
+                                        <span class="toggle-label text-[10px] font-semibold ${toggleLabelClass}">${toggleLabel}</span>
+                                    </button>
                                     <h3 class="font-bold text-brand sm:truncate sm:min-w-0">${t.name}</h3>
                                 </div>
                                 <p class="text-xs text-slate-500 line-clamp-1 italic">${t.title || 'Ingen tittel'}</p>
@@ -444,8 +451,16 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
             inner.querySelectorAll('.delete-tannlege-btn').forEach(btn => {
                 btn.onclick = () => onDelete(parseInt(btn.dataset.row), btn.dataset.name);
             });
+            inner.querySelectorAll('.toggle-active-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const row = parseInt(btn.dataset.row);
+                    const t = dentists.find(d => d.rowIndex === row);
+                    if (t && onToggleActive) onToggleActive(row, t);
+                };
+            });
             // DOMPurify strips onclick attributes – re-attach card click delegation
-            inner.querySelectorAll('.edit-tannlege-btn, .delete-tannlege-btn').forEach(btn => {
+            inner.querySelectorAll('.edit-tannlege-btn, .delete-tannlege-btn, .toggle-active-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => e.stopPropagation());
             });
             inner.querySelectorAll('.admin-card-interactive').forEach(card => {
@@ -479,7 +494,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
         inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste teamet.</div>
             <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
         inner.querySelector('.retry-btn')?.addEventListener('click', () => {
-            loadTannlegerModule(sheetId, onEdit, onDelete, parentFolderId);
+            loadTannlegerModule(sheetId, onEdit, onDelete, parentFolderId, onToggleActive);
         });
     }
 }
