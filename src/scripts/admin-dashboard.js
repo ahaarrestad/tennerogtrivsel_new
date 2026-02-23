@@ -321,7 +321,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
 /**
  * Henter og viser tjenester-listen
  */
-export async function loadTjenesterModule(folderId, onEdit, onDelete) {
+export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleActive) {
     const inner = document.getElementById('module-inner');
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
@@ -344,10 +344,24 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
 
             let html = `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
             services.forEach((s) => {
+                const isActive = s.active !== 'false' && s.active !== false;
+                const toggleTrackClass = isActive ? "bg-green-500" : "bg-slate-300";
+                const toggleDotTransform = isActive ? "translate-x-5" : "translate-x-0";
+                const toggleLabel = isActive ? "Aktiv" : "Inaktiv";
+                const toggleLabelClass = isActive ? "text-green-700" : "text-slate-500";
+
                 html += `
-                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4" onclick="this.querySelector('.edit-btn').click()">
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!isActive ? 'opacity-60' : ''}" onclick="this.querySelector('.edit-btn').click()">
                         <div class="min-w-0 flex-grow">
-                            <h3 class="font-bold text-brand truncate">${s.title || s.name}</h3>
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 mb-1">
+                                <button data-id="${s.driveId}" class="toggle-active-btn flex items-center gap-1.5 shrink-0 cursor-pointer group/toggle" title="Klikk for å endre synlighet" type="button">
+                                    <span class="toggle-track relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 ${toggleTrackClass}">
+                                        <span class="toggle-dot inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ml-0.5 ${toggleDotTransform}"></span>
+                                    </span>
+                                    <span class="toggle-label text-[10px] font-semibold ${toggleLabelClass}">${toggleLabel}</span>
+                                </button>
+                                <h3 class="font-bold text-brand sm:truncate sm:min-w-0">${s.title || s.name}</h3>
+                            </div>
                             <p class="text-xs text-slate-500 mt-1 line-clamp-1">${s.ingress || ''}</p>
                         </div>
                         <div class="flex gap-2 shrink-0" onclick="event.stopPropagation()">
@@ -368,8 +382,16 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
             inner.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.onclick = () => onDelete(btn.dataset.id, btn.dataset.name);
             });
+            inner.querySelectorAll('.toggle-active-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const driveId = btn.dataset.id;
+                    const s = services.find(svc => svc.driveId === driveId);
+                    if (s && onToggleActive) onToggleActive(driveId, s.name, s);
+                };
+            });
             // DOMPurify strips onclick attributes – re-attach card click delegation
-            inner.querySelectorAll('.edit-btn, .delete-btn').forEach(btn => {
+            inner.querySelectorAll('.edit-btn, .delete-btn, .toggle-active-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => e.stopPropagation());
             });
             inner.querySelectorAll('.admin-card-interactive').forEach(card => {
@@ -382,7 +404,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete) {
         inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste behandlinger.</div>
             <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
         inner.querySelector('.retry-btn')?.addEventListener('click', () => {
-            loadTjenesterModule(folderId, onEdit, onDelete);
+            loadTjenesterModule(folderId, onEdit, onDelete, onToggleActive);
         });
     }
 }
