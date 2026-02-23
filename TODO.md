@@ -45,6 +45,10 @@
   - Responsivt design (admin brukes på mobil via PWA-snarvei)
   - Tilgjengelighet (a11y) — grunnleggende krav
 
+- [ ] **Gjøre det enklere å forstå hvor innstillinger brukes på nettsiden**
+  - Bruker av admin-panelet vet ikke nødvendigvis hvor de ulike tekstene i Innstillinger-modulen dukker opp på den offentlige siden
+  - Utforske løsninger som gjør koblingen mellom innstilling og plassering tydeligere (f.eks. forhåndsvisning, hjelpetekst, lenker til relevant seksjon, eller gruppering etter side/seksjon)
+
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
