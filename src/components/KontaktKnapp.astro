@@ -1,7 +1,7 @@
 ---
 import Button from "./Button.astro";
-const { class: className } = Astro.props;
+const { class: className, variant = 'primary' } = Astro.props;
 ---
-<Button href="/#kontakt" class={className}>
+<Button href="/#kontakt" variant={variant} class={className}>
     Kontakt oss
 </Button>
