@@ -345,20 +345,15 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
             let html = `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
             services.forEach((s) => {
                 const isActive = s.active !== 'false' && s.active !== false;
-                const toggleTrackClass = isActive ? "bg-green-500" : "bg-slate-300";
-                const toggleDotTransform = isActive ? "translate-x-5" : "translate-x-0";
                 const toggleLabel = isActive ? "Aktiv" : "Inaktiv";
-                const toggleLabelClass = isActive ? "text-green-700" : "text-slate-500";
 
                 html += `
                     <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!isActive ? 'opacity-60' : ''}" onclick="this.querySelector('.edit-btn').click()">
                         <div class="min-w-0 flex-grow">
                             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 mb-1">
-                                <button data-id="${s.driveId}" class="toggle-active-btn flex items-center gap-1.5 shrink-0 cursor-pointer group/toggle" title="Klikk for å endre synlighet" type="button">
-                                    <span class="toggle-track relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 ${toggleTrackClass}">
-                                        <span class="toggle-dot inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ml-0.5 ${toggleDotTransform}"></span>
-                                    </span>
-                                    <span class="toggle-label text-[10px] font-semibold ${toggleLabelClass}">${toggleLabel}</span>
+                                <button data-id="${s.driveId}" class="toggle-active-btn flex items-center gap-1.5 shrink-0 cursor-pointer group/toggle" title="Klikk for å endre synlighet" type="button" data-active="${isActive}">
+                                    <span class="toggle-track"><span class="toggle-dot"></span></span>
+                                    <span class="toggle-label">${toggleLabel}</span>
                                 </button>
                                 <h3 class="font-bold text-brand line-clamp-2 sm:line-clamp-1 sm:min-w-0">${s.title || s.name}</h3>
                             </div>
@@ -431,10 +426,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
             let html = `<p class="text-xs text-admin-muted-light mb-3">Sist hentet: <span id="tannleger-last-fetched">${formatTimestamp(new Date())}</span></p>`;
             html += `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
             dentists.forEach((t) => {
-                const toggleTrackClass = t.active ? "bg-green-500" : "bg-slate-300";
-                const toggleDotTransform = t.active ? "translate-x-5" : "translate-x-0";
                 const toggleLabel = t.active ? "Aktiv" : "Inaktiv";
-                const toggleLabelClass = t.active ? "text-green-700" : "text-slate-500";
 
                 html += `
                     <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!t.active ? 'opacity-60' : ''}" onclick="this.querySelector('.edit-tannlege-btn').click()">
@@ -444,11 +436,9 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
                             </div>
                             <div class="min-w-0 flex-grow">
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 mb-1">
-                                    <button data-row="${t.rowIndex}" class="toggle-active-btn flex items-center gap-1.5 shrink-0 cursor-pointer group/toggle" title="Klikk for å endre synlighet" type="button">
-                                        <span class="toggle-track relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 ${toggleTrackClass}">
-                                            <span class="toggle-dot inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ml-0.5 ${toggleDotTransform}"></span>
-                                        </span>
-                                        <span class="toggle-label text-[10px] font-semibold ${toggleLabelClass}">${toggleLabel}</span>
+                                    <button data-row="${t.rowIndex}" class="toggle-active-btn flex items-center gap-1.5 shrink-0 cursor-pointer group/toggle" title="Klikk for å endre synlighet" type="button" data-active="${t.active}">
+                                        <span class="toggle-track"><span class="toggle-dot"></span></span>
+                                        <span class="toggle-label">${toggleLabel}</span>
                                     </button>
                                     <h3 class="font-bold text-brand line-clamp-2 sm:line-clamp-1 sm:min-w-0">${t.name}</h3>
                                 </div>
@@ -576,24 +566,15 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
             html += `<div class="grid grid-cols-1 gap-4">`;
             images.forEach((img, idx) => {
                 const isForsidebilde = img.type === 'forsidebilde';
-                const toggleTrackClass = img.active
-                    ? "bg-green-500"
-                    : "bg-slate-300";
-                const toggleDotTransform = img.active
-                    ? "translate-x-5"
-                    : "translate-x-0";
                 const toggleLabel = img.active ? "Aktiv" : "Inaktiv";
-                const toggleLabelClass = img.active ? "text-green-700" : "text-slate-500";
                 const badgeHtml = isForsidebilde
                     ? `<span class="admin-status-pill bg-amber-100 text-amber-700 border-amber-300 text-[8px] shrink-0 font-black">Forsidebilde</span>`
                     : '';
                 const toggleHtml = isForsidebilde
                     ? ''
-                    : `<button data-row="${img.rowIndex}" class="toggle-active-btn flex items-center gap-1.5 shrink-0 cursor-pointer group/toggle" title="Klikk for å endre synlighet" type="button">
-                                        <span class="toggle-track relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 ${toggleTrackClass}">
-                                            <span class="toggle-dot inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ml-0.5 ${toggleDotTransform}"></span>
-                                        </span>
-                                        <span class="toggle-label text-[10px] font-semibold ${toggleLabelClass}">${toggleLabel}</span>
+                    : `<button data-row="${img.rowIndex}" class="toggle-active-btn flex items-center gap-1.5 shrink-0 cursor-pointer group/toggle" title="Klikk for å endre synlighet" type="button" data-active="${img.active}">
+                                        <span class="toggle-track"><span class="toggle-dot"></span></span>
+                                        <span class="toggle-label">${toggleLabel}</span>
                                     </button>`;
                 const isFirst = idx === 0 || (idx === 1 && images[0].type === 'forsidebilde');
                 const isLast = idx === images.length - 1;
