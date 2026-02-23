@@ -11,14 +11,14 @@ export function initMobileMenu() {
     function openMenu() {
         menuBtn?.setAttribute('data-state', 'open');
         menuBtn?.setAttribute('aria-expanded', 'true');
-        mobileMenu?.classList.remove('opacity-0', 'pointer-events-none');
+        mobileMenu?.classList.remove('opacity-0', 'invisible', 'pointer-events-none');
         mobileMenu?.classList.add('opacity-100', 'pointer-events-auto');
     }
 
     function closeMenu() {
         menuBtn?.setAttribute('data-state', 'closed');
         menuBtn?.setAttribute('aria-expanded', 'false');
-        mobileMenu?.classList.add('opacity-0', 'pointer-events-none');
+        mobileMenu?.classList.add('opacity-0', 'invisible', 'pointer-events-none');
         mobileMenu?.classList.remove('opacity-100', 'pointer-events-auto');
     }
 
