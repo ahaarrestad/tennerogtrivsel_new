@@ -46,6 +46,48 @@ describe('pwa-prompt', () => {
             // Verify preventDefault was called
             expect(event.preventDefault).toHaveBeenCalled();
         });
+
+        it('registers service worker when available', () => {
+            const registerMock = vi.fn().mockResolvedValue({});
+            Object.defineProperty(navigator, 'serviceWorker', {
+                writable: true,
+                configurable: true,
+                value: { register: registerMock },
+            });
+
+            initPwaPrompt();
+            expect(registerMock).toHaveBeenCalledWith('/admin-sw.js', { scope: '/admin/' });
+
+            Object.defineProperty(navigator, 'serviceWorker', {
+                writable: true,
+                configurable: true,
+                value: undefined,
+            });
+        });
+
+        it('does not throw when serviceWorker is not available', () => {
+            const orig = Object.getOwnPropertyDescriptor(navigator, 'serviceWorker');
+            delete navigator.serviceWorker;
+            Object.defineProperty(navigator, 'serviceWorker', {
+                writable: true,
+                configurable: true,
+                value: undefined,
+                enumerable: false,
+            });
+            // 'serviceWorker' in navigator is still true, but value is undefined
+            // The code checks 'serviceWorker' in navigator, so we need to truly remove it
+            // In jsdom this is tricky; instead test that undefined.register is guarded
+            // Actually let's just verify no error by overriding the in-check
+            // Simplest: just delete and re-define without the key
+            delete navigator.serviceWorker;
+
+            expect(() => initPwaPrompt()).not.toThrow();
+
+            // Restore
+            if (orig) {
+                Object.defineProperty(navigator, 'serviceWorker', orig);
+            }
+        });
     });
 
     describe('showInstallPromptIfEligible', () => {
@@ -123,6 +165,46 @@ describe('pwa-prompt', () => {
                 'info',
                 { duration: 15000 }
             );
+        });
+
+        it('shows iOS instruction toast on iPadOS (MacIntel with touch)', () => {
+            Object.defineProperty(window, 'matchMedia', {
+                writable: true,
+                value: vi.fn().mockReturnValue({ matches: false }),
+            });
+            Object.defineProperty(navigator, 'userAgent', {
+                writable: true,
+                value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15',
+            });
+            Object.defineProperty(navigator, 'platform', {
+                writable: true,
+                configurable: true,
+                value: 'MacIntel',
+            });
+            Object.defineProperty(navigator, 'maxTouchPoints', {
+                writable: true,
+                configurable: true,
+                value: 5,
+            });
+
+            showInstallPromptIfEligible();
+            expect(showToast).toHaveBeenCalledWith(
+                expect.stringContaining('Del-ikonet'),
+                'info',
+                { duration: 15000 }
+            );
+
+            // Restore
+            Object.defineProperty(navigator, 'platform', {
+                writable: true,
+                configurable: true,
+                value: '',
+            });
+            Object.defineProperty(navigator, 'maxTouchPoints', {
+                writable: true,
+                configurable: true,
+                value: 0,
+            });
         });
     });
 
