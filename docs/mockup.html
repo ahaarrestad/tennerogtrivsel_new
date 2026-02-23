@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mockup — Tenner og Trivsel (Redesign)</title>
+
+  <!-- Google Fonts for mockup preview (production will use self-hosted woff2) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* ========================================================
+       DESIGN TOKENS — matches docs/design-guide.md
+       ======================================================== */
+    :root {
+      /* Primary palette (slate) */
+      --color-brand: #1e293b;        /* slate-800 */
+      --color-brand-dark: #0f172a;   /* slate-900 */
+      --color-brand-hover: #475569;  /* slate-600 */
+      --color-brand-active: #f1f5f9; /* slate-100 */
+      --color-brand-border: #e2e8f0; /* slate-200 */
+      --color-brand-light: #f8fafc;  /* slate-50 */
+      --color-brand-message-box: #f1f5f9;
+      --color-brand-message-banner: #e2e8f0;
+
+      /* Accent (teal) */
+      --color-accent: #0f766e;       /* teal-700 */
+      --color-accent-hover: #115e59; /* teal-800 */
+      --color-accent-light: #f0fdfa; /* teal-50 */
+      --color-accent-border: #99f6e4; /* teal-200 */
+
+      /* Semantic */
+      --color-success: #15803d;
+      --color-error: #b91c1c;
+      --color-info: #1d4ed8;
+      --color-warning: #b45309;
+
+      /* Typography */
+      --font-heading: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+      --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+      /* Spacing */
+      --spacing-section-y: 64px;
+      --spacing-section-y-md: 80px;
+      --spacing-header-mb: 40px;
+      --spacing-header-mb-md: 64px;
+    }
+
+    /* ========================================================
+       RESET & BASE
+       ======================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--color-brand);
+      background: #fff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    img { max-width: 100%; height: auto; display: block; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ========================================================
+       LAYOUT
+       ======================================================== */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    @media (min-width: 768px) { .container { padding: 0 24px; } }
+    @media (min-width: 1024px) { .container { padding: 0 32px; } }
+
+    .section {
+      padding: var(--spacing-section-y) 0;
+    }
+    @media (min-width: 768px) {
+      .section { padding: var(--spacing-section-y-md) 0; }
+    }
+
+    .bg-white { background: #fff; }
+    .bg-brand-light { background: var(--color-brand-light); }
+    .bg-brand-dark { background: var(--color-brand-dark); }
+
+    /* ========================================================
+       TYPOGRAPHY
+       ======================================================== */
+    .h1 {
+      font-family: var(--font-heading);
+      font-weight: 900;
+      font-size: 36px;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      color: var(--color-brand);
+    }
+    @media (min-width: 768px) { .h1 { font-size: 60px; } }
+
+    .h2 {
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 30px;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      color: var(--color-brand);
+    }
+    @media (min-width: 768px) { .h2 { font-size: 48px; } }
+
+    .h3 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 24px;
+      line-height: 1.25;
+      color: var(--color-brand);
+    }
+    @media (min-width: 768px) { .h3 { font-size: 30px; } }
+
+    .h4 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 18px;
+      line-height: 1.4;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-brand);
+    }
+
+    .section-intro {
+      font-family: var(--font-body);
+      font-size: 18px;
+      line-height: 1.75;
+      color: var(--color-brand-hover);
+    }
+
+    .card-text {
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.625;
+      color: var(--color-brand-hover);
+    }
+    @media (min-width: 768px) { .card-text { font-size: 16px; } }
+
+    .card-subtitle {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--color-brand-hover);
+      margin-bottom: 8px;
+    }
+
+    /* ========================================================
+       SECTION HEADER
+       ======================================================== */
+    .section-header {
+      text-align: center;
+      max-width: 896px;
+      margin: 0 auto var(--spacing-header-mb);
+    }
+    @media (min-width: 768px) {
+      .section-header { margin-bottom: var(--spacing-header-mb-md); }
+    }
+
+    .section-header .h2 { margin-bottom: 16px; }
+    .section-header .section-intro { margin-bottom: 24px; }
+
+    .heading-accent {
+      width: 64px;
+      height: 4px;
+      background: var(--color-accent);
+      border-radius: 2px;
+      margin: 0 auto;
+    }
+
+    /* ========================================================
+       BUTTONS
+       ======================================================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      white-space: nowrap;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.025em;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--color-brand);
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+      background: var(--color-brand-dark);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      transform: translateY(-1px);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--color-brand);
+      border: 1px solid var(--color-brand-border);
+    }
+    .btn-secondary:hover {
+      background: var(--color-brand-light);
+      border-color: var(--color-brand);
+    }
+
+    .btn-accent {
+      background: var(--color-accent);
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-accent:hover {
+      background: var(--color-accent-hover);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      transform: translateY(-1px);
+    }
+    .btn-accent:active { transform: translateY(0); }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    /* ========================================================
+       NAVBAR
+       ======================================================== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(226,232,240,0.6);
+      height: 64px;
+      display: flex;
+      align-items: center;
+    }
+    @supports (backdrop-filter: blur(8px)) {
+      .navbar { background: rgba(255,255,255,0.8); }
+    }
+    @media (min-width: 1024px) { .navbar { height: 80px; } }
+
+    .navbar .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .nav-logo {
+      font-family: var(--font-heading);
+      font-weight: 900;
+      font-size: 20px;
+      color: var(--color-brand);
+      letter-spacing: -0.025em;
+    }
+    @media (min-width: 1024px) { .nav-logo { font-size: 24px; } }
+
+    .nav-links {
+      display: none;
+      list-style: none;
+      gap: 24px;
+      align-items: center;
+    }
+    @media (min-width: 1024px) { .nav-links { display: flex; } }
+
+    .nav-link {
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 16px;
+      color: var(--color-brand-hover);
+      position: relative;
+      padding: 4px 0;
+      transition: color 0.2s;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--color-accent);
+      transition: width 0.3s ease;
+    }
+    .nav-link:hover { color: var(--color-brand); }
+    .nav-link:hover::after,
+    .nav-link.active::after { width: 100%; }
+
+    .hamburger {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--color-brand-hover);
+      border-radius: 1px;
+    }
+    @media (min-width: 1024px) { .hamburger { display: none; } }
+
+    /* ========================================================
+       CARDS
+       ======================================================== */
+    .card {
+      background: #fff;
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid rgba(226,232,240,0.6);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    @media (min-width: 768px) { .card { padding: 32px; } }
+
+    .card:hover {
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      border-color: var(--color-brand-border);
+    }
+
+    .card-accent-corner {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 64px;
+      height: 64px;
+      background: var(--color-accent-light);
+      border-radius: 0 16px 0 64px;
+      margin: -24px -24px 0 0;
+    }
+    @media (min-width: 768px) {
+      .card-accent-corner { margin: -32px -32px 0 0; }
+    }
+
+    .card-icon {
+      width: 32px;
+      height: 32px;
+      color: var(--color-brand);
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card .h3 { margin-bottom: 4px; position: relative; z-index: 1; }
+    .card .card-text { position: relative; z-index: 1; flex-grow: 1; }
+
+    .card-link {
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--color-accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 24px;
+      position: relative;
+      z-index: 1;
+    }
+    .card-link .arrow { transition: transform 0.2s; }
+    .card:hover .card-link .arrow { transform: translateX(4px); }
+
+    .card-progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--color-accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+    .card:hover .card-progress-bar { transform: scaleX(1); }
+
+    /* Card with image */
+    .card-image {
+      width: calc(100% + 48px);
+      margin: -24px -24px 24px;
+      height: 240px;
+      overflow: hidden;
+      border-radius: 16px 16px 0 0;
+    }
+    @media (min-width: 768px) {
+      .card-image {
+        width: calc(100% + 64px);
+        margin: -32px -32px 24px;
+      }
+    }
+    .card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Card grid */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    @media (min-width: 768px) {
+      .card-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+    }
+    @media (min-width: 1024px) {
+      .card-grid-3 { grid-template-columns: repeat(3, 1fr); }
+      .card-grid-4 { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    /* ========================================================
+       GALLERY
+       ======================================================== */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    @media (min-width: 768px) {
+      .gallery-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    }
+    @media (min-width: 1024px) {
+      .gallery-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .gallery-item {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      aspect-ratio: 4/3;
+      background: #f1f5f9;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .gallery-item:hover {
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      transform: scale(1.03);
+    }
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .gallery-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+      padding: 12px 16px;
+    }
+    .gallery-overlay p {
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    @media (min-width: 768px) {
+      .gallery-overlay p { font-size: 14px; }
+      .gallery-overlay { padding: 16px; }
+    }
+
+    .see-all-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--color-accent);
+      margin-top: 24px;
+      transition: color 0.2s;
+    }
+    .see-all-link:hover { color: var(--color-accent-hover); }
+
+    /* ========================================================
+       HERO
+       ======================================================== */
+    .hero {
+      padding: var(--spacing-section-y) 0;
+    }
+    @media (min-width: 768px) {
+      .hero { padding: var(--spacing-section-y-md) 0; }
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    @media (min-width: 1024px) {
+      .hero-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .hero-text { text-align: center; }
+    @media (min-width: 1024px) { .hero-text { text-align: left; } }
+
+    .hero-text .h1 { margin-bottom: 24px; }
+    .hero-text .h1 span { color: var(--color-brand-hover); }
+    .hero-text .section-intro { margin-bottom: 32px; }
+
+    .hero-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+    }
+    @media (min-width: 1024px) {
+      .hero-buttons { justify-content: flex-start; }
+    }
+
+    .hero-image {
+      aspect-ratio: 16/10;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 4px solid #fff;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      background: linear-gradient(135deg, var(--color-brand-light), var(--color-accent-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-brand-hover);
+      font-size: 14px;
+    }
+
+    /* ========================================================
+       FOOTER
+       ======================================================== */
+    .footer {
+      background: var(--color-brand-dark);
+      color: #fff;
+      padding: 48px 0;
+    }
+    @media (min-width: 768px) { .footer { padding: 64px 0; } }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    @media (min-width: 768px) {
+      .footer-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .footer h4 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+
+    .footer p, .footer li {
+      font-size: 14px;
+      line-height: 1.75;
+      color: #94a3b8; /* slate-400 */
+    }
+
+    .footer a { color: #94a3b8; transition: color 0.2s; }
+    .footer a:hover { color: #fff; }
+
+    .footer-logo {
+      font-family: var(--font-heading);
+      font-weight: 900;
+      font-size: 20px;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .footer-copyright {
+      border-top: 1px solid #334155; /* slate-700 */
+      margin-top: 40px;
+      padding-top: 24px;
+      text-align: center;
+      font-size: 14px;
+      color: #64748b; /* slate-500 */
+    }
+
+    .footer ul { list-style: none; }
+    .footer li { margin-bottom: 4px; }
+
+    /* ========================================================
+       SKIP LINK
+       ======================================================== */
+    .skip-link {
+      position: absolute;
+      top: -100%;
+      left: 8px;
+      z-index: 100;
+      background: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      font-weight: 600;
+      color: var(--color-brand);
+    }
+    .skip-link:focus { top: 8px; }
+
+    /* ========================================================
+       MOCKUP-SPECIFIC — comparison & annotations
+       ======================================================== */
+    .mockup-banner {
+      background: var(--color-accent);
+      color: #fff;
+      text-align: center;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font-body);
+    }
+
+    .design-system-section {
+      padding: 48px 0;
+      border-bottom: 1px solid var(--color-brand-border);
+    }
+
+    .ds-title {
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: var(--color-brand);
+    }
+
+    .ds-description {
+      font-size: 14px;
+      color: var(--color-brand-hover);
+      margin-bottom: 32px;
+    }
+
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .swatch {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--color-brand-border);
+    }
+
+    .swatch-color {
+      height: 64px;
+    }
+
+    .swatch-label {
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #fff;
+    }
+    .swatch-label span {
+      display: block;
+      font-weight: 400;
+      color: var(--color-brand-hover);
+      font-size: 11px;
+    }
+
+    .type-sample {
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--color-brand-border);
+    }
+    .type-sample:last-child { border-bottom: none; }
+    .type-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-accent);
+      margin-bottom: 4px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .spacer { height: 32px; }
+
+    .annotation {
+      display: inline-block;
+      background: var(--color-accent-light);
+      border: 1px solid var(--color-accent-border);
+      color: var(--color-accent);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: var(--color-brand-border);
+      margin: 0;
+    }
+
+    /* ========================================================
+       KONTAKT INFO CARDS (icon + text style)
+       ======================================================== */
+    .kontakt-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    @media (min-width: 768px) {
+      .kontakt-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+    }
+    @media (min-width: 1024px) {
+      .kontakt-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    /* Map placeholder */
+    .map-placeholder {
+      width: 100%;
+      height: 350px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--color-brand-light), var(--color-brand-border));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-brand-hover);
+      font-size: 14px;
+    }
+    @media (min-width: 768px) { .map-placeholder { height: 450px; } }
+
+    /* hidden on mobile */
+    .hidden-mobile { display: none; }
+    @media (min-width: 768px) { .hidden-mobile { display: block; } }
+
+    /* Tannleger card image */
+    .dentist-image {
+      width: calc(100% + 48px);
+      margin: -24px -24px 24px;
+      height: 280px;
+      overflow: hidden;
+      border-radius: 16px 16px 0 0;
+      background: linear-gradient(135deg, var(--color-brand-light), var(--color-accent-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-brand-hover);
+      font-size: 13px;
+    }
+    @media (min-width: 768px) {
+      .dentist-image {
+        width: calc(100% + 64px);
+        margin: -32px -32px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mockup banner -->
+  <div class="mockup-banner">
+    Mockup — Tenner og Trivsel redesign. Åpne i nettleseren og resize vinduet for responsiv forhåndsvisning.
+  </div>
+
+  <!-- ============================================================
+       DEL 1: DESIGNSYSTEM — tokens, typografi, farger, knapper
+       ============================================================ -->
+
+  <div class="container">
+
+    <!-- TYPOGRAFI -->
+    <div class="design-system-section">
+      <div class="ds-title">Typografi</div>
+      <div class="ds-description">Montserrat (headings) + Inter (body). Self-hosted woff2 i produksjon.</div>
+
+      <div class="type-sample">
+        <div class="type-label">h1 — Montserrat 900, 36/60px, line-height 1.15</div>
+        <div class="h1">Velkommen til Tenner og Trivsel</div>
+      </div>
+
+      <div class="type-sample">
+        <div class="type-label">h2 / section-heading — Montserrat 800, 30/48px, line-height 1.15</div>
+        <div class="h2">Tjenester og priser</div>
+      </div>
+
+      <div class="type-sample">
+        <div class="type-label">h3 / card-title — Montserrat 700, 24/30px</div>
+        <div class="h3">Forebyggende behandling</div>
+      </div>
+
+      <div class="type-sample">
+        <div class="type-label">h4 — Montserrat 700, 18px, uppercase, tracking</div>
+        <div class="h4">Kategori</div>
+      </div>
+
+      <div class="type-sample">
+        <div class="type-label">section-intro — Inter 400, 18px, line-height 1.75</div>
+        <p class="section-intro">Vi tilbyr et bredt spekter av tannhelsetjenester i moderne lokaler sentralt i Oslo. Vårt erfarne team sørger for at du får den beste behandlingen.</p>
+      </div>
+
+      <div class="type-sample">
+        <div class="type-label">body / card-text — Inter 400, 14-16px</div>
+        <p class="card-text">Regelmessige tannlegebesøk er viktig for å opprettholde god tannhelse. Vi anbefaler kontroll minst én gang i året.</p>
+      </div>
+    </div>
+
+    <!-- FARGER -->
+    <div class="design-system-section">
+      <div class="ds-title">Fargepalett</div>
+      <div class="ds-description">Slate primærpalett + teal aksent. Alle kombinasjoner passerer WCAG AA kontrast.</div>
+
+      <div style="margin-bottom: 24px;">
+        <div class="type-label" style="margin-bottom: 12px;">Primær (slate)</div>
+        <div class="swatch-grid">
+          <div class="swatch">
+            <div class="swatch-color" style="background: #0f172a;"></div>
+            <div class="swatch-label">brand-dark<span>slate-900 #0f172a</span></div>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background: #1e293b;"></div>
+            <div class="swatch-label">brand<span>slate-800 #1e293b</span></div>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background: #475569;"></div>
+            <div class="swatch-label">brand-hover<span>slate-600 #475569</span></div>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background: #e2e8f0;"></div>
+            <div class="swatch-label">brand-border<span>slate-200 #e2e8f0</span></div>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background: #f1f5f9;"></div>
+            <div class="swatch-label">brand-active<span>slate-100 #f1f5f9</span></div>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background: #f8fafc;"></div>
+            <div class="swatch-label">brand-light<span>slate-50 #f8fafc</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <div class="type-label" style="margin-bottom: 12px;">Aksent (teal)</div>
+        <div class="swatch-grid">
+          <div class="swatch">
+            <div class="swatch-color" style="background: #0f766e;"></div>
+            <div class="swatch-label">accent<span>teal-700 #0f766e</span></div>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background: #115e59;"></div>
+            <div class="swatch-label">accent-hover<span>teal-800 #115e59</span></div>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background: #f0fdfa;"></div>
+            <div class="swatch-label">accent-light<span>teal-50 #f0fdfa</span></div>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background: #99f6e4;"></div>
+            <div class="swatch-label">accent-border<span>teal-200 #99f6e4</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="type-label" style="margin-bottom: 12px;">Semantiske farger</div>
+        <div class="swatch-grid">
+          <div class="swatch">
+            <div class="swatch-color" style="background: #15803d;"></div>
+            <div class="swatch-label">success<span>green-700</span></div>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background: #b91c1c;"></div>
+            <div class="swatch-label">error<span>red-700</span></div>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background: #1d4ed8;"></div>
+            <div class="swatch-label">info<span>blue-700</span></div>
+          </div>
+          <div class="swatch">
+            <div class="swatch-color" style="background: #b45309;"></div>
+            <div class="swatch-label">warning<span>amber-700</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KNAPPER -->
+    <div class="design-system-section">
+      <div class="ds-title">Knapper</div>
+      <div class="ds-description">Tre varianter: primær (fylt slate), sekundær (outline), accent (fylt teal). Hover for å se interaksjon.</div>
+
+      <div class="type-label" style="margin-bottom: 12px;">Primær — navigasjon, generelle handlinger</div>
+      <div class="button-row">
+        <a href="#" class="btn btn-primary">Til forsiden</a>
+        <a href="#" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="m9 12 2 2 4-4"/></svg>
+          Med ikon
+        </a>
+      </div>
+
+      <div class="type-label" style="margin-bottom: 12px;">Sekundær — støttehandlinger, outline</div>
+      <div class="button-row">
+        <a href="#" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          22 33 44 55
+        </a>
+        <a href="#" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          post@tannlege.no
+        </a>
+        <a href="#" class="btn btn-secondary">Kontakt oss</a>
+      </div>
+
+      <div class="type-label" style="margin-bottom: 12px;">Accent (teal) — primær CTA, «ring oss», «bestill time»</div>
+      <div class="button-row">
+        <a href="#" class="btn btn-accent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          22 33 44 55
+        </a>
+        <a href="#" class="btn btn-accent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          Send e-post
+        </a>
+      </div>
+
+      <div class="spacer"></div>
+      <div class="type-label" style="margin-bottom: 12px;">Variant-tilordning</div>
+      <table style="font-size: 13px; border-collapse: collapse; width: 100%;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--color-brand-border);">
+            <th style="text-align: left; padding: 8px; font-weight: 600;">Kontekst</th>
+            <th style="text-align: left; padding: 8px; font-weight: 600;">Knapp</th>
+            <th style="text-align: left; padding: 8px; font-weight: 600;">Variant</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid var(--color-brand-border);">
+            <td style="padding: 8px;">Hero</td>
+            <td style="padding: 8px;">TelefonKnapp</td>
+            <td style="padding: 8px;"><span class="annotation">accent</span></td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--color-brand-border);">
+            <td style="padding: 8px;">Hero</td>
+            <td style="padding: 8px;">EpostKnapp / KontaktKnapp</td>
+            <td style="padding: 8px;"><span style="display:inline-block;background:#f1f5f9;color:var(--color-brand);font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;">sekundær</span></td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--color-brand-border);">
+            <td style="padding: 8px;">Navbar</td>
+            <td style="padding: 8px;">TelefonKnapp</td>
+            <td style="padding: 8px;"><span style="display:inline-block;background:#f1f5f9;color:var(--color-brand);font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;">sekundær</span></td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--color-brand-border);">
+            <td style="padding: 8px;">Tjeneste-sidebar</td>
+            <td style="padding: 8px;">TelefonKnapp / EpostKnapp</td>
+            <td style="padding: 8px;"><span class="annotation">accent</span></td>
+          </tr>
+          <tr>
+            <td style="padding: 8px;">404-side</td>
+            <td style="padding: 8px;">Til forsiden / TelefonKnapp</td>
+            <td style="padding: 8px;"><span style="display:inline-block;background:#f1f5f9;color:var(--color-brand);font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;">primær / sekundær</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ============================================================
+       DEL 2: FULL SIDEVISNING — slik forsiden vil se ut
+       ============================================================ -->
+
+  <div style="text-align: center; padding: 48px 16px 0; background: var(--color-brand-light);">
+    <div class="ds-title" style="font-size: 30px;">Full sidevisning</div>
+    <p class="ds-description" style="margin-bottom: 0;">Slik forsiden vil se ut etter redesign. Scroll ned for alle seksjoner.</p>
+  </div>
+
+  <!-- SKIP LINK -->
+  <a href="#main-content" class="skip-link">Hopp til hovedinnhold</a>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-logo">Tenner og Trivsel</div>
+
+      <ul class="nav-links">
+        <li><a href="#" class="nav-link active">Forside</a></li>
+        <li><a href="#" class="nav-link">Kontakt</a></li>
+        <li><a href="#" class="nav-link">Klinikken vår</a></li>
+        <li><a href="#" class="nav-link">Tjenester</a></li>
+        <li><a href="#" class="nav-link">Om oss</a></li>
+        <li>
+          <a href="#" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px; pointer-events: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            22 33 44 55
+          </a>
+        </li>
+      </ul>
+
+      <button class="hamburger" aria-label="Meny">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section id="main-content" class="hero bg-white">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-text">
+          <h1 class="h1">
+            Velkommen til<br>
+            <span>Tenner og Trivsel</span>
+          </h1>
+          <p class="section-intro">
+            Vi tilbyr et bredt spekter av tannhelsetjenester i moderne og hyggelige lokaler.
+            Vårt erfarne team sørger for at du får den beste behandlingen i trygge omgivelser.
+          </p>
+          <div class="hero-buttons">
+            <a href="#" class="btn btn-accent">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              22 33 44 55
+            </a>
+            <a href="#" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              post@tannlege.no
+            </a>
+            <a href="#" class="btn btn-secondary">Kontakt oss</a>
+          </div>
+        </div>
+        <div class="hero-image">
+          [Forsidebilde — 16:10]
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KONTAKT -->
+  <section class="section bg-brand-light">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="h2">Kontakt oss</h2>
+        <p class="section-intro">Ta gjerne kontakt med oss for timebestilling eller spørsmål. Vi er her for å hjelpe deg.</p>
+        <div class="heading-accent"></div>
+      </div>
+
+      <div class="kontakt-grid">
+        <!-- Åpningstider -->
+        <div class="card">
+          <div class="card-accent-corner"></div>
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h3 class="h3" style="font-size: 20px;">Åpningstider</h3>
+          <div class="card-text" style="margin-top: 8px;">
+            <p>Man–Fre: 08:00–16:00</p>
+            <p>Lør–Søn: Stengt</p>
+          </div>
+          <div class="card-progress-bar"></div>
+        </div>
+
+        <!-- Besøksadresse -->
+        <div class="card" style="cursor: pointer;">
+          <div class="card-accent-corner"></div>
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <h3 class="h3" style="font-size: 20px;">Besøksadresse</h3>
+          <div class="card-text" style="margin-top: 8px; text-align: center;">
+            <p>Storgata 1</p>
+            <p>0123 Oslo</p>
+          </div>
+          <div class="card-progress-bar"></div>
+        </div>
+
+        <!-- Telefon -->
+        <div class="card">
+          <div class="card-accent-corner"></div>
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <h3 class="h3" style="font-size: 20px;">Telefon</h3>
+          <div class="card-text" style="margin-top: 8px;">
+            <p>22 33 44 55 / 90 80 70 60</p>
+            <p style="font-size: 12px; margin-top: 4px;">Sentralbord: 08:00–15:30</p>
+          </div>
+          <div class="card-progress-bar"></div>
+        </div>
+
+        <!-- E-post -->
+        <div class="card">
+          <div class="card-accent-corner"></div>
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          </div>
+          <h3 class="h3" style="font-size: 20px;">E-post</h3>
+          <div class="card-text" style="margin-top: 8px;">
+            <p>post@tannlege.no</p>
+          </div>
+          <div class="card-progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="map-placeholder">
+        [Google Maps — kart over klinikkens beliggenhet]
+      </div>
+    </div>
+  </section>
+
+  <!-- GALLERI -->
+  <section class="section bg-white">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="h2">Klinikken vår</h2>
+        <p class="section-intro">Ta en titt på våre moderne lokaler og fasiliteter.</p>
+        <div class="heading-accent"></div>
+      </div>
+
+      <div class="gallery-grid">
+        <div class="gallery-item">
+          <div style="width:100%;height:100%;background:linear-gradient(135deg,#e2e8f0,#cbd5e1);display:flex;align-items:center;justify-content:center;font-size:12px;color:#64748b;">Bilde 1</div>
+          <div class="gallery-overlay"><p>Resepsjon</p></div>
+        </div>
+        <div class="gallery-item">
+          <div style="width:100%;height:100%;background:linear-gradient(135deg,#e2e8f0,#cbd5e1);display:flex;align-items:center;justify-content:center;font-size:12px;color:#64748b;">Bilde 2</div>
+          <div class="gallery-overlay"><p>Behandlingsrom</p></div>
+        </div>
+        <div class="gallery-item">
+          <div style="width:100%;height:100%;background:linear-gradient(135deg,#e2e8f0,#cbd5e1);display:flex;align-items:center;justify-content:center;font-size:12px;color:#64748b;">Bilde 3</div>
+          <div class="gallery-overlay"><p>Venterom</p></div>
+        </div>
+        <div class="gallery-item">
+          <div style="width:100%;height:100%;background:linear-gradient(135deg,#e2e8f0,#cbd5e1);display:flex;align-items:center;justify-content:center;font-size:12px;color:#64748b;">Bilde 4</div>
+          <div class="gallery-overlay"><p>Utstyr</p></div>
+        </div>
+        <div class="gallery-item hidden-mobile">
+          <div style="width:100%;height:100%;background:linear-gradient(135deg,#e2e8f0,#cbd5e1);display:flex;align-items:center;justify-content:center;font-size:12px;color:#64748b;">Bilde 5</div>
+          <div class="gallery-overlay"><p>Fasade</p></div>
+        </div>
+        <div class="gallery-item hidden-mobile">
+          <div style="width:100%;height:100%;background:linear-gradient(135deg,#e2e8f0,#cbd5e1);display:flex;align-items:center;justify-content:center;font-size:12px;color:#64748b;">Bilde 6</div>
+          <div class="gallery-overlay"><p>Garderobe</p></div>
+        </div>
+      </div>
+
+      <a href="#" class="see-all-link">Se alle bilder <span style="transition: transform 0.2s;">→</span></a>
+    </div>
+  </section>
+
+  <!-- TJENESTER -->
+  <section class="section bg-brand-light">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="h2">Våre tjenester</h2>
+        <p class="section-intro">Vi tilbyr et bredt spekter av tannhelsetjenester for hele familien.</p>
+        <div class="heading-accent"></div>
+      </div>
+
+      <div class="card-grid card-grid-3">
+        <!-- Tjeneste 1 -->
+        <div class="card" style="cursor: pointer;">
+          <div class="card-accent-corner"></div>
+          <h3 class="h3" style="font-size: 22px;">Forebyggende behandling</h3>
+          <div class="card-text" style="margin-top: 8px; flex-grow: 1;">
+            <p>Regelmessige kontroller og tannrengjøring for å opprettholde god munnhelse og forebygge problemer.</p>
+          </div>
+          <div class="card-link">Les mer <span class="arrow">→</span></div>
+          <div class="card-progress-bar"></div>
+        </div>
+
+        <!-- Tjeneste 2 -->
+        <div class="card" style="cursor: pointer;">
+          <div class="card-accent-corner"></div>
+          <h3 class="h3" style="font-size: 22px;">Tannbleking</h3>
+          <div class="card-text" style="margin-top: 8px; flex-grow: 1;">
+            <p>Profesjonell tannbleking for et lysere og hvitere smil. Trygt og effektivt i våre lokaler.</p>
+          </div>
+          <div class="card-link">Les mer <span class="arrow">→</span></div>
+          <div class="card-progress-bar"></div>
+        </div>
+
+        <!-- Tjeneste 3 -->
+        <div class="card" style="cursor: pointer;">
+          <div class="card-accent-corner"></div>
+          <h3 class="h3" style="font-size: 22px;">Implantat</h3>
+          <div class="card-text" style="margin-top: 8px; flex-grow: 1;">
+            <p>Tannimplantater er en varig løsning for manglende tenner. Vi bruker moderne teknikker for best resultat.</p>
+          </div>
+          <div class="card-link">Les mer <span class="arrow">→</span></div>
+          <div class="card-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TANNLEGER -->
+  <section class="section bg-white">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="h2">Møt teamet vårt</h2>
+        <p class="section-intro">Vårt erfarne team av tannleger og tannpleiere er her for å gi deg den beste behandlingen.</p>
+        <div class="heading-accent"></div>
+      </div>
+
+      <div class="card-grid card-grid-3" style="gap: 40px;">
+        <!-- Tannlege 1 -->
+        <div class="card">
+          <div class="dentist-image">[Portrettbilde]</div>
+          <h3 class="h3" style="font-size: 22px;">Dr. Ola Nordmann</h3>
+          <div class="card-subtitle">Tannlege</div>
+          <div class="card-text">
+            <p>Spesialist i oral kirurgi med over 15 års erfaring. Lidenskapelig opptatt av å gi pasienter en trygg og god opplevelse.</p>
+          </div>
+          <div class="card-progress-bar"></div>
+        </div>
+
+        <!-- Tannlege 2 -->
+        <div class="card">
+          <div class="dentist-image">[Portrettbilde]</div>
+          <h3 class="h3" style="font-size: 22px;">Dr. Kari Hansen</h3>
+          <div class="card-subtitle">Tannlege</div>
+          <div class="card-text">
+            <p>Spesialist i estetisk tannpleie og kosmetisk tannbehandling. Brenner for å skape naturlige, vakre smil.</p>
+          </div>
+          <div class="card-progress-bar"></div>
+        </div>
+
+        <!-- Tannlege 3 -->
+        <div class="card">
+          <div class="dentist-image">[Portrettbilde]</div>
+          <h3 class="h3" style="font-size: 22px;">Lisa Johansen</h3>
+          <div class="card-subtitle">Tannpleier</div>
+          <div class="card-text">
+            <p>Erfaren tannpleier med fokus på forebyggende behandling og pasientopplæring. Spesielt god med barn og ungdom.</p>
+          </div>
+          <div class="card-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <!-- Kolonne 1: Om oss -->
+        <div>
+          <div class="footer-logo">Tenner og Trivsel</div>
+          <p>Din tannklinikk i sentrum av Oslo. Vi kombinerer moderne behandlingsmetoder med en varm og personlig tilnærming.</p>
+        </div>
+
+        <!-- Kolonne 2: Kontakt -->
+        <div>
+          <h4>Kontaktinformasjon</h4>
+          <ul>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:6px;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              Storgata 1, 0123 Oslo
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:6px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <a href="#">22 33 44 55</a>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:6px;"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              <a href="#">post@tannlege.no</a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Kolonne 3: Åpningstider -->
+        <div>
+          <h4>Åpningstider</h4>
+          <ul>
+            <li>Mandag–Fredag: 08:00–16:00</li>
+            <li>Lørdag: Stengt</li>
+            <li>Søndag: Stengt</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-copyright">
+        &copy; 2026 Tenner og Trivsel. Alle rettigheter reservert.
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
