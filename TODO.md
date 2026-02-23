@@ -53,14 +53,13 @@
   - Listene er allerede konsistente — kun editorer endres
   - Plan klar: 4 steg, 2 filer, ~4–6 tester
 
-- [ ] **Legal vurdering av dependencies** ([rapport](docs/plan-legal-dependencies.md))
+## Fullført
+
+- [x] **Legal vurdering av dependencies** ([rapport](docs/plan-legal-dependencies.md))
     - npm audit: 0 sårbarheter, alle deps aktivt vedlikeholdt
     - 97%+ permissive lisenser (MIT/Apache/BSD/ISC), 2 LGPL + 5 MPL — ingen risiko
-    - Ingen lisens nødvendig for privat prosjekt; MIT anbefalt hvis open source
+    - MIT-lisens lagt til prosjektet (`LICENSE`)
     - Dependabot + CI-audit dekker løpende vedlikehold
-    - Rapport klar — kan lukkes som gjennomgått
-
-## Fullført
 
 - [x] **"Legg til snarvei"-lenke i admin på mobil (PWA / Add to Home Screen)** ([plan](docs/plan-pwa-snarvei.md))
   - Web App Manifest (`admin-manifest.json`) med eksisterende favicon-ikoner
