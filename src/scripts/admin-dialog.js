@@ -92,7 +92,7 @@ function getConfirmDialog() {
 
     confirmDialog.innerHTML = [
         '<div class="p-6 space-y-6">',
-        '  <p id="admin-confirm-message" class="text-slate-700 text-base leading-relaxed"></p>',
+        '  <p id="admin-confirm-message" class="text-admin-muted text-base leading-relaxed"></p>',
         '  <div class="flex justify-end gap-3">',
         '    <button id="admin-confirm-cancel" class="admin-btn-secondary !py-3 !px-6 !rounded-xl text-sm cursor-pointer">Avbryt</button>',
         '    <button id="admin-confirm-ok" class="btn-primary py-3 px-6 text-sm cursor-pointer">Bekreft</button>',
