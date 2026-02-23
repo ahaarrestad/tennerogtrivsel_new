@@ -384,6 +384,55 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             return easyMDE;
         }
 
+        // Felles hjelpefunksjon for toggle-switch i editorer
+        function setToggleState(toggleBtn: HTMLElement | null, isActive: boolean) {
+            if (!toggleBtn) return;
+            toggleBtn.dataset.active = String(isActive);
+            const track = toggleBtn.querySelector('.toggle-track') as HTMLElement;
+            const dot = toggleBtn.querySelector('.toggle-dot') as HTMLElement;
+            const lbl = toggleBtn.querySelector('.toggle-label') as HTMLElement;
+            if (track) {
+                track.classList.toggle('bg-green-500', isActive);
+                track.classList.toggle('bg-slate-300', !isActive);
+            }
+            if (dot) {
+                dot.classList.toggle('translate-x-5', isActive);
+                dot.classList.toggle('translate-x-0', !isActive);
+            }
+            if (lbl) {
+                lbl.textContent = isActive ? 'Aktiv' : 'Inaktiv';
+                lbl.classList.toggle('text-green-700', isActive);
+                lbl.classList.toggle('text-slate-500', !isActive);
+            }
+        }
+
+        function renderToggleHtml(id: string, isActive: boolean) {
+            const trackClass = isActive ? 'bg-green-500' : 'bg-slate-300';
+            const dotClass = isActive ? 'translate-x-5' : 'translate-x-0';
+            const labelText = isActive ? 'Aktiv' : 'Inaktiv';
+            const labelClass = isActive ? 'text-green-700' : 'text-slate-500';
+            return `<div class="flex items-center justify-between">
+                <label class="admin-label !mb-0">Synlighet</label>
+                <button id="${id}" type="button" class="flex items-center gap-1.5 cursor-pointer group/toggle" data-active="${isActive}">
+                    <span class="toggle-track relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 ${trackClass}">
+                        <span class="toggle-dot inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ml-0.5 ${dotClass}"></span>
+                    </span>
+                    <span class="toggle-label text-[10px] font-semibold ${labelClass}">${labelText}</span>
+                </button>
+            </div>`;
+        }
+
+        function attachToggleClick(id: string, onChange?: () => void) {
+            const toggleBtn = document.getElementById(id);
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    const current = toggleBtn.dataset.active === 'true';
+                    setToggleState(toggleBtn, !current);
+                    if (onChange) onChange();
+                });
+            }
+        }
+
         function showDeletionToast(deletedName: string, recoveryText: string) {
             document.getElementById('deletion-toast')?.remove();
             const toast = document.createElement('div');
@@ -447,23 +496,11 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 }
 
                 const isActive = data.active !== false && data.active !== 'false';
-                const editToggleTrack = isActive ? 'bg-green-500' : 'bg-slate-300';
-                const editToggleDot = isActive ? 'translate-x-5' : 'translate-x-0';
-                const editToggleLabel = isActive ? 'Aktiv' : 'Inaktiv';
-                const editToggleLabelClass = isActive ? 'text-green-700' : 'text-slate-500';
 
                 inner.innerHTML = `
                     <div class="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <div class="grid grid-cols-1 gap-6">
-                            <div class="flex items-center justify-between">
-                                <label class="admin-label !mb-0">Synlighet</label>
-                                <button id="edit-active-toggle" type="button" class="flex items-center gap-1.5 cursor-pointer group/toggle" data-active="${isActive}">
-                                    <span class="toggle-track relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 ${editToggleTrack}">
-                                        <span class="toggle-dot inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ml-0.5 ${editToggleDot}"></span>
-                                    </span>
-                                    <span class="toggle-label text-[10px] font-semibold ${editToggleLabelClass}">${editToggleLabel}</span>
-                                </button>
-                            </div>
+                            ${renderToggleHtml('edit-active-toggle', isActive)}
                             <div class="flex flex-col gap-2">
                                 <label class="admin-label">Tittel</label>
                                 <input type="text" id="edit-title" value="${data.title || ''}" placeholder="Navn på tjenesten..." class="admin-input">
@@ -483,31 +520,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         </div>
                     </div>`;
 
-                // Toggle-klikk for synlighet i editor
-                const editToggle = document.getElementById('edit-active-toggle');
-                if (editToggle) {
-                    editToggle.addEventListener('click', () => {
-                        const current = editToggle.dataset.active === 'true';
-                        const next = !current;
-                        editToggle.dataset.active = String(next);
-                        const track = editToggle.querySelector('.toggle-track') as HTMLElement;
-                        const dot = editToggle.querySelector('.toggle-dot') as HTMLElement;
-                        const lbl = editToggle.querySelector('.toggle-label') as HTMLElement;
-                        if (track) {
-                            track.classList.toggle('bg-green-500', next);
-                            track.classList.toggle('bg-slate-300', !next);
-                        }
-                        if (dot) {
-                            dot.classList.toggle('translate-x-5', next);
-                            dot.classList.toggle('translate-x-0', !next);
-                        }
-                        if (lbl) {
-                            lbl.textContent = next ? 'Aktiv' : 'Inaktiv';
-                            lbl.classList.toggle('text-green-700', next);
-                            lbl.classList.toggle('text-slate-500', !next);
-                        }
-                    });
-                }
+                attachToggleClick('edit-active-toggle');
 
                 const onSave = async (easyMDE) => {
                     const title = (document.getElementById('edit-title') as HTMLInputElement).value;
@@ -821,13 +834,8 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 max-w-6xl animate-in fade-in slide-in-from-bottom-2 duration-300">
                     <!-- VENSTRE: Skjema -->
                     <div class="space-y-6">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-brand font-black uppercase tracking-tighter">Rediger profil</h3>
-                            <div class="flex items-center gap-2">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase">Aktiv på nettsiden</label>
-                                <input type="checkbox" id="edit-t-active" ${t.active ? 'checked' : ''} class="w-5 h-5 accent-brand cursor-pointer">
-                            </div>
-                        </div>
+                        <h3 class="text-brand font-black uppercase tracking-tighter">Rediger profil</h3>
+                        ${renderToggleHtml('edit-t-active-toggle', !!t.active)}
 
                         <div class="space-y-4">
                             <div class="admin-field-container">
@@ -1004,7 +1012,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 const scaleInp = document.getElementById('edit-t-scale') as HTMLInputElement;
                 const xInp = document.getElementById('edit-t-x') as HTMLInputElement;
                 const yInp = document.getElementById('edit-t-y') as HTMLInputElement;
-                const activeInp = document.getElementById('edit-t-active') as HTMLInputElement;
+                const activeToggle = document.getElementById('edit-t-active-toggle') as HTMLElement;
 
                 const name = nameInp.value;
                 const title = titleInp.value;
@@ -1013,7 +1021,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 const scale = scaleInp.value;
                 const posX = xInp.value;
                 const posY = yInp.value;
-                const active = activeInp.checked;
+                const active = activeToggle?.dataset.active === 'true';
 
                 const nameEl = document.getElementById('preview-name');
                 const titleEl = document.getElementById('preview-title');
@@ -1082,7 +1090,9 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 }, 1500);
             };
 
-            ['edit-t-name', 'edit-t-title', 'edit-t-desc', 'edit-t-image', 'edit-t-scale', 'edit-t-x', 'edit-t-y', 'edit-t-active'].forEach(id => {
+            attachToggleClick('edit-t-active-toggle', updatePreview);
+
+            ['edit-t-name', 'edit-t-title', 'edit-t-desc', 'edit-t-image', 'edit-t-scale', 'edit-t-x', 'edit-t-y'].forEach(id => {
                 const el = document.getElementById(id);
                 if (!el) return;
                 el.addEventListener(el instanceof HTMLInputElement && el.type === 'range' ? 'input' : 'change', updatePreview);
@@ -1228,6 +1238,9 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                             <button id="btn-back-to-bilder" class="text-xs text-brand font-bold uppercase tracking-widest mb-6 hover:underline cursor-pointer">&larr; Tilbake til oversikten</button>
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                                 <div class="space-y-6">
+                                    <div id="galleri-active-field">
+                                        ${renderToggleHtml('galleri-edit-active-toggle', true)}
+                                    </div>
                                     <div class="admin-field-container">
                                         <label class="admin-label">Tittel</label>
                                         <input type="text" id="galleri-edit-title" value="" class="admin-input" placeholder="F.eks. Venterom">
@@ -1242,13 +1255,6 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                             <input type="text" id="galleri-edit-image" value="" class="admin-input flex-grow text-xs text-slate-500 font-mono" placeholder="Ingen bilde valgt" readonly>
                                             <button id="btn-galleri-pick-image" class="btn-primary py-3 px-4 text-xs shrink-0 whitespace-nowrap">Velg bilde</button>
                                         </div>
-                                    </div>
-                                    <div id="galleri-active-field" class="admin-field-container flex items-center gap-3">
-                                        <label class="admin-label !mb-0">Aktiv</label>
-                                        <select id="galleri-edit-active" class="admin-input w-24">
-                                            <option value="ja">Ja</option>
-                                            <option value="nei">Nei</option>
-                                        </select>
                                     </div>
                                     <div class="admin-field-container flex items-center justify-between gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50/50">
                                         <div>
@@ -1327,7 +1333,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     const titleInput = document.getElementById('galleri-edit-title') as HTMLInputElement;
                     const altInput = document.getElementById('galleri-edit-alt') as HTMLInputElement;
                     const imageInput = document.getElementById('galleri-edit-image') as HTMLInputElement;
-                    const activeSelect = document.getElementById('galleri-edit-active') as HTMLSelectElement;
+                    const activeToggle = document.getElementById('galleri-edit-active-toggle') as HTMLElement;
                     const forsideCheckbox = document.getElementById('galleri-edit-forsidebilde') as HTMLInputElement;
                     const scaleInput = document.getElementById('galleri-edit-scale') as HTMLInputElement;
                     const xInput = document.getElementById('galleri-edit-x') as HTMLInputElement;
@@ -1336,12 +1342,12 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     if (titleInput) titleInput.value = item.title || '';
                     if (altInput) altInput.value = item.altText || '';
                     if (imageInput) imageInput.value = item.image || '';
-                    if (activeSelect) activeSelect.value = item.active ? 'ja' : 'nei';
+                    setToggleState(activeToggle, !!item.active);
                     // Forsidebilde er alltid aktivt — skjul aktiv-feltet
                     const activeField = document.getElementById('galleri-active-field');
                     if (isForsidebilde) {
                         if (activeField) activeField.classList.add('hidden');
-                        if (activeSelect) activeSelect.value = 'ja';
+                        setToggleState(activeToggle, true);
                     } else {
                         if (activeField) activeField.classList.remove('hidden');
                     }
@@ -1380,7 +1386,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                             // Skjul/vis aktiv-feltet basert på forsidebilde-status
                             if (forsideCheckbox.checked) {
                                 if (activeField) activeField.classList.add('hidden');
-                                if (activeSelect) activeSelect.value = 'ja';
+                                setToggleState(activeToggle, true);
                             } else {
                                 if (activeField) activeField.classList.remove('hidden');
                             }
@@ -1404,7 +1410,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                         title: titleInput?.value || item.title,
                                         image: imageInput?.value || item.image,
                                         altText: altInput?.value || item.altText,
-                                        active: activeSelect?.value === 'ja',
+                                        active: activeToggle?.dataset.active === 'true',
                                         scale: parseFloat(scaleInput?.value || '1'),
                                         positionX: parseInt(xInput?.value || '50'),
                                         positionY: parseInt(yInput?.value || '50'),
@@ -1419,7 +1425,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                     showToast('Kunne ikke endre type: ' + e.message, 'error');
                                     forsideCheckbox.checked = true;
                                     if (activeField) activeField.classList.add('hidden');
-                                    if (activeSelect) activeSelect.value = 'ja';
+                                    setToggleState(activeToggle, true);
                                 }
                             }
                         });
@@ -1490,7 +1496,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                                     title: titleInput?.value || '',
                                     image: imageInput?.value || '',
                                     altText: altInput?.value || '',
-                                    active: activeSelect?.value === 'ja',
+                                    active: activeToggle?.dataset.active === 'true',
                                     order: item.order,
                                     scale: parseFloat(scaleInput?.value || '1'),
                                     positionX: parseInt(xInput?.value || '50'),
@@ -1523,7 +1529,9 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                         }, 1500);
                     };
 
-                    ['galleri-edit-title', 'galleri-edit-alt', 'galleri-edit-image', 'galleri-edit-active', 'galleri-edit-scale', 'galleri-edit-x', 'galleri-edit-y'].forEach(id => {
+                    attachToggleClick('galleri-edit-active-toggle', updateGalleriPreview);
+
+                    ['galleri-edit-title', 'galleri-edit-alt', 'galleri-edit-image', 'galleri-edit-scale', 'galleri-edit-x', 'galleri-edit-y'].forEach(id => {
                         const el = document.getElementById(id);
                         if (!el) return;
                         el.addEventListener(el instanceof HTMLInputElement && el.type === 'range' ? 'input' : 'change', updateGalleriPreview);
