@@ -33,7 +33,7 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                 const sc = item.data.imageConfig?.scale ?? 1.0;
 
                 return (
-                    <div class={`rounded-2xl overflow-hidden shadow-md aspect-[4/3] bg-slate-100 relative group ${mobileHidden}`}>
+                    <div class={`rounded-2xl overflow-hidden shadow-md aspect-[4/3] bg-brand-active relative group ${mobileHidden}`}>
                         {hasImage ? (
                             <Image
                                 src={images[imgPath]()}
@@ -47,7 +47,7 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                                 loading="lazy"
                             />
                         ) : (
-                            <div class="w-full h-full flex items-center justify-center text-slate-400">
+                            <div class="w-full h-full flex items-center justify-center text-brand-hover">
                                 Bilde mangler
                             </div>
                         )}

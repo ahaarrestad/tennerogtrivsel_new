@@ -34,7 +34,9 @@
     - Token-drevet design: ingen hardkodede farger i komponenter
   - Plan revidert: 13 steg, 3 knapp-varianter (primær/sekundær/accent), avhengigheter oppdatert
   - Steg 1–4 kan gjøres i vilkårlig rekkefølge (ingen innbyrdes avhengigheter)
-  - **Neste steg: Steg 4 (knapper)** — primær, sekundær og accent
+  - [x] **Steg 1: Typografi** — Montserrat/Inter self-hosted, font-tokens, line-height 1.15, h1(900)/h2(800)
+  - [ ] **Steg 2: Fargepalett** ← pågår
+  - **Neste: Steg 3–4, deretter 5–12 (se avhengigheter i plan)**
 
 ## Backlog
 
