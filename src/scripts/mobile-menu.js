@@ -8,17 +8,26 @@ export function initMobileMenu() {
     const mobileMenu = document.getElementById('mobile-menu');
     const mobileLinks = document.querySelectorAll('.mobile-link');
 
+    function openMenu() {
+        menuBtn?.setAttribute('data-state', 'open');
+        menuBtn?.setAttribute('aria-expanded', 'true');
+        mobileMenu?.classList.remove('opacity-0', 'pointer-events-none');
+        mobileMenu?.classList.add('opacity-100', 'pointer-events-auto');
+    }
+
+    function closeMenu() {
+        menuBtn?.setAttribute('data-state', 'closed');
+        menuBtn?.setAttribute('aria-expanded', 'false');
+        mobileMenu?.classList.add('opacity-0', 'pointer-events-none');
+        mobileMenu?.classList.remove('opacity-100', 'pointer-events-auto');
+    }
+
     function toggleMenu() {
         const isOpen = menuBtn?.getAttribute('data-state') === 'open';
-
         if (isOpen) {
-            menuBtn?.setAttribute('data-state', 'closed');
-            menuBtn?.setAttribute('aria-expanded', 'false');
-            mobileMenu?.classList.add('hidden');
+            closeMenu();
         } else {
-            menuBtn?.setAttribute('data-state', 'open');
-            menuBtn?.setAttribute('aria-expanded', 'true');
-            mobileMenu?.classList.remove('hidden');
+            openMenu();
         }
     }
 
@@ -26,10 +35,6 @@ export function initMobileMenu() {
 
     // Lukk menyen når man trykker på en lenke
     mobileLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            menuBtn?.setAttribute('data-state', 'closed');
-            menuBtn?.setAttribute('aria-expanded', 'false');
-            mobileMenu?.classList.add('hidden');
-        });
+        link.addEventListener('click', closeMenu);
     });
 }
