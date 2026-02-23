@@ -35,8 +35,13 @@
   - Plan revidert: 13 steg, 3 knapp-varianter (primær/sekundær/accent), avhengigheter oppdatert
   - Steg 1–4 kan gjøres i vilkårlig rekkefølge (ingen innbyrdes avhengigheter)
   - [x] **Steg 1: Typografi** — Montserrat/Inter self-hosted, font-tokens, line-height 1.15, h1(900)/h2(800)
-  - [ ] **Steg 2: Fargepalett** ← pågår
-  - **Neste: Steg 3–4, deretter 5–12 (se avhengigheter i plan)**
+  - [x] **Steg 2: Fargepalett** — stone-palett, accent-tokens, semantiske farger, offentlige komponenter migrert
+  - [x] **Steg 3: Spacing** — tokens justert, gaps normalisert, pb-[35vh]-hack fjernet, sticky top-fix
+  - [x] **Steg 4: Knapper** — primær/sekundær/accent, variant-prop, hierarki-tilordning
+  - [x] **Steg 5: Kort** — rounded-2xl, p-6/p-8, border/60, hover shadow-md, stacking 6vh
+  - [x] **Steg 6: Navbar** — glassmorfisme, nav-link underline, fade-in mobilmeny
+  - [ ] **Steg 7: Footer** ← neste
+  - **Steg 7–12 gjenstår (se avhengigheter i plan)**
 
 ## Backlog
 

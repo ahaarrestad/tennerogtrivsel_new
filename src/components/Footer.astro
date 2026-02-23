@@ -1,18 +1,82 @@
 ---
-import {formatInfoText} from '../scripts/textFormatter.js';
 import {getSiteSettings} from '../scripts/getSettings';
+import {Image} from 'astro:assets';
+import logoImage from '../assets/tt-logo-2026.png';
 
 const settings = await getSiteSettings();
+
+const businessHours = settings
+    ? Object.keys(settings)
+        .filter(key => key.startsWith('businessHours'))
+        .sort()
+        .map(key => settings[key])
+        .filter(val => val && val.trim().length > 0)
+    : [];
+
+const currentYear = new Date().getFullYear();
 ---
-<footer class="bg-brand-light text-brand py-4">
-    <div class="layout-container text-center">
-        <p class="font-bold text-brand mb-2">
-            <span class="whitespace-nowrap">{settings.adresse1} - {settings.adresse2}</span> -
-            <span set:html={formatInfoText(settings.phone1)}></span> -
-            <span set:html={formatInfoText(settings.phone2)}></span>
-            {settings.showEmail === "ja" && (
-                    <span set:html={"- " + formatInfoText(settings.email)}></span>
+<footer class="bg-brand-dark text-white py-12 md:py-16">
+    <div class="layout-container">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
+
+            {/* Kolonne 1: Logo + beskrivelse */}
+            <div>
+                <Image
+                    src={logoImage}
+                    alt="Tenner og Trivsel"
+                    width={180}
+                    class="h-12 w-auto object-contain mb-4 brightness-0 invert"
+                    loading="lazy"
+                />
+                <p class="text-white/70 text-sm leading-relaxed">
+                    Din tannklinikk for trygg og god behandling.
+                    Vi kombinerer faglig dyktighet med omsorg for å
+                    gi deg den beste opplevelsen.
+                </p>
+            </div>
+
+            {/* Kolonne 2: Kontaktinfo */}
+            <div>
+                <h3 class="font-semibold text-sm uppercase tracking-wider mb-4" style="font-family: var(--font-heading)">Kontakt</h3>
+                <div class="space-y-2 text-white/70 text-sm">
+                    <p>{settings.adresse1}</p>
+                    <p>{settings.adresse2}</p>
+                    <p class="pt-2">
+                        <a href={`tel:${settings.phone1?.replace(/\s+/g, '')}`} class="hover:text-white transition-colors">
+                            {settings.phone1}
+                        </a>
+                    </p>
+                    {settings.phone2 && (
+                        <p>
+                            <a href={`tel:${settings.phone2?.replace(/\s+/g, '')}`} class="hover:text-white transition-colors">
+                                {settings.phone2}
+                            </a>
+                        </p>
+                    )}
+                    {settings.showEmail === "ja" && settings.email && (
+                        <p class="pt-2">
+                            <a href={`mailto:${settings.email}`} class="hover:text-white transition-colors">
+                                {settings.email}
+                            </a>
+                        </p>
+                    )}
+                </div>
+            </div>
+
+            {/* Kolonne 3: Åpningstider */}
+            {businessHours.length > 0 && (
+                <div>
+                    <h3 class="font-semibold text-sm uppercase tracking-wider mb-4" style="font-family: var(--font-heading)">Åpningstider</h3>
+                    <div class="space-y-1 text-white/70 text-sm">
+                        {businessHours.map(text => <p>{text}</p>)}
+                    </div>
+                </div>
             )}
-        </p>
+        </div>
+
+        {/* Copyright-linje */}
+        <div class="border-t border-accent mt-10 pt-6 text-center text-white/50 text-xs">
+            <p>&copy; {currentYear} Tenner og Trivsel</p>
+        </div>
     </div>
 </footer>
