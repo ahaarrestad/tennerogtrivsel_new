@@ -65,8 +65,8 @@ const tjenester = (await getCollection('tjenester')).filter(s => s.data.active !
                                 Ta kontakt med oss for mer informasjon
                             </h3>
                             <div class="flex flex-col gap-3 relative z-10">
-                                <TelefonKnapp/>
-                                <EpostKnapp/>
+                                <TelefonKnapp variant="accent"/>
+                                <EpostKnapp variant="accent"/>
                             </div>
                             <KontaktKnapp class="w-full"/>
                         </div>

@@ -191,6 +191,13 @@
         background-color: inherit;
     }
 
+    @media (min-width: 768px) {
+        .section-header-sticky {
+            /* Nullstill top på desktop — top på relative forskyvde headeren visuelt uten å påvirke layout */
+            top: 0;
+        }
+    }
+
     /* Responsivt kort-rutenett: stabel på mobil, 2-kolonne md, 3-kolonne lg */
     .card-grid {
         @apply flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3;
@@ -314,14 +321,41 @@
         font-family: var(--font-body);
     }
 
-    /* Primærknapp */
+    /* Primærknapp (fylt) */
     .btn-primary {
         @apply inline-flex items-center justify-center gap-2;
-        @apply px-6 py-3.5 rounded-2xl whitespace-nowrap min-w-fit;
-        @apply border border-brand text-brand font-bold;
-        @apply shadow-lg relative z-10;
-        @apply transition-all duration-300;
-        @apply hover:text-brand hover:bg-brand-active hover:shadow-xl hover:-translate-y-0.5;
+        @apply px-6 py-3 rounded-xl whitespace-nowrap min-w-fit;
+        @apply bg-brand text-white font-semibold text-sm;
+        @apply shadow-sm relative z-10;
+        @apply transition-all duration-200;
+        @apply hover:bg-brand-dark hover:shadow-md hover:-translate-y-px;
+        @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+        @apply active:translate-y-0 active:shadow-sm;
+        font-family: var(--font-body);
+    }
+
+    /* Sekundærknapp (outline) */
+    .btn-secondary {
+        @apply inline-flex items-center justify-center gap-2;
+        @apply px-6 py-3 rounded-xl whitespace-nowrap min-w-fit;
+        @apply border border-brand-border text-brand font-semibold text-sm bg-transparent;
+        @apply relative z-10;
+        @apply transition-all duration-200;
+        @apply hover:bg-brand-light hover:border-brand;
+        @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+        font-family: var(--font-body);
+    }
+
+    /* Accent-knapp (mørk CTA) */
+    .btn-accent {
+        @apply inline-flex items-center justify-center gap-2;
+        @apply px-6 py-3 rounded-xl whitespace-nowrap min-w-fit;
+        @apply bg-accent text-white font-semibold text-sm;
+        @apply shadow-md relative z-10;
+        @apply transition-all duration-200;
+        @apply hover:bg-accent-hover hover:shadow-lg hover:-translate-y-px;
+        @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent;
+        @apply active:translate-y-0 active:shadow-sm;
         font-family: var(--font-body);
     }
 

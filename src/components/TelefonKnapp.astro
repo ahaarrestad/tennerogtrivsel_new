@@ -4,10 +4,11 @@ import Button from "./Button.astro";
 const settings = await getSiteSettings();
 const phone = settings.phone1;
 const cleanPhone = phone.replace(/\s+/g, '');
-const { class: className } = Astro.props;
+const { class: className, variant = 'primary' } = Astro.props;
 ---
 <Button
         href={`tel:${cleanPhone}`}
+        variant={variant}
         class:list={[
             "lg:pointer-events-none lg:cursor-default",
             className
