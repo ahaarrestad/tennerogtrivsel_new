@@ -42,8 +42,9 @@
   - [x] **Steg 6: Navbar** — glassmorfisme, nav-link underline, fade-in mobilmeny
   - [x] **Steg 7: Footer** — 3-kolonne layout, mørk bakgrunn, åpningstider, logo invertert
   - [x] **Steg 8: Galleri** — 4 bilder mobil, rounded-xl, shadow-sm/hover:shadow-md, "Se alle bilder →"
-  - [ ] **Steg 9: Heading accent bar** ← neste
-  - **Steg 9–12 gjenstår (se avhengigheter i plan)**
+  - [x] **Steg 9: Heading accent bar** — bg-accent, w-16
+  - [ ] **Steg 10: 404-side** ← neste
+  - **Steg 10–12 gjenstår (se avhengigheter i plan)**
 
 ## Backlog
 
