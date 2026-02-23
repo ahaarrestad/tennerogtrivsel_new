@@ -23,13 +23,19 @@
   - Retning: Profesjonell & tillitvekkende, full redesign
   - Fonter: Montserrat (headings) + Inter (body) fra Google Fonts
   - Farger: Slate-palett + teal aksentfarge for CTA-er
-  - Design-guide og plan revidert etter UX-review
+  - Design-guide og plan revidert etter UX-review (2 runder)
   - Beslutninger tatt:
     - Kontakt forblir rett etter hero (mest etterspurt av brukere)
     - Seksjon-rekkefølge uendret: Hero → Kontakt → Galleri → Tjenester → Tannleger
     - Tjenester/Tannleger forblir `hidden md:block` på forsiden (bevisst — nås via meny på mobil)
     - Kortstokk-animasjon beholdes på standalone-sider med justeringer (6vh, teal accent)
-  - **Neste steg: Starte implementering** — 14 steg, begynn med steg 1 (typografi)
+    - Hero-knapper: alle tre primær (fylt)
+    - TelefonKnapp i nav: sekundær variant (ikke klikkbar desktop, klikkbar mobil)
+    - Mobilmeny: fade-in animasjon (opacity-overgang, ikke slideDown)
+    - Skygger: bruk Tailwinds innebygde shadow-klasser, ingen egne tokens
+    - line-height h1/h2: 1.15 (justert opp fra 1.1 for å unngå bokstavklipping)
+  - Plan revidert: 13 steg (steg 8+13 slått sammen), avhengigheter oppdatert
+  - **Neste steg: Starte implementering** — 13 steg, begynn med steg 1 (typografi)
 
 ## Backlog
 
