@@ -34,13 +34,36 @@ Nettsiden skal bygge tillit raskt og gjøre det enkelt å ta kontakt.
 **Begrunnelse:** Montserrat matcher logoens geometriske, bold sans-serif-stil. Inter er
 designet for skjermlesbarhet og gir god kontrast til Montserrat i brødtekst.
 
-### Google Fonts import
+### Font-hosting (self-hosted)
 
-```html
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+Fontene self-hostes som woff2-filer under `/public/fonts/` for best ytelse (ingen
+tredjepartsavhengighet, ingen ekstra DNS-oppslag, full cache-kontroll via CloudFront).
+
+**Filer som trengs:**
+- `public/fonts/montserrat-v26-latin-700.woff2`
+- `public/fonts/montserrat-v26-latin-800.woff2`
+- `public/fonts/montserrat-v26-latin-900.woff2`
+- `public/fonts/inter-v18-latin-regular.woff2`
+- `public/fonts/inter-v18-latin-500.woff2`
+- `public/fonts/inter-v18-latin-600.woff2`
+
+Last ned fra [google-webfonts-helper](https://gwfh.mranftl.com/fonts) eller direkte
+fra Google Fonts API (velg woff2-format).
+
+**@font-face i global.css:**
+```css
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/montserrat-v26-latin-700.woff2') format('woff2');
+}
+/* ... tilsvarende for 800, 900, Inter 400/500/600 */
 ```
+
+> **Merk:** Self-hosting eliminerer behovet for CSP-endringer for `fonts.googleapis.com`
+> og `fonts.gstatic.com`. Ingen `preconnect`-lenker nødvendig.
 
 ### Font-vekter
 
@@ -83,6 +106,10 @@ Reservér `font-black` (900) kun for h1. H2 bruker `font-extrabold` (800) for ty
 > **Merk:** `line-height: 1.15` (ikke 1.1) brukes for h1/h2 for å unngå at underkanten av
 > bokstaver som «g», «j», «p» klippes. Nåværende kode bruker `leading-tight` (1.25) — dette
 > er en visuell endring som må implementeres eksplisitt.
+>
+> **Test grundig** med Montserrat 800/900 og norsk tekst som inneholder g/j/p/y
+> (f.eks. «Tjenester og priser», «Forebyggende behandling»). Klipping er mest synlig
+> på mørk bakgrunn og ved store fontstørrelser (h1 60px).
 
 ### Komplett font-family-tilordning
 
@@ -98,7 +125,7 @@ Alle klasser som trenger eksplisitt `font-family`-deklarasjon:
 | `.btn-primary`, `.btn-secondary` | `var(--font-body)` |
 | `.nav-link` | `var(--font-body)` |
 
-Uten eksplisitte deklarasjoner har Google Fonts-importen ingen effekt.
+Uten eksplisitte deklarasjoner har `@font-face`-deklarasjonene ingen effekt.
 
 ---
 
@@ -120,7 +147,8 @@ Uten eksplisitte deklarasjoner har Google Fonts-importen ingen effekt.
 > **Sideeffekt på admin-panelet:** Fargetoken-endringer (spesielt `--color-brand-border`
 > fra slate-100 til slate-200) påvirker admin-kort, inputs og nav. Admin-panelet har
 > egne klasser (`.admin-card`, `.admin-input`) men bruker de samme token-variablene.
-> Verifiser visuelt at admin ikke ser feil ut etter fargeendringer.
+> **Eksplisitt verifisering av admin-panelet er påkrevd etter fargeendringer** — sjekk
+> at kort, inputs, navigasjon og modaler ser korrekte ut.
 
 ### Aksentfarge (teal)
 
@@ -163,6 +191,7 @@ overskrifter eller brødtekst.
 | hvit på teal-700 (fylt CTA) | 5.47:1 | PASS |
 | hvit på teal-800 (CTA hover) | 7.58:1 | PASS |
 | hvit på slate-800 (footer) | ~12.6:1 | PASS |
+| hvit på slate-900 (footer bg, primærknapp hover) | ~15.4:1 | PASS |
 
 ### Skygge-system
 
@@ -274,6 +303,24 @@ Bruk `max-w-6xl` (1152px) for tekst-tungt innhold (tjeneste-detaljsider).
 }
 ```
 
+**Accent (teal CTA):**
+```css
+.btn-accent {
+  @apply inline-flex items-center justify-center gap-2;
+  @apply px-6 py-3 rounded-xl whitespace-nowrap min-w-fit;
+  @apply bg-accent text-white font-semibold text-sm;
+  @apply shadow-sm transition-all duration-200;
+  @apply hover:bg-accent-hover hover:shadow-md hover:-translate-y-px;
+  @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent;
+  @apply active:translate-y-0 active:shadow-sm;
+}
+```
+
+**Begrunnelse for 3 varianter:** Accent-varianten brukes for primære handlinger
+(ring oss, bestill time) der teal-fargen tydelig signaliserer «gjør dette nå».
+Primær (slate) brukes for navigasjonshandlinger. Sekundær (outline) brukes for
+nedtonet støttehandlinger.
+
 | Egenskap | Før | Etter |
 |----------|-----|-------|
 | Primær stil | Outline (ghost) | Fylt (bg-brand text-white) |
@@ -281,6 +328,20 @@ Bruk `max-w-6xl` (1152px) for tekst-tungt innhold (tjeneste-detaljsider).
 | Padding | px-6 py-3.5 | px-6 py-3 |
 | Shadow | shadow-lg | shadow-sm (mindre påtrengende) |
 | Focus | Ingen | focus-visible med outline |
+| Ny: accent | — | Fylt teal (bg-accent text-white) for CTA |
+
+**Variant-tilordning:**
+
+| Kontekst | Knapp | Variant |
+|----------|-------|---------|
+| Hero | TelefonKnapp | **accent** (teal — hovedhandling) |
+| Hero | EpostKnapp | sekundær |
+| Hero | KontaktKnapp | sekundær |
+| Navbar | TelefonKnapp | sekundær (`pointer-events-none` desktop) |
+| 404-side | "Til forsiden" | primær |
+| 404-side | TelefonKnapp | sekundær |
+| Tjeneste-sidebar | TelefonKnapp | **accent** (teal) |
+| Tjeneste-sidebar | EpostKnapp | **accent** (teal) |
 
 ### 5.3 Bilder
 
@@ -323,6 +384,7 @@ nav {
 
 - Mobilmeny: `backdrop-blur-sm` + fade-in animasjon (opacity-overgang via CSS transition,
   erstatter `hidden`-toggle i `mobile-menu.js`)
+- Hamburger-ikon: `text-slate-600` (matcher nav-link-fargen, ikke brand)
 
 ### 5.5 Footer
 
@@ -467,7 +529,7 @@ Profesjonell og enkel:
 - Container: `max-w-6xl` for optimal lesebredde
 - Brødsmulesti med mellomsteg: Forside → Tjenester → [Tittel] (link til `/tjenester`)
 - Fjern `!important`-overstyrninger — bruk egne CSS-klasser (f.eks. `.detail-heading` for venstrejustert h1)
-- Sidebar: `p-6 bg-brand-light rounded-2xl` med CTA-knapper
+- Sidebar: `p-6 bg-brand-light rounded-2xl` med CTA-knapper i **accent-variant** (teal)
 - **Fiks h4-bug:** linje 78 har motstridende `text-lg` og `text-sm` — fjern `text-lg`
 
 ### 8.5 Komponenter utenfor scope
@@ -475,6 +537,8 @@ Profesjonell og enkel:
 Følgende komponenter er **uendret** av redesignet og trenger ingen spesifikasjon:
 - **InfoBanner** — beholdes som i dag (påvirkes indirekte av fargetoken-endringer)
 - **Dynamisk meldingsboks** (Forside.astro) — beholdes, bruker `--color-brand-message-box/banner`
+- **Kontakt-seksjonen** — beholdes som i dag. Påvirkes indirekte av spacing-endringer
+  (steg 3) og fargetoken-endringer (steg 2). Verifiser visuelt etter disse stegene.
 
 ---
 
@@ -483,6 +547,7 @@ Følgende komponenter er **uendret** av redesignet og trenger ingen spesifikasjo
 | Element | Standard | Hover | Fokus | Active |
 |---------|----------|-------|-------|--------|
 | Primærknapp | bg-brand shadow-sm | bg-brand-dark shadow-md -translate-y-px | outline-2 outline-brand | translate-y-0 |
+| Accentknapp | bg-accent shadow-sm | bg-accent-hover shadow-md -translate-y-px | outline-2 outline-accent | translate-y-0 |
 | Sekundærknapp | border-brand-border bg-transparent | bg-brand-light border-brand | outline-2 outline-brand | — |
 | Kort | border-brand-border/60 shadow-sm | border-brand-border shadow-md | outline-2 outline-accent | — |
 | Nav-lenke | text-slate-600 | text-brand + underline | outline-2 outline-brand | — |
@@ -493,8 +558,10 @@ Følgende komponenter er **uendret** av redesignet og trenger ingen spesifikasjo
 
 ## 10. Ytelse
 
-- **Fonter:** Variable fonts via Google Fonts (~50-70 KB totalt, woff2)
+- **Fonter:** Self-hosted woff2-filer fra `/fonts/` (~50-70 KB totalt)
+  - Ingen tredjepartsavhengighet (Google Fonts CDN)
+  - Ingen ekstra DNS-oppslag — serveres direkte fra CloudFront
+  - Full cache-kontroll (immutable caching med hashed filnavn eller lang max-age)
 - **font-display: swap** for umiddelbar tekstvisning
-- **preconnect** til fonts.googleapis.com og fonts.gstatic.com
 - **Bilder:** Astro Image-komponent med lazy loading (galleri) og eager loading (hero, above-fold)
 - **CSS:** Tailwind v4 med tree-shaking — kun brukte klasser i produksjon
