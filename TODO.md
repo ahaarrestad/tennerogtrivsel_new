@@ -28,7 +28,8 @@
     - Skygger: bruk Tailwinds innebygde shadow-klasser, ingen egne tokens
     - line-height h1/h2: 1.15 (justert opp fra 1.1 for å unngå bokstavklipping)
   - Plan revidert: 13 steg (steg 8+13 slått sammen), avhengigheter oppdatert
-  - **Neste steg: Starte implementering** — 13 steg, begynn med steg 1 (typografi)
+  - Steg 1–4 kan gjøres i vilkårlig rekkefølge (ingen innbyrdes avhengigheter)
+  - **Neste steg: Steg 4 (knapper)** — primær (fylt) og sekundær (outline)
 
 ## Backlog
 
