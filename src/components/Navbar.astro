@@ -15,15 +15,15 @@ const navLinks = [
 ];
 ---
 
-<nav class="bg-brand-light border-b border-brand-border">
+<nav class="bg-white/95 backdrop-blur-sm supports-[backdrop-filter]:bg-white/80 border-b border-brand-border/60">
     <div class="layout-container">
-        <div class="flex justify-between items-center h-20">
+        <div class="flex justify-between items-center h-16 lg:h-20">
             <a href="/" class="flex items-center no-underline">
                 <Image
                         src={logoImage}
                         alt="Tenner og Trivsel"
                         width={256}
-                        class="h-16 w-auto object-contain"
+                        class="h-12 lg:h-16 w-auto object-contain"
                         loading="eager"
                 />
             </a>
@@ -32,25 +32,26 @@ const navLinks = [
                 {navLinks.map(link => (
                         <a href={link.href}
                            data-nav-link
-                           class="text-brand hover:text-brand-hover font-medium transition-colors">
+                           class="nav-link">
                             {link.name}
                         </a>
                 ))}
                 <TelefonKnapp variant="secondary"/>
             </div>
 
-            <button id="menu-btn" class="lg:hidden flex flex-col gap-1.5 p-2" aria-label="Meny" aria-expanded="false" aria-controls="mobile-menu">
-                <span class="w-6 h-0.5 bg-brand-dark transition-all duration-300 origin-center"></span>
-                <span class="w-6 h-0.5 bg-brand-dark transition-all duration-300"></span>
-                <span class="w-6 h-0.5 bg-brand-dark transition-all duration-300 origin-center"></span>
+            <button id="menu-btn" class="lg:hidden flex flex-col gap-1.5 p-2 text-brand-hover" aria-label="Meny" aria-expanded="false" aria-controls="mobile-menu">
+                <span class="w-6 h-0.5 bg-current transition-all duration-300 origin-center"></span>
+                <span class="w-6 h-0.5 bg-current transition-all duration-300"></span>
+                <span class="w-6 h-0.5 bg-current transition-all duration-300 origin-center"></span>
             </button>
         </div>
     </div>
 
-    <div id="mobile-menu" class="hidden lg:hidden bg-white border-t border-brand-light absolute w-full left-0 shadow-xl z-50">
+    <div id="mobile-menu" class="lg:hidden bg-white/95 backdrop-blur-sm border-t border-brand-border/60 absolute w-full left-0 shadow-xl z-50 transition-all duration-200 opacity-0 pointer-events-none">
         <div class="flex flex-col p-6 gap-4">
             {navLinks.map(link => (
-                    <a href={link.mobileHref} class="text-lg font-medium text-brand hover:text-brand-hover py-2 mobile-link border-b border-brand-light last:border-0">                        {link.name}
+                    <a href={link.mobileHref} class="nav-link text-lg py-2 mobile-link border-b border-brand-light last:border-0">
+                        {link.name}
                     </a>
             ))}
             <TelefonKnapp variant="secondary" class="w-full"/>

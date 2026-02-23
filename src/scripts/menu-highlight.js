@@ -33,11 +33,11 @@ export function initMenuHighlight() {
 
         const setLinkState = (link, active) => {
             if (active) {
-                link.classList.add('text-brand-hover', 'font-bold');
-                link.classList.remove('text-brand');
+                link.classList.add('text-brand', 'font-bold');
+                link.classList.remove('text-brand-hover');
             } else {
-                link.classList.remove('text-brand-hover', 'font-bold');
-                link.classList.add('text-brand');
+                link.classList.remove('text-brand', 'font-bold');
+                link.classList.add('text-brand-hover');
             }
         }
 
