@@ -60,11 +60,12 @@
   - Listene er allerede konsistente — kun editorer endres
   - Plan klar: 4 steg, 2 filer, ~4–6 tester
 
-- [ ] **Legal vurdering av dependencies**
-    - Gjennomgå alle dependencies i `package.json` for å identifisere eventuelle med kjente sårbarheter, utdatert vedlikehold eller lisensproblemer.
-    - Bruk verktøy som `npm audit`, Snyk eller GitHub's Dependabot-rapporter for å få en oversikt over sikkerhetsstatusen til hver dependency.
-    - Dokumenter funnene i en rapport og foreslå nødvendige oppdateringer, erstatninger eller fjerning av problematiske dependencies.
-    - Vurder om jeg trenger en lisens for dette prosjektet. Hvis ja, hvilken lisens er mest passende for en nettside som denne? MIT, GPL, eller noe annet? Konsulter eventuelt med en juridisk ekspert for å sikre at valget av lisens dekker både mine behov og gir tilstrekkelig beskyttelse.
+- [ ] **Legal vurdering av dependencies** ([rapport](docs/plan-legal-dependencies.md))
+    - npm audit: 0 sårbarheter, alle deps aktivt vedlikeholdt
+    - 97%+ permissive lisenser (MIT/Apache/BSD/ISC), 2 LGPL + 5 MPL — ingen risiko
+    - Ingen lisens nødvendig for privat prosjekt; MIT anbefalt hvis open source
+    - Dependabot + CI-audit dekker løpende vedlikehold
+    - Rapport klar — kan lukkes som gjennomgått
 
 ## Fullført
 
