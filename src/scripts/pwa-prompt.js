@@ -79,7 +79,7 @@ function showAndroidInstallToast() {
     });
 
     const dismissBtn = document.createElement('button');
-    dismissBtn.className = 'text-xs text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded-lg transition-colors cursor-pointer';
+    dismissBtn.className = 'text-xs text-admin-muted hover:text-brand px-3 py-1.5 rounded-lg transition-colors cursor-pointer';
     dismissBtn.textContent = 'Ikke nå';
     dismissBtn.addEventListener('click', () => {
         localStorage.setItem(STORAGE_KEY, 'dismissed');
@@ -107,7 +107,7 @@ function showIOSInstallToast() {
     actions.className = 'flex gap-2 mt-2';
 
     const dismissBtn = document.createElement('button');
-    dismissBtn.className = 'text-xs text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded-lg transition-colors cursor-pointer';
+    dismissBtn.className = 'text-xs text-admin-muted hover:text-brand px-3 py-1.5 rounded-lg transition-colors cursor-pointer';
     dismissBtn.textContent = 'Ikke vis igjen';
     dismissBtn.addEventListener('click', () => {
         localStorage.setItem(STORAGE_KEY, 'dismissed');

@@ -11,7 +11,7 @@ export async function loadGallery(folderId, onSelect) {
     const grid = document.getElementById('image-gallery-grid');
     if (!grid) return;
 
-    grid.innerHTML = '<div class="col-span-full text-center py-12 text-slate-400 italic animate-pulse">Laster bilder...</div>';
+    grid.innerHTML = '<div class="col-span-full text-center py-12 text-admin-muted-light italic animate-pulse">Laster bilder...</div>';
 
     try {
         if (!folderId) throw new Error("Mappe-ID mangler");
@@ -25,14 +25,14 @@ export async function loadGallery(folderId, onSelect) {
         const images = await listImages(folderId);
 
         if (images.length === 0) {
-            grid.innerHTML = '<div class="col-span-full text-center py-12 text-slate-400 italic">Ingen bilder funnet i mappen.</div>';
+            grid.innerHTML = '<div class="col-span-full text-center py-12 text-admin-muted-light italic">Ingen bilder funnet i mappen.</div>';
             return;
         }
 
         grid.innerHTML = '';
         images.forEach(img => {
             const el = document.createElement('div');
-            el.className = 'group relative aspect-square bg-slate-100 rounded-lg overflow-hidden cursor-pointer hover:ring-4 ring-brand transition-all flex items-center justify-center';
+            el.className = 'group relative aspect-square bg-admin-hover rounded-lg overflow-hidden cursor-pointer hover:ring-4 ring-brand transition-all flex items-center justify-center';
 
             if (img.thumbnailLink) {
                 el.innerHTML = `
@@ -43,7 +43,7 @@ export async function loadGallery(folderId, onSelect) {
                 `;
             } else {
                 el.innerHTML = `
-                    <div class="flex flex-col items-center justify-center text-slate-400 p-2">
+                    <div class="flex flex-col items-center justify-center text-admin-muted-light p-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <span class="text-[8px] font-bold break-all line-clamp-2 text-center">${img.name}</span>
                     </div>

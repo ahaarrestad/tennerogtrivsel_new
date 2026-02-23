@@ -23,6 +23,7 @@
     - [x] Steg 1: CLS-fiks — fjernet justify-center fra main, scrollTo(0,0) i openModule/closeModule/handleAuth
     - [x] Steg 2: 5 admin-fargetokens i @theme, 8 CSS-klasser oppdatert fra slate→tokens
     - [x] Steg 3: ~35 slate-referanser i index.astro erstattet med admin-tokens
+    - [x] Steg 4: ~30 slate-referanser i JS-moduler erstattet (dashboard, dialog, gallery, pwa-prompt)
 
 - [ ] **Gjøre det enklere å forstå hvor innstillinger brukes på nettsiden**
   - Bruker av admin-panelet vet ikke nødvendigvis hvor de ulike tekstene i Innstillinger-modulen dukker opp på den offentlige siden
