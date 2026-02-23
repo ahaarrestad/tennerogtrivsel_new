@@ -12,13 +12,6 @@
 
 ## Pågående
 
-- [ ] **"Legg til snarvei"-lenke i admin på mobil (PWA / Add to Home Screen)** ([plan](docs/plan-pwa-snarvei.md))
-  - Enkel snarvei: Web App Manifest + install-prompt (ingen service worker)
-  - Toast-melding etter innlogging, kun første gang (lagres i localStorage)
-  - Kun admin-siden — offentlig side berøres ikke
-  - iOS: Instruksjonstekst ("Trykk Del → Legg til på Hjem-skjerm")
-  - Plan klar: 6 steg, 7 filer, ~8 nye tester
-
 - [ ] **UX/design-gjennomgang av den offentlige nettsiden** ([design-guide](docs/design-guide.md)) ([plan](docs/plan-ux-redesign.md))
   - Retning: Profesjonell & tillitvekkende, full redesign
   - Fonter: Montserrat (headings) + Inter (body) fra Google Fonts
@@ -68,6 +61,13 @@
     - Rapport klar — kan lukkes som gjennomgått
 
 ## Fullført
+
+- [x] **"Legg til snarvei"-lenke i admin på mobil (PWA / Add to Home Screen)** ([plan](docs/plan-pwa-snarvei.md))
+  - Web App Manifest (`admin-manifest.json`) med eksisterende favicon-ikoner
+  - Install-prompt (`pwa-prompt.js`) med Android- og iOS-støtte
+  - Toast etter innlogging, husker avvisning via localStorage
+  - Meta-tagger for theme-color og apple-web-app i admin `<head>`
+  - 15 enhetstester, 87.5% branch coverage
 
 - [x] **Legg til toggling for tjenester** ([plan](docs/plan-toggling-tjenester.md))
   - Toggle-switch i liste og editor, frontmatter-basert lagring (active: true/false)
