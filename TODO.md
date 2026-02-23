@@ -12,6 +12,13 @@
 
 ## Pågående
 
+- [ ] **"Legg til snarvei"-lenke i admin på mobil (PWA / Add to Home Screen)** ([plan](docs/plan-pwa-snarvei.md))
+  - Enkel snarvei: Web App Manifest + install-prompt (ingen service worker)
+  - Toast-melding etter innlogging, kun første gang (lagres i localStorage)
+  - Kun admin-siden — offentlig side berøres ikke
+  - iOS: Instruksjonstekst ("Trykk Del → Legg til på Hjem-skjerm")
+  - Plan klar: 6 steg, 7 filer, ~8 nye tester
+
 - [ ] **UX/design-gjennomgang av den offentlige nettsiden** ([design-guide](docs/design-guide.md)) ([plan](docs/plan-ux-redesign.md))
   - Retning: Profesjonell & tillitvekkende, full redesign
   - Fonter: Montserrat (headings) + Inter (body) fra Google Fonts
@@ -31,25 +38,14 @@
   - Bruk et team med sikkerhetsekspert, arkitekt og senior utvikler til å legge planen
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
 
-- [ ] **"Legg til snarvei"-lenke i admin på mobil (PWA / Add to Home Screen)** ([plan](docs/plan-pwa-snarvei.md))
-  - Enkel snarvei: Web App Manifest + install-prompt (ingen service worker)
-  - Toast-melding etter innlogging, kun første gang (lagres i localStorage)
-  - Kun admin-siden — offentlig side berøres ikke
-  - iOS: Instruksjonstekst ("Trykk Del → Legg til på Hjem-skjerm")
-  - Plan klar: 6 steg, 7 filer, ~8 nye tester
-
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
 
-- [x] **Legg til toggling for tjenester** ([plan](docs/plan-toggling-tjenester.md))
-    - Mulighet for å toggle hver tjeneste aktiv/inaktiv i admin-panelet, på samme måte som galleri.
-    - Besluttet å bruke markdown-frontmatter (`active: true/false`), ikke Google Sheets
-    - Ønsker samme visuelle funksjonalitet i tjeneste listen som for for galleriet.
-    - Implementert: content-schema, frontend-filtrering, admin-dashboard toggle, admin toggle-handler, 8 nye tester
-
-- [ ] **Fiks wrapping av tekst i tjeneste-listen i admin på mobil**
+- [ ] **Fiks wrapping av tekst i tjeneste-listen i admin på mobil** ([plan](docs/plan-tjeneste-tekst-wrapping.md))
   - Tittel og ingress-tekst kan bli avkuttet/wrappet dårlig på smale skjermer
-  - Må se bra ut og vise hele teksten på mobil
+  - Løsning: `line-clamp-2` på tittel (mobil), konsistent knapp-plassering
+  - Gjelder tjenester + tannleger + galleri (samme mønster)
+  - Ren CSS-justering, 1 fil, ingen nye tester
 
 - [ ] **Konsistent aktiv/inaktiv-visning i admin på tvers av moduler**
   - Tjenester-modulen viser nå toggle i både liste og editor — bruk dette som referansemønster
@@ -63,6 +59,11 @@
     - Vurder om jeg trenger en lisens for dette prosjektet. Hvis ja, hvilken lisens er mest passende for en nettside som denne? MIT, GPL, eller noe annet? Konsulter eventuelt med en juridisk ekspert for å sikre at valget av lisens dekker både mine behov og gir tilstrekkelig beskyttelse.
 
 ## Fullført
+
+- [x] **Legg til toggling for tjenester** ([plan](docs/plan-toggling-tjenester.md))
+  - Toggle-switch i liste og editor, frontmatter-basert lagring (active: true/false)
+  - Inaktive tjenester filtreres ut fra forsiden og standalone-sider
+  - 8 nye enhetstester for toggle-funksjonaliteten
 
 - [x] **Legg til toggling for tannleger**
   - Klikkbar toggle-switch i tannlege-listen (samme mønster som galleri)
