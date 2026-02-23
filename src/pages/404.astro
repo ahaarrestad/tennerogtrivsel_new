@@ -1,58 +1,31 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import TelefonKnapp from "../components/TelefonKnapp.astro";
-import {Image} from "astro:assets";
-// Vi antar at du flytter bildet til assets for full optimalisering
-import logoImage from "../assets/logo.png";
 ---
 
 <Layout title="Siden ble ikke funnet | Tenner og Trivsel">
-    <main class="relative min-h-[75vh] flex items-center justify-center overflow-hidden bg-white">
+    <section class="relative min-h-[70vh] flex items-center justify-center overflow-hidden bg-white">
 
-        {/* Myke bakgrunnsdetaljer */}
-        <div class="absolute top-1/4 -left-20 w-72 h-72 bg-brand-light/50 rounded-full filter blur-3xl"></div>
-        <div class="absolute bottom-1/4 -right-20 w-96 h-96 bg-brand-light rounded-full filter blur-3xl"></div>
+        {/* Stor, blek 404 som bakgrunnselement */}
+        <div class="absolute inset-0 flex items-center justify-center select-none pointer-events-none" aria-hidden="true">
+            <span class="text-[12rem] md:text-[20rem] font-black text-brand-active leading-none tracking-tight">404</span>
+        </div>
 
         <div class="section-content relative z-10">
-            <div class="max-w-2xl mx-auto text-center">
+            <div class="max-w-xl mx-auto text-center">
+                <h1 class="h2 mb-4">Karies i systemet?</h1>
 
-                {/* Visuelt 404-element */}
-                <div class="flex justify-center items-center mb-10">
-                    <div class="text-7xl md:text-9xl font-black text-brand-hover flex items-center tracking-widest leading-none select-none">
-                        <span>4</span>
-                        <span class="text-brand animate-pulse">0</span>
-                        <div class="relative">
-                            4
-                            <div class="absolute -top-2 -right-6 md:-top-6 md:-right-10 flex items-center justify-center">
-                                <Image
-                                        src={logoImage}
-                                        alt="Tenner og Trivsel logo"
-                                        height={60}
-                                        class="w-12 h-auto md:w-20 md:h-auto max-w-none"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Bruker section-heading og section-intro for samkjøring */}
-                <h2 class="section-heading text-2xl! md:text-4xl! mb-6!">
-                    Karies i systemet?
-                </h2>
-
-                <p class="section-intro mb-12">
-                    Denne siden har dessverre fått et <strong>alvorlig hull</strong>. Vi har prøvd med både sondering og
-                    røntgen, men konklusjonen er at lenken må trekkes.
+                <p class="section-intro mb-10">
+                    Denne siden har dessverre fått et <strong>alvorlig hull</strong>.
+                    Vi har prøvd med både sondering og røntgen, men konklusjonen er
+                    at lenken må trekkes.
                 </p>
 
-                {/* Knapper med globale klasser */}
-                <div class="flex flex-col sm:flex-row gap-4 justify-center items-stretch sm:items-center w-full sm:w-auto">
-                    <a href="/" class="btn-primary w-full sm:w-auto">
-                        Til forside
-                    </a>
-                    <TelefonKnapp variant="secondary" class="w-full sm:w-auto"/>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-stretch sm:items-center">
+                    <a href="/" class="btn-primary">Til forsiden</a>
+                    <TelefonKnapp variant="secondary" />
                 </div>
             </div>
         </div>
-    </main>
+    </section>
 </Layout>
