@@ -27,18 +27,18 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
             {sortert.map((item, index) => {
                 const imgPath = `/src/assets/galleri/${item.data.image}`;
                 const hasImage = item.data.image && images[imgPath];
-                const mobileHidden = !standalone && index >= 2 ? 'hidden md:block' : '';
+                const mobileHidden = !standalone && sortert.length > 4 && index >= 4 ? 'hidden md:block' : '';
                 const pX = item.data.imageConfig?.positionX ?? 50;
                 const pY = item.data.imageConfig?.positionY ?? 50;
                 const sc = item.data.imageConfig?.scale ?? 1.0;
 
                 return (
-                    <div class={`rounded-2xl overflow-hidden shadow-md aspect-[4/3] bg-brand-active relative group ${mobileHidden}`}>
+                    <div class={`rounded-xl overflow-hidden shadow-sm aspect-[4/3] bg-brand-active relative group transition-all duration-300 hover:shadow-md ${mobileHidden}`}>
                         {hasImage ? (
                             <Image
                                 src={images[imgPath]()}
                                 alt={item.data.altText || item.data.title}
-                                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                                 style={{
                                     objectPosition: `${pX}% ${pY}%`,
                                     transform: `scale(${sc})`,
@@ -60,6 +60,14 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                 );
             })}
         </div>
+
+        {!standalone && sortert.length > 4 && (
+            <div class="mt-6 text-center">
+                <a href="/galleri" class="text-brand-hover hover:text-brand font-medium text-sm transition-colors">
+                    Se alle bilder →
+                </a>
+            </div>
+        )}
     </div>
 </section>
 )}
