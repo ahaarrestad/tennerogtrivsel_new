@@ -578,6 +578,28 @@
                select-none;
     }
 
+    /* TOGGLE SWITCH — drevet av data-active attributt */
+    .toggle-track {
+        @apply relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 bg-slate-300;
+    }
+    [data-active="true"] .toggle-track {
+        @apply bg-green-500;
+    }
+
+    .toggle-dot {
+        @apply inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ml-0.5 translate-x-0;
+    }
+    [data-active="true"] .toggle-dot {
+        @apply translate-x-5;
+    }
+
+    .toggle-label {
+        @apply text-[10px] font-semibold text-admin-muted;
+    }
+    [data-active="true"] .toggle-label {
+        @apply text-green-700;
+    }
+
     /* SLIDER SCROLL PREVENTION */
     /* Hindrer utilsiktet verdiendring ved scrolling over range-slidere */
     input[type="range"] {
