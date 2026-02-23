@@ -995,7 +995,63 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 el.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
             });
         };
-        (window as any).openTannlegerModule = () => loadTannlegerModule(SHEET_ID, (window as any).editTannlege, (window as any).deleteTannlege, TANNLEGER_FOLDER);
+        const toggleTannlegeActive = async (rowIndex, t) => {
+            const newActive = !t.active;
+            // Optimistisk UI-oppdatering
+            const btn = document.querySelector(`.toggle-active-btn[data-row="${rowIndex}"]`) as HTMLElement;
+            const card = btn?.closest('.admin-card-interactive') as HTMLElement;
+            if (btn) {
+                const track = btn.querySelector('.toggle-track') as HTMLElement;
+                const dot = btn.querySelector('.toggle-dot') as HTMLElement;
+                const label = btn.querySelector('.toggle-label') as HTMLElement;
+                if (track) {
+                    track.classList.toggle('bg-green-500', newActive);
+                    track.classList.toggle('bg-slate-300', !newActive);
+                }
+                if (dot) {
+                    dot.classList.toggle('translate-x-5', newActive);
+                    dot.classList.toggle('translate-x-0', !newActive);
+                }
+                if (label) {
+                    label.textContent = newActive ? 'Aktiv' : 'Inaktiv';
+                    label.classList.toggle('text-green-700', newActive);
+                    label.classList.toggle('text-slate-500', !newActive);
+                }
+            }
+            if (card) card.classList.toggle('opacity-60', !newActive);
+
+            try {
+                await updateTannlegeRow(SHEET_ID, rowIndex, { ...t, active: newActive });
+                t.active = newActive;
+            } catch (e) {
+                // Reverser ved feil
+                if (btn) {
+                    const track = btn.querySelector('.toggle-track') as HTMLElement;
+                    const dot = btn.querySelector('.toggle-dot') as HTMLElement;
+                    const label = btn.querySelector('.toggle-label') as HTMLElement;
+                    if (track) {
+                        track.classList.toggle('bg-green-500', t.active);
+                        track.classList.toggle('bg-slate-300', !t.active);
+                    }
+                    if (dot) {
+                        dot.classList.toggle('translate-x-5', t.active);
+                        dot.classList.toggle('translate-x-0', !t.active);
+                    }
+                    if (label) {
+                        label.textContent = t.active ? 'Aktiv' : 'Inaktiv';
+                        label.classList.toggle('text-green-700', t.active);
+                        label.classList.toggle('text-slate-500', !t.active);
+                    }
+                }
+                if (card) card.classList.toggle('opacity-60', !t.active);
+                reloadTannleger();
+            }
+        };
+
+        const reloadTannleger = () => {
+            loadTannlegerModule(SHEET_ID, (window as any).editTannlege, (window as any).deleteTannlege, TANNLEGER_FOLDER, toggleTannlegeActive);
+        };
+        (window as any).openTannlegerModule = reloadTannleger;
 
         // --- BILDER MODUL (samlet galleri + forsidebilde) ---
 

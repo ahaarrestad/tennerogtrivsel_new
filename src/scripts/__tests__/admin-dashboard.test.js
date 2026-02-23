@@ -565,6 +565,99 @@ describe('admin-dashboard.js', () => {
 
             expect(adminClient.findFileByName).not.toHaveBeenCalled();
         });
+
+        it('should render toggle-button with correct structure for active dentist', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 2, name: 'Anna', title: 'Tannlege', active: true }
+            ]);
+
+            const onToggleActive = vi.fn();
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn(), null, onToggleActive);
+
+            const toggleBtn = document.querySelector('.toggle-active-btn');
+            expect(toggleBtn).not.toBeNull();
+            expect(toggleBtn.querySelector('.toggle-track')).not.toBeNull();
+            expect(toggleBtn.querySelector('.toggle-dot')).not.toBeNull();
+            expect(toggleBtn.querySelector('.toggle-label').textContent).toBe('Aktiv');
+            expect(toggleBtn.querySelector('.toggle-track').classList.contains('bg-green-500')).toBe(true);
+            expect(toggleBtn.querySelector('.toggle-dot').classList.contains('translate-x-5')).toBe(true);
+        });
+
+        it('should render toggle-button correctly for inactive dentist', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 2, name: 'Anna', title: 'Tannlege', active: false }
+            ]);
+
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn(), null, vi.fn());
+
+            const toggleBtn = document.querySelector('.toggle-active-btn');
+            expect(toggleBtn.querySelector('.toggle-label').textContent).toBe('Inaktiv');
+            expect(toggleBtn.querySelector('.toggle-track').classList.contains('bg-slate-300')).toBe(true);
+            expect(toggleBtn.querySelector('.toggle-dot').classList.contains('translate-x-0')).toBe(true);
+        });
+
+        it('should call onToggleActive with correct arguments on toggle click', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 3, name: 'Kari', title: 'Tannlege', active: true }
+            ]);
+
+            const onToggleActive = vi.fn();
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn(), null, onToggleActive);
+
+            document.querySelector('.toggle-active-btn').click();
+
+            expect(onToggleActive).toHaveBeenCalledWith(3, expect.objectContaining({ name: 'Kari', active: true }));
+        });
+
+        it('should not trigger edit when toggle is clicked', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 2, name: 'Anna', title: 'Tannlege', active: true }
+            ]);
+
+            const onEdit = vi.fn();
+            const onToggleActive = vi.fn();
+            await loadTannlegerModule('sheet-id', onEdit, vi.fn(), null, onToggleActive);
+
+            document.querySelector('.toggle-active-btn').click();
+
+            expect(onToggleActive).toHaveBeenCalled();
+            expect(onEdit).not.toHaveBeenCalled();
+        });
+
+        it('should pass dentist with active: false to callback for inactive dentist', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 2, name: 'Anna', title: 'Tannlege', active: false }
+            ]);
+
+            const onToggleActive = vi.fn();
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn(), null, onToggleActive);
+
+            document.querySelector('.toggle-active-btn').click();
+
+            expect(onToggleActive).toHaveBeenCalledWith(2, expect.objectContaining({ active: false }));
+        });
+
+        it('should apply opacity-60 on card for inactive dentist', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 2, name: 'Anna', title: 'Tannlege', active: false }
+            ]);
+
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn(), null, vi.fn());
+
+            const card = document.querySelector('.admin-card-interactive');
+            expect(card.classList.contains('opacity-60')).toBe(true);
+        });
+
+        it('should not throw when onToggleActive is not provided', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 2, name: 'Anna', title: 'Tannlege', active: true }
+            ]);
+
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn(), null, null);
+
+            const toggleBtn = document.querySelector('.toggle-active-btn');
+            expect(() => toggleBtn.click()).not.toThrow();
+        });
     });
 
     describe('loadGalleriListeModule', () => {
