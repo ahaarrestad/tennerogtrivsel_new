@@ -44,10 +44,11 @@
   - Responsivt design (admin brukes på mobil via PWA-snarvei)
   - Tilgjengelighet (a11y) — grunnleggende krav
 
-- [ ] **Grundig sikkerhetssjekk av hele prosjektet**
+- [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
-  - Bruk et team med sikkerhetsekspert, arkitekt og senior utvikler til å legge planen
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
+  - 6 steg: CloudFront-headere, input-validering, filopplasting, API-nøkkel, tester, dokumentasjon
+  - Steg 1–4 uavhengige, steg 5 avhenger av 2+3, steg 6 sist
 
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
