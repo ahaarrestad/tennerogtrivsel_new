@@ -23,45 +23,40 @@ const {Content} = await render(entry);
 const tjenester = (await getCollection('tjenester')).filter(s => s.data.active !== false);
 ---
 <Layout title={`${entry.data.title} | Tenner og Trivsel`} description={entry.data.ingress}>
-    {/* 1. Vi fjerner 'flex' fra denne ytre diven for å unngå at den krymper innholdet */}
     <div class="flex-grow bg-white w-full">
 
         <section class="pt-12 md:pt-20 pb-0">
-            <div class="container mx-auto px-4 w-full">
-                {/* 1. Nav */}
-                <nav class="mb-8 text-sm text-brand" aria-label="Brødsmulesti">
-                    <a href="/" class="hover:text-brand-hover">Forside</a>
+            <div class="max-w-6xl mx-auto px-4 w-full">
+                <nav class="mb-8 text-sm text-brand-hover" aria-label="Brødsmulesti">
+                    <a href="/" class="hover:text-brand transition-colors">Forside</a>
                     <span class="mx-2">/</span>
-                    <span class="text-brand">{entry.data.title}</span>
+                    <a href="/tjenester" class="hover:text-brand transition-colors">Tjenester</a>
+                    <span class="mx-2">/</span>
+                    <span class="text-brand font-medium">{entry.data.title}</span>
                 </nav>
 
-                {/* 2. Flex-oppsett for innhold og boks */}
                 <div class="flex flex-wrap xl:flex-nowrap gap-12 items-start">
 
-                    {/* Venstre side */}
-                    <div class="flex-1 min-w-0"> {/* min-w-0 hindrer flex-items fra å "eksplodere" i bredden */}
+                    <div class="flex-1 min-w-0">
 
                         <header class="mb-12 not-prose">
-                            <h1 class="section-heading !text-left !mx-0 !text-4xl md:!text-5xl !max-w-none">
+                            <h1 class="h2 text-left" style="max-width: none;">
                                 {entry.data.title}
                             </h1>
 
-                            {/* Fjern alle manuelle størrelser som !text-xl, bruk kun denne: */}
-                            <p class="section-intro !text-left !mx-0 !max-w-none !text-base md:!text-lg italic">
+                            <p class="text-brand-hover text-base md:text-lg leading-relaxed italic mt-2" style="font-family: var(--font-body);">
                                 {entry.data.ingress}
                             </p>
                         </header>
 
-                        {/* Content-delen */}
-                        <div class="markdown-content prose !max-w-none">
+                        <div class="markdown-content prose max-w-none">
                             <Content/>
                         </div>
                     </div>
 
-                    {/* Høyre side: Fast bredde på desktop, full bredde på mobil */}
                     <aside class="w-full lg:w-80 xl:w-96 lg:sticky lg:top-24 min-w-fit">
-                        <div class="p-8 bg-brand-light rounded-2xl border border-brand-border shadow-sm flex flex-col gap-4">
-                            <h3 class="card-title !text-lg !mb-0 leading-snug">
+                        <div class="p-6 md:p-8 bg-brand-light rounded-2xl border border-brand-border/60 shadow-sm flex flex-col gap-4">
+                            <h3 class="card-title text-lg leading-snug" style="margin-bottom: 0;">
                                 Ta kontakt med oss for mer informasjon
                             </h3>
                             <div class="flex flex-col gap-3 relative z-10">
@@ -73,10 +68,10 @@ const tjenester = (await getCollection('tjenester')).filter(s => s.data.active !
                     </aside>
                 </div>
 
-                {/* Sorterte tjenester */}
-                <div class="mt-20 mb-24 border-t pt-10">
-                    <h4 class="font-bold mb-6 text-brand text-lg uppercase tracking-wide text-sm">Våre
-                        tjenester</h4>
+                <div class="mt-16 mb-20 border-t border-brand-border/60 pt-8">
+                    <h4 class="font-bold mb-6 text-brand text-sm uppercase tracking-wide" style="font-family: var(--font-heading);">
+                        Våre tjenester
+                    </h4>
                     <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-3">
                         {tjenester
                             .sort((a, b) => a.data.title.localeCompare(b.data.title, 'nb'))
@@ -89,7 +84,7 @@ const tjenester = (await getCollection('tjenester')).filter(s => s.data.active !
                                                     <span class="text-sm font-bold text-brand-hover">{s.data.title}</span>
                                             ) : (
                                                     <a href={`/tjenester/${s.id}`}
-                                                       class="text-sm font-medium text-brand hover:text-brand-hover hover:no-underline">
+                                                       class="text-sm font-medium text-brand hover:text-brand-hover transition-colors">
                                                         {s.data.title}
                                                     </a>
                                             )}
