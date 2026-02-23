@@ -44,8 +44,9 @@
   - [x] **Steg 8: Galleri** — 4 bilder mobil, rounded-xl, shadow-sm/hover:shadow-md, "Se alle bilder →"
   - [x] **Steg 9: Heading accent bar** — bg-accent, w-16
   - [x] **Steg 10: 404-side** — forenklet, fjernet nestet main, blek 404-bakgrunn, beholdt tannlege-humor
-  - [ ] **Steg 11: Tjenester-detaljside** ← neste
-  - **Steg 11–12 gjenstår (se avhengigheter i plan)**
+  - [x] **Steg 11: Tjenester-detaljside** — max-w-6xl, brødsmulesti med Tjenester-lenke, fjernet !important, h4-bug fikset
+  - [ ] **Steg 12: Tilgjengelighet** ← neste
+  - **Steg 12–13 gjenstår (se avhengigheter i plan)**
 
 ## Backlog
 
