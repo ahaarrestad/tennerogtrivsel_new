@@ -22,6 +22,16 @@ Fullstendig prosedyre finnes i `/quality-gate`-skill. Kjernekrav:
 
 **AGENT-REGEL:** Du har ikke lov til å si deg ferdig eller foreslå en commit før du har presentert en fersk testrapport som viser at kravene er møtt for alle berørte filer. Enhver "ferdig"-melding uten tallgrunnlag er et brudd på instruksene. Hvis dekningsgraden faller på grunn av nye funksjoner, SKAL du skrive tester for disse før du går videre. Ved innføring av nye avhengigheter eller miljøvariabler SKAL du eksplisitt sjekke og oppdatere CI-konfigurasjonen.
 
+## Design-system
+
+Prosjektet følger en token-drevet design-guide dokumentert i [`docs/design-guide.md`](docs/design-guide.md). Alle visuelle endringer på den offentlige nettsiden skal følge denne guiden.
+
+**Kjerneprinsipper:**
+- **Alle farger via CSS-variabler** i `src/styles/global.css` (`@theme`-blokken). Komponenter bruker token-klasser (`text-brand`, `bg-accent`, `border-brand-border`) — aldri hardkodede hex-verdier eller Tailwind-fargeklasser som `text-stone-600`.
+- **Fonter:** Montserrat (headings, self-hosted woff2) og Inter (body, self-hosted woff2). Definert via `--font-heading` og `--font-body`.
+- **Knapper:** Tre varianter — `btn-primary` (fylt), `btn-secondary` (outline), `btn-accent` (mørk CTA). Kun én accent-knapp per synlig viewport-seksjon.
+- **Tilgjengelighet:** Skip-link, globale `focus-visible`-stiler, `ring` (ikke outline) på kort pga `overflow-hidden`.
+
 ## Arkitektur: Bildehåndtering (Galleri + Forsidebilde)
 
 ### Google Sheets-ark
