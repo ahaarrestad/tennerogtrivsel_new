@@ -12,41 +12,7 @@
 
 ## Pågående
 
-- [ ] **UX/design-gjennomgang av den offentlige nettsiden** ([design-guide](docs/design-guide.md)) ([plan](docs/plan-ux-redesign.md))
-  - Retning: Profesjonell & tillitvekkende, full redesign
-  - Fonter: Montserrat (headings) + Inter (body), self-hosted woff2
-  - Farger: **Stone-palett (varm grå)** uten fargeaksent — kun gråtoner
-  - Alle farger via CSS-variabler i global.css — enkel å bytte palett
-  - Design-guide, plan og mockup (`docs/mockup.html`) revidert etter UX-review
-  - Beslutninger tatt:
-    - Kontakt forblir rett etter hero (mest etterspurt av brukere)
-    - Seksjon-rekkefølge uendret: Hero → Kontakt → Galleri → Tjenester → Tannleger
-    - Tjenester/Tannleger forblir `hidden md:block` på forsiden (bevisst — nås via meny på mobil)
-    - Kortstokk-animasjon beholdes på standalone-sider med justeringer (6vh)
-    - Hero-knapper: TelefonKnapp **accent**, EpostKnapp + KontaktKnapp **sekundær** (hierarki)
-    - Sidebar CTA-er: TelefonKnapp + EpostKnapp **accent** (forsterkede skygger)
-    - TelefonKnapp i nav: sekundær variant (ikke klikkbar desktop, klikkbar mobil)
-    - Font-hosting: **self-hosted** woff2 fra `/public/fonts/` (ingen Google Fonts CDN)
-    - Mobilmeny: fade-in animasjon (opacity-overgang, ikke slideDown)
-    - Skygger: bruk Tailwinds innebygde shadow-klasser, ingen egne tokens
-    - line-height h1/h2: 1.15 (justert opp fra 1.1 for å unngå bokstavklipping)
-    - Admin-verifisering: obligatorisk etter fargeendringer (steg 2)
-    - Token-drevet design: ingen hardkodede farger i komponenter
-  - Plan revidert: 13 steg, 3 knapp-varianter (primær/sekundær/accent), avhengigheter oppdatert
-  - Steg 1–4 kan gjøres i vilkårlig rekkefølge (ingen innbyrdes avhengigheter)
-  - [x] **Steg 1: Typografi** — Montserrat/Inter self-hosted, font-tokens, line-height 1.15, h1(900)/h2(800)
-  - [x] **Steg 2: Fargepalett** — stone-palett, accent-tokens, semantiske farger, offentlige komponenter migrert
-  - [x] **Steg 3: Spacing** — tokens justert, gaps normalisert, pb-[35vh]-hack fjernet, sticky top-fix
-  - [x] **Steg 4: Knapper** — primær/sekundær/accent, variant-prop, hierarki-tilordning
-  - [x] **Steg 5: Kort** — rounded-2xl, p-6/p-8, border/60, hover shadow-md, stacking 6vh
-  - [x] **Steg 6: Navbar** — glassmorfisme, nav-link underline, fade-in mobilmeny
-  - [x] **Steg 7: Footer** — 3-kolonne layout, mørk bakgrunn, åpningstider, logo invertert
-  - [x] **Steg 8: Galleri** — 4 bilder mobil, rounded-xl, shadow-sm/hover:shadow-md, "Se alle bilder →"
-  - [x] **Steg 9: Heading accent bar** — bg-accent, w-16
-  - [x] **Steg 10: 404-side** — forenklet, fjernet nestet main, blek 404-bakgrunn, beholdt tannlege-humor
-  - [x] **Steg 11: Tjenester-detaljside** — max-w-6xl, brødsmulesti med Tjenester-lenke, fjernet !important, h4-bug fikset
-  - [x] **Steg 12: Tilgjengelighet** — skip-link, id="main-content", globale fokus-stiler, ring på kort
-  - [ ] **Steg 13: CLAUDE.md-oppdatering** ← neste
+Ingen oppgaver pågår.
 
 ## Backlog
 
@@ -76,6 +42,12 @@
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
 
 ## Fullført
+
+- [x] **UX/design-gjennomgang av den offentlige nettsiden** ([design-guide](docs/design-guide.md)) ([plan](docs/plan-ux-redesign.md))
+  - 13 steg fullført: typografi, fargepalett (stone), spacing, knapper, kort, navbar, footer, galleri, accent bar, 404-side, tjenester-detaljside, tilgjengelighet, CLAUDE.md
+  - Token-drevet design: alle farger via CSS-variabler, self-hosted Montserrat/Inter fonter
+  - Skip-link, globale fokus-stiler, fjernet nestet main, fjernet !important-overstyrringer
+
 
 - [x] **Konsistent aktiv/inaktiv-visning i admin på tvers av moduler** ([plan](docs/plan-konsistent-toggle.md))
   - Tannlege-editor: checkbox → toggle-switch med `data-active`
