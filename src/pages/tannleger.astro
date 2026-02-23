@@ -10,9 +10,7 @@ const settings = await getSiteSettings();
     title={`${settings.tannlegerTittel} | Tenner og Trivsel`}
     description={settings.tannlegerBeskrivelse}
 >
-    <main>
-        <div class="pb-[35vh] md:mb-0">
-            <TannlegerSide variant="white" />
-        </div>
+    <main class="min-h-[50vh]">
+        <TannlegerSide variant="white" />
     </main>
 </Layout>
