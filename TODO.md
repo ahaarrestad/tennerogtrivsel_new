@@ -47,10 +47,12 @@
   - Gjelder tjenester + tannleger + galleri (samme mønster)
   - Ren CSS-justering, 1 fil, ingen nye tester
 
-- [ ] **Konsistent aktiv/inaktiv-visning i admin på tvers av moduler**
-  - Tjenester-modulen viser nå toggle i både liste og editor — bruk dette som referansemønster
-  - Tannleger og galleri bør vise toggle på samme måte (liste + editor)
-  - Sørg for lik plassering, styling og oppførsel i alle moduler
+- [ ] **Konsistent aktiv/inaktiv-visning i admin på tvers av moduler** ([plan](docs/plan-konsistent-toggle.md))
+  - Tjenester-editoren er referansemønsteret (toggle-switch med "Synlighet"-label)
+  - Tannleger-editor: checkbox → toggle-switch
+  - Galleri-editor: select/dropdown → toggle-switch
+  - Listene er allerede konsistente — kun editorer endres
+  - Plan klar: 4 steg, 2 filer, ~4–6 tester
 
 - [ ] **Legal vurdering av dependencies**
     - Gjennomgå alle dependencies i `package.json` for å identifisere eventuelle med kjente sårbarheter, utdatert vedlikehold eller lisensproblemer.
