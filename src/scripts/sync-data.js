@@ -7,6 +7,7 @@ import path from 'path';
 import { pipeline } from 'stream/promises';
 import crypto from 'crypto';
 import sharp from 'sharp';
+import { parseImageConfig } from './image-config.js';
 
 // --- KONFIGURASJON ---
 function getConfig() {
@@ -130,16 +131,7 @@ async function syncTannleger() {
         const tannlegeData = await Promise.all(activeRows.map(async ([navn, tittel, beskrivelse, bildeFil, aktiv, skala, posX, posY]) => {
             console.log(`  🔄 Behandler: ${navn}`);
             
-            // Pars og valider bilde-justeringer med trygge defaults
-            let scale = parseFloat(skala);
-            scale = (!isNaN(scale) && scale >= 1.0 && scale <= 3.0) ? scale : 1.0;
-            if (!isNaN(parseFloat(skala)) && parseFloat(skala) > 3.0) scale = 3.0;
-            
-            const parsedX = parseInt(posX);
-            const positionX = (!isNaN(parsedX) && parsedX >= 0 && parsedX <= 100) ? parsedX : 50;
-            
-            const parsedY = parseInt(posY);
-            const positionY = (!isNaN(parsedY) && parsedY >= 0 && parsedY <= 100) ? parsedY : 50;
+            const { scale, positionX, positionY } = parseImageConfig(skala, posX, posY);
 
             if (bildeFil) {
                 try {
@@ -318,9 +310,10 @@ async function syncForsideBilde() {
             );
             if (forsideRow) {
                 bildeFil = forsideRow[1] || '';
-                scale = parseFloat(forsideRow[5]) || 1;
-                posX = parseInt(forsideRow[6]) || 50;
-                posY = parseInt(forsideRow[7]) || 50;
+                const parsed = parseImageConfig(forsideRow[5], forsideRow[6], forsideRow[7]);
+                scale = parsed.scale;
+                posX = parsed.positionX;
+                posY = parsed.positionY;
                 foundInGalleri = true;
                 console.log('  📋 Forsidebilde funnet i galleri-arket.');
             }
@@ -431,16 +424,7 @@ async function syncGalleri() {
             const isForsidebilde = rowType === 'forsidebilde';
             console.log(`  🔄 Behandler: ${tittel || bildeFil}${isForsidebilde ? ' (forsidebilde)' : ''}`);
 
-            // Pars og valider bilde-justeringer med trygge defaults (identisk mønster som syncTannleger)
-            let scale = parseFloat(skala);
-            scale = (!isNaN(scale) && scale >= 1.0 && scale <= 3.0) ? scale : 1.0;
-            if (!isNaN(parseFloat(skala)) && parseFloat(skala) > 3.0) scale = 3.0;
-
-            const parsedX = parseInt(posX);
-            const positionX = (!isNaN(parsedX) && parsedX >= 0 && parsedX <= 100) ? parsedX : 50;
-
-            const parsedY = parseInt(posY);
-            const positionY = (!isNaN(parsedY) && parsedY >= 0 && parsedY <= 100) ? parsedY : 50;
+            const { scale, positionX, positionY } = parseImageConfig(skala, posX, posY);
 
             const parsedOrder = parseInt(rekkefølge);
             const order = (!isNaN(parsedOrder)) ? parsedOrder : 99;

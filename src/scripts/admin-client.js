@@ -1,5 +1,7 @@
 // src/scripts/admin-client.js
 
+import { parseImageConfig } from './image-config.js';
+
 let tokenClient;
 let gapiInited = false;
 let gisInited = false;
@@ -641,10 +643,8 @@ export async function getTannlegerRaw(spreadsheetId) {
         if (!rows || rows.length <= 1) return [];
 
         return rows.slice(1).map((row, index) => {
-            const scale = parseFloat(row[5]);
-            const pX = parseInt(row[6]);
-            const pY = parseInt(row[7]);
-            
+            const { scale, positionX, positionY } = parseImageConfig(row[5], row[6], row[7]);
+
             return {
                 rowIndex: index + 2, // 1-basert + 1 for header
                 name: row[0] || '',
@@ -652,9 +652,9 @@ export async function getTannlegerRaw(spreadsheetId) {
                 description: row[2] || '',
                 image: row[3] || '',
                 active: (row[4] || 'nei').toLowerCase() === 'ja',
-                scale: isNaN(scale) ? 1.0 : scale,
-                positionX: isNaN(pX) ? 50 : pX,
-                positionY: isNaN(pY) ? 50 : pY
+                scale,
+                positionX,
+                positionY
             };
         });
     } catch (err) {
@@ -843,9 +843,7 @@ export async function getGalleriRaw(spreadsheetId) {
         if (!rows || rows.length <= 1) return [];
 
         return rows.slice(1).map((row, index) => {
-            const scale = parseFloat(row[5]);
-            const pX = parseInt(row[6]);
-            const pY = parseInt(row[7]);
+            const { scale, positionX, positionY } = parseImageConfig(row[5], row[6], row[7]);
             const order = parseInt(row[4]);
 
             return {
@@ -855,9 +853,9 @@ export async function getGalleriRaw(spreadsheetId) {
                 altText: row[2] || '',
                 active: (row[3] || 'nei').toLowerCase() === 'ja',
                 order: isNaN(order) ? 99 : order,
-                scale: isNaN(scale) ? 1.0 : scale,
-                positionX: isNaN(pX) ? 50 : pX,
-                positionY: isNaN(pY) ? 50 : pY,
+                scale,
+                positionX,
+                positionY,
                 type: row[8] || 'galleri'
             };
         });
