@@ -24,6 +24,14 @@
   - ~~Steg 5:~~ ✅ Innrykk-fiks + `downloadImageIfNeeded()` fjerner 3× duplisert download-logikk
 
 ## Backlog
+- [ ] **Endre tekst på admin-siden**
+  - Legge til informasjonstekst: «Endringene lagres på Google Disk og publiseres automatisk innen noen minutter»
+
+- [ ] **Gjennomgang av flaky tester**
+  - Identifisere hvilke tester som er ustabile/flaky
+  - Forstå rotårsaken til hvorfor de feiler sporadisk
+  - Fikse de underliggende problemene
+
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
