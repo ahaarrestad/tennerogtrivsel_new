@@ -26,6 +26,7 @@
     - [x] Steg 4: ~30 slate-referanser i JS-moduler erstattet (dashboard, dialog, gallery, pwa-prompt)
     - [x] Steg 5: Toggle-switch via CSS + data-active — fjernet ~90 classList.toggle-kall, 6 steder forenklet
     - [x] Steg 6: Semantiske status-klasser (active/planned/expired) + siste slate-300 fjernet
+    - [x] Steg 7: Ikon-knapper (admin-icon-btn, admin-icon-btn-danger, admin-icon-btn-reorder) + admin-btn-cancel
 
 - [ ] **Gjøre det enklere å forstå hvor innstillinger brukes på nettsiden**
   - Bruker av admin-panelet vet ikke nødvendigvis hvor de ulike tekstene i Innstillinger-modulen dukker opp på den offentlige siden
