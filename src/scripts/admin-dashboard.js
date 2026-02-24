@@ -282,10 +282,10 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                             </p>
                         </div>
                         <div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
-                            <button data-id="${msg.driveId}" data-name="${msg.name}" class="edit-btn p-2.5 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
+                            <button data-id="${msg.driveId}" data-name="${msg.name}" class="edit-btn admin-icon-btn group/btn" title="Rediger">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
-                            <button data-id="${msg.driveId}" data-name="${msg.name}" class="delete-btn p-2.5 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all group/btn" title="Slett">
+                            <button data-id="${msg.driveId}" data-name="${msg.name}" class="delete-btn admin-icon-btn-danger group/btn" title="Slett">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                             </button>
                         </div>
@@ -360,10 +360,10 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
                             <p class="text-xs text-admin-muted mt-1">${s.ingress || ''}</p>
                         </div>
                         <div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
-                            <button data-id="${s.driveId}" data-name="${s.name}" class="edit-btn p-2.5 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
+                            <button data-id="${s.driveId}" data-name="${s.name}" class="edit-btn admin-icon-btn group/btn" title="Rediger">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
-                            <button data-id="${s.driveId}" data-name="${s.name}" class="delete-btn p-2.5 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all group/btn" title="Slett">
+                            <button data-id="${s.driveId}" data-name="${s.name}" class="delete-btn admin-icon-btn-danger group/btn" title="Slett">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                             </button>
                         </div>
@@ -446,10 +446,10 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
                             </div>
                         </div>
                         <div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
-                            <button data-row="${t.rowIndex}" data-name="${t.name}" class="edit-tannlege-btn p-2.5 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all group/btn" title="Rediger">
+                            <button data-row="${t.rowIndex}" data-name="${t.name}" class="edit-tannlege-btn admin-icon-btn group/btn" title="Rediger">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
-                            <button data-row="${t.rowIndex}" data-name="${t.name}" class="delete-tannlege-btn p-2.5 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all group/btn" title="Slett">
+                            <button data-row="${t.rowIndex}" data-name="${t.name}" class="delete-tannlege-btn admin-icon-btn-danger group/btn" title="Slett">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                             </button>
                         </div>
@@ -600,17 +600,17 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                         <!-- Knapper: rekkefølge + rediger + slett -->
                         <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                             <div class="flex flex-col gap-1">
-                                <button data-row="${img.rowIndex}" data-dir="-1" class="reorder-btn p-1.5 rounded-lg bg-admin-hover text-admin-muted-light hover:bg-brand hover:text-white transition-all ${isFirst || isForsidebilde ? 'invisible' : ''}" title="Flytt opp">
+                                <button data-row="${img.rowIndex}" data-dir="-1" class="reorder-btn admin-icon-btn-reorder ${isFirst || isForsidebilde ? 'invisible' : ''}" title="Flytt opp">
                                     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                                 </button>
-                                <button data-row="${img.rowIndex}" data-dir="1" class="reorder-btn p-1.5 rounded-lg bg-admin-hover text-admin-muted-light hover:bg-brand hover:text-white transition-all ${isLast || isForsidebilde ? 'invisible' : ''}" title="Flytt ned">
+                                <button data-row="${img.rowIndex}" data-dir="1" class="reorder-btn admin-icon-btn-reorder ${isLast || isForsidebilde ? 'invisible' : ''}" title="Flytt ned">
                                     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                 </button>
                             </div>
-                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="edit-galleri-btn p-2 sm:p-2.5 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all" title="Rediger">
+                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="edit-galleri-btn admin-icon-btn" title="Rediger">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
-                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="delete-galleri-btn p-2 sm:p-2.5 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all" title="Slett">
+                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="delete-galleri-btn admin-icon-btn-danger" title="Slett">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                             </button>
                         </div>
