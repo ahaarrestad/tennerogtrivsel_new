@@ -15,6 +15,7 @@ import {
     getSettingsWithNotes,
     updateSettings,
     updateSettingByKey,
+    updateSettingOrder,
     checkAccess,
     listFiles,
     getFileContent,
@@ -373,10 +374,10 @@ describe('admin-client.js', () => {
     });
 
     describe('Google Sheets Module', () => {
-        it('getSettingsWithNotes skal mappe rader fra A, B og C korrekt', async () => {
+        it('getSettingsWithNotes skal mappe rader fra A, B, C og D korrekt', async () => {
             const mockValues = [
-                ['ID', 'Verdi', 'Beskrivelse'], 
-                ['tel', '123', 'Telefonnummer']
+                ['ID', 'Verdi', 'Beskrivelse', 'Rekkefølge'],
+                ['tel', '123', 'Telefonnummer', 3]
             ];
             gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
                 result: { values: mockValues }
@@ -384,19 +385,50 @@ describe('admin-client.js', () => {
 
             const settings = await getSettingsWithNotes('sheet-123');
             expect(settings).toHaveLength(1);
-            expect(settings[0]).toEqual({
+            expect(settings[0]).toMatchObject({
                 row: 2,
                 id: 'tel',
                 value: '123',
-                description: 'Telefonnummer'
+                description: 'Telefonnummer',
+                order: 3
             });
+        });
+
+        it('getSettingsWithNotes skal bruke UNFORMATTED_VALUE', async () => {
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
+                result: { values: [['ID', 'Verdi', 'Beskrivelse', 'Rekkefølge']] }
+            });
+
+            await getSettingsWithNotes('sheet-123');
+
+            expect(gapi.client.sheets.spreadsheets.values.get).toHaveBeenCalledWith(expect.objectContaining({
+                range: 'Innstillinger!A:D',
+                valueRenderOption: 'UNFORMATTED_VALUE'
+            }));
+        });
+
+        it('getSettingsWithNotes skal bruke radnummer som fallback for manglende order', async () => {
+            const mockValues = [
+                ['ID', 'Verdi', 'Beskrivelse', 'Rekkefølge'],
+                ['key1', 'v1', '', ''],  // order tom → fallback index + 1 = 1
+                ['key2', 'v2', '', 5]    // order = 5
+            ];
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
+                result: { values: mockValues }
+            });
+
+            const settings = await getSettingsWithNotes('sheet-123');
+            expect(settings[0].order).toBe(1);
+            expect(settings[0]._orderMissing).toBe(true);
+            expect(settings[1].order).toBe(5);
+            expect(settings[1]._orderMissing).toBe(false);
         });
 
         it('getSettingsWithNotes skal bruke tomme strenger som fallback for manglende celler', async () => {
             const mockValues = [
-                ['ID', 'Verdi', 'Beskrivelse'],
-                ['key1'],           // bare kolonne A, B og C mangler
-                ['key2', 'val2'],   // kolonne C mangler
+                ['ID', 'Verdi', 'Beskrivelse', 'Rekkefølge'],
+                ['key1'],           // bare kolonne A, B, C og D mangler
+                ['key2', 'val2'],   // kolonne C og D mangler
             ];
             gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
                 result: { values: mockValues }
@@ -404,8 +436,22 @@ describe('admin-client.js', () => {
 
             const settings = await getSettingsWithNotes('sheet-123');
             expect(settings).toHaveLength(2);
-            expect(settings[0]).toEqual({ row: 2, id: 'key1', value: '', description: '' });
-            expect(settings[1]).toEqual({ row: 3, id: 'key2', value: 'val2', description: '' });
+            expect(settings[0]).toMatchObject({ row: 2, id: 'key1', value: '', description: '', order: 1 });
+            expect(settings[1]).toMatchObject({ row: 3, id: 'key2', value: 'val2', description: '', order: 2 });
+        });
+
+        it('getSettingsWithNotes skal konvertere numeriske verdier til strenger', async () => {
+            const mockValues = [
+                ['ID', 'Verdi', 'Beskrivelse', 'Rekkefølge'],
+                ['latitude', 59.9139, 'Breddegrad', 1]
+            ];
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValue({
+                result: { values: mockValues }
+            });
+
+            const settings = await getSettingsWithNotes('sheet-123');
+            expect(settings[0].value).toBe('59.9139');
+            expect(typeof settings[0].value).toBe('string');
         });
 
         it('updateSettings skal sende korrekte verdier til APIet', async () => {
@@ -1556,9 +1602,9 @@ describe('admin-client.js', () => {
             gapi.client.sheets.spreadsheets.values.get.mockResolvedValueOnce({
                 result: {
                     values: [
-                        ['header', 'header'],
-                        ['forsideBilde', 'gammel.png', ''],
-                        ['forsideBildeScale', '1', ''],
+                        ['header', 'header', '', ''],
+                        ['forsideBilde', 'gammel.png', '', 1],
+                        ['forsideBildeScale', '1', '', 2],
                     ]
                 }
             });
@@ -1574,9 +1620,14 @@ describe('admin-client.js', () => {
             );
         });
 
-        it('skal legge til ny rad hvis nøkkelen ikke finnes', async () => {
+        it('skal legge til ny rad med order-verdi (maxOrder + 1)', async () => {
             gapi.client.sheets.spreadsheets.values.get.mockResolvedValueOnce({
-                result: { values: [['header', 'header']] }
+                result: {
+                    values: [
+                        ['header', 'header', '', ''],
+                        ['existing', 'val', '', 3]
+                    ]
+                }
             });
             gapi.client.sheets.spreadsheets.values.append.mockResolvedValueOnce({});
 
@@ -1584,16 +1635,53 @@ describe('admin-client.js', () => {
 
             expect(gapi.client.sheets.spreadsheets.values.append).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    range: 'Innstillinger!A:C',
-                    resource: { values: [['forsideBildeScale', '1.5', '']] }
+                    range: 'Innstillinger!A:D',
+                    resource: { values: [['forsideBildeScale', '1.5', '', 4]] }
                 })
             );
+        });
+
+        it('skal bruke order 1 når arket er tomt (ingen eksisterende innstillinger)', async () => {
+            gapi.client.sheets.spreadsheets.values.get.mockResolvedValueOnce({
+                result: { values: [['header', 'header', '', '']] }
+            });
+            gapi.client.sheets.spreadsheets.values.append.mockResolvedValueOnce({});
+
+            await updateSettingByKey('sheet-id', 'newKey', 'val');
+
+            const appendCall = gapi.client.sheets.spreadsheets.values.append.mock.calls[0][0];
+            expect(appendCall.resource.values[0][3]).toBe(1); // maxOrder 0 + 1
         });
 
         it('skal kaste feil hvis API feiler', async () => {
             gapi.client.sheets.spreadsheets.values.get.mockRejectedValueOnce(new Error('API-feil'));
             const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
             await expect(updateSettingByKey('sheet-id', 'key', 'val')).rejects.toThrow('API-feil');
+            consoleSpy.mockRestore();
+        });
+    });
+
+    describe('updateSettingOrder', () => {
+        it('skal oppdatere kolonne D for en bestemt rad', async () => {
+            gapi.client.sheets.spreadsheets.values.update.mockResolvedValueOnce({});
+
+            const result = await updateSettingOrder('sheet-id', 5, 3);
+
+            expect(result).toBe(true);
+            expect(gapi.client.sheets.spreadsheets.values.update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    spreadsheetId: 'sheet-id',
+                    range: 'Innstillinger!D5',
+                    valueInputOption: 'RAW',
+                    resource: { values: [[3]] }
+                })
+            );
+        });
+
+        it('skal kaste feil ved API-feil', async () => {
+            gapi.client.sheets.spreadsheets.values.update.mockRejectedValueOnce(new Error('API-feil'));
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            await expect(updateSettingOrder('sheet-id', 2, 1)).rejects.toThrow('API-feil');
             consoleSpy.mockRestore();
         });
     });
