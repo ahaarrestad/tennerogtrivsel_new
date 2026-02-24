@@ -29,6 +29,7 @@
     - [x] Steg 7: Ikon-knapper (admin-icon-btn, admin-icon-btn-danger, admin-icon-btn-reorder) + admin-btn-cancel
     - [x] Steg 8: Fokus-ring synlighet (ring-2/20), gap-konsistens, border-admin-border på delere
     - [x] Steg 9: EasyMDE hex→CSS-variabler, PWA manifest + theme-color → brand (#292524)
+    - [x] Steg 10: Toggle role=switch + aria-checked, spinner role=status, toast responsiv
 
 - [ ] **Gjøre det enklere å forstå hvor innstillinger brukes på nettsiden**
   - Bruker av admin-panelet vet ikke nødvendigvis hvor de ulike tekstene i Innstillinger-modulen dukker opp på den offentlige siden

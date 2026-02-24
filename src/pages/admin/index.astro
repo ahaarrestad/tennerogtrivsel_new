@@ -168,8 +168,8 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             <div id="module-content" class="admin-card min-h-[300px]">
                 <h2 id="module-title" class="admin-title !mb-8 border-b border-brand-light pb-6">Behandlingsområde</h2>
                 <div id="module-inner">
-                    <div class="flex items-center gap-3 text-admin-muted text-sm italic">
-                        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <div class="flex items-center gap-3 text-admin-muted text-sm italic" role="status" aria-label="Laster innhold">
+                        <svg class="animate-spin h-5 w-5" aria-hidden="true" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         Laster innhold...
                     </div>
                 </div>
@@ -198,8 +198,8 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                             <p class="mb-2 text-sm text-admin-muted"><span class="font-bold text-brand">Klikk for å laste opp</span> eller dra og slipp</p>
                             <p class="text-xs text-admin-muted-light">JPG, PNG, WEBP (Maks 5MB)</p>
                         </div>
-                        <div id="upload-spinner" class="absolute inset-0 flex items-center justify-center bg-white/80 hidden">
-                            <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <div id="upload-spinner" class="absolute inset-0 flex items-center justify-center bg-white/80 hidden" role="status" aria-label="Laster opp bilde">
+                            <svg class="animate-spin h-8 w-8 text-brand" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         </div>
                         <input id="upload-image-input" type="file" class="hidden" accept="image/*" />
                     </label>
@@ -388,6 +388,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         function setToggleState(toggleBtn: HTMLElement | null, isActive: boolean) {
             if (!toggleBtn) return;
             toggleBtn.dataset.active = String(isActive);
+            toggleBtn.setAttribute('aria-checked', String(isActive));
             const lbl = toggleBtn.querySelector('.toggle-label') as HTMLElement;
             if (lbl) lbl.textContent = isActive ? 'Aktiv' : 'Inaktiv';
         }
@@ -396,7 +397,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             const labelText = isActive ? 'Aktiv' : 'Inaktiv';
             return `<div class="flex items-center justify-between">
                 <label class="admin-label !mb-0">Synlighet</label>
-                <button id="${id}" type="button" class="flex items-center gap-1.5 cursor-pointer group/toggle" data-active="${isActive}">
+                <button id="${id}" type="button" role="switch" aria-checked="${isActive}" class="flex items-center gap-1.5 cursor-pointer group/toggle" data-active="${isActive}">
                     <span class="toggle-track"><span class="toggle-dot"></span></span>
                     <span class="toggle-label">${labelText}</span>
                 </button>
