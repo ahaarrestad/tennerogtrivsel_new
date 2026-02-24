@@ -51,16 +51,14 @@ Hvert steg er én commit. Ingen funksjonalitet endres — kun strukturforbedring
 
 ---
 
-### Steg 3: Felles event-binding og thumbnail-lasting for admin-modullastere
+### ~~Steg 3: Felles event-binding og thumbnail-lasting for admin-modullastere~~ ✅
 
 **Fil:** `src/scripts/admin-dashboard.js`
 
-- Ekstraher `bindModuleEvents(container, { onEdit, onDelete, onToggle, onReorder })` — erstatter 4× gjentatt event-binding (edit-btn, delete-btn, toggle, stopPropagation, card-klikk)
-- Ekstraher `loadThumbnails(container, items, parentFolderId)` — erstatter 2× identisk async thumbnail-lasting (tannleger linje 484-501, galleri linje 678-695)
-- DOMPurify-kompatibel re-binding av handlere
-
-**Risiko:** Lav — ren ekstraksjon, enkelt å verifisere
-**Test:** Eksisterende E2E-tester verifiserer funksjonalitet
+- `bindCardClickDelegation(container, editBtnSelector)` — erstatter 4× duplisert stopPropagation + kort→edit-delegering
+- `loadThumbnails(container, items, parentFolderId)` — erstatter 2× identisk async thumbnail-lasting
+- Edit/delete/toggle-bindinger beholdt som de er (ulike signaturer, ikke verdt å generalisere)
+- 107 tester bestått, 85.64% branch coverage
 
 ---
 
