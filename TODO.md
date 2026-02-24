@@ -18,6 +18,7 @@
   - Fokus på klarhet, konsistens og vedlikeholdbarhet
   - 6 steg: bildeparsing, CRUD-konsolidering, event-binding, HTML-templates, sync-data-rydding, ekstraher inline-script
   - ~~Steg 1:~~ ✅ Felles `parseImageConfig()` erstatter 5× duplisert bildeparsing
+  - ~~Steg 2:~~ ✅ `deleteSheetRow()` + `updateSheetRow()` konsoliderer CRUD
 
 ## Backlog
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))

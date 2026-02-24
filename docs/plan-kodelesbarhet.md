@@ -40,16 +40,14 @@ Hvert steg er én commit. Ingen funksjonalitet endres — kun strukturforbedring
 
 ---
 
-### Steg 2: Konsolider CRUD-operasjoner i admin-client.js
+### ~~Steg 2: Konsolider CRUD-operasjoner i admin-client.js~~ ✅
 
 **Fil:** `src/scripts/admin-client.js`
 
-- Ekstraher felles `deleteSheetRow(sheetName, rowIndex)` fra `deleteTannlegeRowPermanently()` (linje 772-807) og `deleteGalleriRowPermanently()` (linje 998-1033) — ~90% identisk kode
-- Ekstraher felles `updateSheetRow(sheetName, range, values)` fra `updateTannlegeRow()` og `updateGalleriRow()`
-- Behold eksisterende funksjoner som tynne wrappers for bakoverkompatibilitet
-
-**Risiko:** Middels — mange tester avhenger av disse funksjonene
-**Test:** Kjør eksisterende testsuite, legg til tester for hjelpefunksjonene
+- `deleteSheetRow(spreadsheetId, sheetName, rowIndex)` — felles slette-logikk
+- `updateSheetRow(spreadsheetId, sheetName, rowIndex, endCol, values, label)` — felles oppdatering
+- Eksisterende funksjoner beholdt som tynne wrappers (bakoverkompatibilitet)
+- 133 eksisterende tester bestått, 94.76% branch coverage
 
 ---
 
