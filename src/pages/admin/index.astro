@@ -228,7 +228,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         import {
             initGapi, initGis, login, logout, tryRestoreSession,
             silentLogin, getStoredUser, setRememberMe, getSettingsWithNotes, updateSettings,
-            updateSettingByKey, getSheetParentFolder, listFiles, getFileContent,
+            updateSettingByKey, updateSettingOrder, getSheetParentFolder, listFiles, getFileContent,
             saveFile, createFile, deleteFile, parseMarkdown, stringifyMarkdown,
             updateTannlegeRow, addTannlegeRow, deleteTannlegeRowPermanently, getDriveImageBlob,
             findFileByName, backupToSlettetSheet, getTannlegerRaw,
@@ -244,7 +244,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             updateUIWithUser, autoResizeTextarea, saveSingleSetting,
             loadMeldingerModule, enforceAccessControl,
             loadTjenesterModule, loadTannlegerModule, loadGalleriListeModule,
-            reorderGalleriItem, mergeSettingsWithDefaults,
+            reorderGalleriItem, reorderSettingItem, mergeSettingsWithDefaults,
             formatTimestamp, updateLastFetchedTime
         } from '../../scripts/admin-dashboard.js';
         import snarkdown from 'snarkdown';
@@ -299,6 +299,8 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             tannlegerBeskrivelse: '/tannleger — meta-beskrivelse (SEO)',
         };
 
+        let settingsReorderMode = false;
+
         async function loadSettingsModule() {
             const inner = document.getElementById('module-inner');
             if (!inner) return;
@@ -317,39 +319,92 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                     ));
                 }
 
+                // Migrer order-verdier for rader som mangler kolonne D
+                const needsOrderMigration = sheetSettings.filter(s => s._orderMissing);
+                if (needsOrderMigration.length > 0) {
+                    await Promise.all(needsOrderMigration.map(s =>
+                        updateSettingOrder(SHEET_ID, s.row, s.order)
+                            .then(() => { s._orderMissing = false; })
+                            .catch(err => console.warn(`Kunne ikke migrere order for ${s.id}:`, err))
+                    ));
+                }
+
+                // Sorter etter order
+                allSettings.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+
                 const fetchedAt = formatTimestamp(new Date());
                 let html = `<div class="space-y-4 max-w-4xl">`;
+                html += `<div class="flex items-center justify-between">`;
                 html += `<p class="text-xs text-admin-muted-light">Sist hentet: <span id="settings-last-fetched">${fetchedAt}</span></p>`;
+                html += `<button id="settings-reorder-toggle" class="text-xs px-3 py-1 rounded border border-admin-border hover:bg-admin-hover transition-colors ${settingsReorderMode ? 'bg-admin-hover font-bold' : ''}" type="button">Endre rekkefølge</button>`;
+                html += `</div>`;
                 allSettings.forEach((setting, i) => {
                     const label = setting.description || setting.id;
                     const isLong = (setting.value && setting.value.length > 60) || setting.id.toLowerCase().includes('tekst');
                     const hint = SETTING_HINTS[setting.id] || '';
+                    const isFirst = i === 0;
+                    const isLast = i === allSettings.length - 1;
                     html += `
-                        <div class="admin-field-container cursor-pointer" id="setting-container-${i}">
+                        <div class="admin-field-container ${settingsReorderMode ? '' : 'cursor-pointer'}" id="setting-container-${i}">
                             <div class="flex justify-between items-start gap-4">
-                                <label class="admin-label !mb-0 cursor-pointer">${label}</label>
+                                <div class="flex items-center gap-2">
+                                    ${settingsReorderMode ? `
+                                    <div class="flex flex-col gap-1">
+                                        <button data-idx="${i}" data-dir="-1" class="settings-reorder-btn admin-icon-btn-reorder ${isFirst ? 'invisible' : ''}" title="Flytt opp">
+                                            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                        </button>
+                                        <button data-idx="${i}" data-dir="1" class="settings-reorder-btn admin-icon-btn-reorder ${isLast ? 'invisible' : ''}" title="Flytt ned">
+                                            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                        </button>
+                                    </div>` : ''}
+                                    <label class="admin-label !mb-0 ${settingsReorderMode ? '' : 'cursor-pointer'}">${label}</label>
+                                </div>
                                 <div id="status-${i}" class="shrink-0 h-5"></div>
                             </div>
-                            ${hint ? `<p class="text-[10px] text-admin-muted-light -mt-0.5">Vises på: ${hint}</p>` : ''}
-                            ${isLong ?
+                            ${hint ? `<p class="text-[10px] text-admin-muted-light -mt-0.5">${settingsReorderMode ? '' : 'Vises på: '}${hint}</p>` : ''}
+                            ${settingsReorderMode ? '' : (isLong ?
                                 `<textarea id="setting-input-${i}" data-index="${i}" class="setting-field admin-input resize-none overflow-hidden">${setting.value}</textarea>` :
                                 `<input type="text" id="setting-input-${i}" data-index="${i}" value="${setting.value}" class="setting-field admin-input">`
-                            }
+                            )}
                         </div>`;
                 });
                 inner.innerHTML = html + `</div>`;
-                document.querySelectorAll('.setting-field').forEach(input => {
-                    if (input.tagName === 'TEXTAREA') {
-                        autoResizeTextarea(input);
-                        input.addEventListener('input', (e) => autoResizeTextarea(e.target as HTMLTextAreaElement));
-                    }
-                    input.addEventListener('blur', (e) => saveSingleSetting(parseInt((e.target as any).dataset.index), e.target as HTMLInputElement, allSettings, SHEET_ID, loadSettingsModule));
+
+                // Toggle reorder-modus
+                document.getElementById('settings-reorder-toggle')?.addEventListener('click', () => {
+                    settingsReorderMode = !settingsReorderMode;
+                    loadSettingsModule();
                 });
-                allSettings.forEach((_, i) => {
-                    document.getElementById(`setting-container-${i}`)?.addEventListener('click', () => {
-                        (document.getElementById(`setting-input-${i}`) as HTMLElement)?.focus();
+
+                if (settingsReorderMode) {
+                    // Reorder-knapper
+                    inner.querySelectorAll('.settings-reorder-btn').forEach(btn => {
+                        (btn as HTMLElement).addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            const idx = parseInt((btn as HTMLElement).dataset.idx!);
+                            const dir = parseInt((btn as HTMLElement).dataset.dir!);
+                            const ok = await reorderSettingItem(SHEET_ID, allSettings, idx, dir);
+                            if (ok) {
+                                updateLastFetchedTime(new Date());
+                                loadSettingsModule();
+                            }
+                        });
                     });
-                });
+                } else {
+                    // Vanlige felt-events
+                    document.querySelectorAll('.setting-field').forEach(input => {
+                        if (input.tagName === 'TEXTAREA') {
+                            autoResizeTextarea(input);
+                            input.addEventListener('input', (e) => autoResizeTextarea(e.target as HTMLTextAreaElement));
+                        }
+                        input.addEventListener('blur', (e) => saveSingleSetting(parseInt((e.target as any).dataset.index), e.target as HTMLInputElement, allSettings, SHEET_ID, loadSettingsModule));
+                    });
+                    allSettings.forEach((_, i) => {
+                        document.getElementById(`setting-container-${i}`)?.addEventListener('click', () => {
+                            (document.getElementById(`setting-input-${i}`) as HTMLElement)?.focus();
+                        });
+                    });
+                }
             } catch (e) {
                 console.error("Settings load failed", e);
                 inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste innstillinger.</div>

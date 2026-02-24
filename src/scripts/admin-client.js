@@ -424,12 +424,14 @@ export function logout() {
  * Kolonne A: Teknisk ID
  * Kolonne B: Verdi
  * Kolonne C: Beskrivelse (vises som tittel i Admin)
+ * Kolonne D: Rekkefølge (order)
  */
 export async function getSettingsWithNotes(spreadsheetId) {
     try {
         const response = await gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId: spreadsheetId,
-            range: 'Innstillinger!A:C',
+            range: 'Innstillinger!A:D',
+            valueRenderOption: 'UNFORMATTED_VALUE',
         });
 
         const rows = response.result.values;
@@ -437,11 +439,16 @@ export async function getSettingsWithNotes(spreadsheetId) {
 
         // Vi hopper over header-raden (indeks 0)
         return rows.slice(1).map((row, index) => {
+            const rawOrder = row[3];
+            const order = parseInt(rawOrder);
+            const orderMissing = rawOrder === undefined || rawOrder === null || rawOrder === '';
             return {
                 row: index + 2,
-                id: row[0] || '',
-                value: row[1] || '',
-                description: row[2] || '' // Bruker kolonne C som forklaring/tittel
+                id: (row[0] || '') + '',
+                value: (row[1] ?? '') + '',
+                description: (row[2] || '') + '',
+                order: isNaN(order) ? index + 1 : order,
+                _orderMissing: orderMissing
             };
         }).filter(item => item.id);
 
@@ -486,11 +493,12 @@ export async function updateSettingByKey(spreadsheetId, key, value) {
                 resource: { values: [[String(value)]] }
             });
         } else {
+            const maxOrder = allSettings.reduce((max, s) => Math.max(max, s.order || 0), 0);
             await gapi.client.sheets.spreadsheets.values.append({
                 spreadsheetId,
-                range: 'Innstillinger!A:C',
+                range: 'Innstillinger!A:D',
                 valueInputOption: 'RAW',
-                resource: { values: [[key, String(value), '']] }
+                resource: { values: [[key, String(value), '', maxOrder + 1]] }
             });
         }
 
@@ -498,6 +506,25 @@ export async function updateSettingByKey(spreadsheetId, key, value) {
         return true;
     } catch (err) {
         console.error(`[Admin] Kunne ikke oppdatere innstilling "${key}":`, err);
+        throw err;
+    }
+}
+
+/**
+ * Oppdaterer rekkefølge (kolonne D) for én innstilling.
+ */
+export async function updateSettingOrder(spreadsheetId, rowNumber, order) {
+    try {
+        await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Innstillinger!D${rowNumber}`,
+            valueInputOption: 'RAW',
+            resource: { values: [[order]] }
+        });
+        console.log(`[Admin] Rekkefølge for rad ${rowNumber} satt til ${order}.`);
+        return true;
+    } catch (err) {
+        console.error(`[Admin] Kunne ikke oppdatere rekkefølge for rad ${rowNumber}:`, err);
         throw err;
     }
 }

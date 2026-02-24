@@ -24,6 +24,7 @@ vi.mock('../admin-client.js', () => ({
     stringifyMarkdown: vi.fn(),
     updateSettings: vi.fn(),
     updateSettingByKey: vi.fn(),
+    updateSettingOrder: vi.fn(),
     getSettingsWithNotes: vi.fn(),
     checkMultipleAccess: vi.fn(),
     logout: vi.fn(),
@@ -56,7 +57,8 @@ const {
     enforceAccessControl, updateUIWithUser, autoResizeTextarea,
     saveSingleSetting, loadMeldingerModule, loadTjenesterModule,
     loadTannlegerModule, loadGalleriListeModule, reorderGalleriItem,
-    mergeSettingsWithDefaults, formatTimestamp, updateLastFetchedTime
+    reorderSettingItem, mergeSettingsWithDefaults, formatTimestamp,
+    updateLastFetchedTime
 } = adminDashboard;
 
 describe('admin-dashboard.js', () => {
@@ -1130,6 +1132,80 @@ describe('admin-dashboard.js', () => {
 
             // After swap both are 5, so force different: current.order = 0+1=1, neighbor.order = 0
             expect(items[0].order).not.toBe(items[1].order);
+        });
+    });
+
+    describe('reorderSettingItem', () => {
+        it('should swap order values between current and neighbor (down)', async () => {
+            const items = [
+                { row: 2, id: 'phone1', order: 1 },
+                { row: 3, id: 'email', order: 2 }
+            ];
+            adminClient.updateSettingOrder.mockResolvedValue(true);
+
+            const result = await reorderSettingItem('sheet-id', items, 0, 1);
+
+            expect(result).toBe(true);
+            expect(items[0].order).toBe(2);
+            expect(items[1].order).toBe(1);
+            expect(adminClient.updateSettingOrder).toHaveBeenCalledTimes(2);
+        });
+
+        it('should swap order values between current and neighbor (up)', async () => {
+            const items = [
+                { row: 2, id: 'phone1', order: 1 },
+                { row: 3, id: 'email', order: 2 }
+            ];
+            adminClient.updateSettingOrder.mockResolvedValue(true);
+
+            const result = await reorderSettingItem('sheet-id', items, 1, -1);
+
+            expect(result).toBe(true);
+            expect(items[0].order).toBe(2);
+            expect(items[1].order).toBe(1);
+        });
+
+        it('should return false when trying to move first item up', async () => {
+            const items = [{ row: 2, id: 'phone1', order: 1 }];
+
+            const result = await reorderSettingItem('sheet-id', items, 0, -1);
+
+            expect(result).toBe(false);
+            expect(adminClient.updateSettingOrder).not.toHaveBeenCalled();
+        });
+
+        it('should return false when trying to move last item down', async () => {
+            const items = [{ row: 2, id: 'phone1', order: 1 }];
+
+            const result = await reorderSettingItem('sheet-id', items, 0, 1);
+
+            expect(result).toBe(false);
+            expect(adminClient.updateSettingOrder).not.toHaveBeenCalled();
+        });
+
+        it('should force different order values when both have same order', async () => {
+            const items = [
+                { row: 2, id: 'a', order: 5 },
+                { row: 3, id: 'b', order: 5 }
+            ];
+            adminClient.updateSettingOrder.mockResolvedValue(true);
+
+            await reorderSettingItem('sheet-id', items, 0, 1);
+
+            expect(items[0].order).not.toBe(items[1].order);
+        });
+
+        it('should call updateSettingOrder with correct row and order values', async () => {
+            const items = [
+                { row: 4, id: 'a', order: 10 },
+                { row: 7, id: 'b', order: 20 }
+            ];
+            adminClient.updateSettingOrder.mockResolvedValue(true);
+
+            await reorderSettingItem('sheet-id', items, 0, 1);
+
+            expect(adminClient.updateSettingOrder).toHaveBeenCalledWith('sheet-id', 4, 20);
+            expect(adminClient.updateSettingOrder).toHaveBeenCalledWith('sheet-id', 7, 10);
         });
     });
 
