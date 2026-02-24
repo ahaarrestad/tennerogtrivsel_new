@@ -17,6 +17,45 @@ function getRefreshAuth() {
 }
 
 /**
+ * Binder kort-klikk-delegering etter DOMPurify.sanitize():
+ * - stopPropagation på alle knapper inni kort (DOMPurify stripper onclick-attributter)
+ * - Kort-klikk delegeres til edit-knappen
+ */
+export function bindCardClickDelegation(container, editBtnSelector) {
+    container.querySelectorAll('.admin-card-interactive button').forEach(btn => {
+        btn.addEventListener('click', (e) => e.stopPropagation());
+    });
+    container.querySelectorAll('.admin-card-interactive').forEach(card => {
+        card.onclick = () => card.querySelector(editBtnSelector)?.click();
+    });
+}
+
+/**
+ * Laster thumbnails asynkront for en liste med elementer.
+ * Finner bildefilen i Drive og viser den med riktig utsnitt (scale, posX, posY).
+ */
+export function loadThumbnails(container, items, parentFolderId) {
+    if (!parentFolderId) return;
+    items.forEach(async (item) => {
+        if (!item.image) return;
+        const thumbContainer = container.querySelector(`[data-thumb-row="${item.rowIndex}"]`);
+        if (!thumbContainer) return;
+        try {
+            const file = await findFileByName(item.image, parentFolderId);
+            if (file) {
+                const blobUrl = await getDriveImageBlob(file.id);
+                if (blobUrl) {
+                    const pX = item.positionX ?? 50;
+                    const pY = item.positionY ?? 50;
+                    const sc = item.scale ?? 1.0;
+                    thumbContainer.innerHTML = `<img src="${blobUrl}" class="w-full h-full object-cover" alt="" style="object-position:${pX}% ${pY}%;transform:scale(${sc});transform-origin:${pX}% ${pY}%">`;
+                }
+            }
+        } catch (_) { /* thumbnail er best-effort */ }
+    });
+}
+
+/**
  * Slår sammen innstillinger fra Google Sheets med HARD_DEFAULTS.
  * Nøkler som finnes i defaults men ikke i sheetSettings legges til med isVirtual: true.
  */
@@ -300,13 +339,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
             inner.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.onclick = () => onDelete(btn.dataset.id, btn.dataset.name);
             });
-            // DOMPurify strips onclick attributes – re-attach card click delegation
-            inner.querySelectorAll('.edit-btn, .delete-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => e.stopPropagation());
-            });
-            inner.querySelectorAll('.admin-card-interactive').forEach(card => {
-                card.onclick = () => card.querySelector('.edit-btn')?.click();
-            });
+            bindCardClickDelegation(inner, '.edit-btn');
         }
         document.getElementById('btn-new-melding').onclick = () => onEdit(null, null);
     } catch (e) {
@@ -386,13 +419,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
                     if (s && onToggleActive) onToggleActive(driveId, s.name, s);
                 };
             });
-            // DOMPurify strips onclick attributes – re-attach card click delegation
-            inner.querySelectorAll('.edit-btn, .delete-btn, .toggle-active-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => e.stopPropagation());
-            });
-            inner.querySelectorAll('.admin-card-interactive').forEach(card => {
-                card.onclick = () => card.querySelector('.edit-btn')?.click();
-            });
+            bindCardClickDelegation(inner, '.edit-btn');
         }
         document.getElementById('btn-new-tjeneste').onclick = () => onEdit(null, null);
     } catch (e) {
@@ -472,34 +499,8 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
                     if (t && onToggleActive) onToggleActive(row, t);
                 };
             });
-            // DOMPurify strips onclick attributes – re-attach card click delegation
-            inner.querySelectorAll('.edit-tannlege-btn, .delete-tannlege-btn, .toggle-active-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => e.stopPropagation());
-            });
-            inner.querySelectorAll('.admin-card-interactive').forEach(card => {
-                card.onclick = () => card.querySelector('.edit-tannlege-btn')?.click();
-            });
-
-            // Asynkron lasting av thumbnails
-            if (parentFolderId) {
-                dentists.forEach(async (t) => {
-                    if (!t.image) return;
-                    const thumbContainer = inner.querySelector(`[data-thumb-row="${t.rowIndex}"]`);
-                    if (!thumbContainer) return;
-                    try {
-                        const file = await findFileByName(t.image, parentFolderId);
-                        if (file) {
-                            const blobUrl = await getDriveImageBlob(file.id);
-                            if (blobUrl) {
-                                const pX = t.positionX ?? 50;
-                                const pY = t.positionY ?? 50;
-                                const sc = t.scale ?? 1.0;
-                                thumbContainer.innerHTML = `<img src="${blobUrl}" class="w-full h-full object-cover" alt="" style="object-position:${pX}% ${pY}%;transform:scale(${sc});transform-origin:${pX}% ${pY}%">`;
-                            }
-                        }
-                    } catch (_) { /* thumbnail er best-effort */ }
-                });
-            }
+            bindCardClickDelegation(inner, '.edit-tannlege-btn');
+            loadThumbnails(inner, dentists, parentFolderId);
         }
         document.getElementById('btn-new-tannlege').onclick = () => onEdit(null, null);
     } catch (e) {
@@ -667,33 +668,8 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                     if (img && onToggleActive) onToggleActive(row, img);
                 };
             });
-            container.querySelectorAll('.edit-galleri-btn, .delete-galleri-btn, .reorder-btn, .toggle-active-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => e.stopPropagation());
-            });
-            container.querySelectorAll('.admin-card-interactive').forEach(card => {
-                card.onclick = () => card.querySelector('.edit-galleri-btn')?.click();
-            });
-
-            // Asynkron lasting av thumbnails
-            if (parentFolderId) {
-                images.forEach(async (img) => {
-                    if (!img.image) return;
-                    const thumbContainer = container.querySelector(`[data-thumb-row="${img.rowIndex}"]`);
-                    if (!thumbContainer) return;
-                    try {
-                        const file = await findFileByName(img.image, parentFolderId);
-                        if (file) {
-                            const blobUrl = await getDriveImageBlob(file.id);
-                            if (blobUrl) {
-                                const pX = img.positionX ?? 50;
-                                const pY = img.positionY ?? 50;
-                                const sc = img.scale ?? 1.0;
-                                thumbContainer.innerHTML = `<img src="${blobUrl}" class="w-full h-full object-cover" alt="" style="object-position:${pX}% ${pY}%;transform:scale(${sc});transform-origin:${pX}% ${pY}%">`;
-                            }
-                        }
-                    } catch (_) { /* thumbnail er best-effort */ }
-                });
-            }
+            bindCardClickDelegation(container, '.edit-galleri-btn');
+            loadThumbnails(container, images, parentFolderId);
         }
     } catch (e) {
         console.error("Load galleri failed", e);
