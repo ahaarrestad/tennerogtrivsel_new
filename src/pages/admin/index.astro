@@ -17,7 +17,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
     <title>Admin | Tenner og Trivsel</title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="manifest" href="/admin-manifest.json">
-    <meta name="theme-color" content="#0d9488">
+    <meta name="theme-color" content="#292524">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="TT Admin">
@@ -39,17 +39,17 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         .EasyMDEContainer .editor-toolbar {
             border-top-left-radius: 12px;
             border-top-right-radius: 12px;
-            border-color: #e2e8f0;
-            background: #f8fafc;
+            border-color: var(--color-admin-border);
+            background: var(--color-admin-surface);
         }
         .EasyMDEContainer .CodeMirror {
             border-bottom-left-radius: 12px;
             border-bottom-right-radius: 12px;
-            border-color: #e2e8f0;
+            border-color: var(--color-admin-border);
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         }
         .EasyMDEContainer .editor-preview-active-side {
-            border-color: #e2e8f0;
+            border-color: var(--color-admin-border);
         }
     </style>
 </head>
