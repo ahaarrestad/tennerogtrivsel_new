@@ -1,0 +1,162 @@
+import {
+    deleteFile, getFileContent, parseMarkdown, stringifyMarkdown,
+    saveFile, createFile
+} from './admin-client.js';
+import { showToast, showConfirm } from './admin-dialog.js';
+import { formatDate, stripStackEditData, slugify } from './textFormatter.js';
+import { loadMeldingerModule } from './admin-dashboard.js';
+import { getAdminConfig, showDeletionToast, initEditors } from './admin-editor-helpers.js';
+
+async function deleteMelding(id, name) {
+    if (await showConfirm(`Vil du slette «${name}»?`, { destructive: true })) {
+        try {
+            await deleteFile(id);
+            reloadMeldinger();
+            showDeletionToast(name,
+                'Filen er lagt i Google Drive-papirkurven og kan gjenopprettes derfra innen 30 dager. ' +
+                'Gå til drive.google.com → Papirkurv for å gjenopprette.');
+        } catch (e) { showToast("Kunne ikke slette oppslaget.", "error"); }
+    }
+}
+
+async function editMelding(id, name) {
+    const { MELDINGER_FOLDER } = getAdminConfig();
+    const inner = document.getElementById('module-inner');
+    const actions = document.getElementById('module-actions');
+    if (!inner || !actions) return;
+
+    actions.innerHTML = '';
+    inner.innerHTML = '<div class="text-admin-muted italic text-sm animate-pulse">Laster editor...</div>';
+
+    try {
+        let msgData = { title: '', startDate: new Date().toISOString().split('T')[0], endDate: '', content: '' };
+
+        if (id) {
+            const raw = await getFileContent(id);
+            const { data, body } = parseMarkdown(raw);
+            msgData = { ...data, content: stripStackEditData(body) };
+        }
+
+        inner.innerHTML = `
+            <div class="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label class="admin-label">Tittel</label>
+                        <input type="text" id="edit-title" value="${msgData.title || ''}" placeholder="Skriv en tittel..." class="admin-input">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-2">
+                            <div class="flex justify-between items-center">
+                                <label class="admin-label">Fra og med</label>
+                                <span id="preview-start" class="text-[10px] text-admin-muted-light font-bold">${formatDate(msgData.startDate)}</span>
+                            </div>
+                            <input type="text" id="edit-start" value="${msgData.startDate || ''}" placeholder="Velg dato..." class="admin-input cursor-pointer bg-white">
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex justify-between items-center">
+                                <label class="admin-label">Til og med</label>
+                                <span id="preview-end" class="text-[10px] text-admin-muted-light font-bold">${formatDate(msgData.endDate)}</span>
+                            </div>
+                            <input type="text" id="edit-end" value="${msgData.endDate || ''}" placeholder="Velg dato..." class="admin-input cursor-pointer bg-white">
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2 editor-container">
+                        <label class="admin-label">Innhold</label>
+                        <textarea id="edit-content" placeholder="Skriv meldingen her...">${msgData.content || ''}</textarea>
+                    </div>
+
+                    <!-- DYNAMISK FEILMELDING -->
+                    <div id="date-error" class="hidden animate-in fade-in slide-in-from-top-1">
+                        <div class="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            <span class="text-sm font-black uppercase tracking-tight">Sluttdato må være etter startdato.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-admin-border">
+                    <button id="btn-save-melding" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Lagre melding</button>
+                    <button onclick="window.loadMeldingerModule()" class="admin-btn-cancel">Avbryt</button>
+                </div>
+            </div>`;
+
+        const onDateChange = () => {
+            const startInp = document.getElementById('edit-start');
+            const endInp = document.getElementById('edit-end');
+            const startEl = document.getElementById('preview-start');
+            const endEl = document.getElementById('preview-end');
+            const errorBox = document.getElementById('date-error');
+            const saveBtn = document.getElementById('btn-save-melding');
+
+            if (startEl && startInp) startEl.textContent = formatDate(startInp.value);
+            if (endEl && endInp) endEl.textContent = formatDate(endInp.value);
+
+            const startVal = startInp.value;
+            const endVal = endInp.value;
+
+            if (startVal && endVal && new Date(endVal) < new Date(startVal)) {
+                errorBox?.classList.remove('hidden');
+                saveBtn.disabled = true;
+                saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                errorBox?.classList.add('hidden');
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        };
+
+        const onSave = async (easyMDE) => {
+            const title = document.getElementById('edit-title').value;
+            const startDate = document.getElementById('edit-start').value;
+            const endDate = document.getElementById('edit-end').value;
+            const saveBtn = document.getElementById('btn-save-melding');
+
+            if (saveBtn.disabled) return;
+
+            const safeTitle = slugify(title) || 'u-navnet';
+            const newFileName = `${safeTitle}-${Date.now()}.md`;
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = "Lagrer...";
+
+            const data = {
+                title: title,
+                startDate: startDate,
+                endDate: endDate
+            };
+
+            const body = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
+
+            try {
+                if (id) await saveFile(id, newFileName, stringifyMarkdown(data, body));
+                else await createFile(MELDINGER_FOLDER, newFileName, stringifyMarkdown(data, body));
+                reloadMeldinger();
+            } catch (e) {
+                console.error("Lagring feilet:", e);
+                showToast("Kunne ikke lagre endringene.", "error");
+                saveBtn.disabled = false;
+                saveBtn.textContent = "Lagre melding";
+            }
+        };
+
+        initEditors(onDateChange, onSave);
+
+        document.getElementById('edit-start')?.addEventListener('change', () => onDateChange());
+        document.getElementById('edit-end')?.addEventListener('change', () => onDateChange());
+    } catch (e) {
+        console.error("Klarte ikke laste editor:", e);
+        inner.innerHTML = `<div class="admin-alert-error">❌ En feil oppstod under lasting av editoren. Sjekk konsollen for detaljer.</div>`;
+    }
+}
+
+function reloadMeldinger() {
+    const { MELDINGER_FOLDER } = getAdminConfig();
+    loadMeldingerModule(MELDINGER_FOLDER, editMelding, deleteMelding);
+}
+
+export function initMeldingerModule() {
+    window.deleteMelding = deleteMelding;
+    window.editMelding = editMelding;
+    window.loadMeldingerModule = reloadMeldinger;
+}
+
+export { reloadMeldinger };

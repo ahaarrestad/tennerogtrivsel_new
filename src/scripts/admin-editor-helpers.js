@@ -1,0 +1,168 @@
+import DOMPurify from 'dompurify';
+import snarkdown from 'snarkdown';
+import { createAuthRefresher } from './admin-api-retry.js';
+import { silentLogin } from './admin-client.js';
+
+/**
+ * Leser admin-konfigurasjonen fra DOM-elementet #admin-config.
+ */
+export function getAdminConfig() {
+    const configEl = document.getElementById('admin-config');
+    return {
+        TJENESTER_FOLDER: configEl?.dataset.tjenesterFolder,
+        TANNLEGER_FOLDER: configEl?.dataset.tannlegerFolder,
+        MELDINGER_FOLDER: configEl?.dataset.meldingerFolder,
+        SHEET_ID: configEl?.dataset.sheetId,
+        HARD_DEFAULTS: JSON.parse(configEl?.dataset.defaults || '{}'),
+    };
+}
+
+let _refreshAuth = null;
+export function getRefreshAuth() {
+    if (!_refreshAuth) _refreshAuth = createAuthRefresher(silentLogin);
+    return _refreshAuth;
+}
+
+export function setToggleState(toggleBtn, isActive) {
+    if (!toggleBtn) return;
+    toggleBtn.dataset.active = String(isActive);
+    toggleBtn.setAttribute('aria-checked', String(isActive));
+    const lbl = toggleBtn.querySelector('.toggle-label');
+    if (lbl) lbl.textContent = isActive ? 'Aktiv' : 'Inaktiv';
+}
+
+export function renderToggleHtml(id, isActive) {
+    const labelText = isActive ? 'Aktiv' : 'Inaktiv';
+    return `<div class="flex items-center justify-between">
+        <label class="admin-label !mb-0">Synlighet</label>
+        <button id="${id}" type="button" role="switch" aria-checked="${isActive}" class="flex items-center gap-1.5 cursor-pointer group/toggle" data-active="${isActive}">
+            <span class="toggle-track"><span class="toggle-dot"></span></span>
+            <span class="toggle-label">${labelText}</span>
+        </button>
+    </div>`;
+}
+
+export function attachToggleClick(id, onChange) {
+    const toggleBtn = document.getElementById(id);
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            const current = toggleBtn.dataset.active === 'true';
+            setToggleState(toggleBtn, !current);
+            if (onChange) onChange();
+        });
+    }
+}
+
+export function showDeletionToast(deletedName, recoveryText) {
+    document.getElementById('deletion-toast')?.remove();
+    const toast = document.createElement('div');
+    toast.id = 'deletion-toast';
+    toast.className = 'fixed bottom-6 right-6 z-50 max-w-sm w-full';
+    toast.innerHTML = DOMPurify.sanitize(`
+        <div class="bg-white rounded-2xl shadow-2xl border border-admin-hover p-5 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div class="flex items-start gap-3">
+                <div class="shrink-0 w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p id="toast-deleted-name" class="font-black text-sm text-brand"></p>
+                    <p id="toast-recovery-text" class="text-xs text-admin-muted mt-1 leading-relaxed"></p>
+                </div>
+                <button class="toast-close shrink-0 p-1 -mr-1 -mt-1 text-admin-muted-light hover:text-admin-muted transition-colors cursor-pointer" aria-label="Lukk">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+        </div>
+    `);
+    const nameEl = toast.querySelector('#toast-deleted-name');
+    const recoveryEl = toast.querySelector('#toast-recovery-text');
+    if (nameEl) nameEl.textContent = `«${deletedName}» ble slettet`;
+    if (recoveryEl) recoveryEl.textContent = recoveryText;
+    document.body.appendChild(toast);
+    toast.querySelector('.toast-close')?.addEventListener('click', () => toast.remove());
+    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 30000);
+}
+
+export function initMarkdownEditor(onSave) {
+    let easyMDE = null;
+    const EasyMDEGlobal = window['EasyMDE'];
+    if (typeof EasyMDEGlobal !== 'undefined') {
+        easyMDE = new EasyMDEGlobal({
+            element: document.getElementById('edit-content'),
+            spellChecker: false,
+            status: false,
+            minHeight: "350px",
+            placeholder: "Skriv innholdet her...",
+            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
+            previewRender: (plainText) => {
+                return `<div class="markdown-content prose">${DOMPurify.sanitize(snarkdown(plainText))}</div>`;
+            }
+        });
+    }
+    const saveBtn = document.getElementById('btn-save-tjeneste');
+    if (saveBtn) saveBtn.onclick = () => onSave(easyMDE);
+    return easyMDE;
+}
+
+export function initEditors(onDateChange, onSave) {
+    let easyMDE = null;
+    const EasyMDEGlobal = window['EasyMDE'];
+    if (typeof EasyMDEGlobal !== 'undefined') {
+        easyMDE = new EasyMDEGlobal({
+            element: document.getElementById('edit-content'),
+            spellChecker: false,
+            status: false,
+            minHeight: "250px",
+            placeholder: "Skriv innholdet her...",
+            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
+            previewRender: (plainText) => {
+                return `<div class="markdown-content prose">${DOMPurify.sanitize(snarkdown(plainText))}</div>`;
+            }
+        });
+    }
+
+    const flatpickrGlobal = window['flatpickr'];
+    if (typeof flatpickrGlobal !== 'undefined') {
+        const fpConfig = {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d.m.Y",
+            allowInput: true,
+            onChange: (selectedDates, dateStr, instance) => {
+                instance.element.value = dateStr;
+                if (onDateChange) onDateChange(selectedDates, dateStr, instance);
+            }
+        };
+        const l10ns = flatpickrGlobal.l10ns;
+        const noLocale = l10ns ? (l10ns.no || l10ns.nb || l10ns.Norwegian) : null;
+        if (noLocale) fpConfig.locale = noLocale;
+
+        flatpickrGlobal("#edit-start", fpConfig);
+        flatpickrGlobal("#edit-end", fpConfig);
+    }
+
+    const saveBtn = document.getElementById('btn-save-melding');
+    if (saveBtn) saveBtn.onclick = () => onSave(easyMDE);
+    return easyMDE;
+}
+
+export function bindSliderStepButtons(container) {
+    container.querySelectorAll('.slider-step-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = document.getElementById(btn.dataset.target);
+            if (!target) return;
+            const step = parseFloat(btn.dataset.step);
+            const min = parseFloat(target.min);
+            const max = parseFloat(target.max);
+            const current = parseFloat(target.value);
+            target.value = String(Math.min(max, Math.max(min, +(current + step).toFixed(2))));
+            target.dispatchEvent(new Event('input'));
+        });
+    });
+}
+
+export function bindWheelPrevent(container) {
+    container.querySelectorAll('input[type="range"]').forEach(el => {
+        el.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
+    });
+}

@@ -85,24 +85,20 @@ Hvert steg er én commit. Ingen funksjonalitet endres — kun strukturforbedring
 
 ---
 
-### Steg 6: Ekstraher inline-script fra admin/index.astro
+### ~~Steg 6: Ekstraher inline-script fra admin/index.astro~~ ✅
 
-**Filer:** `src/pages/admin/index.astro` → nye modulfiler
+**Filer:** `src/pages/admin/index.astro` → 7 nye modulfiler
 
-- Flytt den ~1570-linjers `<script>`-blokken (linje 227-1797) til separate filer:
-  - `src/scripts/admin-module-settings.js` — `loadSettingsModule()` + reorder-logikk
-  - `src/scripts/admin-module-tjenester.js` — `editTjeneste`, `deleteTjeneste`, reload
-  - `src/scripts/admin-module-meldinger.js` — `editMelding`, `deleteMelding`, reload
-  - `src/scripts/admin-module-tannleger.js` — `editTannlege`, `deleteTannlege`, reload
-  - `src/scripts/admin-module-bilder.js` — `loadBilderModule()` (479 linjer alene)
-  - `src/scripts/admin-init.js` — `openModule()`, `closeModule()`, `handleAuth()`, initialisering
-- Felles hjelpefunksjoner (`setToggleState`, `renderToggleHtml`, `attachToggleClick`, `showDeletionToast`) flyttes til delt modul
-- Admin-siden importerer modulene og beholder kun HTML/CSS
-- Gjenbruk hjelpefunksjonene fra steg 1-4
-
-**Risiko:** Høy — største refaktoreringen, mange avhengigheter
-**Test:** Full testsuite + manuell verifisering av admin-panelet
-**Avhenger av:** Steg 1-5 (bygger på ekstraherte hjelpefunksjoner)
+- `src/scripts/admin-editor-helpers.js` — felles hjelpefunksjoner (`getAdminConfig`, `getRefreshAuth`, `setToggleState`, `renderToggleHtml`, `attachToggleClick`, `showDeletionToast`, `initMarkdownEditor`, `initEditors`, `bindSliderStepButtons`, `bindWheelPrevent`)
+- `src/scripts/admin-module-settings.js` — `SETTING_HINTS` + `loadSettingsModule()` med reorder-logikk
+- `src/scripts/admin-module-tjenester.js` — `deleteTjeneste`, `editTjeneste`, `toggleTjenesteActive`, `reloadTjenester`
+- `src/scripts/admin-module-meldinger.js` — `deleteMelding`, `editMelding`, `reloadMeldinger`
+- `src/scripts/admin-module-tannleger.js` — `deleteTannlege`, `editTannlege`, `toggleTannlegeActive`, `reloadTannleger`
+- `src/scripts/admin-module-bilder.js` — `loadBilderModule()` med all editor/preview/auto-save-logikk
+- `src/scripts/admin-init.js` — `openModule()`, `closeModule()`, `handleAuth()`, `setup()`
+- `index.astro` redusert fra 1797 til 231 linjer (kun HTML/CSS + `import '../../scripts/admin-init.js'`)
+- Alle TypeScript-annotasjoner fjernet (`.js`-filer følger prosjektkonvensjon)
+- 502 tester bestått, 84 E2E-tester bestått, build OK
 
 ---
 
