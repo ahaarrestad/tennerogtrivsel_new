@@ -108,6 +108,25 @@ src/content/galleri.json      # Synkronisert fra Sheets
 
 `.gitkeep`-filer bevarer mappestrukturen i git.
 
+## Arkitektur: Meldinger (InfoBanner)
+
+### Datofiltrering: Klient, IKKE byggetid
+
+`active-messages.json.ts` returnerer **alle** meldinger uten datofiltrering. Filtrering skjer i `messageClient.js` ved runtime (`new Date()` mot `startDate`/`endDate`).
+
+**Hvorfor:** Prosjektet bygges statisk (`output: 'static'`). Hvis API-ruten filtrerer ved byggetid, fryses resultatet i JSON-filen. Meldinger som utløper mellom bygg forblir synlige, og nye meldinger dukker ikke opp før neste bygg. Klient-side filtrering sikrer at meldinger alltid er oppdatert.
+
+**VIKTIG:** Ikke flytt datofiltrering tilbake til API-ruten — dette er en bevisst arkitekturbeslutning, ikke en forglemmelse.
+
+### Build-scripts i CI
+
+| Script | Kommando | Bruk |
+|--------|----------|------|
+| `build` | `sync-data.js && astro build` | Lokalt (synker + bygger) |
+| `build:ci` | `astro build` | CI/CD (sync kjøres som eget steg) |
+
+CI-workflowen bruker `build:ci` for å unngå dobbel synkronisering. `npm run sync` kjøres alltid som et eget steg **før** bygg i CI.
+
 ## Arkitektur: Seksjonsbakgrunner (variant-prop)
 
 Seksjonskomponentene (`Kontakt`, `Galleri`, `Tjenester`, `Tannleger`) tar en `variant`-prop for å kontrollere bakgrunnsfarge:
