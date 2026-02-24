@@ -32,7 +32,7 @@ function getToastContainer() {
     if (toastContainer && toastContainer.parentNode) return toastContainer;
     toastContainer = document.createElement('div');
     toastContainer.id = 'admin-toast-container';
-    toastContainer.className = 'fixed bottom-6 right-6 z-50 flex flex-col gap-3 max-w-sm';
+    toastContainer.className = 'fixed bottom-6 right-6 left-6 sm:left-auto z-50 flex flex-col gap-3 max-w-sm';
     toastContainer.setAttribute('aria-live', 'polite');
     toastContainer.setAttribute('role', 'status');
     document.body.appendChild(toastContainer);
