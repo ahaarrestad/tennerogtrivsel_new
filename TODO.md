@@ -31,6 +31,10 @@
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
   - Sjekk om det finnes GitHub workflows som ikke er i bruk og kan fjernes
 
+- [ ] **Sett opp CloudFront på test-siden**
+  - Dokumenter steg-for-steg hvordan CloudFront aktiveres foran S3-bucketen (test2.aarrestad.com)
+  - SSL-sertifikat, origin-oppsett, cache-policy, og DNS-pekere
+
 ## Fullført
 
 - [x] **Legg til åpningstid for telefon i footeren**
