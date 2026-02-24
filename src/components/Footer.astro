@@ -53,6 +53,9 @@ const currentYear = new Date().getFullYear();
                             </a>
                         </p>
                     )}
+                    {settings.sentralbordTekst && (
+                        <p class="pt-1 text-white/50 text-xs">{settings.sentralbordTekst}</p>
+                    )}
                     {settings.showEmail === "ja" && settings.email && (
                         <p class="pt-2">
                             <a href={`mailto:${settings.email}`} class="hover:text-white transition-colors">
