@@ -62,18 +62,15 @@ Hvert steg er én commit. Ingen funksjonalitet endres — kun strukturforbedring
 
 ---
 
-### Steg 4: Konsolider HTML-templates i admin-dashboard.js
+### ~~Steg 4: Konsolider HTML-templates i admin-dashboard.js~~ ✅
 
 **Fil:** `src/scripts/admin-dashboard.js`
 
-- Ekstraher felles template-hjelpefunksjoner:
-  - `renderListCard(title, subtitle, badges, thumbnailConfig)` — felles kort-template for `.admin-card-interactive`
-  - `renderStatusBadge(isActive)` — aktiv/inaktiv-badge
-  - `renderReorderButtons(index, total)` — opp/ned-knapper
-- Forenkle de 4 modullasterne (`loadMeldingerModule`, `loadTjenesterModule`, `loadTannlegerModule`, `loadGalleriListeModule`)
-
-**Risiko:** Middels — templates er subtilt forskjellige, må bevare alle varianter
-**Test:** Visuell verifisering + eksisterende E2E
+- 7 SVG-ikonkonstanter (`ICON_EDIT`, `ICON_DELETE`, `ICON_UP`, `ICON_DOWN`, `ICON_PERSON`, `ICON_IMAGE`, `ICON_CALENDAR`) erstatter dupliserte inline-SVGer
+- `renderToggleSwitch(dataAttr, dataValue, isActive)` — felles toggle-template
+- `renderActionButtons(editClass, deleteClass, dataAttrs)` — felles edit/delete-knapper
+- Forenklet alle 4 modullastere (meldinger, tjenester, tannleger, galleri)
+- 107 tester bestått, 85.36% branch coverage
 
 ---
 

@@ -20,6 +20,7 @@
   - ~~Steg 1:~~ ✅ Felles `parseImageConfig()` erstatter 5× duplisert bildeparsing
   - ~~Steg 2:~~ ✅ `deleteSheetRow()` + `updateSheetRow()` konsoliderer CRUD
   - ~~Steg 3:~~ ✅ `bindCardClickDelegation()` + `loadThumbnails()` fjerner duplisering
+  - ~~Steg 4:~~ ✅ SVG-ikonkonstanter + `renderToggleSwitch()` + `renderActionButtons()` konsoliderer templates
 
 ## Backlog
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
