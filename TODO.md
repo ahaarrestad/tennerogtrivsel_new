@@ -12,25 +12,6 @@
 
 ## Pågående
 
-- [ ] **Design- og UX-gjennomgang av admin-panelet** ([plan](docs/plan-admin-ux.md))
-  - Følg prosjektets design-guide som retning, men med lavere terskel — funksjon og brukervennlighet er viktigst
-  - 10 steg: CLS-fiks, fargetokens, slate→tokens i astro/JS, toggle CSS, status-indikatorer, knapper, fokus/spacing, EasyMDE/PWA, responsiv/a11y
-  - Fokus: god opplevelse, enkel og konsistent bruk
-  - Konsistens på tvers av moduler (spacing, knapper, farger, fonter, feedback)
-  - Responsivt design (admin brukes på mobil via PWA-snarvei)
-  - Tilgjengelighet (a11y) — grunnleggende krav
-  - **Fremgang:**
-    - [x] Steg 1: CLS-fiks — fjernet justify-center fra main, scrollTo(0,0) i openModule/closeModule/handleAuth
-    - [x] Steg 2: 5 admin-fargetokens i @theme, 8 CSS-klasser oppdatert fra slate→tokens
-    - [x] Steg 3: ~35 slate-referanser i index.astro erstattet med admin-tokens
-    - [x] Steg 4: ~30 slate-referanser i JS-moduler erstattet (dashboard, dialog, gallery, pwa-prompt)
-    - [x] Steg 5: Toggle-switch via CSS + data-active — fjernet ~90 classList.toggle-kall, 6 steder forenklet
-    - [x] Steg 6: Semantiske status-klasser (active/planned/expired) + siste slate-300 fjernet
-    - [x] Steg 7: Ikon-knapper (admin-icon-btn, admin-icon-btn-danger, admin-icon-btn-reorder) + admin-btn-cancel
-    - [x] Steg 8: Fokus-ring synlighet (ring-2/20), gap-konsistens, border-admin-border på delere
-    - [x] Steg 9: EasyMDE hex→CSS-variabler, PWA manifest + theme-color → brand (#292524)
-    - [x] Steg 10: Toggle role=switch + aria-checked, spinner role=status, toast responsiv
-
 - [ ] **Gjøre det enklere å forstå hvor innstillinger brukes på nettsiden**
   - Bruker av admin-panelet vet ikke nødvendigvis hvor de ulike tekstene i Innstillinger-modulen dukker opp på den offentlige siden
   - Utforske løsninger som gjør koblingen mellom innstilling og plassering tydeligere (f.eks. forhåndsvisning, hjelpetekst, lenker til relevant seksjon, eller gruppering etter side/seksjon)
@@ -69,6 +50,11 @@
 
 
 ## Fullført
+
+- [x] **Design- og UX-gjennomgang av admin-panelet** ([plan](docs/plan-admin-ux.md))
+  - 10 steg fullført: CLS-fiks, 5 admin-fargetokens, ~65 slate→token-erstatninger, toggle CSS refaktor, semantiske status-klasser, ikon-knapper, fokus/spacing, EasyMDE/PWA-opprydding, a11y (role=switch, aria-checked, role=status)
+  - Token-drevet admin-design: alle farger via CSS-variabler (admin-surface, admin-hover, admin-border, admin-muted, admin-muted-light)
+  - Ny CSS-klasser: admin-icon-btn, admin-icon-btn-danger, admin-icon-btn-reorder, admin-btn-cancel, admin-status-active/planned/expired
 
 - [x] **UX/design-gjennomgang av den offentlige nettsiden** ([design-guide](docs/design-guide.md)) ([plan](docs/plan-ux-redesign.md))
   - 13 steg fullført: typografi, fargepalett (stone), spacing, knapper, kort, navbar, footer, galleri, accent bar, 404-side, tjenester-detaljside, tilgjengelighet, CLAUDE.md
