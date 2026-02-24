@@ -27,10 +27,9 @@
 - [ ] **Endre tekst på admin-siden**
   - Legge til informasjonstekst: «Endringene lagres på Google Disk og publiseres automatisk innen noen minutter»
 
-- [ ] **Gjennomgang av flaky tester**
-  - Identifisere hvilke tester som er ustabile/flaky
-  - Forstå rotårsaken til hvorfor de feiler sporadisk
-  - Fikse de underliggende problemene
+- [ ] **Gjennomgang av flaky tester** ([plan](docs/plan-flaky-tester.md))
+  - Bekreftet feil i CI: `mobilmeny skal fungere` på Mobile Chrome (`toBeHidden()` feiler pga. `invisible`-klasse mangler i rendret DOM)
+  - 4 steg: diagnostikk, fiks mobilmeny-synlighet, full E2E-suite, vurder retry-konfigurasjon
 
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
