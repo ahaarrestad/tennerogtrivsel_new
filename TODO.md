@@ -21,6 +21,7 @@
   - ~~Steg 2:~~ ✅ `deleteSheetRow()` + `updateSheetRow()` konsoliderer CRUD
   - ~~Steg 3:~~ ✅ `bindCardClickDelegation()` + `loadThumbnails()` fjerner duplisering
   - ~~Steg 4:~~ ✅ SVG-ikonkonstanter + `renderToggleSwitch()` + `renderActionButtons()` konsoliderer templates
+  - ~~Steg 5:~~ ✅ Innrykk-fiks + `downloadImageIfNeeded()` fjerner 3× duplisert download-logikk
 
 ## Backlog
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))

@@ -74,16 +74,14 @@ Hvert steg er én commit. Ingen funksjonalitet endres — kun strukturforbedring
 
 ---
 
-### Steg 5: Rydd sync-data.js — innrykk, download-logikk og forenkling
+### ~~Steg 5: Rydd sync-data.js — innrykk, download-logikk og forenkling~~ ✅
 
 **Fil:** `src/scripts/sync-data.js`
 
-- Fiks innrykk-korrupsjon i syncTannleger (linje 150-162, ~40+ spaces innrykk)
-- Ekstraher `downloadImageIfNeeded(metadata, localPath)` fra gjentatt download-logikk (4× `shouldDownload()`+`downloadFile()`-mønster)
-- Forenkle `syncForsideBilde()` fallback-logikk til en dedikert `getForsideBildeConfig()`
-
-**Risiko:** Lav — formatering + ren ekstraksjon
-**Test:** Eksisterende tester
+- Fikset innrykk-korrupsjon i syncTannleger + syncMarkdownCollection (~40+ spaces → korrekt 4-space)
+- `downloadImageIfNeeded(fileName, folderId, destinationPath, label)` — erstatter 3× duplisert find+check+download-logikk
+- Forenklet syncTannleger, syncForsideBilde og syncGalleri med ny hjelpefunksjon
+- 54 tester bestått, 95.37% branch coverage, 502 tester totalt bestått
 
 ---
 
