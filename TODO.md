@@ -37,6 +37,11 @@
   - Fjern tester som dekker samme logikk flere ganger uten å tilføre verdi
   - Mål: behold 80% branch coverage per fil, men reduser total byggetid
 
+- [ ] **Kodelesbarhet — ny gjennomgang og forenkling**
+  - Analyser dagens tilstand av kodebasen etter tidligere refaktoreringer
+  - Vurder om koden er lesbar nok eller om ytterligere forenkling trengs
+  - Fokusområder: kompleksitet, navngiving, modulstruktur, duplisering
+
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
   - Sjekk om det finnes GitHub workflows som ikke er i bruk og kan fjernes
