@@ -12,16 +12,10 @@
 
 ## Pågående
 
-- [ ] **Kodelesbarhet — gå gjennom og forenkle koden** ([plan](docs/plan-kodelesbarhet.md))
-  - Gjøre koden enklere og lettere å lese
-  - Identifisere komplekse eller uoversiktlige partier og refaktorere dem
-  - Fokus på klarhet, konsistens og vedlikeholdbarhet
-  - 6 steg: bildeparsing, CRUD-konsolidering, event-binding, HTML-templates, sync-data-rydding, ekstraher inline-script
-  - ~~Steg 1:~~ ✅ Felles `parseImageConfig()` erstatter 5× duplisert bildeparsing
-  - ~~Steg 2:~~ ✅ `deleteSheetRow()` + `updateSheetRow()` konsoliderer CRUD
-  - ~~Steg 3:~~ ✅ `bindCardClickDelegation()` + `loadThumbnails()` fjerner duplisering
-  - ~~Steg 4:~~ ✅ SVG-ikonkonstanter + `renderToggleSwitch()` + `renderActionButtons()` konsoliderer templates
-  - ~~Steg 5:~~ ✅ Innrykk-fiks + `downloadImageIfNeeded()` fjerner 3× duplisert download-logikk
+- [ ] **Tester for ekstraherte admin-moduler**
+  - 7 nye modulfiler fra steg 6 (kodelesbarhet) mangler enhetstester
+  - admin-editor-helpers.js, admin-module-settings.js, admin-module-tjenester.js, admin-module-meldinger.js, admin-module-tannleger.js, admin-module-bilder.js, admin-init.js
+  - Mål: 80% branch coverage per fil
 
 ## Backlog
 - [ ] **Endre tekst på admin-siden**
@@ -49,6 +43,15 @@
   - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
 ## Fullført
+
+- [x] **Kodelesbarhet — gå gjennom og forenkle koden** ([plan](docs/plan-kodelesbarhet.md))
+  - 6 steg fullført: bildeparsing, CRUD-konsolidering, event-binding, HTML-templates, sync-data-rydding, inline-script-ekstraksjon
+  - Steg 1: `parseImageConfig()` erstatter 5× duplisert parsing
+  - Steg 2: `deleteSheetRow()` + `updateSheetRow()` konsoliderer CRUD
+  - Steg 3: `bindCardClickDelegation()` + `loadThumbnails()` fjerner duplisering
+  - Steg 4: SVG-ikonkonstanter + `renderToggleSwitch()` + `renderActionButtons()`
+  - Steg 5: Innrykk-fiks + `downloadImageIfNeeded()` fjerner 3× duplisert download
+  - Steg 6: 1570-linjers inline-script → 7 modulfiler, `index.astro` 1797→231 linjer
 
 - [x] **Legg til åpningstid for telefon i footeren**
   - `sentralbordTekst` fra Google Sheets vises under telefonnumrene i footer
