@@ -12,10 +12,6 @@
 
 ## Pågående
 
-- [ ] **Gjøre det enklere å forstå hvor innstillinger brukes på nettsiden**
-  - Bruker av admin-panelet vet ikke nødvendigvis hvor de ulike tekstene i Innstillinger-modulen dukker opp på den offentlige siden
-  - Utforske løsninger som gjør koblingen mellom innstilling og plassering tydeligere (f.eks. forhåndsvisning, hjelpetekst, lenker til relevant seksjon, eller gruppering etter side/seksjon)
-
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
   - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
@@ -50,6 +46,11 @@
 
 
 ## Fullført
+
+- [x] **Gjøre det enklere å forstå hvor innstillinger brukes på nettsiden** ([plan](docs/plan-innstillinger-hint.md))
+  - Lagt til «Vises på:»-hint under hver innstilling i admin-panelet
+  - SETTING_HINTS-objekt med 28 nøkler som mapper til plassering på nettsiden
+  - Hint vises som dempet tekst (10px) under label, før input-feltet
 
 - [x] **Design- og UX-gjennomgang av admin-panelet** ([plan](docs/plan-admin-ux.md))
   - 10 steg fullført: CLS-fiks, 5 admin-fargetokens, ~65 slate→token-erstatninger, toggle CSS refaktor, semantiske status-klasser, ikon-knapper, fokus/spacing, EasyMDE/PWA-opprydding, a11y (role=switch, aria-checked, role=status)

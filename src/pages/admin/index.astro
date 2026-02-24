@@ -263,6 +263,42 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
             return _refreshAuth;
         }
 
+        const SETTING_HINTS: Record<string, string> = {
+            // Forside (hero)
+            velkomstTittel1: 'Forsiden — hero-tittel, linje 1',
+            velkomstTittel2: 'Forsiden — hero-tittel, linje 2 (farget)',
+            velkomstTekst: 'Forsiden — hero-avsnitt under tittel',
+            // Kontakt
+            phone1: 'Kontakt, footer, mobilknapp, schema.org',
+            phone2: 'Kontakt, footer',
+            email: 'Kontakt, footer (kun synlig hvis showEmail = ja)',
+            showEmail: 'Styrer om e-post vises i kontakt og footer',
+            adresse1: 'Kontakt, footer',
+            adresse2: 'Kontakt, footer',
+            businessHours1: 'Kontakt, footer',
+            businessHours2: 'Kontakt, footer',
+            sentralbordTekst: 'Kontakt — under telefonkort',
+            latitude: 'Kontakt — Google Maps-kart',
+            longitude: 'Kontakt — Google Maps-kart',
+            // Seksjonstitler (navbar + seksjon)
+            kontaktTittel: 'Navbar + kontakt-seksjon (overskrift)',
+            galleriTittel: 'Navbar + galleri-seksjon (overskrift)',
+            tjenesterTittel: 'Navbar + tjenester-seksjon (overskrift)',
+            tannlegerTittel: 'Navbar + tannleger-seksjon (overskrift)',
+            // Seksjonstekster
+            kontaktTekst: 'Kontakt-seksjon — intro-avsnitt',
+            galleriTekst: 'Galleri-seksjon — intro-avsnitt',
+            tjenesteTekst: 'Tjenester-seksjon — intro-avsnitt',
+            tannlegerTekst: 'Tannleger-seksjon — intro-avsnitt',
+            // SEO
+            siteTitle: 'Nettleserens tittellinje (fallback alle sider)',
+            siteDescription: 'Meta-beskrivelse (fallback alle sider)',
+            kontaktBeskrivelse: '/kontakt — meta-beskrivelse (SEO)',
+            galleriBeskrivelse: '/galleri — meta-beskrivelse (SEO)',
+            tjenesterBeskrivelse: '/tjenester — meta-beskrivelse (SEO)',
+            tannlegerBeskrivelse: '/tannleger — meta-beskrivelse (SEO)',
+        };
+
         async function loadSettingsModule() {
             const inner = document.getElementById('module-inner');
             if (!inner) return;
@@ -287,12 +323,14 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
                 allSettings.forEach((setting, i) => {
                     const label = setting.description || setting.id;
                     const isLong = (setting.value && setting.value.length > 60) || setting.id.toLowerCase().includes('tekst');
+                    const hint = SETTING_HINTS[setting.id] || '';
                     html += `
                         <div class="admin-field-container cursor-pointer" id="setting-container-${i}">
                             <div class="flex justify-between items-start gap-4">
                                 <label class="admin-label !mb-0 cursor-pointer">${label}</label>
                                 <div id="status-${i}" class="shrink-0 h-5"></div>
                             </div>
+                            ${hint ? `<p class="text-[10px] text-admin-muted-light -mt-0.5">Vises på: ${hint}</p>` : ''}
                             ${isLong ?
                                 `<textarea id="setting-input-${i}" data-index="${i}" class="setting-field admin-input resize-none overflow-hidden">${setting.value}</textarea>` :
                                 `<input type="text" id="setting-input-${i}" data-index="${i}" value="${setting.value}" class="setting-field admin-input">`
