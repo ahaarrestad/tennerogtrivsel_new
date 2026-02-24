@@ -18,12 +18,13 @@
   - Mål: 80% branch coverage per fil
 
 ## Backlog
-- [ ] **Endre tekst på admin-siden**
-  - Legge til informasjonstekst: «Endringene lagres på Google Disk og publiseres automatisk innen noen minutter»
-
 - [ ] **Gjennomgang av flaky tester** ([plan](docs/plan-flaky-tester.md))
   - Bekreftet feil i CI: `mobilmeny skal fungere` på Mobile Chrome (`toBeHidden()` feiler pga. `invisible`-klasse mangler i rendret DOM)
   - 4 steg: diagnostikk, fiks mobilmeny-synlighet, full E2E-suite, vurder retry-konfigurasjon
+
+- [ ] **Sjekk at alle filer som kan testes er testet**
+  - Gå gjennom alle kildefiler i `src/scripts/` og `src/pages/api/` og verifiser at de har tilhørende testfiler
+  - Identifiser eventuelle hull i testdekningen
 
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
@@ -43,6 +44,10 @@
   - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
 ## Fullført
+
+- [x] **Endre tekst på admin-siden**
+  - Byttet «i Google Sheets» til «på Google Disk» i dashboard-headeren
+
 
 - [x] **Kodelesbarhet — gå gjennom og forenkle koden** ([plan](docs/plan-kodelesbarhet.md))
   - 6 steg fullført: bildeparsing, CRUD-konsolidering, event-binding, HTML-templates, sync-data-rydding, inline-script-ekstraksjon
