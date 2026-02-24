@@ -17,7 +17,7 @@
   - Identifisere komplekse eller uoversiktlige partier og refaktorere dem
   - Fokus på klarhet, konsistens og vedlikeholdbarhet
   - 6 steg: bildeparsing, CRUD-konsolidering, event-binding, HTML-templates, sync-data-rydding, ekstraher inline-script
-  - **Steg 1 pågår:** Ekstraher duplisert bildeparsing til felles hjelpefunksjon
+  - ~~Steg 1:~~ ✅ Felles `parseImageConfig()` erstatter 5× duplisert bildeparsing
 
 ## Backlog
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))

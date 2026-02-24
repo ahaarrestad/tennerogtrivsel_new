@@ -30,16 +30,13 @@ Hvert steg er én commit. Ingen funksjonalitet endres — kun strukturforbedring
 
 ---
 
-### Steg 1: Ekstraher duplisert bildeparsing til felles hjelpefunksjon
+### ~~Steg 1: Ekstraher duplisert bildeparsing til felles hjelpefunksjon~~ ✅
 
-**Filer:** `src/scripts/sync-data.js`, `src/scripts/admin-client.js`
+**Filer:** `src/scripts/image-config.js` (ny), `src/scripts/sync-data.js`, `src/scripts/admin-client.js`
 
-- Lag `parseImageConfig(row, indices)` som returnerer `{scale, posX, posY}` med validering og defaults
-- Bruk den i sync-data.js (linje 134-142, 321-323, 435-443) og admin-client.js (`getTannlegerRaw()`, `getGalleriRaw()`)
-- Fjerner 5× duplisert parsing med `parseFloat`/`parseInt` + `isNaN` + bounds-sjekk
-
-**Risiko:** Lav — ren ekstraksjon av identisk logikk
-**Test:** Eksisterende tester dekker allerede denne logikken + nye tester for hjelpefunksjonen
+- `parseImageConfig(scaleVal, posXVal, posYVal)` med full validering (scale 1–3, pos 0–100) og defaults
+- Erstatter 5× duplisert parsing i sync-data.js (3×) og admin-client.js (2×)
+- 13 nye tester, 100% branch coverage på ny fil, 502 tester totalt bestått
 
 ---
 
