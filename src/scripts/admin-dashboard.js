@@ -230,19 +230,19 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                 const startTime = parseToUTC(msg.startDate);
                 const endTime = parseToUTC(msg.endDate || '2099-12-31');
                 
-                let statusClass = "bg-admin-hover text-admin-muted border-admin-border";
+                let statusClass = "admin-status-expired";
                 let statusText = "Utløpt";
                 let dotClass = "admin-status-dot-expired";
                 let currentGroup = "Historikk (Utløpte)";
 
                 if (startTime !== null && endTime !== null) {
                     if (nowUTC >= startTime && nowUTC <= endTime) {
-                        statusClass = "bg-green-100 text-green-700 border-green-200 font-black";
+                        statusClass = "admin-status-active";
                         statusText = "Aktiv nå";
                         dotClass = "admin-status-dot-active";
                         currentGroup = "Aktive oppslag";
                     } else if (nowUTC < startTime) {
-                        statusClass = "bg-blue-100 text-blue-700 border-blue-200";
+                        statusClass = "admin-status-planned";
                         statusText = "Planlagt";
                         dotClass = "admin-status-dot-planned";
                         currentGroup = "Planlagte oppslag";

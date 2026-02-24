@@ -25,6 +25,7 @@
     - [x] Steg 3: ~35 slate-referanser i index.astro erstattet med admin-tokens
     - [x] Steg 4: ~30 slate-referanser i JS-moduler erstattet (dashboard, dialog, gallery, pwa-prompt)
     - [x] Steg 5: Toggle-switch via CSS + data-active — fjernet ~90 classList.toggle-kall, 6 steder forenklet
+    - [x] Steg 6: Semantiske status-klasser (active/planned/expired) + siste slate-300 fjernet
 
 - [ ] **Gjøre det enklere å forstå hvor innstillinger brukes på nettsiden**
   - Bruker av admin-panelet vet ikke nødvendigvis hvor de ulike tekstene i Innstillinger-modulen dukker opp på den offentlige siden
@@ -44,6 +45,24 @@
 
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
+
+- [ ] **Rar oppførsel for meldinger og muligens tjenester**
+    - Endret dato på en melding, den forsvant fra dev når jeg gjorde reload, men ikke fra bygget gjennom github til s3. Ser fra api/active-messages.json at det ser ut som om meldingen fremdeles ligger der (har bygget "google drive" bygget flere ganger). Kan det være at sync-data ikke fjerner inaktive meldinger fra api-mappen? Eller at den ikke oppdaterer api/active-messages.json korrekt? Eller at det er en cache-issue på github? eller noe helt annet? Det hjalp heller ikke å slette meldingen fra goodle drive og synce på nytt. Men det hjalp å bygge CI/CD på nytt. Antar det noe i optimalisering av byggescriptet?
+
+- [ ] **Dynamisk årstall for copyright i footer**
+  - Sørg for at årstallet i footeren oppdateres automatisk hver gang det gjøes et bygg
+
+- [ ] **Legg til åpningstid for telefon i footeren**
+    - Det er allere en tekst for når telefonen er åpen i google sheets: sentralbordTekst
+    - Bruk denne i footer i forbindelse med telefonnummer / kontakt.
+    - Vær også obs på at phone2 kan være tom, så footer må håndtere dette 
+
+- [ ] **Sortering av rekkefølge innstillinger i admin menyen**
+    - Innsillinger i admin menyen vises i dag i samme rekkefølge som de ligger i google sheets.
+    - Legg til mulighet for å kunne flytte disse opp og ned i admin consollet slik at det blir enklere å holde oversikt.
+    - Gjør sortering mulig hvis du toggler noe, slik at sorering ikke alltid er tilgjengelig, men kun hvis en ønsker å se det eller bruke det.
+    - Pass på at layout passer med det som er ellers i admin consollet.
+
 
 ## Fullført
 

@@ -542,8 +542,12 @@
     }
 
     .admin-status-dot-active { @apply bg-green-500 animate-pulse; }
-    .admin-status-dot-expired { @apply bg-slate-300; }
+    .admin-status-dot-expired { @apply bg-admin-muted-light; }
     .admin-status-dot-planned { @apply bg-blue-500; }
+
+    .admin-status-active { @apply bg-green-100 text-green-700 border-green-200 font-black; }
+    .admin-status-planned { @apply bg-blue-100 text-blue-700 border-blue-200; }
+    .admin-status-expired { @apply bg-admin-hover text-admin-muted border-admin-border; }
 
     .admin-label {
         @apply font-bold text-brand text-xs uppercase tracking-wider block mb-2;
@@ -580,7 +584,7 @@
 
     /* TOGGLE SWITCH — drevet av data-active attributt */
     .toggle-track {
-        @apply relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 bg-slate-300;
+        @apply relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 bg-admin-muted-light;
     }
     [data-active="true"] .toggle-track {
         @apply bg-green-500;
