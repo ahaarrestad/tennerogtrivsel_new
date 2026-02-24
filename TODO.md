@@ -29,6 +29,7 @@
 
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
+  - Sjekk om det finnes GitHub workflows som ikke er i bruk og kan fjernes
 
 ## Fullført
 
