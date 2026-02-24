@@ -30,9 +30,6 @@
 - [ ] **Rar oppførsel for meldinger og muligens tjenester**
     - Endret dato på en melding, den forsvant fra dev når jeg gjorde reload, men ikke fra bygget gjennom github til s3. Ser fra api/active-messages.json at det ser ut som om meldingen fremdeles ligger der (har bygget "google drive" bygget flere ganger). Kan det være at sync-data ikke fjerner inaktive meldinger fra api-mappen? Eller at den ikke oppdaterer api/active-messages.json korrekt? Eller at det er en cache-issue på github? eller noe helt annet? Det hjalp heller ikke å slette meldingen fra goodle drive og synce på nytt. Men det hjalp å bygge CI/CD på nytt. Antar det noe i optimalisering av byggescriptet?
 
-- [ ] **Dynamisk årstall for copyright i footer**
-  - Sørg for at årstallet i footeren oppdateres automatisk hver gang det gjøes et bygg
-
 - [ ] **Legg til åpningstid for telefon i footeren**
     - Det er allere en tekst for når telefonen er åpen i google sheets: sentralbordTekst
     - Bruk denne i footer i forbindelse med telefonnummer / kontakt.
@@ -46,6 +43,9 @@
 
 
 ## Fullført
+
+- [x] **Dynamisk årstall for copyright i footer**
+  - Allerede implementert: `new Date().getFullYear()` i Footer.astro gir riktig årstall ved hvert bygg
 
 - [x] **Gjøre det enklere å forstå hvor innstillinger brukes på nettsiden** ([plan](docs/plan-innstillinger-hint.md))
   - Lagt til «Vises på:»-hint under hver innstilling i admin-panelet
