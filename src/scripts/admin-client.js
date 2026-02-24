@@ -624,6 +624,69 @@ export async function getDriveImageBlob(fileId) {
 }
 
 /**
+ * FELLES SHEETS-HJELPEFUNKSJONER
+ */
+
+/**
+ * Oppdaterer en rad i et Google Sheets-ark.
+ */
+export async function updateSheetRow(spreadsheetId, sheetName, rowIndex, endCol, values, label) {
+    try {
+        await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `${sheetName}!A${rowIndex}:${endCol}${rowIndex}`,
+            valueInputOption: 'RAW',
+            resource: { values: [values] }
+        });
+        console.log(`[Admin] ${label} rad ${rowIndex} oppdatert.`);
+        return true;
+    } catch (err) {
+        console.error(`[Admin] Kunne ikke oppdatere ${label.toLowerCase()}:`, err);
+        throw err;
+    }
+}
+
+/**
+ * Sletter en rad permanent fra et Google Sheets-ark (fysisk fjerning).
+ */
+export async function deleteSheetRow(spreadsheetId, sheetName, rowIndex) {
+    try {
+        const sheetResp = await gapi.client.sheets.spreadsheets.get({
+            spreadsheetId,
+            fields: 'sheets.properties'
+        });
+        const sheet = (sheetResp.result.sheets || []).find(
+            s => s.properties.title === sheetName
+        );
+        if (!sheet) {
+            throw new Error(`Fant ikke '${sheetName}'-arket i regnearket.`);
+        }
+        const sheetId = sheet.properties.sheetId;
+
+        await gapi.client.sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: {
+                requests: [{
+                    deleteDimension: {
+                        range: {
+                            sheetId,
+                            dimension: 'ROWS',
+                            startIndex: rowIndex - 1,
+                            endIndex: rowIndex
+                        }
+                    }
+                }]
+            }
+        });
+        console.log(`[Admin] ${sheetName} rad ${rowIndex} permanent slettet.`);
+        return true;
+    } catch (err) {
+        console.error(`[Admin] Kunne ikke slette rad ${rowIndex} fra ${sheetName}:`, err);
+        throw err;
+    }
+}
+
+/**
  * TANNLEGER CRUD (GOOGLE SHEETS)
  */
 
@@ -667,31 +730,11 @@ export async function getTannlegerRaw(spreadsheetId) {
  * Oppdaterer en spesifikk rad i tannleger-arket.
  */
 export async function updateTannlegeRow(spreadsheetId, rowIndex, data) {
-    try {
-        const values = [[
-            data.name,
-            data.title,
-            data.description,
-            data.image,
-            data.active ? 'ja' : 'nei',
-            data.scale,
-            data.positionX,
-            data.positionY
-        ]];
-
-        await gapi.client.sheets.spreadsheets.values.update({
-            spreadsheetId: spreadsheetId,
-            range: `tannleger!A${rowIndex}:H${rowIndex}`,
-            valueInputOption: 'RAW',
-            resource: { values }
-        });
-
-        console.log(`[Admin] Tannlege rad ${rowIndex} oppdatert.`);
-        return true;
-    } catch (err) {
-        console.error("[Admin] Kunne ikke oppdatere tannlege:", err);
-        throw err;
-    }
+    const values = [
+        data.name, data.title, data.description, data.image,
+        data.active ? 'ja' : 'nei', data.scale, data.positionX, data.positionY
+    ];
+    return updateSheetRow(spreadsheetId, 'tannleger', rowIndex, 'H', values, 'Tannlege');
 }
 
 /**
@@ -770,40 +813,7 @@ export async function backupToSlettetSheet(spreadsheetId, type, title, data) {
  * Permanent sletting av en tannlege-rad fra arket (fysisk fjerning).
  */
 export async function deleteTannlegeRowPermanently(spreadsheetId, rowIndex) {
-    try {
-        const sheetResp = await gapi.client.sheets.spreadsheets.get({
-            spreadsheetId,
-            fields: 'sheets.properties'
-        });
-        const sheet = (sheetResp.result.sheets || []).find(
-            s => s.properties.title === 'tannleger'
-        );
-        if (!sheet) {
-            throw new Error("Fant ikke 'tannleger'-arket i regnearket.");
-        }
-        const sheetId = sheet.properties.sheetId;
-
-        await gapi.client.sheets.spreadsheets.batchUpdate({
-            spreadsheetId,
-            resource: {
-                requests: [{
-                    deleteDimension: {
-                        range: {
-                            sheetId,
-                            dimension: 'ROWS',
-                            startIndex: rowIndex - 1,
-                            endIndex: rowIndex
-                        }
-                    }
-                }]
-            }
-        });
-        console.log(`[Admin] Tannlege rad ${rowIndex} permanent slettet.`);
-        return true;
-    } catch (err) {
-        console.error("[Admin] Kunne ikke slette tannlege permanent:", err);
-        throw err;
-    }
+    return deleteSheetRow(spreadsheetId, 'tannleger', rowIndex);
 }
 
 // --- GALLERI ---
@@ -866,32 +876,11 @@ export async function getGalleriRaw(spreadsheetId) {
 }
 
 export async function updateGalleriRow(spreadsheetId, rowIndex, data) {
-    try {
-        const values = [[
-            data.title,
-            data.image,
-            data.altText,
-            data.active ? 'ja' : 'nei',
-            data.order,
-            data.scale,
-            data.positionX,
-            data.positionY,
-            data.type || 'galleri'
-        ]];
-
-        await gapi.client.sheets.spreadsheets.values.update({
-            spreadsheetId: spreadsheetId,
-            range: `galleri!A${rowIndex}:I${rowIndex}`,
-            valueInputOption: 'RAW',
-            resource: { values }
-        });
-
-        console.log(`[Admin] Galleri rad ${rowIndex} oppdatert.`);
-        return true;
-    } catch (err) {
-        console.error("[Admin] Kunne ikke oppdatere galleribilde:", err);
-        throw err;
-    }
+    const values = [
+        data.title, data.image, data.altText, data.active ? 'ja' : 'nei',
+        data.order, data.scale, data.positionX, data.positionY, data.type || 'galleri'
+    ];
+    return updateSheetRow(spreadsheetId, 'galleri', rowIndex, 'I', values, 'Galleri');
 }
 
 export async function addGalleriRow(spreadsheetId, data) {
@@ -994,38 +983,5 @@ export async function migrateForsideBildeToGalleri(spreadsheetId) {
 }
 
 export async function deleteGalleriRowPermanently(spreadsheetId, rowIndex) {
-    try {
-        const sheetResp = await gapi.client.sheets.spreadsheets.get({
-            spreadsheetId,
-            fields: 'sheets.properties'
-        });
-        const sheet = (sheetResp.result.sheets || []).find(
-            s => s.properties.title === 'galleri'
-        );
-        if (!sheet) {
-            throw new Error("Fant ikke 'galleri'-arket i regnearket.");
-        }
-        const sheetId = sheet.properties.sheetId;
-
-        await gapi.client.sheets.spreadsheets.batchUpdate({
-            spreadsheetId,
-            resource: {
-                requests: [{
-                    deleteDimension: {
-                        range: {
-                            sheetId,
-                            dimension: 'ROWS',
-                            startIndex: rowIndex - 1,
-                            endIndex: rowIndex
-                        }
-                    }
-                }]
-            }
-        });
-        console.log(`[Admin] Galleri rad ${rowIndex} permanent slettet.`);
-        return true;
-    } catch (err) {
-        console.error("[Admin] Kunne ikke slette galleribilde permanent:", err);
-        throw err;
-    }
+    return deleteSheetRow(spreadsheetId, 'galleri', rowIndex);
 }
