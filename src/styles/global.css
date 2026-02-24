@@ -554,7 +554,7 @@
     }
 
     .admin-input {
-        @apply w-full p-3 rounded-xl border border-admin-border outline-none focus:border-brand focus:ring-4 focus:ring-brand/5 transition-all text-sm;
+        @apply w-full p-3 rounded-xl border border-admin-border outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all text-sm;
     }
 
     .admin-field-container {

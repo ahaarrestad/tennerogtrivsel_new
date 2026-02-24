@@ -582,7 +582,7 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                 const thumbAspect = isForsidebilde ? 'aspect-[16/10]' : 'aspect-[4/3]';
 
                 html += `
-                    <div class="admin-card-interactive group flex flex-col sm:flex-row sm:items-center gap-3 ${!img.active ? 'opacity-60' : ''} ${isForsidebilde ? 'border-amber-200 bg-amber-50/30' : ''}">
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row sm:items-center gap-4 ${!img.active ? 'opacity-60' : ''} ${isForsidebilde ? 'border-amber-200 bg-amber-50/30' : ''}">
                         <!-- Thumbnail + tekst -->
                         <div class="flex items-center gap-3 flex-grow min-w-0">
                             <div class="shrink-0 w-20 sm:w-24 ${thumbAspect} rounded-lg overflow-hidden bg-admin-hover flex items-center justify-center" data-thumb-row="${img.rowIndex}">
