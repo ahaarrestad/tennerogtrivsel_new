@@ -62,7 +62,7 @@ jobs:
           HOME: /root
 
       - name: Build Astro site
-        run: npm run build
+        run: npm run build:ci
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -93,7 +93,7 @@ jobs:
         run: npm run sync
       - name: Build Astro site
         if: github.event_name == 'repository_dispatch'
-        run: npm run build
+        run: npm run build:ci
       - name: Upload build artifact
         if: github.event_name == 'repository_dispatch'
         uses: actions/upload-artifact@v4
@@ -125,4 +125,12 @@ jobs:
 
       - name: Deploy to S3
         run: |
+          # Synk alt med standard caching (immutable assets håndteres av Astro-hashing)
           aws s3 sync dist/ s3://test2.aarrestad.com --acl public-read --delete
+
+          # Sett no-cache på API JSON-filer — disse MÅ hentes fersk hver gang
+          # fordi klienten filtrerer meldinger etter dato ved runtime
+          aws s3 cp s3://test2.aarrestad.com/api/ s3://test2.aarrestad.com/api/ \
+            --recursive --acl public-read \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --metadata-directive REPLACE

@@ -12,6 +12,9 @@
 
 ## Pågående
 
+- [ ] **Rar oppførsel for meldinger og muligens tjenester**
+    - Endret dato på en melding, den forsvant fra dev når jeg gjorde reload, men ikke fra bygget gjennom github til s3. Ser fra api/active-messages.json at det ser ut som om meldingen fremdeles ligger der (har bygget "google drive" bygget flere ganger). Kan det være at sync-data ikke fjerner inaktive meldinger fra api-mappen? Eller at den ikke oppdaterer api/active-messages.json korrekt? Eller at det er en cache-issue på github? eller noe helt annet? Det hjalp heller ikke å slette meldingen fra goodle drive og synce på nytt. Men det hjalp å bygge CI/CD på nytt. Antar det noe i optimalisering av byggescriptet?
+
 ## Backlog
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
@@ -27,9 +30,6 @@
 
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
-
-- [ ] **Rar oppførsel for meldinger og muligens tjenester**
-    - Endret dato på en melding, den forsvant fra dev når jeg gjorde reload, men ikke fra bygget gjennom github til s3. Ser fra api/active-messages.json at det ser ut som om meldingen fremdeles ligger der (har bygget "google drive" bygget flere ganger). Kan det være at sync-data ikke fjerner inaktive meldinger fra api-mappen? Eller at den ikke oppdaterer api/active-messages.json korrekt? Eller at det er en cache-issue på github? eller noe helt annet? Det hjalp heller ikke å slette meldingen fra goodle drive og synce på nytt. Men det hjalp å bygge CI/CD på nytt. Antar det noe i optimalisering av byggescriptet?
 
 - [ ] **Sortering av rekkefølge innstillinger i admin menyen**
     - Innsillinger i admin menyen vises i dag i samme rekkefølge som de ligger i google sheets.

@@ -2,21 +2,11 @@ import { getCollection } from 'astro:content';
 
 export const GET = async () => {
     try {
-        const now = new Date();
         const alleMeldinger = await getCollection('meldinger');
 
+        // Datofiltrering skjer på klienten (messageClient.js) — ikke ved byggetid.
+        // Statisk bygg fryser JSON-filen, så filtrering her gir utdaterte resultater.
         const data = alleMeldinger
-            .filter((m) => {
-                const start = new Date(m.data.startDate);
-                const end = new Date(m.data.endDate);
-                
-                // Sett start til starten av dagen
-                start.setHours(0, 0, 0, 0);
-                // Sett sluttidspunkt til slutten av dagen
-                end.setHours(23, 59, 59, 999);
-                
-                return now >= start && now <= end;
-            })
             .sort((a, b) => {
                 const dateA = new Date(a.data.startDate).getTime();
                 const dateB = new Date(b.data.startDate).getTime();
@@ -42,8 +32,7 @@ export const GET = async () => {
         return new Response(JSON.stringify(data), {
             status: 200,
             headers: {
-                'Content-Type': 'application/json',
-                'Cache-Control': 'no-cache'
+                'Content-Type': 'application/json'
             }
         });
     } catch (error) {

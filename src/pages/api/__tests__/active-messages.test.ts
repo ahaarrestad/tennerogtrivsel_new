@@ -118,7 +118,7 @@ Some data here
         expect(json[2].content).toBe('');
     });
 
-    it('should filter out messages that are not active', async () => {
+    it('should return all messages without date filtering (filtering moved to client)', async () => {
         const now = new Date();
         const yesterday = new Date(now);
         yesterday.setDate(now.getDate() - 1);
@@ -160,7 +160,32 @@ Some data here
         const response = await GET();
         const json = await response.json();
 
-        expect(json).toHaveLength(1);
-        expect(json[0].title).toBe('Active');
+        // Alle meldinger returneres — datofiltrering skjer på klienten
+        expect(json).toHaveLength(3);
+        expect(json.map((m: { title: string }) => m.title)).toContain('Expired');
+        expect(json.map((m: { title: string }) => m.title)).toContain('Upcoming');
+        expect(json.map((m: { title: string }) => m.title)).toContain('Active');
+    });
+
+    it('should include date fields in output', async () => {
+        const mockMessages = [
+            {
+                slug: 'msg',
+                data: {
+                    title: 'Test',
+                    startDate: new Date('2026-03-01'),
+                    endDate: new Date('2026-03-31'),
+                },
+                body: 'Content',
+            },
+        ];
+
+        getCollectionMock.mockResolvedValueOnce(mockMessages);
+
+        const response = await GET();
+        const json = await response.json();
+
+        expect(json[0]).toHaveProperty('startDate');
+        expect(json[0]).toHaveProperty('endDate');
     });
 });
