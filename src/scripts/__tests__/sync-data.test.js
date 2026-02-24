@@ -402,7 +402,7 @@ describe('sync-data.js', () => {
             // Only the parent-folder lookup called files.get; the download was skipped
             expect(mockDrive.files.get).toHaveBeenCalledTimes(1);
             const logs = logSpy.mock.calls.map(c => c[0]);
-            expect(logs.some(l => l.includes('forsidebilde er uendret'))).toBe(true);
+            expect(logs.some(l => l.includes('uendret.jpg er uendret'))).toBe(true);
         });
 
         it('bør generere beskjært OG-bilde til public/ etter nedlasting', async () => {
@@ -778,7 +778,7 @@ describe('sync-data.js', () => {
             await syncGalleri();
 
             const logs = logSpy.mock.calls.map(c => c[0]);
-            expect(logs.some(l => l.includes('Laster ned bilde: ny.jpg'))).toBe(true);
+            expect(logs.some(l => l.includes('Laster ned galleribilde: ny.jpg'))).toBe(true);
         });
 
         it('bør advare hvis galleribilde ikke finnes i Drive', async () => {

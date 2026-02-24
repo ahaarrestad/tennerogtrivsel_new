@@ -93,6 +93,25 @@ async function downloadFile(fileId, destinationPath) {
     await pipeline(res.data, fs.createWriteStream(destinationPath));
 }
 
+/**
+ * Finner fil i Drive, sjekker hash, og laster ned ved behov.
+ * Returnerer true hvis filen ble funnet (uavhengig av om den ble lastet ned).
+ */
+async function downloadImageIfNeeded(fileName, folderId, destinationPath, label) {
+    const driveFile = await findFileMetadataByName(fileName, folderId);
+    if (!driveFile) {
+        logWarning('Missing Asset', `${label} ikke funnet i Drive: ${fileName}`);
+        return false;
+    }
+    if (await shouldDownload(driveFile, destinationPath)) {
+        console.log(`    ⬇️ Laster ned ${label.toLowerCase()}: ${fileName}`);
+        await downloadFile(driveFile.id, destinationPath);
+    } else {
+        console.log(`    ⏭️ Skip: ${fileName} er uendret`);
+    }
+    return true;
+}
+
 async function findFileMetadataByName(name, folderId) {
     const drive = getDrive();
     let q = `name = '${name}' and trashed = false`;
@@ -136,102 +155,91 @@ async function syncTannleger() {
             if (bildeFil) {
                 try {
                     const destinationPath = path.join(config.paths.tannlegerAssets, bildeFil);
-                    const driveFile = await findFileMetadataByName(bildeFil, config.tannlegerFolderId);
+                    await downloadImageIfNeeded(bildeFil, config.tannlegerFolderId, destinationPath, 'Bilde');
+                } catch (imgErr) {
+                    logWarning('Download Error', `Feil ved behandling av bilde ${bildeFil}: ${imgErr.message}`);
+                }
+            }
 
-                    if (driveFile) {
-                                                if (await shouldDownload(driveFile, destinationPath)) {
-                                                    console.log(`    ⬇️ Laster ned bilde: ${bildeFil}`);
-                                                    await downloadFile(driveFile.id, destinationPath);
-                                                } else {
-                                                    console.log(`    ⏭️ Skip: ${bildeFil} er uendret`);
-                                                }
-                                            } else {
-                                                logWarning('Missing Asset', `Bilde ikke funnet i Drive: ${bildeFil}`);
-                                            }
-                                        } catch (imgErr) {
-                                            logWarning('Download Error', `Feil ved behandling av bilde ${bildeFil}: ${imgErr.message}`);
-                                        }
-                                    }
-                        
-                                    return {
-                                        id: navn.toLowerCase().replace(/\s+/g, '-'),
-                                        name: navn,
-                                        title: tittel,
-                                        description: beskrivelse,
-                                        image: bildeFil,
-                                        imageConfig: {
-                                            scale,
-                                            positionX,
-                                            positionY
-                                        }
-                                    };
-                                }));
-                        
-                                // Rydding: Slett bilder som ikke lenger er i bruk
-                                const localAssets = fs.readdirSync(config.paths.tannlegerAssets);
-                                const activeImages = new Set(tannlegeData.map(t => t.image).filter(Boolean));
+            return {
+                id: navn.toLowerCase().replace(/\s+/g, '-'),
+                name: navn,
+                title: tittel,
+                description: beskrivelse,
+                image: bildeFil,
+                imageConfig: {
+                    scale,
+                    positionX,
+                    positionY
+                }
+            };
+        }));
 
-                                localAssets.forEach(file => {
-                                    if (file !== '.gitkeep' && !activeImages.has(file)) {
-                                        const pathToDelete = path.join(config.paths.tannlegerAssets, file);
-                                        console.log(`  🗑️ Sletter ubrukt bilde: ${file}`);
-                                        fs.unlinkSync(pathToDelete);
-                                    }
-                                });
+        // Rydding: Slett bilder som ikke lenger er i bruk
+        const localAssets = fs.readdirSync(config.paths.tannlegerAssets);
+        const activeImages = new Set(tannlegeData.map(t => t.image).filter(Boolean));
 
-                                fs.writeFileSync(config.paths.tannlegerData, JSON.stringify(tannlegeData, null, 2));
-                                console.log(`  ✅ Synkroniserte ${tannlegeData.length} tannleger.`);
-                            } catch (err) {
-                                console.error('❌ Feil under synkronisering av tannleger:', err.message);
-                                throw err;
-                            }
-                        }
-                        
-                        // Fellesfunksjon for alle Markdown-samlinger (Tjenester, Meldinger, etc.)
-                        async function syncMarkdownCollection(collection) {
-                            const drive = getDrive();
-                        
-                            console.log(`🚀 Synkroniserer ${collection.name} (.md)...`);
-                            if (!fs.existsSync(collection.dest)) fs.mkdirSync(collection.dest, { recursive: true });
-                        
-                            const res = await drive.files.list({
-                                q: `'${collection.folderId}' in parents and trashed = false`,
-                                fields: 'files(id, name, md5Checksum)',
-                                supportsAllDrives: true,
-                                includeItemsFromAllDrives: true
-                            });
-                        
-                            const files = (res.data.files || []).filter(f => f.name.endsWith('.md'));
-                            
-                            // Rydding: Slett lokale filer som ikke lenger finnes i Drive
-                            const localFiles = fs.readdirSync(collection.dest);
-                            const remoteFileNames = new Set(files.map(f => f.name));
+        localAssets.forEach(file => {
+            if (file !== '.gitkeep' && !activeImages.has(file)) {
+                const pathToDelete = path.join(config.paths.tannlegerAssets, file);
+                console.log(`  🗑️ Sletter ubrukt bilde: ${file}`);
+                fs.unlinkSync(pathToDelete);
+            }
+        });
 
-                            localFiles.forEach(localFile => {
-                                if (localFile.endsWith('.md') && !remoteFileNames.has(localFile)) {
-                                    const pathToDelete = path.join(collection.dest, localFile);
-                                    console.log(`  🗑️ Sletter utgått fil: ${collection.name}/${localFile}`);
-                                    fs.unlinkSync(pathToDelete);
-                                }
-                            });
+        fs.writeFileSync(config.paths.tannlegerData, JSON.stringify(tannlegeData, null, 2));
+        console.log(`  ✅ Synkroniserte ${tannlegeData.length} tannleger.`);
+    } catch (err) {
+        console.error('❌ Feil under synkronisering av tannleger:', err.message);
+        throw err;
+    }
+}
 
-                            if (files.length === 0) {
-                                logWarning('Empty Collection', `Ingen filer funnet i samlingen "${collection.name}"`);
-                                return;
-                            }
-                        
-                            // Last ned alle filer i denne samlingen i parallell
-                            await Promise.all(files.map(async (file) => {
-                                const destinationPath = path.join(collection.dest, file.name);
-                                
-                                if (await shouldDownload(file, destinationPath)) {
-                                    await downloadFile(file.id, destinationPath);
-                                    console.log(`  ✅ ${collection.name}: ${file.name} (lastet ned)`);
-                                } else {
-                                    console.log(`    ⏭️ Skip: ${collection.name}/${file.name} er uendret`);
-                                }
-                            }));
-                        }
+// Fellesfunksjon for alle Markdown-samlinger (Tjenester, Meldinger, etc.)
+async function syncMarkdownCollection(collection) {
+    const drive = getDrive();
+
+    console.log(`🚀 Synkroniserer ${collection.name} (.md)...`);
+    if (!fs.existsSync(collection.dest)) fs.mkdirSync(collection.dest, { recursive: true });
+
+    const res = await drive.files.list({
+        q: `'${collection.folderId}' in parents and trashed = false`,
+        fields: 'files(id, name, md5Checksum)',
+        supportsAllDrives: true,
+        includeItemsFromAllDrives: true
+    });
+
+    const files = (res.data.files || []).filter(f => f.name.endsWith('.md'));
+
+    // Rydding: Slett lokale filer som ikke lenger finnes i Drive
+    const localFiles = fs.readdirSync(collection.dest);
+    const remoteFileNames = new Set(files.map(f => f.name));
+
+    localFiles.forEach(localFile => {
+        if (localFile.endsWith('.md') && !remoteFileNames.has(localFile)) {
+            const pathToDelete = path.join(collection.dest, localFile);
+            console.log(`  🗑️ Sletter utgått fil: ${collection.name}/${localFile}`);
+            fs.unlinkSync(pathToDelete);
+        }
+    });
+
+    if (files.length === 0) {
+        logWarning('Empty Collection', `Ingen filer funnet i samlingen "${collection.name}"`);
+        return;
+    }
+
+    // Last ned alle filer i denne samlingen i parallell
+    await Promise.all(files.map(async (file) => {
+        const destinationPath = path.join(collection.dest, file.name);
+
+        if (await shouldDownload(file, destinationPath)) {
+            await downloadFile(file.id, destinationPath);
+            console.log(`  ✅ ${collection.name}: ${file.name} (lastet ned)`);
+        } else {
+            console.log(`    ⏭️ Skip: ${collection.name}/${file.name} er uendret`);
+        }
+    }));
+}
 
 /**
  * Genererer et beskjært OG-bilde (1200×630) som replikerer CSS-en i Forside.astro:
@@ -345,19 +353,8 @@ async function syncForsideBilde() {
         }
 
         const destinationPath = path.join(process.cwd(), 'src/assets/hovedbilde.png');
-        const driveFile = await findFileMetadataByName(bildeFil, forsideFolderId);
-
-        if (!driveFile) {
-            logWarning('Missing Asset', `Forsidebilde ikke funnet i Drive: ${bildeFil}`);
-            return;
-        }
-
-        if (await shouldDownload(driveFile, destinationPath)) {
-            console.log(`  ⬇️ Laster ned forsidebilde: ${bildeFil}`);
-            await downloadFile(driveFile.id, destinationPath);
-        } else {
-            console.log(`  ⏭️ Skip: forsidebilde er uendret`);
-        }
+        const found = await downloadImageIfNeeded(bildeFil, forsideFolderId, destinationPath, 'Forsidebilde');
+        if (!found) return;
 
         // Generer beskjært OG-bilde (1200×630) til public/ med samme utsnitt som forsiden
         const publicPath = path.join(process.cwd(), 'public/hovedbilde.png');
@@ -433,18 +430,7 @@ async function syncGalleri() {
             if (bildeFil && !isForsidebilde) {
                 try {
                     const destinationPath = path.join(config.paths.galleriAssets, bildeFil);
-                    const driveFile = await findFileMetadataByName(bildeFil, folderId);
-
-                    if (driveFile) {
-                        if (await shouldDownload(driveFile, destinationPath)) {
-                            console.log(`    ⬇️ Laster ned bilde: ${bildeFil}`);
-                            await downloadFile(driveFile.id, destinationPath);
-                        } else {
-                            console.log(`    ⏭️ Skip: ${bildeFil} er uendret`);
-                        }
-                    } else {
-                        logWarning('Missing Asset', `Galleribilde ikke funnet i Drive: ${bildeFil}`);
-                    }
+                    await downloadImageIfNeeded(bildeFil, folderId, destinationPath, 'Galleribilde');
                 } catch (imgErr) {
                     logWarning('Download Error', `Feil ved behandling av galleribilde ${bildeFil}: ${imgErr.message}`);
                 }
@@ -548,4 +534,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 /* v8 ignore stop */
 
-export { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, runSync, getConfig, getLocalHash, shouldDownload };
+export { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, runSync, getConfig, getLocalHash, shouldDownload, downloadImageIfNeeded };
