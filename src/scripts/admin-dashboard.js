@@ -4,7 +4,7 @@ import {
     parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
     checkMultipleAccess, logout, getTannlegerRaw, updateTannlegeRow,
     addTannlegeRow, getGalleriRaw, updateGalleriRow, findFileByName, getDriveImageBlob,
-    updateSettingByKey, silentLogin
+    updateSettingByKey, updateSettingOrder, silentLogin
 } from './admin-client.js';
 import { withRetry, createAuthRefresher } from './admin-api-retry.js';
 import { formatDate, sortMessages } from './textFormatter.js';
@@ -537,6 +537,34 @@ export async function reorderGalleriItem(sheetId, items, rowIndex, direction) {
     await Promise.all([
         withRetry(() => updateGalleriRow(sheetId, current.rowIndex, current), { refreshAuth: getRefreshAuth() }),
         withRetry(() => updateGalleriRow(sheetId, neighbor.rowIndex, neighbor), { refreshAuth: getRefreshAuth() })
+    ]);
+    return true;
+}
+
+/**
+ * Bytter rekkefølge (order) mellom to innstillinger.
+ * direction: -1 = opp, +1 = ned
+ */
+export async function reorderSettingItem(sheetId, items, index, direction) {
+    const neighborIdx = index + direction;
+    if (neighborIdx < 0 || neighborIdx >= items.length) return false;
+
+    const current = items[index];
+    const neighbor = items[neighborIdx];
+
+    const tmpOrder = current.order;
+    current.order = neighbor.order;
+    neighbor.order = tmpOrder;
+
+    // Hvis begge har samme order, tving ulik
+    if (current.order === neighbor.order) {
+        current.order = index + direction;
+        neighbor.order = index;
+    }
+
+    await Promise.all([
+        withRetry(() => updateSettingOrder(sheetId, current.row, current.order), { refreshAuth: getRefreshAuth() }),
+        withRetry(() => updateSettingOrder(sheetId, neighbor.row, neighbor.order), { refreshAuth: getRefreshAuth() })
     ]);
     return true;
 }
