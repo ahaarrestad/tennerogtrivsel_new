@@ -12,7 +12,12 @@
 
 ## Pågående
 
-(Ingen oppgaver pågår)
+- [ ] **Kodelesbarhet — gå gjennom og forenkle koden** ([plan](docs/plan-kodelesbarhet.md))
+  - Gjøre koden enklere og lettere å lese
+  - Identifisere komplekse eller uoversiktlige partier og refaktorere dem
+  - Fokus på klarhet, konsistens og vedlikeholdbarhet
+  - 6 steg: bildeparsing, CRUD-konsolidering, event-binding, HTML-templates, sync-data-rydding, ekstraher inline-script
+  - **Steg 1 pågår:** Ekstraher duplisert bildeparsing til felles hjelpefunksjon
 
 ## Backlog
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
@@ -21,19 +26,16 @@
   - 6 steg: CloudFront-headere, input-validering, filopplasting, API-nøkkel, tester, dokumentasjon
   - Steg 1–4 uavhengige, steg 5 avhenger av 2+3, steg 6 sist
 
-- [ ] **Kodelesbarhet — gå gjennom og forenkle koden** ([plan](docs/plan-kodelesbarhet.md))
-  - Gjøre koden enklere og lettere å lese
-  - Identifisere komplekse eller uoversiktlige partier og refaktorere dem
-  - Fokus på klarhet, konsistens og vedlikeholdbarhet
-  - 6 steg: bildeparsing, CRUD-konsolidering, event-binding, HTML-templates, sync-data-rydding, ekstraher inline-script
-
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
   - Sjekk om det finnes GitHub workflows som ikke er i bruk og kan fjernes
 
-- [ ] **Sett opp CloudFront på test-siden**
+- [ ] **Sett opp CloudFront på test-siden** ([plan](docs/plan-cloudfront-test.md))
   - Dokumenter steg-for-steg hvordan CloudFront aktiveres foran S3-bucketen (test2.aarrestad.com)
-  - SSL-sertifikat, origin-oppsett, cache-policy, og DNS-pekere
+  - SSL-sertifikat (ACM us-east-1), CloudFront-distribusjon med OAC, cache-policy, DNS-pekere
+  - Response Headers Policy (CSP, HSTS, X-Frame-Options m.fl.) — dekker sikkerhetsplanens M1
+  - Oppdater deploy-workflow: fjern `--acl public-read`, legg til cache-invalidering
+  - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
 ## Fullført
 
