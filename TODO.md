@@ -42,6 +42,11 @@
   - Vurder om koden er lesbar nok eller om ytterligere forenkling trengs
   - Fokusområder: kompleksitet, navngiving, modulstruktur, duplisering
 
+- [ ] **UX- og brukervennlighetsgjennomgang av admin-panelet**
+  - Helhetlig gjennomgang av admin-siden med fokus på brukeropplevelse
+  - Vurder: navigasjon, arbeidsflyt, feilmeldinger, responstid, mobilvennlighet, visuelt hierarki
+  - Team: UX-reviewer (analyse + forslag), frontend-utvikler (implementering), tester (verifisering)
+
 - [ ] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
   - Sjekk om det finnes GitHub workflows som ikke er i bruk og kan fjernes
