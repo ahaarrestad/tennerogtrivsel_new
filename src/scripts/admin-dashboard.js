@@ -10,6 +10,38 @@ import { withRetry, createAuthRefresher } from './admin-api-retry.js';
 import { formatDate, sortMessages } from './textFormatter.js';
 import DOMPurify from 'dompurify';
 
+// --- SVG-IKONER (gjenbrukes i templates) ---
+const ICON_EDIT = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
+const ICON_DELETE = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+const ICON_UP = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+const ICON_DOWN = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+const ICON_PERSON = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-admin-muted-light"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+const ICON_IMAGE = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-admin-muted-light"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+const ICON_CALENDAR = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+
+// --- TEMPLATE-HJELPEFUNKSJONER ---
+
+/**
+ * Genererer HTML for en toggle-switch (aktiv/inaktiv).
+ */
+export function renderToggleSwitch(dataAttr, dataValue, isActive) {
+    const label = isActive ? 'Aktiv' : 'Inaktiv';
+    return `<button data-${dataAttr}="${dataValue}" class="toggle-active-btn flex items-center gap-1.5 shrink-0 cursor-pointer group/toggle" title="Klikk for å endre synlighet" type="button" role="switch" aria-checked="${isActive}" data-active="${isActive}">
+        <span class="toggle-track"><span class="toggle-dot"></span></span>
+        <span class="toggle-label">${label}</span>
+    </button>`;
+}
+
+/**
+ * Genererer HTML for edit- og delete-knapper.
+ */
+export function renderActionButtons(editClass, deleteClass, dataAttrs) {
+    return `<div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
+        <button ${dataAttrs} class="${editClass} admin-icon-btn group/btn" title="Rediger">${ICON_EDIT}</button>
+        <button ${dataAttrs} class="${deleteClass} admin-icon-btn-danger group/btn" title="Slett">${ICON_DELETE}</button>
+    </div>`;
+}
+
 let _refreshAuth = null;
 function getRefreshAuth() {
     if (!_refreshAuth) _refreshAuth = createAuthRefresher(silentLogin);
@@ -317,18 +349,11 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                                 <h3 class="font-bold text-brand line-clamp-2 sm:line-clamp-1 sm:min-w-0">${msg.title || msg.name}</h3>
                             </div>
                             <p class="text-xs text-admin-muted flex items-center gap-2">
-                                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                ${ICON_CALENDAR}
                                 ${formatDate(msg.startDate)} til ${formatDate(msg.endDate || 'Uendelig')}
                             </p>
                         </div>
-                        <div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
-                            <button data-id="${msg.driveId}" data-name="${msg.name}" class="edit-btn admin-icon-btn group/btn" title="Rediger">
-                                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            </button>
-                            <button data-id="${msg.driveId}" data-name="${msg.name}" class="delete-btn admin-icon-btn-danger group/btn" title="Slett">
-                                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                            </button>
-                        </div>
+                        ${renderActionButtons('edit-btn', 'delete-btn', `data-id="${msg.driveId}" data-name="${msg.name}"`)}
                     </div>`;
             });
             inner.innerHTML = DOMPurify.sanitize(html + `</div>`);
@@ -379,28 +404,17 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
             let html = `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
             services.forEach((s) => {
                 const isActive = s.active !== 'false' && s.active !== false;
-                const toggleLabel = isActive ? "Aktiv" : "Inaktiv";
 
                 html += `
                     <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!isActive ? 'opacity-60' : ''}" onclick="this.querySelector('.edit-btn').click()">
                         <div class="min-w-0 flex-grow">
                             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 mb-1">
-                                <button data-id="${s.driveId}" class="toggle-active-btn flex items-center gap-1.5 shrink-0 cursor-pointer group/toggle" title="Klikk for å endre synlighet" type="button" role="switch" aria-checked="${isActive}" data-active="${isActive}">
-                                    <span class="toggle-track"><span class="toggle-dot"></span></span>
-                                    <span class="toggle-label">${toggleLabel}</span>
-                                </button>
+                                ${renderToggleSwitch('id', s.driveId, isActive)}
                                 <h3 class="font-bold text-brand line-clamp-2 sm:line-clamp-1 sm:min-w-0">${s.title || s.name}</h3>
                             </div>
                             <p class="text-xs text-admin-muted mt-1">${s.ingress || ''}</p>
                         </div>
-                        <div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
-                            <button data-id="${s.driveId}" data-name="${s.name}" class="edit-btn admin-icon-btn group/btn" title="Rediger">
-                                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            </button>
-                            <button data-id="${s.driveId}" data-name="${s.name}" class="delete-btn admin-icon-btn-danger group/btn" title="Slett">
-                                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                            </button>
-                        </div>
+                        ${renderActionButtons('edit-btn', 'delete-btn', `data-id="${s.driveId}" data-name="${s.name}"`)}
                     </div>`;
             });
             inner.innerHTML = DOMPurify.sanitize(html + `</div>`);
@@ -454,33 +468,21 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
             let html = `<p class="text-xs text-admin-muted-light mb-3">Sist hentet: <span id="tannleger-last-fetched">${formatTimestamp(new Date())}</span></p>`;
             html += `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
             dentists.forEach((t) => {
-                const toggleLabel = t.active ? "Aktiv" : "Inaktiv";
-
                 html += `
                     <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!t.active ? 'opacity-60' : ''}" onclick="this.querySelector('.edit-tannlege-btn').click()">
                         <div class="flex items-center gap-3 flex-grow min-w-0 w-full">
                             <div class="shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-admin-hover flex items-center justify-center" data-thumb-row="${t.rowIndex}">
-                                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-admin-muted-light"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                ${ICON_PERSON}
                             </div>
                             <div class="min-w-0 flex-grow">
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 mb-1">
-                                    <button data-row="${t.rowIndex}" class="toggle-active-btn flex items-center gap-1.5 shrink-0 cursor-pointer group/toggle" title="Klikk for å endre synlighet" type="button" role="switch" aria-checked="${t.active}" data-active="${t.active}">
-                                        <span class="toggle-track"><span class="toggle-dot"></span></span>
-                                        <span class="toggle-label">${toggleLabel}</span>
-                                    </button>
+                                    ${renderToggleSwitch('row', t.rowIndex, t.active)}
                                     <h3 class="font-bold text-brand line-clamp-2 sm:line-clamp-1 sm:min-w-0">${t.name}</h3>
                                 </div>
                                 <p class="text-xs text-admin-muted italic">${t.title || 'Ingen tittel'}</p>
                             </div>
                         </div>
-                        <div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
-                            <button data-row="${t.rowIndex}" data-name="${t.name}" class="edit-tannlege-btn admin-icon-btn group/btn" title="Rediger">
-                                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            </button>
-                            <button data-row="${t.rowIndex}" data-name="${t.name}" class="delete-tannlege-btn admin-icon-btn-danger group/btn" title="Slett">
-                                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                            </button>
-                        </div>
+                        ${renderActionButtons('edit-tannlege-btn', 'delete-tannlege-btn', `data-row="${t.rowIndex}" data-name="${t.name}"`)}
                     </div>`;
             });
             inner.innerHTML = DOMPurify.sanitize(html + `</div>`);
@@ -596,27 +598,19 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
             html += `<div class="grid grid-cols-1 gap-4">`;
             images.forEach((img, idx) => {
                 const isForsidebilde = img.type === 'forsidebilde';
-                const toggleLabel = img.active ? "Aktiv" : "Inaktiv";
                 const badgeHtml = isForsidebilde
                     ? `<span class="admin-status-pill bg-amber-100 text-amber-700 border-amber-300 text-[8px] shrink-0 font-black">Forsidebilde</span>`
                     : '';
-                const toggleHtml = isForsidebilde
-                    ? ''
-                    : `<button data-row="${img.rowIndex}" class="toggle-active-btn flex items-center gap-1.5 shrink-0 cursor-pointer group/toggle" title="Klikk for å endre synlighet" type="button" role="switch" aria-checked="${img.active}" data-active="${img.active}">
-                                        <span class="toggle-track"><span class="toggle-dot"></span></span>
-                                        <span class="toggle-label">${toggleLabel}</span>
-                                    </button>`;
+                const toggleHtml = isForsidebilde ? '' : renderToggleSwitch('row', img.rowIndex, img.active);
                 const isFirst = idx === 0 || (idx === 1 && images[0].type === 'forsidebilde');
                 const isLast = idx === images.length - 1;
-
                 const thumbAspect = isForsidebilde ? 'aspect-[16/10]' : 'aspect-[4/3]';
 
                 html += `
                     <div class="admin-card-interactive group flex flex-col sm:flex-row sm:items-center gap-4 ${!img.active ? 'opacity-60' : ''} ${isForsidebilde ? 'border-amber-200 bg-amber-50/30' : ''}">
-                        <!-- Thumbnail + tekst -->
                         <div class="flex items-center gap-3 flex-grow min-w-0">
                             <div class="shrink-0 w-20 sm:w-24 ${thumbAspect} rounded-lg overflow-hidden bg-admin-hover flex items-center justify-center" data-thumb-row="${img.rowIndex}">
-                                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-admin-muted-light"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                ${ICON_IMAGE}
                             </div>
                             <div class="min-w-0 flex-grow">
                                 <div class="flex flex-wrap items-center gap-1 mb-1">
@@ -627,22 +621,13 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                                 <p class="text-xs text-admin-muted truncate italic mt-0.5">${img.image || 'Ingen bilde'}</p>
                             </div>
                         </div>
-                        <!-- Knapper: rekkefølge + rediger + slett -->
                         <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                             <div class="flex flex-col gap-1">
-                                <button data-row="${img.rowIndex}" data-dir="-1" class="reorder-btn admin-icon-btn-reorder ${isFirst || isForsidebilde ? 'invisible' : ''}" title="Flytt opp">
-                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                                </button>
-                                <button data-row="${img.rowIndex}" data-dir="1" class="reorder-btn admin-icon-btn-reorder ${isLast || isForsidebilde ? 'invisible' : ''}" title="Flytt ned">
-                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                </button>
+                                <button data-row="${img.rowIndex}" data-dir="-1" class="reorder-btn admin-icon-btn-reorder ${isFirst || isForsidebilde ? 'invisible' : ''}" title="Flytt opp">${ICON_UP}</button>
+                                <button data-row="${img.rowIndex}" data-dir="1" class="reorder-btn admin-icon-btn-reorder ${isLast || isForsidebilde ? 'invisible' : ''}" title="Flytt ned">${ICON_DOWN}</button>
                             </div>
-                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="edit-galleri-btn admin-icon-btn" title="Rediger">
-                                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            </button>
-                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="delete-galleri-btn admin-icon-btn-danger" title="Slett">
-                                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                            </button>
+                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="edit-galleri-btn admin-icon-btn" title="Rediger">${ICON_EDIT}</button>
+                            <button data-row="${img.rowIndex}" data-title="${img.title}" class="delete-galleri-btn admin-icon-btn-danger" title="Slett">${ICON_DELETE}</button>
                         </div>
                     </div>`;
             });
