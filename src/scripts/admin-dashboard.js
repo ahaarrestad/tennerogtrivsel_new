@@ -293,7 +293,7 @@ export async function saveSingleSetting(index, inputEl, currentSettings, sheetId
             const freshSetting = freshSettings.find(s => s.id === setting.id);
             if (freshSetting && freshSetting.value !== newValue) {
                 console.warn(`[Admin] Mismatch etter lagring av "${setting.id}": forventet "${newValue}", fikk "${freshSetting.value}"`);
-                statusEl.innerHTML = '<span class="text-amber-600 text-[10px] font-bold">⚠️ Laster på nytt…</span>';
+                statusEl.innerHTML = '<span class="text-amber-600 text-xs font-bold">⚠️ Laster på nytt…</span>';
                 if (onReload) onReload();
                 return;
             }
@@ -302,11 +302,11 @@ export async function saveSingleSetting(index, inputEl, currentSettings, sheetId
         }
 
         const ts = formatTimestamp(savedTime);
-        statusEl.innerHTML = `<span class="text-green-600 text-[10px] font-bold" title="Publiseres automatisk om noen minutter">✅ ${ts}</span>`;
+        statusEl.innerHTML = `<span class="text-green-600 text-xs font-bold" title="Publiseres automatisk om noen minutter">✅ ${ts}</span>`;
         setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 5000);
     } catch (e) {
         console.error("Save failed", e);
-        if (statusEl) statusEl.innerHTML = '<span class="text-red-500 text-[10px] font-bold">❌ Lagring feilet</span>';
+        if (statusEl) statusEl.innerHTML = '<span class="text-red-500 text-xs font-bold">❌ Lagring feilet</span>';
     }
 }
 

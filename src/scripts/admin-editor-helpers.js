@@ -166,3 +166,27 @@ export function bindWheelPrevent(container) {
         el.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
     });
 }
+
+let _hideSaveBarTimer = null;
+
+export function showSaveBar(state, message) {
+    let bar = document.getElementById('admin-save-bar');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'admin-save-bar';
+        document.body.appendChild(bar);
+    }
+    clearTimeout(_hideSaveBarTimer);
+    bar.className = `admin-save-bar admin-save-bar-${state}`;
+    bar.textContent = message;
+}
+
+export function hideSaveBar(delay = 0) {
+    if (delay > 0) {
+        _hideSaveBarTimer = setTimeout(() => {
+            document.getElementById('admin-save-bar')?.remove();
+        }, delay);
+    } else {
+        document.getElementById('admin-save-bar')?.remove();
+    }
+}

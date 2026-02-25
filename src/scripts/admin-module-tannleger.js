@@ -7,7 +7,8 @@ import { loadGallery, setupUploadHandler } from './admin-gallery.js';
 import { loadTannlegerModule, formatTimestamp } from './admin-dashboard.js';
 import {
     getAdminConfig, renderToggleHtml, attachToggleClick,
-    showDeletionToast, bindSliderStepButtons, bindWheelPrevent
+    showDeletionToast, bindSliderStepButtons, bindWheelPrevent,
+    showSaveBar, hideSaveBar
 } from './admin-editor-helpers.js';
 
 let tannlegeSaveTimeout = null;
@@ -143,8 +144,6 @@ async function editTannlege(rowIndex, data = null) {
                         </div>
                     </div>
                 </div>
-
-                <div id="save-status" class="min-h-6 text-[10px] font-black uppercase tracking-widest text-admin-muted-light italic"></div>
 
                 <div class="pt-6 border-t border-admin-border">
                     <button onclick="window.openTannlegerModule()" class="btn-primary w-full py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs flex items-center justify-center gap-2">
@@ -285,12 +284,11 @@ async function editTannlege(rowIndex, data = null) {
         if (valX) valX.textContent = `${posX}%`;
         if (valY) valY.textContent = `${posY}%`;
 
-        const statusEl = document.getElementById('save-status');
-        if (statusEl) statusEl.textContent = "⏳ Endringer oppdaget...";
+        showSaveBar('changed', '⏳ Endringer oppdaget...');
 
         clearTimeout(tannlegeSaveTimeout);
         tannlegeSaveTimeout = setTimeout(async () => {
-            if (statusEl) statusEl.textContent = "💾 Lagrer til Google Sheets...";
+            showSaveBar('saving', '💾 Lagrer til Google Sheets...');
             const updateData = {
                 name, title, description: desc, active,
                 image: image,
@@ -315,7 +313,7 @@ async function editTannlege(rowIndex, data = null) {
                     const freshRow = freshData.find(d => d.rowIndex === rowIndex);
                     if (freshRow && freshRow.name !== name) {
                         console.warn(`[Admin] Tannlege-mismatch etter lagring: forventet "${name}", fikk "${freshRow.name}"`);
-                        if (statusEl) statusEl.innerHTML = '⚠️ Laster på nytt…';
+                        showSaveBar('error', '⚠️ Laster på nytt…');
                         reloadTannleger();
                         return;
                     }
@@ -323,10 +321,10 @@ async function editTannlege(rowIndex, data = null) {
                     console.warn("[Admin] Tannlege-verifisering feilet, men lagring gikk OK:", verifyErr);
                 }
                 const ts = formatTimestamp(savedTime);
-                if (statusEl) statusEl.innerHTML = `✅ Lagret ${ts} <span class="block text-admin-muted-light not-italic">Publiseres automatisk om noen minutter.</span>`;
-                setTimeout(() => { if(statusEl) statusEl.innerHTML = ""; }, 5000);
+                showSaveBar('saved', `✅ Lagret ${ts}`);
+                hideSaveBar(5000);
             } catch (e) {
-                if (statusEl) statusEl.textContent = "❌ Feil ved lagring!";
+                showSaveBar('error', '❌ Feil ved lagring!');
             }
         }, 1500);
     };

@@ -45,6 +45,8 @@ vi.mock('../admin-editor-helpers.js', () => ({
     showDeletionToast: vi.fn(),
     bindSliderStepButtons: vi.fn(),
     bindWheelPrevent: vi.fn(),
+    showSaveBar: vi.fn(),
+    hideSaveBar: vi.fn(),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({
@@ -59,7 +61,7 @@ import {
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadGallery, setupUploadHandler } from '../admin-gallery.js';
 import { loadGalleriListeModule, reorderGalleriItem } from '../admin-dashboard.js';
-import { showDeletionToast, bindSliderStepButtons, bindWheelPrevent } from '../admin-editor-helpers.js';
+import { showDeletionToast, bindSliderStepButtons, bindWheelPrevent, showSaveBar } from '../admin-editor-helpers.js';
 import { loadBilderModule } from '../admin-module-bilder.js';
 
 function setupDOM() {
@@ -447,7 +449,7 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
 
         await vi.advanceTimersByTimeAsync(1500);
 
-        expect(document.getElementById('galleri-save-status').textContent).toContain('Feil ved lagring');
+        expect(showSaveBar).toHaveBeenCalledWith('error', expect.stringContaining('Feil ved lagring'));
         vi.useRealTimers();
     });
 
@@ -705,7 +707,7 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
 
         await vi.advanceTimersByTimeAsync(1500);
 
-        expect(document.getElementById('galleri-save-status').innerHTML).toContain('Lagret');
+        expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('Lagret'));
         vi.useRealTimers();
     });
 
@@ -734,7 +736,7 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         await vi.advanceTimersByTimeAsync(1500);
 
         // Should show success despite verification failure
-        expect(document.getElementById('galleri-save-status').innerHTML).toContain('Lagret');
+        expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('Lagret'));
         vi.useRealTimers();
     });
 
@@ -1313,14 +1315,14 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         titleInput.value = 'NewTitle';
         titleInput.dispatchEvent(new Event('input'));
 
-        const statusEl = document.getElementById('galleri-save-status');
-        expect(statusEl.textContent).toContain('Endringer oppdaget');
+        expect(showSaveBar).toHaveBeenCalledWith('changed', expect.stringContaining('Endringer oppdaget'));
 
         // Test 'input' event on alt (text input)
+        showSaveBar.mockClear();
         const altInput = document.getElementById('galleri-edit-alt');
         altInput.value = 'NewAlt';
         altInput.dispatchEvent(new Event('input'));
-        expect(statusEl.textContent).toContain('Endringer oppdaget');
+        expect(showSaveBar).toHaveBeenCalledWith('changed', expect.stringContaining('Endringer oppdaget'));
     });
 
     it('should update last-fetched time during verification', async () => {
@@ -1439,7 +1441,7 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         });
     });
 
-    it('should handle auto-save when galleri-save-status is missing from DOM', async () => {
+    it('should show saved bar and schedule hide after successful auto-save', async () => {
         vi.useFakeTimers();
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
@@ -1453,9 +1455,6 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
             }
         ]);
         await editFn(2);
-
-        // Remove the save status element BEFORE triggering preview update
-        document.getElementById('galleri-save-status').remove();
 
         updateGalleriRow.mockResolvedValue();
         getGalleriRaw.mockResolvedValue([{ rowIndex: 2, title: 'Changed' }]);
@@ -1464,15 +1463,14 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         titleInput.value = 'Changed';
         titleInput.dispatchEvent(new Event('change'));
 
-        // Should not crash when statusEl is null
         await vi.advanceTimersByTimeAsync(1500);
 
-        // The save should still complete without errors
         expect(updateGalleriRow).toHaveBeenCalled();
+        expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('Lagret'));
         vi.useRealTimers();
     });
 
-    it('should handle auto-save error when galleri-save-status is missing', async () => {
+    it('should show error bar on auto-save failure', async () => {
         vi.useFakeTimers();
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
@@ -1487,17 +1485,14 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         ]);
         await editFn(2);
 
-        // Remove save status element
-        document.getElementById('galleri-save-status').remove();
-
         updateGalleriRow.mockRejectedValue(new Error('fail'));
 
         const titleInput = document.getElementById('galleri-edit-title');
         titleInput.value = 'Changed';
         titleInput.dispatchEvent(new Event('change'));
 
-        // Should not crash even with error + missing statusEl
         await vi.advanceTimersByTimeAsync(1500);
+        expect(showSaveBar).toHaveBeenCalledWith('error', expect.stringContaining('Feil ved lagring'));
         vi.useRealTimers();
     });
 

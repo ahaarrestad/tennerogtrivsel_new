@@ -44,6 +44,8 @@ vi.mock('../admin-editor-helpers.js', () => ({
     showDeletionToast: vi.fn(),
     bindSliderStepButtons: vi.fn(),
     bindWheelPrevent: vi.fn(),
+    showSaveBar: vi.fn(),
+    hideSaveBar: vi.fn(),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({
@@ -56,7 +58,7 @@ import {
 } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadTannlegerModule } from '../admin-dashboard.js';
-import { showDeletionToast, attachToggleClick, bindSliderStepButtons, bindWheelPrevent } from '../admin-editor-helpers.js';
+import { showDeletionToast, attachToggleClick, bindSliderStepButtons, bindWheelPrevent, showSaveBar, hideSaveBar } from '../admin-editor-helpers.js';
 import { initTannlegerModule, reloadTannleger } from '../admin-module-tannleger.js';
 
 function setupDOM() {
@@ -292,7 +294,7 @@ describe('editTannlege', () => {
         nameInp.value = 'Changed';
         nameInp.dispatchEvent(new Event('input'));
 
-        expect(document.getElementById('save-status').textContent).toContain('Endringer oppdaget');
+        expect(showSaveBar).toHaveBeenCalledWith('changed', expect.stringContaining('Endringer oppdaget'));
         vi.useRealTimers();
     });
 
@@ -351,7 +353,7 @@ describe('editTannlege', () => {
 
         await vi.advanceTimersByTimeAsync(1500);
 
-        expect(document.getElementById('save-status').textContent).toContain('Feil ved lagring');
+        expect(showSaveBar).toHaveBeenCalledWith('error', expect.stringContaining('Feil ved lagring'));
         vi.useRealTimers();
     });
 
@@ -372,7 +374,7 @@ describe('editTannlege', () => {
 
         await vi.advanceTimersByTimeAsync(1500);
 
-        expect(document.getElementById('save-status').innerHTML).toContain('Laster på nytt');
+        expect(showSaveBar).toHaveBeenCalledWith('error', expect.stringContaining('Laster på nytt'));
         vi.useRealTimers();
     });
 
@@ -393,7 +395,7 @@ describe('editTannlege', () => {
         await vi.advanceTimersByTimeAsync(1500);
 
         // Should still show success despite verify failure
-        expect(document.getElementById('save-status').innerHTML).toContain('Lagret');
+        expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('Lagret'));
         vi.useRealTimers();
     });
 
@@ -569,7 +571,7 @@ describe('editTannlege', () => {
         vi.useRealTimers();
     });
 
-    it('should clear save status after success timeout', async () => {
+    it('should show saved and schedule hide after success', async () => {
         vi.useFakeTimers();
         updateTannlegeRow.mockResolvedValue();
         getTannlegerRaw.mockResolvedValue([{ rowIndex: 2, name: 'N' }]);
@@ -583,11 +585,8 @@ describe('editTannlege', () => {
         document.getElementById('edit-t-name').dispatchEvent(new Event('input'));
         await vi.advanceTimersByTimeAsync(1500);
 
-        expect(document.getElementById('save-status').innerHTML).toContain('Lagret');
-
-        // After 5 second timeout, status should be cleared
-        await vi.advanceTimersByTimeAsync(5000);
-        expect(document.getElementById('save-status').innerHTML).toBe('');
+        expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('Lagret'));
+        expect(hideSaveBar).toHaveBeenCalledWith(5000);
         vi.useRealTimers();
     });
 
