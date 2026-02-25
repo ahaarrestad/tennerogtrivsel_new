@@ -89,7 +89,7 @@ Filer: `global.css`
 
 ---
 
-### Steg 6: Dashboard-kort med statusinfo
+### ✅ Steg 6: Dashboard-kort med statusinfo
 **Impakt: MIDDELS** — Brukeren må klikke inn i modulen for å se om noe har endret seg.
 
 Endringer:

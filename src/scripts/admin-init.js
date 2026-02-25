@@ -4,7 +4,7 @@ import {
 } from './admin-client.js';
 import { showConfirm } from './admin-dialog.js';
 import { initPwaPrompt, showInstallPromptIfEligible } from './pwa-prompt.js';
-import { updateUIWithUser, enforceAccessControl } from './admin-dashboard.js';
+import { updateUIWithUser, enforceAccessControl, loadDashboardCounts } from './admin-dashboard.js';
 import { getAdminConfig } from './admin-editor-helpers.js';
 import { loadSettingsModule } from './admin-module-settings.js';
 import { initTjenesterModule, reloadTjenester } from './admin-module-tjenester.js';
@@ -54,6 +54,7 @@ async function handleAuth(userInfo = null) {
             MELDINGER_FOLDER,
             TANNLEGER_FOLDER
         });
+        loadDashboardCounts({ SHEET_ID, TJENESTER_FOLDER, MELDINGER_FOLDER });
         showInstallPromptIfEligible();
     }
 }

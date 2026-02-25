@@ -710,3 +710,83 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
         handleModuleError(e, 'galleribilder', container, () => loadGalleriListeModule(sheetId, onEdit, onDelete, onReorder, parentFolderId, onToggleActive));
     }
 }
+
+/**
+ * Henter elementtelling for alle moduler i parallell og viser det på dashboard-kortene.
+ * Kalles fire-and-forget (uten await) fra handleAuth().
+ */
+export async function loadDashboardCounts(config) {
+    const { SHEET_ID, TJENESTER_FOLDER, MELDINGER_FOLDER } = config;
+
+    const setCount = (id, text) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = text;
+        el.classList.remove('hidden');
+    };
+
+    const fetchTjenesterCount = async () => {
+        if (!TJENESTER_FOLDER) return null;
+        const files = await withRetry(() => listFiles(TJENESTER_FOLDER), { refreshAuth: getRefreshAuth() });
+        const services = await Promise.all(files.map(async f => {
+            const raw = await getFileContent(f.id);
+            const { data } = parseMarkdown(raw);
+            return data;
+        }));
+        const active = services.filter(s => s.active !== 'false' && s.active !== false).length;
+        return { total: files.length, active };
+    };
+
+    const fetchMeldingerCount = async () => {
+        if (!MELDINGER_FOLDER) return null;
+        const files = await withRetry(() => listFiles(MELDINGER_FOLDER), { refreshAuth: getRefreshAuth() });
+        const today = new Date();
+        const nowUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+        const parseToUTC = (dateStr) => {
+            if (!dateStr) return null;
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return null;
+            return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+        };
+        const messages = await Promise.all(files.map(async f => {
+            const raw = await getFileContent(f.id);
+            const { data } = parseMarkdown(raw);
+            return data;
+        }));
+        const active = messages.filter(m => {
+            const start = parseToUTC(m.startDate);
+            const end = parseToUTC(m.endDate || '2099-12-31');
+            return start !== null && end !== null && nowUTC >= start && nowUTC <= end;
+        }).length;
+        return { total: files.length, active };
+    };
+
+    const [tjenesterResult, meldingerResult, tannlegerResult, galleriResult] = await Promise.allSettled([
+        fetchTjenesterCount(),
+        fetchMeldingerCount(),
+        SHEET_ID ? withRetry(() => getTannlegerRaw(SHEET_ID), { refreshAuth: getRefreshAuth() }) : Promise.resolve(null),
+        SHEET_ID ? withRetry(() => getGalleriRaw(SHEET_ID), { refreshAuth: getRefreshAuth() }) : Promise.resolve(null),
+    ]);
+
+    if (tjenesterResult.status === 'fulfilled' && tjenesterResult.value) {
+        const { total, active } = tjenesterResult.value;
+        setCount('card-tjenester-count', `${total} ${total === 1 ? 'behandling' : 'behandlinger'}, ${active} aktive`);
+    }
+
+    if (meldingerResult.status === 'fulfilled' && meldingerResult.value) {
+        const { total, active } = meldingerResult.value;
+        setCount('card-meldinger-count', `${total} oppslag, ${active} aktive`);
+    }
+
+    if (tannlegerResult.status === 'fulfilled' && tannlegerResult.value) {
+        const all = tannlegerResult.value;
+        const active = all.filter(t => t.active).length;
+        setCount('card-tannleger-count', `${all.length} ${all.length === 1 ? 'person' : 'personer'}, ${active} aktive`);
+    }
+
+    if (galleriResult.status === 'fulfilled' && galleriResult.value) {
+        const images = galleriResult.value.filter(img => img.type !== 'forsidebilde');
+        const active = images.filter(img => img.active).length;
+        setCount('card-bilder-count', `${images.length} ${images.length === 1 ? 'bilde' : 'bilder'}, ${active} aktive`);
+    }
+}

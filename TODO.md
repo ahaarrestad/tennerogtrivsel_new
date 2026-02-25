@@ -21,7 +21,8 @@
   - ✅ Steg 3: kontekstuelle feilmeldinger med veiledning
   - ✅ Steg 4: tydelig lagrestatus-feedback (fast bunnlinje, showSaveBar/hideSaveBar)
   - ✅ Steg 5: større berøringsmål på mobil — min-w/h-[44px] på alle ikonknapper, w-10 h-10 på slider-step-btn
-  - Steg 6 venter: dashboard-kort med statusinfo
+  - ✅ Steg 6: dashboard-kort med statusinfo — aktiv-telling for tjenester, meldinger, tannleger og galleri
+  - Steg 7 venter: mykere overganger mellom visninger
 
 ## Backlog
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))

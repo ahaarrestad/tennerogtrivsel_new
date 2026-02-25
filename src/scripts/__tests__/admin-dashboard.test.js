@@ -72,7 +72,7 @@ const {
     loadTannlegerModule, loadGalleriListeModule, reorderGalleriItem,
     reorderSettingItem, mergeSettingsWithDefaults, formatTimestamp,
     updateLastFetchedTime, updateBreadcrumbCount, renderSkeletonCards,
-    handleModuleError
+    handleModuleError, loadDashboardCounts
 } = adminDashboard;
 
 describe('admin-dashboard.js', () => {
@@ -86,10 +86,18 @@ describe('admin-dashboard.js', () => {
             <div id="module-actions"></div>
             <span id="breadcrumb-count" class="hidden"></span>
             <div id="card-settings" class="admin-card-interactive"></div>
-            <div id="card-tjenester" class="admin-card-interactive"></div>
-            <div id="card-meldinger" class="admin-card-interactive"></div>
-            <div id="card-tannleger" class="admin-card-interactive"></div>
-            <div id="card-bilder" class="admin-card-interactive"></div>
+            <div id="card-tjenester" class="admin-card-interactive">
+                <span id="card-tjenester-count" class="admin-card-count hidden"></span>
+            </div>
+            <div id="card-meldinger" class="admin-card-interactive">
+                <span id="card-meldinger-count" class="admin-card-count hidden"></span>
+            </div>
+            <div id="card-tannleger" class="admin-card-interactive">
+                <span id="card-tannleger-count" class="admin-card-count hidden"></span>
+            </div>
+            <div id="card-bilder" class="admin-card-interactive">
+                <span id="card-bilder-count" class="admin-card-count hidden"></span>
+            </div>
         `;
         vi.clearAllMocks();
     });
@@ -1664,6 +1672,184 @@ describe('admin-dashboard.js', () => {
             handleModuleError(new Error('fail'), 'test', container, onRetry);
             container.querySelector('.retry-btn').click();
             expect(onRetry).toHaveBeenCalled();
+        });
+    });
+
+    describe('loadDashboardCounts', () => {
+        const mockConfig = {
+            SHEET_ID: 'sheet-1',
+            TJENESTER_FOLDER: 'folder-tjenester',
+            MELDINGER_FOLDER: 'folder-meldinger',
+        };
+
+        it('should show tjenester count with active count', async () => {
+            adminClient.listFiles
+                .mockResolvedValueOnce([{ id: '1' }, { id: '2' }, { id: '3' }])  // tjenester
+                .mockResolvedValueOnce([]);  // meldinger (empty, no file fetches)
+            adminClient.getFileContent.mockResolvedValue('content');
+            adminClient.parseMarkdown
+                .mockReturnValueOnce({ data: { active: true }, body: '' })
+                .mockReturnValueOnce({ data: { active: false }, body: '' })
+                .mockReturnValueOnce({ data: { active: true }, body: '' });
+            adminClient.getTannlegerRaw.mockResolvedValue([]);
+            adminClient.getGalleriRaw.mockResolvedValue([]);
+
+            await loadDashboardCounts(mockConfig);
+
+            const el = document.getElementById('card-tjenester-count');
+            expect(el.textContent).toBe('3 behandlinger, 2 aktive');
+            expect(el.classList.contains('hidden')).toBe(false);
+        });
+
+        it('should show singular form for 1 behandling', async () => {
+            adminClient.listFiles
+                .mockResolvedValueOnce([{ id: '1' }])
+                .mockResolvedValueOnce([]);
+            adminClient.getFileContent.mockResolvedValue('content');
+            adminClient.parseMarkdown.mockReturnValueOnce({ data: { active: true }, body: '' });
+            adminClient.getTannlegerRaw.mockResolvedValue([]);
+            adminClient.getGalleriRaw.mockResolvedValue([]);
+
+            await loadDashboardCounts(mockConfig);
+
+            expect(document.getElementById('card-tjenester-count').textContent).toBe('1 behandling, 1 aktive');
+        });
+
+        it('should treat active: false as inactive tjeneste', async () => {
+            adminClient.listFiles
+                .mockResolvedValueOnce([{ id: '1' }, { id: '2' }])
+                .mockResolvedValueOnce([]);
+            adminClient.getFileContent.mockResolvedValue('content');
+            adminClient.parseMarkdown
+                .mockReturnValueOnce({ data: { active: false }, body: '' })
+                .mockReturnValueOnce({ data: { active: 'false' }, body: '' });
+            adminClient.getTannlegerRaw.mockResolvedValue([]);
+            adminClient.getGalleriRaw.mockResolvedValue([]);
+
+            await loadDashboardCounts(mockConfig);
+
+            expect(document.getElementById('card-tjenester-count').textContent).toBe('2 behandlinger, 0 aktive');
+        });
+
+        it('should count active meldinger based on current date', async () => {
+            adminClient.listFiles
+                .mockResolvedValueOnce([])  // tjenester (empty)
+                .mockResolvedValueOnce([{ id: 'm1' }, { id: 'm2' }, { id: 'm3' }]);  // meldinger
+            adminClient.getFileContent.mockResolvedValue('content');
+            // Active: started, not ended. Planned: future. Expired: past.
+            adminClient.parseMarkdown
+                .mockReturnValueOnce({ data: { startDate: '2020-01-01', endDate: '2099-12-31' }, body: '' })  // active
+                .mockReturnValueOnce({ data: { startDate: '2099-01-01', endDate: '2099-12-31' }, body: '' })  // planned
+                .mockReturnValueOnce({ data: { startDate: '2020-01-01', endDate: '2020-12-31' }, body: '' }); // expired
+            adminClient.getTannlegerRaw.mockResolvedValue([]);
+            adminClient.getGalleriRaw.mockResolvedValue([]);
+
+            await loadDashboardCounts(mockConfig);
+
+            expect(document.getElementById('card-meldinger-count').textContent).toBe('3 oppslag, 1 aktive');
+        });
+
+        it('should count melding with no endDate as active (defaults to 2099)', async () => {
+            adminClient.listFiles
+                .mockResolvedValueOnce([])
+                .mockResolvedValueOnce([{ id: 'm1' }]);
+            adminClient.getFileContent.mockResolvedValue('content');
+            adminClient.parseMarkdown.mockReturnValueOnce({ data: { startDate: '2020-01-01' }, body: '' });
+            adminClient.getTannlegerRaw.mockResolvedValue([]);
+            adminClient.getGalleriRaw.mockResolvedValue([]);
+
+            await loadDashboardCounts(mockConfig);
+
+            expect(document.getElementById('card-meldinger-count').textContent).toBe('1 oppslag, 1 aktive');
+        });
+
+        it('should not count melding with invalid dates as active', async () => {
+            adminClient.listFiles
+                .mockResolvedValueOnce([])
+                .mockResolvedValueOnce([{ id: 'm1' }]);
+            adminClient.getFileContent.mockResolvedValue('content');
+            adminClient.parseMarkdown.mockReturnValueOnce({ data: { startDate: 'invalid', endDate: 'invalid' }, body: '' });
+            adminClient.getTannlegerRaw.mockResolvedValue([]);
+            adminClient.getGalleriRaw.mockResolvedValue([]);
+
+            await loadDashboardCounts(mockConfig);
+
+            expect(document.getElementById('card-meldinger-count').textContent).toBe('1 oppslag, 0 aktive');
+        });
+
+        it('should show tannleger count with active count', async () => {
+            adminClient.listFiles.mockResolvedValue([]);
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { name: 'Alice', active: true },
+                { name: 'Bob', active: false },
+                { name: 'Charlie', active: true },
+            ]);
+            adminClient.getGalleriRaw.mockResolvedValue([]);
+
+            await loadDashboardCounts(mockConfig);
+
+            expect(document.getElementById('card-tannleger-count').textContent).toBe('3 personer, 2 aktive');
+        });
+
+        it('should show singular form for 1 tannlege', async () => {
+            adminClient.listFiles.mockResolvedValue([]);
+            adminClient.getTannlegerRaw.mockResolvedValue([{ name: 'Alice', active: true }]);
+            adminClient.getGalleriRaw.mockResolvedValue([]);
+
+            await loadDashboardCounts(mockConfig);
+
+            expect(document.getElementById('card-tannleger-count').textContent).toBe('1 person, 1 aktive');
+        });
+
+        it('should show bilder count excluding forsidebilde', async () => {
+            adminClient.listFiles.mockResolvedValue([]);
+            adminClient.getTannlegerRaw.mockResolvedValue([]);
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 1, type: 'forsidebilde', active: true },
+                { rowIndex: 2, active: true },
+                { rowIndex: 3, active: true },
+                { rowIndex: 4, active: false },
+            ]);
+
+            await loadDashboardCounts(mockConfig);
+
+            expect(document.getElementById('card-bilder-count').textContent).toBe('3 bilder, 2 aktive');
+        });
+
+        it('should show singular form for 1 bilde', async () => {
+            adminClient.listFiles.mockResolvedValue([]);
+            adminClient.getTannlegerRaw.mockResolvedValue([]);
+            adminClient.getGalleriRaw.mockResolvedValue([{ rowIndex: 2, active: true }]);
+
+            await loadDashboardCounts(mockConfig);
+
+            expect(document.getElementById('card-bilder-count').textContent).toBe('1 bilde, 1 aktive');
+        });
+
+        it('should not throw when any fetch fails (Promise.allSettled)', async () => {
+            adminClient.listFiles.mockRejectedValue(new Error('network'));
+            adminClient.getTannlegerRaw.mockRejectedValue(new Error('network'));
+            adminClient.getGalleriRaw.mockRejectedValue(new Error('network'));
+
+            await expect(loadDashboardCounts(mockConfig)).resolves.not.toThrow();
+        });
+
+        it('should not update DOM when config has no folder IDs', async () => {
+            await loadDashboardCounts({});
+
+            expect(document.getElementById('card-tjenester-count').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('card-meldinger-count').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('card-tannleger-count').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('card-bilder-count').classList.contains('hidden')).toBe(true);
+        });
+
+        it('should not throw when count elements are missing from DOM', async () => {
+            document.body.innerHTML = '';
+            adminClient.listFiles.mockResolvedValue([]);
+            adminClient.getTannlegerRaw.mockResolvedValue([{ name: 'X', active: true }]);
+            adminClient.getGalleriRaw.mockResolvedValue([{ rowIndex: 1, active: true }]);
+
+            await expect(loadDashboardCounts(mockConfig)).resolves.not.toThrow();
         });
     });
 });

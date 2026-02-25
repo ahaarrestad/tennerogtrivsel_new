@@ -1739,4 +1739,43 @@ describe('toggleGalleriActive with DOM elements', () => {
 
         expect(img.active).toBe(false);
     });
+
+    it('should toggle without toggle-label span in button', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        document.body.innerHTML += `
+            <div class="admin-card-interactive">
+                <button class="toggle-active-btn" data-row="7" data-active="true"></button>
+            </div>
+        `;
+
+        updateGalleriRow.mockResolvedValue();
+        const toggleFn = loadGalleriListeModule.mock.calls[0][5];
+        const img = { active: true };
+        await toggleFn(7, img);
+
+        expect(img.active).toBe(false);
+    });
+
+    it('should revert toggle error without toggle-label span in button', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        document.body.innerHTML += `
+            <div class="admin-card-interactive">
+                <button class="toggle-active-btn" data-row="8" data-active="true"></button>
+            </div>
+        `;
+
+        updateGalleriRow.mockRejectedValue(new Error('fail'));
+        const toggleFn = loadGalleriListeModule.mock.calls[0][5];
+        const img = { active: true };
+        await toggleFn(8, img);
+
+        const btn = document.querySelector('.toggle-active-btn[data-row="8"]');
+        expect(btn.dataset.active).toBe('true'); // reverted
+    });
 });
