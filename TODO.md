@@ -25,7 +25,7 @@
   - 6 steg: CloudFront-headere, input-validering, filopplasting, API-nøkkel, tester, dokumentasjon
   - Steg 1–4 uavhengige, steg 5 avhenger av 2+3, steg 6 sist
 
-- [ ] **Optimaliser testsuiten — fjern redundante tester**
+- [ ] **Optimaliser testsuiten — fjern redundante tester** ([plan](docs/plan-optimaliser-testsuite.md))
   - Gå gjennom alle enhetstester og E2E-tester og identifiser overlapp/duplisering
   - Fjern tester som dekker samme logikk flere ganger uten å tilføre verdi
   - Mål: behold 80% branch coverage per fil, men reduser total byggetid
