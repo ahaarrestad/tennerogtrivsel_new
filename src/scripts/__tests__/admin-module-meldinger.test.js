@@ -41,10 +41,12 @@ vi.mock('../admin-editor-helpers.js', () => ({
 
 vi.mock('../admin-api-retry.js', () => ({
     createAuthRefresher: vi.fn(() => () => Promise.resolve(true)),
+    classifyError: vi.fn(() => 'non-retryable'),
 }));
 
 import { deleteFile, getFileContent, parseMarkdown, saveFile, createFile, stringifyMarkdown } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
+import { classifyError } from '../admin-api-retry.js';
 import { loadMeldingerModule } from '../admin-dashboard.js';
 import { showDeletionToast, initEditors } from '../admin-editor-helpers.js';
 import { initMeldingerModule, reloadMeldinger } from '../admin-module-meldinger.js';
@@ -107,6 +109,22 @@ describe('deleteMelding', () => {
         deleteFile.mockRejectedValue(new Error('fail'));
         await window.deleteMelding('id1', 'Test');
         expect(showToast).toHaveBeenCalledWith('Kunne ikke slette oppslaget.', 'error');
+    });
+
+    it('should show auth toast when deletion fails with auth error', async () => {
+        classifyError.mockReturnValueOnce('auth');
+        showConfirm.mockResolvedValue(true);
+        deleteFile.mockRejectedValue({ status: 401 });
+        await window.deleteMelding('id1', 'Test');
+        expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
+    });
+
+    it('should show network toast when deletion fails with retryable error', async () => {
+        classifyError.mockReturnValueOnce('retryable');
+        showConfirm.mockResolvedValue(true);
+        deleteFile.mockRejectedValue(new Error('network'));
+        await window.deleteMelding('id1', 'Test');
+        expect(showToast).toHaveBeenCalledWith('Nettverksfeil — prøv igjen.', 'error');
     });
 });
 
@@ -202,6 +220,32 @@ describe('editMelding', () => {
         await onSave(null);
 
         expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
+    });
+
+    it('should show auth toast when save fails with auth error', async () => {
+        classifyError.mockReturnValueOnce('auth');
+        getFileContent.mockResolvedValue('raw');
+        parseMarkdown.mockReturnValue({ data: { title: 'M', startDate: '', endDate: '' }, body: '' });
+        saveFile.mockRejectedValue({ status: 401 });
+
+        await window.editMelding('id1', 'M');
+        const onSave = initEditors.mock.calls[0][1];
+        await onSave(null);
+
+        expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
+    });
+
+    it('should show network toast when save fails with retryable error', async () => {
+        classifyError.mockReturnValueOnce('retryable');
+        getFileContent.mockResolvedValue('raw');
+        parseMarkdown.mockReturnValue({ data: { title: 'M', startDate: '', endDate: '' }, body: '' });
+        saveFile.mockRejectedValue(new Error('network'));
+
+        await window.editMelding('id1', 'M');
+        const onSave = initEditors.mock.calls[0][1];
+        await onSave(null);
+
+        expect(showToast).toHaveBeenCalledWith('Nettverksfeil — prøv igjen.', 'error');
     });
 
     it('should bind date change listeners', async () => {
