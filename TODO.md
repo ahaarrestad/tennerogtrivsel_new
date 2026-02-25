@@ -12,7 +12,12 @@
 
 ## Pågående
 
-(Ingen oppgaver pågår)
+- [ ] **Sett opp CloudFront på test-siden** ([plan](docs/plan-cloudfront-test.md))
+  - Dokumenter steg-for-steg hvordan CloudFront aktiveres foran S3-bucketen (test2.aarrestad.com)
+  - SSL-sertifikat (ACM us-east-1), CloudFront-distribusjon med OAC, cache-policy, DNS-pekere
+  - Response Headers Policy (CSP, HSTS, X-Frame-Options m.fl.) — dekker sikkerhetsplanens M1
+  - Oppdater deploy-workflow: fjern `--acl public-read`, legg til cache-invalidering
+  - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
 ## Backlog
 - [ ] **Sjekk at alle filer som kan testes er testet**
@@ -40,18 +45,11 @@
   - Vurder: navigasjon, arbeidsflyt, feilmeldinger, responstid, mobilvennlighet, visuelt hierarki
   - Team: UX-reviewer (analyse + forslag), frontend-utvikler (implementering), tester (verifisering)
 
-- [ ] **CI/CD-forbedringer 2**
-  - CloudFront cache-invalidering mangler i deploy-steget — brukere kan se gammel versjon etter deploy
-  - Sjekk om det finnes GitHub workflows som ikke er i bruk og kan fjernes
-
-- [ ] **Sett opp CloudFront på test-siden** ([plan](docs/plan-cloudfront-test.md))
-  - Dokumenter steg-for-steg hvordan CloudFront aktiveres foran S3-bucketen (test2.aarrestad.com)
-  - SSL-sertifikat (ACM us-east-1), CloudFront-distribusjon med OAC, cache-policy, DNS-pekere
-  - Response Headers Policy (CSP, HSTS, X-Frame-Options m.fl.) — dekker sikkerhetsplanens M1
-  - Oppdater deploy-workflow: fjern `--acl public-read`, legg til cache-invalidering
-  - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
-
 ## Fullført
+
+- [x] **CI/CD-forbedringer 2**
+  - CloudFront cache-invalidering allerede implementert i `deploy.yml` (commit `109c339`) — invaliderer hele distribusjonen etter S3-sync
+  - Gjennomgått alle 5 workflows: ingen ubrukte eller redundante (deploy, auto-pr, codeql, dependabot-auto-merge, dependabot-rebase)
 
 - [x] **Gjennomgang av flaky tester** ([plan](docs/plan-flaky-tester.md))
   - Rotårsak: `toBeHidden()`/`toBeVisible()` avhenger av Tailwinds `invisible`-klasse som Playwright ikke konsistent gjenkjenner
