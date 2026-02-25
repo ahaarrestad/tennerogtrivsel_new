@@ -12,14 +12,17 @@
 
 ## Pågående
 
-- [ ] **Sett opp CloudFront på test-siden** ([plan](docs/plan-cloudfront-test.md))
-  - Dokumenter steg-for-steg hvordan CloudFront aktiveres foran S3-bucketen (test2.aarrestad.com)
-  - SSL-sertifikat (ACM us-east-1), CloudFront-distribusjon med OAC, cache-policy, DNS-pekere
-  - Response Headers Policy (CSP, HSTS, X-Frame-Options m.fl.) — dekker sikkerhetsplanens M1
-  - Oppdater deploy-workflow: fjern `--acl public-read`, legg til cache-invalidering
-  - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
+(ingen)
 
 ## Backlog
+- [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
+  - Samme oppsett som test-siden, tilpasset produksjonsdomenet
+  - SSL-sertifikat (ACM us-east-1), CloudFront-distribusjon med OAC, cache-policy, DNS-pekere
+  - Gjenbruk Response Headers Policy og CloudFront Function fra test
+  - Oppdater deploy-workflow for prod-bucket
+  - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
+
+
 - [ ] **Sjekk at alle filer som kan testes er testet**
   - Gå gjennom alle kildefiler i `src/scripts/` og `src/pages/api/` og verifiser at de har tilhørende testfiler
   - Identifiser eventuelle hull i testdekningen
@@ -46,6 +49,15 @@
   - Team: UX-reviewer (analyse + forslag), frontend-utvikler (implementering), tester (verifisering)
 
 ## Fullført
+
+- [x] **Sett opp CloudFront på test-siden** ([plan](docs/plan-cloudfront-test.md))
+  - ACM-sertifikat (us-east-1) med DNS-validering
+  - CloudFront-distribusjon med OAC, CachingOptimized + CachingDisabled for `/api/*`
+  - Response Headers Policy: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+  - S3 bucket policy for OAC, blokkert direkte offentlig tilgang
+  - DNS peker til CloudFront, feilsider (403→404) konfigurert
+  - Deploy-workflow oppdatert: fjernet `--acl public-read` og API-cache-steg
+  - Verifisert: HTTPS, sikkerhetsheadere, API no-cache, 404-side, undersider, blokkert S3-tilgang
 
 - [x] **CI/CD-forbedringer 2**
   - CloudFront cache-invalidering allerede implementert i `deploy.yml` (commit `109c339`) — invaliderer hele distribusjonen etter S3-sync
