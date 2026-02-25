@@ -73,7 +73,7 @@ Filer: `admin-editor-helpers.js`, `admin-module-tannleger.js`, `admin-module-bil
 
 ---
 
-### Steg 5: Større berøringsmål på mobil (CSS-only)
+### ✅ Steg 5: Større berøringsmål på mobil (CSS-only)
 **Impakt: MIDDELS** — Ikonknapper er ~36px, WCAG anbefaler 44×44px.
 
 Endringer:

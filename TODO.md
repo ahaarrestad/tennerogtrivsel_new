@@ -20,7 +20,8 @@
   - ✅ Steg 2: skeleton-loadere
   - ✅ Steg 3: kontekstuelle feilmeldinger med veiledning
   - ✅ Steg 4: tydelig lagrestatus-feedback (fast bunnlinje, showSaveBar/hideSaveBar)
-  - Steg 5 venter: større berøringsmål på mobil (CSS-only)
+  - ✅ Steg 5: større berøringsmål på mobil — min-w/h-[44px] på alle ikonknapper, w-10 h-10 på slider-step-btn
+  - Steg 6 venter: dashboard-kort med statusinfo
 
 ## Backlog
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))

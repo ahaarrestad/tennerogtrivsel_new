@@ -97,6 +97,11 @@
     100% { background-position: -200% 0; }
 }
 
+@keyframes admin-save-bar-in {
+    from { opacity: 0; transform: translateX(-50%) translateY(1rem); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 @layer base {
     body {
         font-family: var(--font-body);
@@ -584,13 +589,16 @@
 
     /* ICON BUTTONS — edit, delete, reorder */
     .admin-icon-btn {
-        @apply p-2.5 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all;
+        @apply min-w-[44px] min-h-[44px] flex items-center justify-center
+               p-2.5 rounded-xl bg-brand-light/30 text-brand hover:bg-brand hover:text-white transition-all;
     }
     .admin-icon-btn-danger {
-        @apply p-2.5 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all;
+        @apply min-w-[44px] min-h-[44px] flex items-center justify-center
+               p-2.5 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all;
     }
     .admin-icon-btn-reorder {
-        @apply p-1.5 rounded-lg bg-admin-hover text-admin-muted-light hover:bg-brand hover:text-white transition-all;
+        @apply min-w-[44px] min-h-[44px] flex items-center justify-center
+               p-1.5 rounded-lg bg-admin-hover text-admin-muted-light hover:bg-brand hover:text-white transition-all;
     }
 
     /* SKELETON LOADERS */
@@ -640,10 +648,11 @@
 
     /* SAVE STATUS BAR — fixed bottom bar for auto-save feedback */
     .admin-save-bar {
-        @apply fixed bottom-6 left-1/2 -translate-x-1/2 z-50
+        @apply fixed bottom-6 left-1/2 z-50
                flex items-center gap-2 px-5 py-3 rounded-2xl
-               shadow-xl border font-bold text-sm
-               animate-in fade-in slide-in-from-bottom-4 duration-300;
+               shadow-xl border font-bold text-sm;
+        transform: translateX(-50%);
+        animation: admin-save-bar-in 300ms ease-out;
     }
     .admin-save-bar-changed {
         @apply bg-amber-50 text-amber-700 border-amber-200;
@@ -660,7 +669,7 @@
 
     /* SLIDER STEP BUTTONS */
     .slider-step-btn {
-        @apply w-8 h-8 flex items-center justify-center rounded-lg
+        @apply w-10 h-10 flex items-center justify-center rounded-lg
                bg-admin-hover text-admin-muted font-bold text-sm
                hover:bg-brand hover:text-white
                active:scale-95 transition-all shrink-0
