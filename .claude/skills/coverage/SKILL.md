@@ -1,5 +1,6 @@
 ---
 name: coverage
+model: sonnet
 description: "Run unit tests and show per-file branch coverage report. Use when the user says 'coverage', 'dekningsgrad', 'show coverage', 'sjekk coverage', 'branch coverage', or asks about test coverage for specific files."
 disable-model-invocation: false
 allowed-tools: ["Bash(npm test:*)", "Bash(node --input-type=commonjs:*)"]

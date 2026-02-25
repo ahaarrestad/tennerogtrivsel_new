@@ -1,5 +1,6 @@
 ---
 name: todo
+model: sonnet
 description: "Vis og administrer prosjektets TODO-liste (TODO.md). Bruk når brukeren sier 'todo', 'TODO', 'oppgaveliste', 'vis oppgaver', 'backlog', 'hva gjenstår', 'neste oppgave', 'legg til oppgave', 'ny oppgave', 'flytt oppgave', 'marker ferdig', eller spør om status på oppgaver."
 disable-model-invocation: false
 allowed-tools: ["Read(TODO.md)", "Edit(TODO.md)", "Glob(docs/**)", "Read(docs/**)"]
