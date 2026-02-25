@@ -1,5 +1,6 @@
 ---
 name: commit
+model: sonnet
 description: "Automate git commit and push following the project's review workflow. Stages files, generates a Norwegian conventional-commit message, and optionally pushes via `git review` (never `git push`). Use when the user says 'commit', 'committ', 'lagre endringer', 'push', 'send til review', or asks to save/commit their work. Also trigger when a quality gate passes and the user wants to commit the result."
 disable-model-invocation: false
 allowed-tools: ["Bash(git *)", "Bash(cat *)"]
