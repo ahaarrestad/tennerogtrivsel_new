@@ -292,6 +292,7 @@ describe('admin-dashboard.js', () => {
             const el = document.getElementById('breadcrumb-count');
             expect(el.textContent).toBe('(2)');
             expect(el.classList.contains('hidden')).toBe(false);
+            expect(document.getElementById('module-inner').classList.contains('admin-view-enter')).toBe(true);
         });
 
         it('should list messages and attach edit/delete handlers', async () => {
@@ -447,6 +448,7 @@ describe('admin-dashboard.js', () => {
             const el = document.getElementById('breadcrumb-count');
             expect(el.textContent).toBe('(3)');
             expect(el.classList.contains('hidden')).toBe(false);
+            expect(document.getElementById('module-inner').classList.contains('admin-view-enter')).toBe(true);
         });
 
         it('should list services and sort them by title', async () => {
@@ -636,6 +638,7 @@ describe('admin-dashboard.js', () => {
             const el = document.getElementById('breadcrumb-count');
             expect(el.textContent).toBe('(2)');
             expect(el.classList.contains('hidden')).toBe(false);
+            expect(document.getElementById('module-inner').classList.contains('admin-view-enter')).toBe(true);
         });
 
         it('should list dentists and sort them alphabetically', async () => {
@@ -889,6 +892,7 @@ describe('admin-dashboard.js', () => {
             const el = document.getElementById('breadcrumb-count');
             expect(el.textContent).toBe('(2)');
             expect(el.classList.contains('hidden')).toBe(false);
+            expect(document.getElementById('galleri-liste-container').classList.contains('admin-view-enter')).toBe(true);
         });
 
         it('should list gallery images sorted by order with forsidebilde first', async () => {

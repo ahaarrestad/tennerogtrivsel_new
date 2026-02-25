@@ -102,6 +102,11 @@
     to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+@keyframes admin-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
 @layer base {
     body {
         font-family: var(--font-body);
@@ -647,6 +652,9 @@
     }
     .admin-card-count {
         @apply block text-xs text-admin-muted-light mt-1;
+    }
+    .admin-view-enter {
+        animation: admin-fade-in 200ms ease-out;
     }
 
     /* SAVE STATUS BAR — fixed bottom bar for auto-save feedback */

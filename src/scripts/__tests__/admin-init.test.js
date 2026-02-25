@@ -43,6 +43,7 @@ vi.mock('../pwa-prompt.js', () => ({
 vi.mock('../admin-dashboard.js', () => ({
     updateUIWithUser: vi.fn(),
     enforceAccessControl: vi.fn().mockResolvedValue(undefined),
+    loadDashboardCounts: vi.fn().mockResolvedValue(undefined),
     autoResizeTextarea: vi.fn(),
     saveSingleSetting: vi.fn(),
     loadMeldingerModule: vi.fn(),
@@ -194,6 +195,7 @@ describe('admin-init', () => {
         document.getElementById('card-settings').click();
         expect(document.getElementById('dashboard').classList.contains('hidden')).toBe(true);
         expect(document.getElementById('module-container').classList.contains('hidden')).toBe(false);
+        expect(document.getElementById('module-container').classList.contains('admin-view-enter')).toBe(true);
         expect(document.getElementById('module-title').textContent).toBe('Innstillinger');
         expect(document.getElementById('breadcrumb-module').textContent).toBe('Innstillinger');
         expect(document.getElementById('breadcrumb-count').classList.contains('hidden')).toBe(true);
@@ -241,6 +243,7 @@ describe('admin-init', () => {
         document.getElementById('back-to-dashboard').click();
         expect(document.getElementById('module-container').classList.contains('hidden')).toBe(true);
         expect(document.getElementById('dashboard').classList.contains('hidden')).toBe(false);
+        expect(document.getElementById('dashboard').classList.contains('admin-view-enter')).toBe(true);
     });
 
     it('should bind card keyboard events (Enter/Space)', async () => {

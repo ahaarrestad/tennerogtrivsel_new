@@ -102,7 +102,7 @@ Filer: `index.astro`, `admin-dashboard.js`, `admin-init.js`, `global.css`
 
 ---
 
-### Steg 7: Mykere overganger mellom visninger
+### ✅ Steg 7: Mykere overganger mellom visninger
 **Impakt: MIDDELS-LAV** — Brå bytte mellom dashboard↔modul og liste↔editor.
 
 Endringer:

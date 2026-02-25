@@ -12,19 +12,14 @@
 
 ## Pågående
 
-- [ ] **UX- og brukervennlighetsgjennomgang av admin-panelet** ([plan](docs/plan-ux-brukervennlighet-admin.md))
-  - Helhetlig gjennomgang av admin-siden med fokus på brukeropplevelse
-  - Vurder: navigasjon, arbeidsflyt, feilmeldinger, responstid, mobilvennlighet, visuelt hierarki
-  - 7 steg: brødsmuler, skeleton-loadere, kontekstuelle feilmeldinger, lagrestatus, berøringsmål, dashboard-tall, overganger
-  - ✅ Steg 1: modul-header med brødsmuler og elementtelling
-  - ✅ Steg 2: skeleton-loadere
-  - ✅ Steg 3: kontekstuelle feilmeldinger med veiledning
-  - ✅ Steg 4: tydelig lagrestatus-feedback (fast bunnlinje, showSaveBar/hideSaveBar)
-  - ✅ Steg 5: større berøringsmål på mobil — min-w/h-[44px] på alle ikonknapper, w-10 h-10 på slider-step-btn
-  - ✅ Steg 6: dashboard-kort med statusinfo — aktiv-telling for tjenester, meldinger, tannleger og galleri
-  - Steg 7 venter: mykere overganger mellom visninger
-
 ## Backlog
+- [ ] **Galleri-navigasjon: scroll vs. standalone-side — er det konsistent?** ([plan](docs/plan-galleri-navigasjon.md))
+  - På mobil kan man scrolle ned til galleriet på forsiden
+  - Menyvalget «Bilder» åpner standalone-siden `/galleri`
+  - Er dette tilsiktet? Vurder om det er forvirrende eller om det er greit med to innganger
+  - Hvorfor vises «Se alle bildene» på mobil, men ikke på stor skjerm?
+  - Sjekk også desktop-oppførselen for konsistens
+
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
   - Samme oppsett som test-siden, tilpasset produksjonsdomenet
   - SSL-sertifikat (ACM us-east-1), CloudFront-distribusjon med OAC, cache-policy, DNS-pekere
@@ -56,6 +51,16 @@
 
 
 ## Fullført
+
+- [x] **UX- og brukervennlighetsgjennomgang av admin-panelet** ([plan](docs/plan-ux-brukervennlighet-admin.md))
+  - 7 steg fullført: brødsmuler, skeleton-loadere, kontekstuelle feilmeldinger, lagrestatus, berøringsmål, dashboard-tall, overganger
+  - Steg 1: brødsmule-nav `Dashboard / Modulnavn (N elementer)` med elementtelling per modul
+  - Steg 2: skeleton-kort (thumbnail + tekstlinjer + knapper) erstatter «Henter...»-tekst
+  - Steg 3: kontekstuelle feilmeldinger med auth-expired-banner og «Prøv igjen»-knapper
+  - Steg 4: `showSaveBar()`/`hideSaveBar()` — fast bunnlinje med gul/grønn/rød lagrestatus
+  - Steg 5: `min-w/h-[44px]` på alle ikonknapper, `w-10 h-10` på slider-step-btn (CSS-only)
+  - Steg 6: aktiv-telling på dashboard-kort — tjenester (frontmatter), meldinger (datofiltrering), tannleger og galleri (Sheets)
+  - Steg 7: `admin-view-enter` fade+slide-animasjon ved åpning/lukking av moduler og etter innlasting av lister
 
 - [x] **Sett opp CloudFront på test-siden** ([plan](docs/plan-cloudfront-test.md))
   - ACM-sertifikat (us-east-1) med DNS-validering
