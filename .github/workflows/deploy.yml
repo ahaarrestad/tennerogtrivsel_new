@@ -134,3 +134,9 @@ jobs:
             --recursive --acl public-read \
             --cache-control "no-cache, no-store, must-revalidate" \
             --metadata-directive REPLACE
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
