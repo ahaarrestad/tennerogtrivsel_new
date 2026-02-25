@@ -54,6 +54,7 @@ vi.mock('../admin-dashboard.js', () => ({
     mergeSettingsWithDefaults: vi.fn(),
     formatTimestamp: vi.fn(() => '24. feb kl. 12:00'),
     updateLastFetchedTime: vi.fn(),
+    updateBreadcrumbCount: vi.fn(),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({
@@ -93,6 +94,8 @@ function setupDOM() {
         <div id="login-container"></div>
         <div id="dashboard" class="hidden"></div>
         <div id="module-container" class="hidden">
+            <span id="breadcrumb-module"></span>
+            <span id="breadcrumb-count" class="hidden"></span>
             <div id="module-title"></div>
             <div id="module-actions"></div>
             <div id="module-inner"></div>
@@ -191,6 +194,17 @@ describe('admin-init', () => {
         expect(document.getElementById('dashboard').classList.contains('hidden')).toBe(true);
         expect(document.getElementById('module-container').classList.contains('hidden')).toBe(false);
         expect(document.getElementById('module-title').textContent).toBe('Innstillinger');
+        expect(document.getElementById('breadcrumb-module').textContent).toBe('Innstillinger');
+        expect(document.getElementById('breadcrumb-count').classList.contains('hidden')).toBe(true);
+    });
+
+    it('should update breadcrumb when switching modules', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+        document.getElementById('card-tjenester').click();
+        expect(document.getElementById('breadcrumb-module').textContent).toBe('Tjenester');
+        document.getElementById('card-tannleger').click();
+        expect(document.getElementById('breadcrumb-module').textContent).toBe('Tannleger');
     });
 
     it('should bind card-tannleger click', async () => {

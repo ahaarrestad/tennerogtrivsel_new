@@ -20,6 +20,10 @@ function openModule(id, title) {
     if (titleEl) titleEl.textContent = title;
     const actionsEl = document.getElementById('module-actions');
     if (actionsEl) actionsEl.innerHTML = '';
+    const breadcrumbModule = document.getElementById('breadcrumb-module');
+    if (breadcrumbModule) breadcrumbModule.textContent = title;
+    const breadcrumbCount = document.getElementById('breadcrumb-count');
+    if (breadcrumbCount) { breadcrumbCount.textContent = ''; breadcrumbCount.classList.add('hidden'); }
 
     if (id === 'settings') loadSettingsModule();
     else if (id === 'meldinger') reloadMeldinger();

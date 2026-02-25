@@ -25,6 +25,7 @@ vi.mock('../admin-dashboard.js', () => ({
     reorderSettingItem: vi.fn(),
     formatTimestamp: vi.fn(() => '24. feb kl. 12:00'),
     updateLastFetchedTime: vi.fn(),
+    updateBreadcrumbCount: vi.fn(),
 }));
 
 vi.mock('../admin-editor-helpers.js', () => ({
@@ -36,13 +37,14 @@ vi.mock('../admin-editor-helpers.js', () => ({
 }));
 
 import { getSettingsWithNotes, updateSettingByKey, updateSettingOrder } from '../admin-client.js';
-import { mergeSettingsWithDefaults, reorderSettingItem, updateLastFetchedTime } from '../admin-dashboard.js';
+import { mergeSettingsWithDefaults, reorderSettingItem, updateLastFetchedTime, updateBreadcrumbCount } from '../admin-dashboard.js';
 
 function setupDOM() {
     document.body.innerHTML = `
         <div id="admin-config" data-sheet-id="sid" data-defaults='{}'>
         </div>
         <div id="module-inner"></div>
+        <span id="breadcrumb-count" class="hidden"></span>
     `;
 }
 
@@ -58,6 +60,18 @@ async function getLoadSettingsModule() {
 }
 
 describe('loadSettingsModule', () => {
+    it('should call updateBreadcrumbCount with settings length', async () => {
+        const mockSettings = [
+            { id: 'phone1', value: '12345678', description: 'Telefon', order: 1, row: 2 },
+            { id: 'email', value: 'x@y.no', description: 'E-post', order: 2, row: 3 },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue(mockSettings);
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+        expect(updateBreadcrumbCount).toHaveBeenCalledWith(mockSettings.length);
+    });
+
     it('should show loading spinner while fetching', async () => {
         getSettingsWithNotes.mockReturnValue(new Promise(() => {}));
         const loadSettingsModule = await getLoadSettingsModule();

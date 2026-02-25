@@ -58,7 +58,7 @@ const {
     saveSingleSetting, loadMeldingerModule, loadTjenesterModule,
     loadTannlegerModule, loadGalleriListeModule, reorderGalleriItem,
     reorderSettingItem, mergeSettingsWithDefaults, formatTimestamp,
-    updateLastFetchedTime
+    updateLastFetchedTime, updateBreadcrumbCount
 } = adminDashboard;
 
 describe('admin-dashboard.js', () => {
@@ -70,6 +70,7 @@ describe('admin-dashboard.js', () => {
             <div id="nav-user-info"></div>
             <div id="module-inner"></div>
             <div id="module-actions"></div>
+            <span id="breadcrumb-count" class="hidden"></span>
             <div id="card-settings" class="admin-card-interactive"></div>
             <div id="card-tjenester" class="admin-card-interactive"></div>
             <div id="card-meldinger" class="admin-card-interactive"></div>
@@ -77,6 +78,27 @@ describe('admin-dashboard.js', () => {
             <div id="card-bilder" class="admin-card-interactive"></div>
         `;
         vi.clearAllMocks();
+    });
+
+    describe('updateBreadcrumbCount', () => {
+        it('should set text content and remove hidden class', () => {
+            updateBreadcrumbCount(5);
+            const el = document.getElementById('breadcrumb-count');
+            expect(el.textContent).toBe('(5)');
+            expect(el.classList.contains('hidden')).toBe(false);
+        });
+
+        it('should show (0) when count is zero', () => {
+            updateBreadcrumbCount(0);
+            const el = document.getElementById('breadcrumb-count');
+            expect(el.textContent).toBe('(0)');
+            expect(el.classList.contains('hidden')).toBe(false);
+        });
+
+        it('should do nothing when element is missing', () => {
+            document.getElementById('breadcrumb-count').remove();
+            expect(() => updateBreadcrumbCount(3)).not.toThrow();
+        });
     });
 
     describe('updateUIWithUser', () => {
@@ -203,6 +225,15 @@ describe('admin-dashboard.js', () => {
     });
 
     describe('loadMeldingerModule', () => {
+        it('should update breadcrumb count after loading', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: '1', name: 'a.md' }, { id: '2', name: 'b.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: T\nstartDate: 2026-01-01\n---');
+            await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
+            const el = document.getElementById('breadcrumb-count');
+            expect(el.textContent).toBe('(2)');
+            expect(el.classList.contains('hidden')).toBe(false);
+        });
+
         it('should list messages and attach edit/delete handlers', async () => {
             const mockFiles = [{ id: '1', name: 'active.md' }];
             adminClient.listFiles.mockResolvedValue(mockFiles);
@@ -349,6 +380,15 @@ describe('admin-dashboard.js', () => {
     });
 
     describe('loadTjenesterModule', () => {
+        it('should update breadcrumb count after loading', async () => {
+            adminClient.listFiles.mockResolvedValue([{ id: '1', name: 'a.md' }, { id: '2', name: 'b.md' }, { id: '3', name: 'c.md' }]);
+            adminClient.getFileContent.mockResolvedValue('---\ntitle: T\n---');
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), vi.fn());
+            const el = document.getElementById('breadcrumb-count');
+            expect(el.textContent).toBe('(3)');
+            expect(el.classList.contains('hidden')).toBe(false);
+        });
+
         it('should list services and sort them by title', async () => {
             const mockFiles = [
                 { id: 'b', name: 'b.md' },
@@ -527,6 +567,17 @@ describe('admin-dashboard.js', () => {
     });
 
     describe('loadTannlegerModule', () => {
+        it('should update breadcrumb count after loading', async () => {
+            adminClient.getTannlegerRaw.mockResolvedValue([
+                { rowIndex: 1, name: 'A', active: true },
+                { rowIndex: 2, name: 'B', active: true }
+            ]);
+            await loadTannlegerModule('sheet-id', vi.fn(), vi.fn(), null, vi.fn());
+            const el = document.getElementById('breadcrumb-count');
+            expect(el.textContent).toBe('(2)');
+            expect(el.classList.contains('hidden')).toBe(false);
+        });
+
         it('should list dentists and sort them alphabetically', async () => {
             const mockDentists = [
                 { rowIndex: 3, name: 'Zoe', title: 'T', active: true },
@@ -767,6 +818,17 @@ describe('admin-dashboard.js', () => {
     describe('loadGalleriListeModule', () => {
         beforeEach(() => {
             document.body.innerHTML += `<div id="galleri-liste-container"></div>`;
+        });
+
+        it('should update breadcrumb count after loading', async () => {
+            adminClient.getGalleriRaw.mockResolvedValue([
+                { rowIndex: 1, image: 'a.jpg', active: true, order: 1 },
+                { rowIndex: 2, image: 'b.jpg', active: true, order: 2 }
+            ]);
+            await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null, vi.fn());
+            const el = document.getElementById('breadcrumb-count');
+            expect(el.textContent).toBe('(2)');
+            expect(el.classList.contains('hidden')).toBe(false);
         });
 
         it('should list gallery images sorted by order with forsidebilde first', async () => {

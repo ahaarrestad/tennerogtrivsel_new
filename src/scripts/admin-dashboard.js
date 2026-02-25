@@ -193,6 +193,16 @@ export function formatTimestamp(date) {
 }
 
 /**
+ * Oppdaterer elementtelling i brødsmule-navigasjonen
+ */
+export function updateBreadcrumbCount(count) {
+    const el = document.getElementById('breadcrumb-count');
+    if (!el) return;
+    el.textContent = `(${count})`;
+    el.classList.remove('hidden');
+}
+
+/**
  * Oppdaterer "Sist hentet"-tidspunkt i modul-headeren
  */
 export function updateLastFetchedTime(date) {
@@ -266,6 +276,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
 
     try {
         const files = await withRetry(() => listFiles(folderId), { refreshAuth: getRefreshAuth() });
+        updateBreadcrumbCount(files.length);
         const today = new Date();
         const nowUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -390,6 +401,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
 
     try {
         const files = await withRetry(() => listFiles(folderId), { refreshAuth: getRefreshAuth() });
+        updateBreadcrumbCount(files.length);
         if (files.length === 0) {
             inner.innerHTML = `<div class="text-center py-12 text-admin-muted-light italic">Ingen behandlinger funnet.</div>`;
         } else {
@@ -459,6 +471,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
 
     try {
         const dentists = await withRetry(() => getTannlegerRaw(sheetId), { refreshAuth: getRefreshAuth() });
+        updateBreadcrumbCount(dentists.length);
 
         if (dentists.length === 0) {
             inner.innerHTML = `<div class="text-center py-12 text-admin-muted-light italic">Ingen team-medlemmer funnet.</div>`;
@@ -583,6 +596,7 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
 
     try {
         const images = await withRetry(() => getGalleriRaw(sheetId), { refreshAuth: getRefreshAuth() });
+        updateBreadcrumbCount(images.length);
 
         if (images.length === 0) {
             container.innerHTML = `<div class="text-center py-8 text-admin-muted-light italic">Ingen galleribilder funnet.</div>`;
