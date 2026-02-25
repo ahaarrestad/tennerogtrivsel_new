@@ -14,11 +14,9 @@
 
 ## Backlog
 - [ ] **Galleri-navigasjon: scroll vs. standalone-side — er det konsistent?** ([plan](docs/plan-galleri-navigasjon.md))
-  - På mobil kan man scrolle ned til galleriet på forsiden
-  - Menyvalget «Bilder» åpner standalone-siden `/galleri`
-  - Er dette tilsiktet? Vurder om det er forvirrende eller om det er greit med to innganger
-  - Hvorfor vises «Se alle bildene» på mobil, men ikke på stor skjerm?
-  - Sjekk også desktop-oppførselen for konsistens
+  - ✅ Forsiden begrenset til 4 bilder + «Se alle bilder»-lenke på alle skjermstørrelser
+  - Gjenstår: vurder om desktop-opplevelsen bør vise flere bilder (f.eks. 8) for å utnytte plassen
+  - Gjenstår: navbar-lenke er ulik — desktop `/#galleri` vs. mobil `/galleri` — bør dette samkjøres?
 
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
   - Samme oppsett som test-siden, tilpasset produksjonsdomenet

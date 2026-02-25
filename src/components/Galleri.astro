@@ -17,6 +17,9 @@ const sortert = [...galleri]
 interface Props { variant?: SectionVariant; standalone?: boolean }
 const { variant = 'white', standalone = false } = Astro.props;
 const { sectionBg, headerBg } = getSectionClasses(variant);
+const MAX_PREVIEW = 4;
+const visibleImages = standalone ? sortert : sortert.slice(0, MAX_PREVIEW);
+const hasMore = !standalone && sortert.length > MAX_PREVIEW;
 ---
 {sortert.length > 0 && (
 <section id="galleri" class={`section-container ${sectionBg}`}>
@@ -24,16 +27,15 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
         <SectionHeader title={settings.galleriTittel} intro={settings.galleriTekst} headerBg={headerBg} />
 
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-            {sortert.map((item, index) => {
+            {visibleImages.map((item, index) => {
                 const imgPath = `/src/assets/galleri/${item.data.image}`;
                 const hasImage = item.data.image && images[imgPath];
-                const mobileHidden = !standalone && sortert.length > 4 && index >= 4 ? 'hidden md:block' : '';
                 const pX = item.data.imageConfig?.positionX ?? 50;
                 const pY = item.data.imageConfig?.positionY ?? 50;
                 const sc = item.data.imageConfig?.scale ?? 1.0;
 
                 return (
-                    <div class={`rounded-xl overflow-hidden shadow-sm aspect-[4/3] bg-brand-active relative group transition-all duration-300 hover:shadow-md ${mobileHidden}`}>
+                    <div class="rounded-xl overflow-hidden shadow-sm aspect-[4/3] bg-brand-active relative group transition-all duration-300 hover:shadow-md">
                         {hasImage ? (
                             <Image
                                 src={images[imgPath]()}
@@ -61,7 +63,7 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
             })}
         </div>
 
-        {!standalone && sortert.length > 4 && (
+        {hasMore && (
             <div class="mt-6 text-center">
                 <a href="/galleri" class="text-brand-hover hover:text-brand font-medium text-sm transition-colors">
                     Se alle bilder →
