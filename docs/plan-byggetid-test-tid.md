@@ -1,5 +1,7 @@
 # Plan: Optimalisere byggetid og test-tid i CI
 
+> **Status: FULLFØRT**
+
 ## Kontekst
 
 Pipeline bruker i dag ~4 minutter fra push til deploy. E2E-jobben er flaskehalsen (~3m 15s), der Playwright OS-avhengigheter tar 33-53s selv med browser-cache, og selve testene tar 110-133s. Build-jobben kjører på en separat runner bare for å kjøre `astro build` (~10s), men bruker ~15-20s på overhead (checkout, npm ci, runner-oppstart).

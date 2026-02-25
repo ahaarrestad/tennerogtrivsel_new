@@ -1,5 +1,7 @@
 # Plan: Forbedre UX for zoom/posisjon-kontroller i admin
 
+> **Status: FULLFØRT**
+
 ## Kontekst
 
 Zoom- og posisjons-sliderne i admin-redigeringsskjemaene (tannleger + galleri) har to UX-problemer:

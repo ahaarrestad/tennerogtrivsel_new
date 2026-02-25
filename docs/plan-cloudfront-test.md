@@ -1,5 +1,7 @@
 # Plan: Sett opp CloudFront på test-siden
 
+> **Status: FULLFØRT**
+
 ## Bakgrunn
 
 Nettsiden deployes til S3-bucketen `test2.aarrestad.com` (eu-west-1) med `--acl public-read`. S3 serverer filene direkte — ingen CDN, ingen sikkerhetsheadere i produksjon, og ingen cache-invalidering etter deploy. Middleware i `src/middleware.ts` setter CSP og andre headere, men kjører kun i dev/SSR, ikke på statiske S3-filer.

@@ -1,5 +1,7 @@
 # Plan: Design- og UX-gjennomgang av admin-panelet
 
+> **Status: FULLFØRT** — 10 steg fullført
+
 ## Kontekst
 
 Admin-panelet er en SPA (`src/pages/admin/index.astro`, ~1800 linjer) med 5 moduler (Innstillinger, Tjenester, Meldinger, Tannleger, Bilder). Det bruker CSS-klasser i `src/styles/global.css` (linje 448-586) og genererer HTML via template-strenger i JS-moduler.

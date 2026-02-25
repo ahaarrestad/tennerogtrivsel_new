@@ -1,5 +1,7 @@
 # Plan: Forbedre Innstillinger i admin-panelet
 
+> **Status: FULLFØRT**
+
 ## Kontekst
 
 Admin-panelet sin Innstillinger-side har to svakheter:

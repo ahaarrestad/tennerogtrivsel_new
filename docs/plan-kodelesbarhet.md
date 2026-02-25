@@ -1,5 +1,7 @@
 # Plan: Kodelesbarhet — gå gjennom og forenkle koden
 
+> **Status: FULLFØRT** — alle 6 steg fullført
+>
 > Revidert 2026-02-24 med fersk kodeanalyse.
 
 ## Bakgrunn

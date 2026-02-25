@@ -1,6 +1,6 @@
 # Plan: Bildegalleri og layout-forbedringer for Tenner og Trivsel
 
-> Status: UTKAST v2 — Godkjent av: (venter)
+> **Status: FULLFØRT**
 > Dato: 2026-02-21
 > Revidert etter to teamgjennomganger med UX-designer, arkitekt, løsningsarkitekt og kritisk utvikler.
 

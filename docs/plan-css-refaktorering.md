@@ -1,5 +1,7 @@
 # Plan: Refaktorere inline-klasser til global.css
 
+> **Status: FULLFØRT**
+
 ## Kontekst
 
 Prosjektets `.astro`-komponenter har flere gjentatte Tailwind-klassekombinasjoner og duplisert logikk. Målet er å redusere duplisering ved å:

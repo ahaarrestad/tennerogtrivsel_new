@@ -1,5 +1,7 @@
 # Plan: Sikre at Dependabot-PRer ikke merges ved feilet bygg
 
+> **Status: FULLFØRT**
+
 ## Kontekst
 
 Prosjektet har en `dependabot-auto-merge.yml` som automatisk godkjenner og aktiverer auto-merge for Dependabot-PRer. Workflowen bruker `gh pr merge --auto`, som betyr at GitHub venter på at required status checks passerer før merge. **Problemet:** Rulesettet refererte til «build-and-deploy» — et jobb-navn som ikke eksisterer etter CI-sammenslåingen. Rulesettet er nå aktivert, men status check-navnene måtte oppdateres.
