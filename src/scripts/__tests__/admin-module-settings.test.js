@@ -72,11 +72,11 @@ describe('loadSettingsModule', () => {
         expect(updateBreadcrumbCount).toHaveBeenCalledWith(mockSettings.length);
     });
 
-    it('should show loading spinner while fetching', async () => {
+    it('should show skeleton while fetching', async () => {
         getSettingsWithNotes.mockReturnValue(new Promise(() => {}));
         const loadSettingsModule = await getLoadSettingsModule();
         loadSettingsModule();
-        expect(document.getElementById('module-inner').innerHTML).toContain('Henter innstillinger');
+        expect(document.getElementById('module-inner').innerHTML).toContain('admin-skeleton');
     });
 
     it('should render settings after fetch', async () => {

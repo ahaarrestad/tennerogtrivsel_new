@@ -58,7 +58,7 @@ const {
     saveSingleSetting, loadMeldingerModule, loadTjenesterModule,
     loadTannlegerModule, loadGalleriListeModule, reorderGalleriItem,
     reorderSettingItem, mergeSettingsWithDefaults, formatTimestamp,
-    updateLastFetchedTime, updateBreadcrumbCount
+    updateLastFetchedTime, updateBreadcrumbCount, renderSkeletonCards
 } = adminDashboard;
 
 describe('admin-dashboard.js', () => {
@@ -78,6 +78,38 @@ describe('admin-dashboard.js', () => {
             <div id="card-bilder" class="admin-card-interactive"></div>
         `;
         vi.clearAllMocks();
+    });
+
+    describe('renderSkeletonCards', () => {
+        it('should render correct number of skeleton cards', () => {
+            const html = renderSkeletonCards(3);
+            const el = document.createElement('div');
+            el.innerHTML = html;
+            expect(el.querySelectorAll('.admin-skeleton-card').length).toBe(3);
+        });
+
+        it('should include thumbnail placeholder when withThumbnail is true', () => {
+            const html = renderSkeletonCards(2, { withThumbnail: true });
+            const el = document.createElement('div');
+            el.innerHTML = html;
+            const thumbs = el.querySelectorAll('.admin-skeleton-card .admin-skeleton');
+            // Each card has 1 thumb + 2 button skeletons = 3 per card
+            expect(thumbs.length).toBe(6);
+        });
+
+        it('should not include thumbnail placeholder by default', () => {
+            const html = renderSkeletonCards(1);
+            const el = document.createElement('div');
+            el.innerHTML = html;
+            const skeletons = el.querySelectorAll('.admin-skeleton-card .admin-skeleton');
+            // Only 2 button skeletons, no thumb
+            expect(skeletons.length).toBe(2);
+        });
+
+        it('should include aria-hidden on wrapper', () => {
+            const html = renderSkeletonCards(1);
+            expect(html).toContain('aria-hidden="true"');
+        });
     });
 
     describe('updateBreadcrumbCount', () => {
@@ -225,6 +257,12 @@ describe('admin-dashboard.js', () => {
     });
 
     describe('loadMeldingerModule', () => {
+        it('should show skeleton cards while loading', () => {
+            adminClient.listFiles.mockReturnValue(new Promise(() => {}));
+            loadMeldingerModule('folder-id', vi.fn(), vi.fn());
+            expect(document.getElementById('module-inner').innerHTML).toContain('admin-skeleton');
+        });
+
         it('should update breadcrumb count after loading', async () => {
             adminClient.listFiles.mockResolvedValue([{ id: '1', name: 'a.md' }, { id: '2', name: 'b.md' }]);
             adminClient.getFileContent.mockResolvedValue('---\ntitle: T\nstartDate: 2026-01-01\n---');

@@ -17,7 +17,8 @@
   - Vurder: navigasjon, arbeidsflyt, feilmeldinger, responstid, mobilvennlighet, visuelt hierarki
   - 7 steg: brødsmuler, skeleton-loadere, kontekstuelle feilmeldinger, lagrestatus, berøringsmål, dashboard-tall, overganger
   - ✅ Steg 1: modul-header med brødsmuler og elementtelling
-  - Steg 2 neste: skeleton-loadere
+  - ✅ Steg 2: skeleton-loadere
+  - Steg 3 pågår: kontekstuelle feilmeldinger med veiledning
 
 ## Backlog
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))

@@ -193,6 +193,30 @@ export function formatTimestamp(date) {
 }
 
 /**
+ * Genererer HTML for skeleton-kort som matcher formen til ekte modul-kort.
+ * Brukes som loading-placeholder mens data hentes.
+ */
+export function renderSkeletonCards(count, { withThumbnail = false } = {}) {
+    const thumb = withThumbnail
+        ? `<div class="admin-skeleton shrink-0 w-14 h-14 sm:w-16 sm:h-16" style="border-radius:0.5rem"></div>`
+        : '';
+    const card = `
+        <div class="admin-skeleton-card">
+            ${thumb}
+            <div class="flex-grow space-y-2 min-w-0">
+                <div class="admin-skeleton-text w-16"></div>
+                <div class="admin-skeleton-text w-2/3" style="height:1rem"></div>
+                <div class="admin-skeleton-text w-1/3"></div>
+            </div>
+            <div class="flex gap-2 shrink-0">
+                <div class="admin-skeleton w-8 h-8" style="border-radius:0.75rem"></div>
+                <div class="admin-skeleton w-8 h-8" style="border-radius:0.75rem"></div>
+            </div>
+        </div>`;
+    return `<div class="grid grid-cols-1 gap-4 max-w-5xl" aria-hidden="true">${Array(count).fill(card).join('')}</div>`;
+}
+
+/**
  * Oppdaterer elementtelling i brødsmule-navigasjonen
  */
 export function updateBreadcrumbCount(count) {
@@ -272,7 +296,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
     if (!inner || !actions) return;
 
     actions.innerHTML = `<button id="btn-new-melding" class="btn-primary text-xs py-2 px-4 shadow-md">➕ Heng opp nytt oppslag</button>`;
-    inner.innerHTML = '<div class="text-admin-muted italic text-sm animate-pulse">Henter oppslag...</div>';
+    inner.innerHTML = renderSkeletonCards(3);
 
     try {
         const files = await withRetry(() => listFiles(folderId), { refreshAuth: getRefreshAuth() });
@@ -397,7 +421,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
     if (!inner || !actions) return;
 
     actions.innerHTML = `<button id="btn-new-tjeneste" class="btn-primary text-xs py-2 px-4 shadow-md">➕ Legg til behandling</button>`;
-    inner.innerHTML = '<div class="text-admin-muted italic text-sm animate-pulse">Henter behandlinger...</div>';
+    inner.innerHTML = renderSkeletonCards(3);
 
     try {
         const files = await withRetry(() => listFiles(folderId), { refreshAuth: getRefreshAuth() });
@@ -467,7 +491,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
     if (!inner || !actions) return;
 
     actions.innerHTML = `<button id="btn-new-tannlege" class="btn-primary text-xs py-2 px-4 shadow-md">➕ Legg til team-medlem</button>`;
-    inner.innerHTML = '<div class="text-admin-muted italic text-sm animate-pulse">Henter teamet...</div>';
+    inner.innerHTML = renderSkeletonCards(3, { withThumbnail: true });
 
     try {
         const dentists = await withRetry(() => getTannlegerRaw(sheetId), { refreshAuth: getRefreshAuth() });
@@ -592,7 +616,7 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
     const container = document.getElementById('galleri-liste-container');
     if (!container) return;
 
-    container.innerHTML = '<div class="text-admin-muted italic text-sm animate-pulse">Henter galleribilder...</div>';
+    container.innerHTML = renderSkeletonCards(3, { withThumbnail: true });
 
     try {
         const images = await withRetry(() => getGalleriRaw(sheetId), { refreshAuth: getRefreshAuth() });

@@ -44,11 +44,20 @@ const SETTING_HINTS = {
 
 let settingsReorderMode = false;
 
+function renderSkeletonSettings(count = 4) {
+    const field = `
+        <div class="admin-field-container">
+            <div class="admin-skeleton-text w-1/4"></div>
+            <div class="admin-skeleton w-full rounded-xl mt-2" style="height:2.5rem"></div>
+        </div>`;
+    return `<div class="space-y-4 max-w-4xl" aria-hidden="true">${Array(count).fill(field).join('')}</div>`;
+}
+
 export async function loadSettingsModule() {
     const { SHEET_ID, HARD_DEFAULTS } = getAdminConfig();
     const inner = document.getElementById('module-inner');
     if (!inner) return;
-    inner.innerHTML = '<div class="text-admin-muted italic text-sm animate-pulse">Henter innstillinger...</div>';
+    inner.innerHTML = renderSkeletonSettings();
     try {
         const sheetSettings = await withRetry(() => getSettingsWithNotes(SHEET_ID), { refreshAuth: getRefreshAuth() });
         const allSettings = mergeSettingsWithDefaults(sheetSettings, HARD_DEFAULTS);
