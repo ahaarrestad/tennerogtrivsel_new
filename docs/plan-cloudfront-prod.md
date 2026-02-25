@@ -34,7 +34,7 @@ Sertifikat for `www.tennerogtrivsel.no` er opprettet i us-east-1 og har status �
 
 ---
 
-## Steg 2: CloudFront-distribusjon
+## ~~Steg 2: CloudFront-distribusjon~~ ✅ Fullført
 
 ### 2.1 Opprett distribusjon
 
@@ -161,7 +161,7 @@ function handler(event) {
 
 ---
 
-## Steg 3: Response Headers Policy (sikkerhetsheadere)
+## Steg 3: Response Headers Policy (sikkerhetsheadere) — ⚠️ Delvis fullført
 
 > **Merk:** Du kan gjenbruke policyen `tenner-og-trivsel-security-headers` fra test-oppsettet — den er ikke bundet til en spesifikk distribusjon. Hopp i så fall direkte til steg 3.3.
 
@@ -206,7 +206,7 @@ default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com ht
 
 ---
 
-## Steg 4: S3 Bucket Policy (for OAC)
+## ~~Steg 4: S3 Bucket Policy (for OAC)~~ ✅ Fullført
 
 ### 4.1 Kopier policyen fra CloudFront
 
@@ -258,7 +258,7 @@ curl -I http://PROD_BUCKET_NAME.s3.eu-west-1.amazonaws.com/index.html
 
 ---
 
-## Steg 5: DNS-oppdatering
+## ~~Steg 5: DNS-oppdatering~~ ✅ Fullført
 
 ### 5.1 Finn CloudFront-domenenavnet
 
