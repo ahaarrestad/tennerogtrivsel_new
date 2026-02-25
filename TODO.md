@@ -19,7 +19,8 @@
   - ✅ Steg 1: modul-header med brødsmuler og elementtelling
   - ✅ Steg 2: skeleton-loadere
   - ✅ Steg 3: kontekstuelle feilmeldinger med veiledning
-  - Steg 4 venter: tydelig lagrestatus-feedback
+  - ✅ Steg 4: tydelig lagrestatus-feedback (fast bunnlinje, showSaveBar/hideSaveBar)
+  - Steg 5 venter: større berøringsmål på mobil (CSS-only)
 
 ## Backlog
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))

@@ -60,7 +60,7 @@ Filer: `admin-dashboard.js`, `admin-dialog.js`, `admin-module-tjenester.js`, `ad
 
 ---
 
-### Steg 4: Tydelig lagrestatus-feedback
+### ✅ Steg 4: Tydelig lagrestatus-feedback
 **Impakt: MIDDELS-HØY** — Auto-save-status er `text-[10px]` og forsvinner etter 5 sekunder.
 
 Endringer:

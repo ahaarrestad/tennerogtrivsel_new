@@ -15,7 +15,7 @@ vi.mock('../admin-client.js', () => ({
 import {
     getAdminConfig, getRefreshAuth, setToggleState, renderToggleHtml,
     attachToggleClick, showDeletionToast, initMarkdownEditor, initEditors,
-    bindSliderStepButtons, bindWheelPrevent
+    bindSliderStepButtons, bindWheelPrevent, showSaveBar, hideSaveBar
 } from '../admin-editor-helpers.js';
 import { createAuthRefresher } from '../admin-api-retry.js';
 
@@ -333,5 +333,69 @@ describe('bindWheelPrevent', () => {
         const event = new Event('wheel', { cancelable: true });
         document.querySelector('input[type="range"]').dispatchEvent(event);
         expect(event.defaultPrevented).toBe(true);
+    });
+});
+
+describe('showSaveBar', () => {
+    afterEach(() => {
+        document.getElementById('admin-save-bar')?.remove();
+    });
+
+    it('should create a save bar with correct class and text', () => {
+        showSaveBar('saving', '💾 Lagrer...');
+        const bar = document.getElementById('admin-save-bar');
+        expect(bar).not.toBeNull();
+        expect(bar.className).toContain('admin-save-bar-saving');
+        expect(bar.textContent).toBe('💾 Lagrer...');
+    });
+
+    it('should update existing bar without creating a new one', () => {
+        showSaveBar('saving', '💾 Lagrer...');
+        showSaveBar('saved', '✅ Lagret');
+        const bars = document.querySelectorAll('#admin-save-bar');
+        expect(bars.length).toBe(1);
+        expect(bars[0].textContent).toBe('✅ Lagret');
+    });
+
+    it('should set correct class for each state', () => {
+        for (const state of ['changed', 'saving', 'saved', 'error']) {
+            showSaveBar(state, 'test');
+            const bar = document.getElementById('admin-save-bar');
+            expect(bar.className).toContain(`admin-save-bar-${state}`);
+        }
+    });
+});
+
+describe('hideSaveBar', () => {
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() => {
+        vi.useRealTimers();
+        document.getElementById('admin-save-bar')?.remove();
+    });
+
+    it('should remove bar immediately when no delay', () => {
+        showSaveBar('saved', '✅');
+        hideSaveBar();
+        expect(document.getElementById('admin-save-bar')).toBeNull();
+    });
+
+    it('should remove bar after delay', () => {
+        showSaveBar('saved', '✅');
+        hideSaveBar(5000);
+        expect(document.getElementById('admin-save-bar')).not.toBeNull();
+        vi.advanceTimersByTime(5000);
+        expect(document.getElementById('admin-save-bar')).toBeNull();
+    });
+
+    it('should cancel pending hide on new showSaveBar call', () => {
+        showSaveBar('saved', '✅');
+        hideSaveBar(5000);
+        showSaveBar('saving', '💾');
+        vi.advanceTimersByTime(5000);
+        expect(document.getElementById('admin-save-bar')).not.toBeNull();
+    });
+
+    it('should not throw when bar does not exist', () => {
+        expect(() => hideSaveBar()).not.toThrow();
     });
 });

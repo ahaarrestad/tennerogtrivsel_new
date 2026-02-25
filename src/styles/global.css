@@ -638,6 +638,26 @@
         @apply text-admin-muted-light;
     }
 
+    /* SAVE STATUS BAR — fixed bottom bar for auto-save feedback */
+    .admin-save-bar {
+        @apply fixed bottom-6 left-1/2 -translate-x-1/2 z-50
+               flex items-center gap-2 px-5 py-3 rounded-2xl
+               shadow-xl border font-bold text-sm
+               animate-in fade-in slide-in-from-bottom-4 duration-300;
+    }
+    .admin-save-bar-changed {
+        @apply bg-amber-50 text-amber-700 border-amber-200;
+    }
+    .admin-save-bar-saving {
+        @apply bg-blue-50 text-blue-700 border-blue-200;
+    }
+    .admin-save-bar-saved {
+        @apply bg-green-50 text-green-700 border-green-200;
+    }
+    .admin-save-bar-error {
+        @apply bg-red-50 text-red-600 border-red-200;
+    }
+
     /* SLIDER STEP BUTTONS */
     .slider-step-btn {
         @apply w-8 h-8 flex items-center justify-center rounded-lg

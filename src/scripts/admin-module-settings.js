@@ -116,7 +116,7 @@ export async function loadSettingsModule() {
                         </div>
                         <div id="status-${i}" class="shrink-0 h-5"></div>
                     </div>
-                    ${hint ? `<p class="text-[10px] text-admin-muted-light -mt-0.5">${settingsReorderMode ? '' : 'Vises på: '}${hint}</p>` : ''}
+                    ${hint ? `<p class="text-xs text-admin-muted-light -mt-0.5">${settingsReorderMode ? '' : 'Vises på: '}${hint}</p>` : ''}
                     ${settingsReorderMode ? '' : (isLong ?
                         `<textarea id="setting-input-${i}" data-index="${i}" class="setting-field admin-input resize-none overflow-hidden">${setting.value}</textarea>` :
                         `<input type="text" id="setting-input-${i}" data-index="${i}" value="${setting.value}" class="setting-field admin-input">`

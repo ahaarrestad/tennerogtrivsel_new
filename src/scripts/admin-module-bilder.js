@@ -9,7 +9,8 @@ import { loadGallery, setupUploadHandler } from './admin-gallery.js';
 import { loadGalleriListeModule, reorderGalleriItem, formatTimestamp } from './admin-dashboard.js';
 import {
     getAdminConfig, renderToggleHtml, setToggleState, attachToggleClick,
-    showDeletionToast, bindSliderStepButtons, bindWheelPrevent
+    showDeletionToast, bindSliderStepButtons, bindWheelPrevent,
+    showSaveBar, hideSaveBar
 } from './admin-editor-helpers.js';
 
 export async function loadBilderModule() {
@@ -135,7 +136,6 @@ export async function loadBilderModule() {
                                     </div>
                                 </div>
                             </div>
-                            <div id="galleri-save-status" class="min-h-6 text-[10px] font-black uppercase tracking-widest text-admin-muted-light italic"></div>
                             <div class="pt-6 border-t border-admin-border">
                                 <button id="btn-ferdig-galleri" class="btn-primary w-full py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs flex items-center justify-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -319,12 +319,11 @@ export async function loadBilderModule() {
                 if (valX) valX.textContent = `${x}%`;
                 if (valY) valY.textContent = `${y}%`;
 
-                const statusEl = document.getElementById('galleri-save-status');
-                if (statusEl) statusEl.textContent = '⏳ Endringer oppdaget...';
+                showSaveBar('changed', '⏳ Endringer oppdaget...');
 
                 clearTimeout(galleriSaveTimeout);
                 galleriSaveTimeout = setTimeout(async () => {
-                    if (statusEl) statusEl.textContent = '💾 Lagrer til Google Sheets...';
+                    showSaveBar('saving', '💾 Lagrer til Google Sheets...');
                     try {
                         const saveData = {
                             title: titleInput?.value || '',
@@ -347,7 +346,7 @@ export async function loadBilderModule() {
                             const freshRow = freshData.find(r => r.rowIndex === rowIndex);
                             if (freshRow && freshRow.title !== saveData.title) {
                                 console.warn(`[Admin] Galleri-mismatch etter lagring: forventet "${saveData.title}", fikk "${freshRow.title}"`);
-                                if (statusEl) statusEl.innerHTML = '⚠️ Laster på nytt…';
+                                showSaveBar('error', '⚠️ Laster på nytt…');
                                 loadBilderModule();
                                 return;
                             }
@@ -355,10 +354,10 @@ export async function loadBilderModule() {
                             console.warn("[Admin] Galleri-verifisering feilet, men lagring gikk OK:", verifyErr);
                         }
                         const ts = formatTimestamp(savedTime);
-                        if (statusEl) statusEl.innerHTML = `✅ Lagret ${ts} <span class="block text-admin-muted-light not-italic">Publiseres automatisk om noen minutter.</span>`;
-                        setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 5000);
+                        showSaveBar('saved', `✅ Lagret ${ts}`);
+                        hideSaveBar(5000);
                     } catch (e) {
-                        if (statusEl) statusEl.textContent = '❌ Feil ved lagring!';
+                        showSaveBar('error', '❌ Feil ved lagring!');
                     }
                 }, 1500);
             };
