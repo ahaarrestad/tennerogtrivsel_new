@@ -43,10 +43,10 @@
   - Vurder om koden er lesbar nok eller om ytterligere forenkling trengs
   - Fokusområder: kompleksitet, navngiving, modulstruktur, duplisering
 
-- [ ] **UX- og brukervennlighetsgjennomgang av admin-panelet**
+- [ ] **UX- og brukervennlighetsgjennomgang av admin-panelet** ([plan](docs/plan-ux-brukervennlighet-admin.md))
   - Helhetlig gjennomgang av admin-siden med fokus på brukeropplevelse
   - Vurder: navigasjon, arbeidsflyt, feilmeldinger, responstid, mobilvennlighet, visuelt hierarki
-  - Team: UX-reviewer (analyse + forslag), frontend-utvikler (implementering), tester (verifisering)
+  - 7 steg: brødsmuler, skeleton-loadere, kontekstuelle feilmeldinger, lagrestatus, berøringsmål, dashboard-tall, overganger
 
 ## Fullført
 
