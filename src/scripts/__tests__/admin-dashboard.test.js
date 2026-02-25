@@ -27,6 +27,7 @@ vi.mock('../admin-client.js', () => ({
     updateSettingOrder: vi.fn(),
     getSettingsWithNotes: vi.fn(),
     checkMultipleAccess: vi.fn(),
+    login: vi.fn(),
     logout: vi.fn(),
     silentLogin: vi.fn(),
     getTannlegerRaw: vi.fn(),
@@ -39,10 +40,19 @@ vi.mock('../admin-client.js', () => ({
     getDriveImageBlob: vi.fn()
 }));
 
-// Mock admin-api-retry (pass-through)
+// Mock admin-api-retry
 vi.mock('../admin-api-retry.js', () => ({
     withRetry: vi.fn((fn) => fn()),
-    createAuthRefresher: vi.fn(() => () => Promise.resolve(true))
+    createAuthRefresher: vi.fn(() => () => Promise.resolve(true)),
+    classifyError: vi.fn(() => 'non-retryable')
+}));
+
+// Mock admin-dialog
+vi.mock('../admin-dialog.js', () => ({
+    showAuthExpired: vi.fn(),
+    showToast: vi.fn(),
+    showConfirm: vi.fn(),
+    showBanner: vi.fn(),
 }));
 
 // Mock textFormatter
@@ -53,12 +63,16 @@ vi.mock('../textFormatter.js', () => ({
     slugify: vi.fn(s => s)
 }));
 
+import { showAuthExpired } from '../admin-dialog.js';
+import { classifyError } from '../admin-api-retry.js';
+
 const {
     enforceAccessControl, updateUIWithUser, autoResizeTextarea,
     saveSingleSetting, loadMeldingerModule, loadTjenesterModule,
     loadTannlegerModule, loadGalleriListeModule, reorderGalleriItem,
     reorderSettingItem, mergeSettingsWithDefaults, formatTimestamp,
-    updateLastFetchedTime, updateBreadcrumbCount, renderSkeletonCards
+    updateLastFetchedTime, updateBreadcrumbCount, renderSkeletonCards,
+    handleModuleError
 } = adminDashboard;
 
 describe('admin-dashboard.js', () => {
@@ -301,7 +315,7 @@ describe('admin-dashboard.js', () => {
         it('should handle API errors gracefully', async () => {
             adminClient.listFiles.mockRejectedValue(new Error('Fail'));
             await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
-            expect(document.getElementById('module-inner').textContent).toContain('Kunne ikke laste oppslag');
+            expect(document.getElementById('module-inner').textContent).toContain('Noe gikk galt med oppslag');
         });
 
         it('should categorize messages into groups', async () => {
@@ -478,7 +492,7 @@ describe('admin-dashboard.js', () => {
         it('should handle API errors', async () => {
             adminClient.listFiles.mockRejectedValue(new Error('Fail'));
             await loadTjenesterModule('folder-id', vi.fn(), vi.fn());
-            expect(document.getElementById('module-inner').textContent).toContain('Kunne ikke laste behandlinger');
+            expect(document.getElementById('module-inner').textContent).toContain('Noe gikk galt med behandlinger');
         });
 
         it('should handle empty list', async () => {
@@ -671,7 +685,7 @@ describe('admin-dashboard.js', () => {
         it('should handle API errors', async () => {
             adminClient.getTannlegerRaw.mockRejectedValue(new Error('fail'));
             await loadTannlegerModule('id', vi.fn(), vi.fn());
-            expect(document.getElementById('module-inner').textContent).toContain('Kunne ikke laste teamet');
+            expect(document.getElementById('module-inner').textContent).toContain('Noe gikk galt med team');
         });
 
         it('should trigger edit when card is clicked (click delegation)', async () => {
@@ -921,7 +935,7 @@ describe('admin-dashboard.js', () => {
         it('should handle API errors', async () => {
             adminClient.getGalleriRaw.mockRejectedValue(new Error('fail'));
             await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null);
-            expect(document.getElementById('galleri-liste-container').textContent).toContain('Kunne ikke laste galleribilder');
+            expect(document.getElementById('galleri-liste-container').textContent).toContain('Noe gikk galt med galleribilder');
         });
 
         it('should return early when container is missing from DOM', async () => {
@@ -1605,6 +1619,51 @@ describe('admin-dashboard.js', () => {
 
             const cardBilder = document.getElementById('card-bilder');
             expect(cardBilder.style.display).toBe('none');
+        });
+    });
+
+    describe('handleModuleError', () => {
+        let container;
+
+        beforeEach(() => {
+            container = document.createElement('div');
+            document.body.appendChild(container);
+            vi.clearAllMocks();
+        });
+
+        it('should show contextual non-retryable error message', () => {
+            classifyError.mockReturnValue('non-retryable');
+            const err = new Error('fail');
+            handleModuleError(err, 'oppslag', container, vi.fn());
+            expect(container.textContent).toContain('Noe gikk galt med oppslag');
+        });
+
+        it('should show network error message for retryable errors', () => {
+            classifyError.mockReturnValue('retryable');
+            handleModuleError(new Error('net'), 'test', container, vi.fn());
+            expect(container.textContent).toContain('Nettverksfeil');
+        });
+
+        it('should call showAuthExpired and clear container for auth errors', () => {
+            classifyError.mockReturnValue('auth');
+            container.innerHTML = '<p>skeleton</p>';
+            handleModuleError(new Error('401'), 'test', container, vi.fn());
+            expect(container.innerHTML).not.toContain('skeleton');
+            expect(showAuthExpired).toHaveBeenCalledWith(container, expect.any(Function));
+        });
+
+        it('should render retry button for retryable errors', () => {
+            classifyError.mockReturnValue('retryable');
+            handleModuleError(new Error('net'), 'test', container, vi.fn());
+            expect(container.querySelector('.retry-btn')).not.toBeNull();
+        });
+
+        it('should call onRetry when retry button is clicked', () => {
+            classifyError.mockReturnValue('non-retryable');
+            const onRetry = vi.fn();
+            handleModuleError(new Error('fail'), 'test', container, onRetry);
+            container.querySelector('.retry-btn').click();
+            expect(onRetry).toHaveBeenCalled();
         });
     });
 });

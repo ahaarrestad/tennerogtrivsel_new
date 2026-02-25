@@ -3,6 +3,7 @@ import {
     saveFile, createFile
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
+import { classifyError } from './admin-api-retry.js';
 import { stripStackEditData, slugify } from './textFormatter.js';
 import { loadTjenesterModule } from './admin-dashboard.js';
 import {
@@ -18,7 +19,15 @@ async function deleteTjeneste(id, name) {
             showDeletionToast(name,
                 'Filen er lagt i Google Drive-papirkurven og kan gjenopprettes derfra innen 30 dager. ' +
                 'Gå til drive.google.com → Papirkurv for å gjenopprette.');
-        } catch (e) { showToast("Kunne ikke slette tjenesten.", "error"); }
+        } catch (e) {
+            const kind = classifyError(e);
+            showToast(
+                kind === 'auth' ? 'Økten din er utløpt. Last siden på nytt.'
+                : kind === 'retryable' ? 'Nettverksfeil — prøv igjen.'
+                : 'Kunne ikke slette tjenesten.',
+                'error'
+            );
+        }
     }
 }
 
@@ -96,7 +105,13 @@ async function editTjeneste(id, name) {
                 reloadTjenester();
             } catch (e) {
                 console.error("Lagring feilet:", e);
-                showToast("Kunne ikke lagre endringene.", "error");
+                const kind = classifyError(e);
+                showToast(
+                    kind === 'auth' ? 'Økten din er utløpt. Last siden på nytt.'
+                    : kind === 'retryable' ? 'Nettverksfeil — prøv igjen.'
+                    : 'Kunne ikke lagre endringene.',
+                    'error'
+                );
                 saveBtn.disabled = false;
                 saveBtn.textContent = "Lagre tjeneste";
             }

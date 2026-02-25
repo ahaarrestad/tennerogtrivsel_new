@@ -174,6 +174,45 @@ export function showConfirm(message, options = {}) {
 }
 
 /**
+ * Viser en prominent banner i en gitt container når brukerens økt har utløpt.
+ * @param {HTMLElement} container - Elementet å prepende banneret i
+ * @param {() => void} onLogin - Kalles når brukeren klikker "Logg inn"
+ * @returns {HTMLElement|null}
+ */
+export function showAuthExpired(container, onLogin) {
+    if (!container) return null;
+
+    const ICON_LOCK = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
+
+    const banner = document.createElement('div');
+    banner.className = 'flex items-start gap-4 p-5 rounded-xl border border-amber-200 bg-amber-50 mb-4';
+    banner.setAttribute('role', 'alert');
+
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'shrink-0 text-amber-600 mt-0.5';
+    iconSpan.innerHTML = ICON_LOCK;
+
+    const textDiv = document.createElement('div');
+    textDiv.className = 'flex-1 min-w-0';
+    textDiv.innerHTML = '<p class="font-semibold text-amber-800 text-sm">Økten din er utløpt</p><p class="text-amber-700 text-xs mt-1">Logg inn på nytt for å fortsette å redigere.</p>';
+
+    const loginBtn = document.createElement('button');
+    loginBtn.className = 'auth-expired-login-btn btn-primary text-xs py-2 px-4 shrink-0';
+    loginBtn.textContent = 'Logg inn';
+    loginBtn.addEventListener('click', () => {
+        banner.remove();
+        if (onLogin) onLogin();
+    });
+
+    banner.appendChild(iconSpan);
+    banner.appendChild(textDiv);
+    banner.appendChild(loginBtn);
+
+    container.prepend(banner);
+    return banner;
+}
+
+/**
  * Show an inline banner inside a container element.
  * @param {string} containerId - The ID of the container to prepend the banner to
  * @param {string} message

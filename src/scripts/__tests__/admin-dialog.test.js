@@ -17,7 +17,7 @@ if (!HTMLDialogElement.prototype.close) {
     };
 }
 
-import { showToast, showConfirm, showBanner } from '../admin-dialog.js';
+import { showToast, showConfirm, showBanner, showAuthExpired } from '../admin-dialog.js';
 
 describe('admin-dialog.js', () => {
     beforeEach(() => {
@@ -270,6 +270,56 @@ describe('admin-dialog.js', () => {
         it('skal bruke error-farge for error-type', () => {
             const banner = showBanner('test-container', 'Feil', 'error');
             expect(banner.className).toContain('bg-red-50');
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // showAuthExpired
+    // -------------------------------------------------------------------------
+    describe('showAuthExpired', () => {
+        let container;
+
+        beforeEach(() => {
+            container = document.createElement('div');
+            document.body.appendChild(container);
+        });
+
+        it('skal vise banner med "Økten din er utløpt"', () => {
+            showAuthExpired(container, vi.fn());
+            expect(container.textContent).toContain('Økten din er utløpt');
+        });
+
+        it('skal ha role="alert"', () => {
+            const banner = showAuthExpired(container, vi.fn());
+            expect(banner.getAttribute('role')).toBe('alert');
+        });
+
+        it('skal prepende banneret i containeren', () => {
+            const existing = document.createElement('p');
+            existing.textContent = 'Eksisterende';
+            container.appendChild(existing);
+            showAuthExpired(container, vi.fn());
+            expect(container.firstElementChild.getAttribute('role')).toBe('alert');
+        });
+
+        it('skal ha "Logg inn"-knapp', () => {
+            showAuthExpired(container, vi.fn());
+            const btn = container.querySelector('.auth-expired-login-btn');
+            expect(btn).not.toBeNull();
+            expect(btn.textContent).toContain('Logg inn');
+        });
+
+        it('skal kalle onLogin og fjerne banner ved klikk på Logg inn', () => {
+            const onLogin = vi.fn();
+            showAuthExpired(container, onLogin);
+            container.querySelector('.auth-expired-login-btn').click();
+            expect(onLogin).toHaveBeenCalled();
+            expect(container.querySelector('[role="alert"]')).toBeNull();
+        });
+
+        it('skal returnere null og ikke krasje hvis container er null', () => {
+            const result = showAuthExpired(null, vi.fn());
+            expect(result).toBeNull();
         });
     });
 });

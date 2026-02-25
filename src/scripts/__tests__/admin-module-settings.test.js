@@ -26,6 +26,7 @@ vi.mock('../admin-dashboard.js', () => ({
     formatTimestamp: vi.fn(() => '24. feb kl. 12:00'),
     updateLastFetchedTime: vi.fn(),
     updateBreadcrumbCount: vi.fn(),
+    handleModuleError: vi.fn(),
 }));
 
 vi.mock('../admin-editor-helpers.js', () => ({
@@ -37,7 +38,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
 }));
 
 import { getSettingsWithNotes, updateSettingByKey, updateSettingOrder } from '../admin-client.js';
-import { mergeSettingsWithDefaults, reorderSettingItem, updateLastFetchedTime, updateBreadcrumbCount } from '../admin-dashboard.js';
+import { mergeSettingsWithDefaults, reorderSettingItem, updateLastFetchedTime, updateBreadcrumbCount, handleModuleError } from '../admin-dashboard.js';
 
 function setupDOM() {
     document.body.innerHTML = `
@@ -139,22 +140,29 @@ describe('loadSettingsModule', () => {
         expect(firstIdx).toBeLessThan(secondIdx);
     });
 
-    it('should show error on fetch failure', async () => {
+    it('should call handleModuleError on fetch failure', async () => {
         getSettingsWithNotes.mockRejectedValue(new Error('fail'));
 
         const loadSettingsModule = await getLoadSettingsModule();
         await loadSettingsModule();
 
-        expect(document.getElementById('module-inner').innerHTML).toContain('Kunne ikke laste innstillinger');
+        expect(handleModuleError).toHaveBeenCalledWith(
+            expect.any(Error),
+            'innstillinger',
+            expect.any(HTMLElement),
+            expect.any(Function)
+        );
     });
 
-    it('should have retry button on error', async () => {
+    it('should call handleModuleError with a retry function on error', async () => {
         getSettingsWithNotes.mockRejectedValue(new Error('fail'));
 
         const loadSettingsModule = await getLoadSettingsModule();
         await loadSettingsModule();
 
-        expect(document.querySelector('.retry-btn')).not.toBeNull();
+        expect(handleModuleError).toHaveBeenCalled();
+        const [, , , retryFn] = handleModuleError.mock.calls[0];
+        expect(typeof retryFn).toBe('function');
     });
 
     it('should show reorder toggle button', async () => {

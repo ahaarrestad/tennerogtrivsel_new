@@ -55,6 +55,7 @@ vi.mock('../admin-dashboard.js', () => ({
     formatTimestamp: vi.fn(() => '24. feb kl. 12:00'),
     updateLastFetchedTime: vi.fn(),
     updateBreadcrumbCount: vi.fn(),
+    handleModuleError: vi.fn(),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({

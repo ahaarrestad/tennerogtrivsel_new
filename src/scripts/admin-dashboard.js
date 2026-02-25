@@ -2,11 +2,12 @@
 import {
     listFiles, getFileContent, saveFile, createFile, deleteFile,
     parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
-    checkMultipleAccess, logout, getTannlegerRaw, updateTannlegeRow,
+    checkMultipleAccess, login, logout, getTannlegerRaw, updateTannlegeRow,
     addTannlegeRow, getGalleriRaw, updateGalleriRow, findFileByName, getDriveImageBlob,
     updateSettingByKey, updateSettingOrder, silentLogin
 } from './admin-client.js';
-import { withRetry, createAuthRefresher } from './admin-api-retry.js';
+import { withRetry, createAuthRefresher, classifyError } from './admin-api-retry.js';
+import { showAuthExpired } from './admin-dialog.js';
 import { formatDate, sortMessages } from './textFormatter.js';
 import DOMPurify from 'dompurify';
 
@@ -227,6 +228,28 @@ export function updateBreadcrumbCount(count) {
 }
 
 /**
+ * Håndterer feil i modullasting med kontekstuell melding basert på feiltype.
+ * @param {*} err - Feilobjektet
+ * @param {string} context - Norsk beskrivelse av hva som feilet (f.eks. "oppslag")
+ * @param {HTMLElement} container - Elementet som skal vise feilmeldingen
+ * @param {() => void} onRetry - Kalles når brukeren klikker "Prøv igjen"
+ */
+export function handleModuleError(err, context, container, onRetry) {
+    const kind = classifyError(err);
+    if (kind === 'auth') {
+        container.innerHTML = '';
+        showAuthExpired(container, () => login());
+        return;
+    }
+    const message = kind === 'retryable'
+        ? 'Nettverksfeil — sjekk internettforbindelsen og prøv igjen.'
+        : `Noe gikk galt med ${context}. Prøv igjen eller kontakt administrator.`;
+    container.innerHTML = `<div class="admin-alert-error">❌ ${message}</div>
+        <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
+    container.querySelector('.retry-btn')?.addEventListener('click', onRetry);
+}
+
+/**
  * Oppdaterer "Sist hentet"-tidspunkt i modul-headeren
  */
 export function updateLastFetchedTime(date) {
@@ -404,11 +427,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
         document.getElementById('btn-new-melding').onclick = () => onEdit(null, null);
     } catch (e) {
         console.error("Load failed", e);
-        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste oppslag.</div>
-            <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
-        inner.querySelector('.retry-btn')?.addEventListener('click', () => {
-            loadMeldingerModule(folderId, onEdit, onDelete);
-        });
+        handleModuleError(e, 'oppslag', inner, () => loadMeldingerModule(folderId, onEdit, onDelete));
     }
 }
 
@@ -474,11 +493,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
         document.getElementById('btn-new-tjeneste').onclick = () => onEdit(null, null);
     } catch (e) {
         console.error("Load failed", e);
-        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste behandlinger.</div>
-            <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
-        inner.querySelector('.retry-btn')?.addEventListener('click', () => {
-            loadTjenesterModule(folderId, onEdit, onDelete, onToggleActive);
-        });
+        handleModuleError(e, 'behandlinger', inner, () => loadTjenesterModule(folderId, onEdit, onDelete, onToggleActive));
     }
 }
 
@@ -544,11 +559,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
         document.getElementById('btn-new-tannlege').onclick = () => onEdit(null, null);
     } catch (e) {
         console.error("Load failed", e);
-        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste teamet.</div>
-            <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
-        inner.querySelector('.retry-btn')?.addEventListener('click', () => {
-            loadTannlegerModule(sheetId, onEdit, onDelete, parentFolderId, onToggleActive);
-        });
+        handleModuleError(e, 'team', inner, () => loadTannlegerModule(sheetId, onEdit, onDelete, parentFolderId, onToggleActive));
     }
 }
 
@@ -696,10 +707,6 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
         }
     } catch (e) {
         console.error("Load galleri failed", e);
-        container.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste galleribilder.</div>
-            <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
-        container.querySelector('.retry-btn')?.addEventListener('click', () => {
-            loadGalleriListeModule(sheetId, onEdit, onDelete, onReorder, parentFolderId, onToggleActive);
-        });
+        handleModuleError(e, 'galleribilder', container, () => loadGalleriListeModule(sheetId, onEdit, onDelete, onReorder, parentFolderId, onToggleActive));
     }
 }

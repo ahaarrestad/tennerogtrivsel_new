@@ -43,7 +43,7 @@ Filer: `admin-dashboard.js`, `admin-module-settings.js`, `global.css`
 
 ---
 
-### Steg 3: Kontekstuelle feilmeldinger med veiledning
+### ✅ Steg 3: Kontekstuelle feilmeldinger med veiledning
 **Impakt: HØY** — Generiske feilmeldinger gir brukeren ingen hjelp.
 
 Nåværende: `showToast("Kunne ikke laste oppslag", "error")` — hva skal brukeren gjøre?

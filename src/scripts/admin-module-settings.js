@@ -2,7 +2,8 @@ import { getSettingsWithNotes, updateSettingByKey, updateSettingOrder } from './
 import { withRetry } from './admin-api-retry.js';
 import {
     mergeSettingsWithDefaults, autoResizeTextarea, saveSingleSetting,
-    reorderSettingItem, formatTimestamp, updateLastFetchedTime, updateBreadcrumbCount
+    reorderSettingItem, formatTimestamp, updateLastFetchedTime, updateBreadcrumbCount,
+    handleModuleError
 } from './admin-dashboard.js';
 import { getAdminConfig, getRefreshAuth } from './admin-editor-helpers.js';
 
@@ -159,8 +160,6 @@ export async function loadSettingsModule() {
         }
     } catch (e) {
         console.error("Settings load failed", e);
-        inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke laste innstillinger.</div>
-            <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
-        inner.querySelector('.retry-btn')?.addEventListener('click', () => loadSettingsModule());
+        handleModuleError(e, 'innstillinger', inner, () => loadSettingsModule());
     }
 }
