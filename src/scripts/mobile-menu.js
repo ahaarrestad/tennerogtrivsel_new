@@ -11,6 +11,7 @@ export function initMobileMenu() {
     function openMenu() {
         menuBtn?.setAttribute('data-state', 'open');
         menuBtn?.setAttribute('aria-expanded', 'true');
+        mobileMenu?.setAttribute('data-open', 'true');
         mobileMenu?.classList.remove('opacity-0', 'invisible', 'pointer-events-none');
         mobileMenu?.classList.add('opacity-100', 'pointer-events-auto');
     }
@@ -18,6 +19,7 @@ export function initMobileMenu() {
     function closeMenu() {
         menuBtn?.setAttribute('data-state', 'closed');
         menuBtn?.setAttribute('aria-expanded', 'false');
+        mobileMenu?.setAttribute('data-open', 'false');
         mobileMenu?.classList.add('opacity-0', 'invisible', 'pointer-events-none');
         mobileMenu?.classList.remove('opacity-100', 'pointer-events-auto');
     }

@@ -21,7 +21,7 @@ describe('mobile-menu.js', () => {
                 <span></span>
                 <span></span>
             </button>
-            <div id="mobile-menu" class="opacity-0 pointer-events-none">
+            <div id="mobile-menu" data-open="false" class="opacity-0 pointer-events-none">
                 <a href="#test" class="mobile-link">Lenke</a>
             </div>
         `;
@@ -36,6 +36,7 @@ describe('mobile-menu.js', () => {
         menuBtn.click();
 
         expect(isMenuVisible(mobileMenu)).toBe(true);
+        expect(mobileMenu.getAttribute('data-open')).toBe('true');
         expect(menuBtn.getAttribute('data-state')).toBe('open');
     });
 
@@ -44,11 +45,12 @@ describe('mobile-menu.js', () => {
         const mobileMenu = document.getElementById('mobile-menu');
 
         menuBtn.click(); // Åpne
-        expect(menuBtn.getAttribute('data-state')).toBe('open');
+        expect(mobileMenu.getAttribute('data-open')).toBe('true');
 
         menuBtn.click(); // Lukke
 
         expect(isMenuHidden(mobileMenu)).toBe(true);
+        expect(mobileMenu.getAttribute('data-open')).toBe('false');
         expect(menuBtn.getAttribute('data-state')).toBe('closed');
     });
 
@@ -63,6 +65,7 @@ describe('mobile-menu.js', () => {
         mobileLink.click(); // Trykk på lenke
 
         expect(isMenuHidden(mobileMenu)).toBe(true);
+        expect(mobileMenu.getAttribute('data-open')).toBe('false');
         expect(menuBtn.getAttribute('data-state')).toBe('closed');
     });
 
@@ -74,7 +77,7 @@ describe('mobile-menu.js', () => {
     it('skal fungere selv om spans mangler inni knappen', () => {
         document.body.innerHTML = `
             <button id="menu-btn"></button>
-            <div id="mobile-menu" class="opacity-0 pointer-events-none"></div>
+            <div id="mobile-menu" data-open="false" class="opacity-0 pointer-events-none"></div>
         `;
         initMobileMenu();
         const menuBtn = document.getElementById('menu-btn');
@@ -82,11 +85,11 @@ describe('mobile-menu.js', () => {
 
         menuBtn.click();
         expect(isMenuVisible(mobileMenu)).toBe(true);
-        expect(menuBtn.getAttribute('data-state')).toBe('open');
+        expect(mobileMenu.getAttribute('data-open')).toBe('true');
 
         menuBtn.click();
         expect(isMenuHidden(mobileMenu)).toBe(true);
-        expect(menuBtn.getAttribute('data-state')).toBe('closed');
+        expect(mobileMenu.getAttribute('data-open')).toBe('false');
     });
 
     it('skal fungere selv om mobile-menu mangler', () => {
@@ -102,7 +105,7 @@ describe('mobile-menu.js', () => {
 
     it('skal håndtere klikk på lenke når spans mangler', () => {
         document.body.innerHTML = `
-            <div id="mobile-menu" class="opacity-0 pointer-events-none">
+            <div id="mobile-menu" data-open="false" class="opacity-0 pointer-events-none">
                 <a href="#test" class="mobile-link">Lenke</a>
             </div>
         `;
