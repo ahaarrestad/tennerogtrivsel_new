@@ -645,6 +645,9 @@
     .admin-item-count {
         @apply text-admin-muted-light;
     }
+    .admin-card-count {
+        @apply block text-xs text-admin-muted-light mt-1;
+    }
 
     /* SAVE STATUS BAR — fixed bottom bar for auto-save feedback */
     .admin-save-bar {
