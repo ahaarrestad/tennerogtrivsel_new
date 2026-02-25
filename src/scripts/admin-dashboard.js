@@ -218,6 +218,15 @@ export function renderSkeletonCards(count, { withThumbnail = false } = {}) {
 }
 
 /**
+ * Trigger fade+slide-animasjon på et element ved å fjerne og gjenlegge CSS-klassen.
+ */
+function applyViewEnter(el) {
+    el.classList.remove('admin-view-enter');
+    void el.offsetWidth; // tving reflow så animasjonen starter på nytt
+    el.classList.add('admin-view-enter');
+}
+
+/**
  * Oppdaterer elementtelling i brødsmule-navigasjonen
  */
 export function updateBreadcrumbCount(count) {
@@ -424,6 +433,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
             });
             bindCardClickDelegation(inner, '.edit-btn');
         }
+        applyViewEnter(inner);
         document.getElementById('btn-new-melding').onclick = () => onEdit(null, null);
     } catch (e) {
         console.error("Load failed", e);
@@ -490,6 +500,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
             });
             bindCardClickDelegation(inner, '.edit-btn');
         }
+        applyViewEnter(inner);
         document.getElementById('btn-new-tjeneste').onclick = () => onEdit(null, null);
     } catch (e) {
         console.error("Load failed", e);
@@ -556,6 +567,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
             bindCardClickDelegation(inner, '.edit-tannlege-btn');
             loadThumbnails(inner, dentists, parentFolderId);
         }
+        applyViewEnter(inner);
         document.getElementById('btn-new-tannlege').onclick = () => onEdit(null, null);
     } catch (e) {
         console.error("Load failed", e);
@@ -705,6 +717,7 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
             bindCardClickDelegation(container, '.edit-galleri-btn');
             loadThumbnails(container, images, parentFolderId);
         }
+        applyViewEnter(container);
     } catch (e) {
         console.error("Load galleri failed", e);
         handleModuleError(e, 'galleribilder', container, () => loadGalleriListeModule(sheetId, onEdit, onDelete, onReorder, parentFolderId, onToggleActive));

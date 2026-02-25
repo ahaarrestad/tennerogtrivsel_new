@@ -15,7 +15,9 @@ import { loadBilderModule } from './admin-module-bilder.js';
 function openModule(id, title) {
     window.scrollTo(0, 0);
     document.getElementById('dashboard')?.classList.add('hidden');
-    document.getElementById('module-container')?.classList.remove('hidden');
+    const moduleContainer = document.getElementById('module-container');
+    moduleContainer?.classList.remove('hidden');
+    moduleContainer?.classList.add('admin-view-enter');
     const titleEl = document.getElementById('module-title');
     if (titleEl) titleEl.textContent = title;
     const actionsEl = document.getElementById('module-actions');
@@ -38,8 +40,10 @@ function openModule(id, title) {
 
 function closeModule() {
     window.scrollTo(0, 0);
-    document.getElementById('dashboard')?.classList.remove('hidden');
     document.getElementById('module-container')?.classList.add('hidden');
+    const dashboard = document.getElementById('dashboard');
+    dashboard?.classList.remove('hidden');
+    dashboard?.classList.add('admin-view-enter');
 }
 
 async function handleAuth(userInfo = null) {
