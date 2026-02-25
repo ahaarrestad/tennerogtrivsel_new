@@ -1,5 +1,7 @@
 # Plan: Gjennomgang av flaky tester
 
+> **Status: FULLFØRT**
+
 ## Kontekst
 
 Prosjektet har `retries: 1` i Playwright-config for CI, noe som maskerer flaky-feil. En konkret test har feilet i CI nylig, og ved lokal kjøring oppstår sporadiske feil som ofte feilaktig avskrives som «flaky» uten at rotårsaken undersøkes. Målet er å identifisere og fikse rotårsakene slik at testene er deterministiske.

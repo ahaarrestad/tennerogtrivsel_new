@@ -1,5 +1,7 @@
 # Plan: Konsistent aktiv/inaktiv-visning i admin-editorer
 
+> **Status: FULLFØRT**
+
 ## Problem
 
 De tre editor-visningene (tjenester, tannleger, galleri) bruker ulike UI-mønstre for aktiv/inaktiv:

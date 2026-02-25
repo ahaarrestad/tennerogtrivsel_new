@@ -1,5 +1,7 @@
 # Plan: Gjøre det enklere å forstå hvor innstillinger brukes
 
+> **Status: FULLFØRT**
+
 ## Problem
 Brukeren av admin-panelet vet ikke nødvendigvis hvor de ulike tekstene i Innstillinger-modulen dukker opp på den offentlige nettsiden.
 

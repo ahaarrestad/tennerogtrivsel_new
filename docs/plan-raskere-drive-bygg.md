@@ -1,5 +1,7 @@
 # Plan: Raskere bygg ved Google Drive-oppdatering
 
+> **Status: FULLFØRT**
+
 ## Bakgrunn
 
 Når innhold oppdateres i Google Drive, trigges `repository_dispatch: google_drive_update` i CI.

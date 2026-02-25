@@ -1,5 +1,7 @@
 # Plan: Konsolidere og rydde i E2E-tester
 
+> **Status: FULLFØRT**
+
 ## Bakgrunn
 
 E2E-suiten har 7 aktive spec-filer (33 tester) som kjører i 3 nettlesere (chromium, webkit, Mobile Chrome) = **~99 nettleser-instanser**. Analysen viser overlapp og unødvendig bred nettleser-dekning for metadata-tester.

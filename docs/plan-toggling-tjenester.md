@@ -1,5 +1,7 @@
 # Plan: Legg til toggling for tjenester
 
+> **Status: FULLFØRT**
+
 ## Kontekst
 
 Tjenester (behandlinger) lagres som markdown-filer i Google Drive og synkes til `src/content/tjenester/*.md` ved bygg. I dag er alle tjenester alltid synlige. Oppgaven er å legge til aktiv/inaktiv-toggle i admin-panelet — samme visuelle mønster som galleriet — men med frontmatter i markdown som datakilde (ikke Google Sheets).

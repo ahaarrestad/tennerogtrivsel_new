@@ -1,5 +1,7 @@
 # Plan: Kodekvalitet / småfiks
 
+> **Status: FULLFØRT**
+
 ## Kontekst
 TODO-backloggen har 5 kodekvalitetsproblemer som bør ryddes opp. Alle er små, isolerte fikser uten innbyrdes avhengigheter.
 

@@ -1,5 +1,7 @@
 # Plan: Fiks wrapping av tekst i tjeneste-listen i admin på mobil
 
+> **Status: FULLFØRT**
+
 ## Problem
 
 I tjeneste-listen i admin-panelet kan tittel og ingress-tekst bli avkuttet eller wrappe dårlig på smale skjermer. Samme mønster brukes i tannleger- og galleri-listen — fiksen bør gjelde alle tre.

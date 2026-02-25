@@ -1,5 +1,7 @@
 # Plan: Sett opp CloudFront på produksjon
 
+> **Status: PÅGÅR** — Steg 1, 2, 4, 5 fullført · Steg 3 delvis · Steg 6, 7 gjenstår
+
 ## Bakgrunn
 
 Samme oppsett som test-siden (test2.aarrestad.com) skal nå gjøres for produksjonsdomenet `www.tennerogtrivsel.no`. Test-oppsettet er verifisert og fungerer — denne planen følger samme steg med produksjonsverdier.

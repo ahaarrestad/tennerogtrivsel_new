@@ -1,5 +1,7 @@
 # Plan: "Legg til snarvei" i admin på mobil
 
+> **Status: FULLFØRT**
+
 ## Bakgrunn
 
 Admin-brukere åpner admin-panelet på mobil via nettleseren. Vi vil gi dem mulighet til å legge til en snarvei på hjemskjermen slik at admin-panelet føles mer app-lignende.

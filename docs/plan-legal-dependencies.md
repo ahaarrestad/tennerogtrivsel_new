@@ -1,5 +1,7 @@
 # Plan: Legal vurdering av dependencies
 
+> **Status: FULLFØRT**
+
 ## Nåværende status
 
 ### Sårbarheter

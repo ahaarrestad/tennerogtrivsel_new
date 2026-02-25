@@ -1,5 +1,7 @@
 # Plan: UX/Design-redesign
 
+> **Status: FULLFØRT** — 13 steg fullført
+>
 > Implementeringsplan basert på [design-guide.md](design-guide.md).
 > Hvert steg er en selvstendig commit. Rekkefølgen er prioritert for å minimere
 > merge-konflikter og gi synlig fremgang tidlig.

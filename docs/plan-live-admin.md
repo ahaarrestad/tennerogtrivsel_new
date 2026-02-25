@@ -1,5 +1,7 @@
 # Plan: Forbedre admin-opplevelsen — «live» følelse
 
+> **Status: FULLFØRT**
+
 ## Bakgrunn
 
 Oppgaven var å utrede backend-alternativer for mer «live» oppdatering. Etter analyse av nåværende system og diskusjon med bruker, ble konklusjonen:
