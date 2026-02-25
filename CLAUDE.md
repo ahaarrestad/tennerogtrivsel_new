@@ -1,200 +1,44 @@
 # Claude Code Instructions
 
-This document outlines the operational guidelines and expectations for the Claude Code agent when interacting with this project. Adhering to these instructions ensures efficient, safe, and context-aware assistance.
+## TODO-liste
 
-## Core Principles
-
-1.  **Adherence to Project Conventions:** Always prioritize and strictly adhere to existing project conventions (formatting, naming, architectural patterns, etc.). Analyze surrounding code, tests, and configuration first.
-2.  **Tool and Library Verification:** Never assume the availability or appropriateness of a new library, framework, or tool. Verify its established usage within the project.
-3.  **Idiomatic Changes:** Ensure all modifications integrate naturally and idiomatically with the local context.
-4.  **Comments:** Add code comments sparingly, focusing on *why* complex logic exists.
-5.  **Proactive Fulfillment:** Fulfill requests thoroughly, including adding tests for new features or bug fixes.
-6.  **Confirmation for Ambiguity/Expansion:** Do not take significant actions beyond the clear scope of a request without explicit confirmation.
-7.  **Security and Safety:** Prioritize security best practices. Never introduce code that exposes sensitive information.
-8.  **TODO-liste:** Prosjektet har en `TODO.md` i roten som sporer oppgaver. Før en oppgave startes, lag alltid en plan og still avklarende spørsmål. Hold listen oppdatert underveis — flytt oppgaver mellom seksjonene og noter fremgang.
+Prosjektet har en `TODO.md` i roten som sporer oppgaver. Før en oppgave startes, lag alltid en plan og still avklarende spørsmål. Hold listen oppdatert underveis — flytt oppgaver mellom seksjonene og noter fremgang.
 
 ## Kvalitetssikring (Quality Gates)
 
 Fullstendig prosedyre finnes i `/quality-gate`-skill. Kjernekrav:
 
-- **80% branch coverage per fil** (ikke bare totalt) for kjerne-logikk (scripts og API).
+- **80% branch coverage per fil** for kjerne-logikk (scripts og API).
 - Ved nye miljøvariabler: sjekk og oppdater `.github/workflows/`-filer.
 
-**AGENT-REGEL:** Du har ikke lov til å si deg ferdig eller foreslå en commit før du har presentert en fersk testrapport som viser at kravene er møtt for alle berørte filer. Enhver "ferdig"-melding uten tallgrunnlag er et brudd på instruksene. Hvis dekningsgraden faller på grunn av nye funksjoner, SKAL du skrive tester for disse før du går videre. Ved innføring av nye avhengigheter eller miljøvariabler SKAL du eksplisitt sjekke og oppdatere CI-konfigurasjonen.
+**AGENT-REGEL:** Du har ikke lov til å si deg ferdig eller foreslå en commit før du har presentert en fersk testrapport som viser at kravene er møtt for alle berørte filer. Hvis dekningsgraden faller pga. nye funksjoner, SKAL du skrive tester før du går videre.
 
 ## Design-system
 
-Prosjektet følger en token-drevet design-guide dokumentert i [`docs/design-guide.md`](docs/design-guide.md). Alle visuelle endringer på den offentlige nettsiden skal følge denne guiden.
+Token-drevet design-guide i [`docs/design-guide.md`](docs/design-guide.md). Alle visuelle endringer skal følge denne.
 
-**Kjerneprinsipper:**
-- **Alle farger via CSS-variabler** i `src/styles/global.css` (`@theme`-blokken). Komponenter bruker token-klasser (`text-brand`, `bg-accent`, `border-brand-border`) — aldri hardkodede hex-verdier eller Tailwind-fargeklasser som `text-stone-600`.
-- **Fonter:** Montserrat (headings, self-hosted woff2) og Inter (body, self-hosted woff2). Definert via `--font-heading` og `--font-body`.
-- **Knapper:** Tre varianter — `btn-primary` (fylt), `btn-secondary` (outline), `btn-accent` (mørk CTA). Kun én accent-knapp per synlig viewport-seksjon.
-- **Tilgjengelighet:** Skip-link, globale `focus-visible`-stiler, `ring` (ikke outline) på kort pga `overflow-hidden`.
+- **Farger:** Kun CSS-variabler fra `src/styles/global.css` (`@theme`-blokken). Token-klasser (`text-brand`, `bg-accent`) — aldri hardkodede hex eller Tailwind-fargeklasser.
+- **Fonter:** Montserrat (headings) og Inter (body), begge self-hosted woff2. `--font-heading` / `--font-body`.
+- **Knapper:** `btn-primary` (fylt), `btn-secondary` (outline), `btn-accent` (mørk CTA). Maks én accent-knapp per viewport-seksjon.
 
-## Arkitektur: Bildehåndtering (Galleri + Forsidebilde)
+## Sheets API: valueRenderOption
 
-### Google Sheets-ark
+Alle `sheets.values.get`-kall med numeriske felter **SKAL** bruke `valueRenderOption: 'UNFORMATTED_VALUE'`. Norsk locale gjør `1.5` → `"1,5"` → `parseFloat` gir `1`.
 
-**Galleri** (`galleri!A:I`):
-
-| A | B | C | D | E | F | G | H | I |
-|---|---|---|---|---|---|---|---|---|
-| Tittel | Bildefil | AltTekst | Aktiv | Rekkefølge | Skala | PosX | PosY | Type |
-
-- **`Type`-kolonnen** skiller mellom `'galleri'` (standard) og `'forsidebilde'` (hero-bilde på forsiden).
-- Kun **én rad** kan ha `type='forsidebilde'` om gangen — `setForsideBildeInGalleri()` nedgraderer automatisk den eksisterende.
-- Rader uten Type-verdi tolkes som `'galleri'` (bakoverkompatibilitet).
-
-**Tannleger** (`tannleger!A:H`):
-
-| A | B | C | D | E | F | G | H |
-|---|---|---|---|---|---|---|---|
-| Navn | Tittel | Beskrivelse | Bildefil | Aktiv | Skala | PosX | PosY |
-
-### Dataflyt
-
-```
-Google Sheets (galleri-ark)
-  ↓ sync-data.js
-  ├── syncGalleri()        → src/content/galleri.json  (inkluderer forsidebilde med type-felt)
-  └── syncForsideBilde()   → src/assets/hovedbilde.png (leser KUN forsidebilde-rad)
-                           → public/hovedbilde.png     (beskjært OG-bilde 1200×630)
-```
-
-- `Forside.astro` leser utsnitt (scale, posX, posY) fra **galleri-collectionen** (forsidebilde-raden), ikke fra Innstillinger.
-- `Galleri.astro` filtrerer ut forsidebilde-rader ved rendering.
-
-**Forsidebilde-fallback:** `syncForsideBilde()` prøver galleri-arket først. Hvis det ikke finnes en forsidebilde-rad (eller arket mangler), faller den tilbake til Innstillinger-arket (`forsideBilde`, `forsideBildeScale`, `forsideBildePosX`, `forsideBildePosY`).
-
-### Google Sheets API: valueRenderOption
-
-Alle `sheets.values.get`-kall som leser numeriske felter (scale, posX, posY, order) **SKAL** bruke `valueRenderOption: 'UNFORMATTED_VALUE'`. Uten dette returnerer API-et tall i spreadsheetets lokale format — med norsk locale blir f.eks. `1.5` til `"1,5"`, og `parseFloat("1,5")` gir `1`. Heltall er upåvirket, men desimaltall (som zoom/scale) mister desimaldelen.
-
-### Admin-panelet (bilder-modul)
-
-Nøkkelfunksjoner i `admin-client.js`:
-
-| Funksjon | Formål |
-|----------|--------|
-| `getGalleriRaw()` | Henter alle rader fra galleri-arket (A:I) |
-| `updateGalleriRow()` | Oppdaterer én rad inkl. type |
-| `addGalleriRow()` | Legger til ny rad, sikrer at arket finnes (`ensureGalleriSheet`) |
-| `setForsideBildeInGalleri()` | Setter én rad som forsidebilde, nedgraderer evt. eksisterende |
-| `migrateForsideBildeToGalleri()` | One-time migrering fra Innstillinger-ark til galleri-ark |
-
-Nøkkelfunksjoner i `admin-dashboard.js`:
-
-| Funksjon | Formål |
-|----------|--------|
-| `loadGalleriListeModule()` | Viser bildeoversikt med thumbnails, badges og reorder-knapper |
-| `reorderGalleriItem()` | Bytter rekkefølge mellom to naboer (opp/ned-knapper) |
-
-**Thumbnails** (galleri og tannleger) lastes asynkront via `findFileByName()` + `getDriveImageBlob()` (best-effort, blokkerer ikke UI). Thumbnails viser utsnitt (scale, posX, posY) via CSS `object-position`, `transform: scale()` og `transform-origin`. Blob-URLer krever `blob:` i CSP `connect-src`.
-
-### Gitignore for synkroniserte filer
-
-Bilder og JSON-filer som lastes ned fra Google Drive er **gitignored** og synkroniseres ved bygg:
-
-```gitignore
-/src/assets/tannleger/       # Tannlege-bilder fra Drive
-!src/assets/tannleger/.gitkeep
-/src/assets/galleri/          # Galleribilder fra Drive
-!src/assets/galleri/.gitkeep
-/public/hovedbilde.png        # Generert OG-bilde
-src/content/tannleger.json    # Synkronisert fra Sheets
-src/content/galleri.json      # Synkronisert fra Sheets
-```
-
-`.gitkeep`-filer bevarer mappestrukturen i git.
-
-## Arkitektur: Meldinger (InfoBanner)
-
-### Datofiltrering: Klient, IKKE byggetid
-
-`active-messages.json.ts` returnerer **alle** meldinger uten datofiltrering. Filtrering skjer i `messageClient.js` ved runtime (`new Date()` mot `startDate`/`endDate`).
-
-**Hvorfor:** Prosjektet bygges statisk (`output: 'static'`). Hvis API-ruten filtrerer ved byggetid, fryses resultatet i JSON-filen. Meldinger som utløper mellom bygg forblir synlige, og nye meldinger dukker ikke opp før neste bygg. Klient-side filtrering sikrer at meldinger alltid er oppdatert.
-
-**VIKTIG:** Ikke flytt datofiltrering tilbake til API-ruten — dette er en bevisst arkitekturbeslutning, ikke en forglemmelse.
-
-### Build-scripts i CI
+## Build-scripts
 
 | Script | Kommando | Bruk |
 |--------|----------|------|
-| `build` | `sync-data.js && astro build` | Lokalt (synker + bygger) |
-| `build:ci` | `astro build` | CI/CD (sync kjøres som eget steg) |
+| `build` | `sync-data.js && astro build` | Lokalt |
+| `build:ci` | `astro build` | CI/CD (sync kjøres som eget steg før) |
 
-CI-workflowen bruker `build:ci` for å unngå dobbel synkronisering. `npm run sync` kjøres alltid som et eget steg **før** bygg i CI.
+## Arkitekturdokumentasjon
 
-## Arkitektur: Seksjonsbakgrunner (variant-prop)
+Detaljert arkitekturdokumentasjon for spesifikke subsystemer finnes i `docs/architecture/`:
 
-Seksjonskomponentene (`Kontakt`, `Galleri`, `Tjenester`, `Tannleger`) tar en `variant`-prop for å kontrollere bakgrunnsfarge:
+- [Bildehåndtering](docs/architecture/bildehåndtering.md) — galleri, forsidebilde, admin-funksjoner, Sheets-ark
+- [Meldinger](docs/architecture/meldinger.md) — InfoBanner, datofiltrering klient-side
+- [Seksjonsbakgrunner](docs/architecture/seksjonsbakgrunner.md) — variant-prop, annenhver-mønster
+- [Sikkerhet](docs/architecture/sikkerhet.md) — DOMPurify, CSP, middleware, test-gotchas
 
-```astro
-interface Props { variant?: 'white' | 'brand' }
-```
-
-- `'brand'` → `bg-brand-light` på section, `bg-brand-light/95 md:bg-transparent` på sticky header
-- `'white'` → `bg-white` på section, `bg-white/95` på sticky header
-
-### Forsiden (index.astro): Annenhver-mønster
-
-`index.astro` beregner variant dynamisk basert på om galleriet er synlig:
-
-```
-Forside:   hvit (hero, ingen variant)
-Kontakt:   brand (alltid #1)
-Galleri:   white (alltid #2, betinget synlig)
-Tjenester: brand hvis galleri synlig, white hvis ikke
-Tannleger: motsatt av Tjenester
-```
-
-### Standalone-sider: Alltid hvit
-
-Egne sider (`/kontakt`, `/tjenester`, `/tannleger`) bruker **alltid `variant="white"`** for konsistent hvit bakgrunn. Annenhver-mønsteret gjelder kun forsiden.
-
-## Sikkerhet
-
-### DOMPurify og innerHTML
-All HTML som settes via `innerHTML` og som inneholder bruker- eller CMS-generert innhold, SKAL saniteres med DOMPurify. **DOMPurify fjerner alle inline event-handlere** (f.eks. `onclick="..."`). Event-lyttere MÅ derfor alltid knyttes programmatisk etter at `innerHTML` er satt — aldri som attributter i template-strenger.
-
-```js
-// Feil – onclick strippes av DOMPurify og har ingen effekt:
-inner.innerHTML = DOMPurify.sanitize(`<div onclick="doSomething()">...</div>`);
-
-// Riktig – knytt lyttere programmatisk etterpå:
-inner.innerHTML = DOMPurify.sanitize(html);
-inner.querySelectorAll('.my-btn').forEach(btn => {
-    btn.addEventListener('click', () => doSomething());
-});
-```
-
-I node-miljø (Vitest) finnes ingen DOM, så DOMPurify må mockes i testfiler:
-```js
-vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
-```
-
-### Middleware og produksjonsmiljø
-`src/middleware.ts` setter HTTP-sikkerhetsheadere (CSP, X-Frame-Options, m.fl.) og kjører i Astro dev-server og for SSR-endepunkter. **Prosjektet deployes som statiske filer til AWS S3 og har ingen kjørende server i produksjon.** Middleware påvirker derfor ikke produksjon. Dersom disse headerne skal gjelde i prod, må de konfigureres i CloudFront (Response Headers Policy) eller S3.
-
-CSP inkluderer `blob:` i `connect-src` for å støtte thumbnail-forhåndsvisning (blob-URLer fra `getDriveImageBlob()`) i admin-panelet.
-
-### CSP-verifisering
-`tests/csp-check.spec.ts` verifiserer CSP-brudd på tvers av nøkkelsider. Kjør ved endringer i `src/middleware.ts` (se `/security-audit`-skill).
-
-### Web Storage og modul-tilstand i tester
-- Når kode under test bruker Web Storage, SKAL **begge** `localStorage.clear()` og
-  `sessionStorage.clear()` kalles i `beforeEach` – ikke bare én av dem.
-- `admin-client.js` har modul-nivå-variabler (`tokenClient`, `_rememberMe`, `gapiInited`,
-  `gisInited`) som **ikke** nullstilles av `vi.clearAllMocks()`. Tester som er sensitive
-  for denne tilstanden MÅ eksplisitt kalle de eksporterte setter-funksjonene
-  (f.eks. `setRememberMe(false)`) i `beforeEach`.
-
-## Testing
-
-### E2E: Sitemap-sider
-`tests/sitemap-pages.spec.ts` verifiserer at alle sider i sitemapen laster korrekt (200 OK), har riktig tittel, og at standalone-sider har hvit bakgrunn. Nye sider SKAL legges til i denne testfilen.
-
-### Galleri-tester (sync-data)
-`syncForsideBilde()`-tester MÅ mocke **to** `sheets.values.get`-kall: først galleri-arket, deretter Innstillinger-fallback. Eldre tester som kun mocker Innstillinger-kallet vil feile fordi koden nå prøver galleri-arket først.
+Les relevant arkitekturdokument **før** du gjør endringer i et subsystem.
