@@ -588,6 +588,23 @@
         @apply p-1.5 rounded-lg bg-admin-hover text-admin-muted-light hover:bg-brand hover:text-white transition-all;
     }
 
+    /* BREADCRUMB NAVIGASJON */
+    .admin-breadcrumb {
+        @apply flex items-center gap-2 text-xs;
+    }
+    .admin-breadcrumb-back {
+        @apply text-brand font-bold flex items-center gap-1.5 hover:text-brand-hover transition-colors uppercase tracking-wider cursor-pointer;
+    }
+    .admin-breadcrumb-sep {
+        @apply text-admin-muted-light;
+    }
+    .admin-breadcrumb-current {
+        @apply font-bold text-brand uppercase tracking-wider;
+    }
+    .admin-item-count {
+        @apply text-admin-muted-light;
+    }
+
     /* SLIDER STEP BUTTONS */
     .slider-step-btn {
         @apply w-8 h-8 flex items-center justify-center rounded-lg

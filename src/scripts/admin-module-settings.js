@@ -2,7 +2,7 @@ import { getSettingsWithNotes, updateSettingByKey, updateSettingOrder } from './
 import { withRetry } from './admin-api-retry.js';
 import {
     mergeSettingsWithDefaults, autoResizeTextarea, saveSingleSetting,
-    reorderSettingItem, formatTimestamp, updateLastFetchedTime
+    reorderSettingItem, formatTimestamp, updateLastFetchedTime, updateBreadcrumbCount
 } from './admin-dashboard.js';
 import { getAdminConfig, getRefreshAuth } from './admin-editor-helpers.js';
 
@@ -52,6 +52,7 @@ export async function loadSettingsModule() {
     try {
         const sheetSettings = await withRetry(() => getSettingsWithNotes(SHEET_ID), { refreshAuth: getRefreshAuth() });
         const allSettings = mergeSettingsWithDefaults(sheetSettings, HARD_DEFAULTS);
+        updateBreadcrumbCount(allSettings.length);
 
         // Skriv manglende nøkler til Google Sheets med en gang
         const virtualSettings = allSettings.filter(s => s.isVirtual);

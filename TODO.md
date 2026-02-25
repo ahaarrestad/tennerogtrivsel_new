@@ -12,7 +12,12 @@
 
 ## Pågående
 
-(ingen)
+- [ ] **UX- og brukervennlighetsgjennomgang av admin-panelet** ([plan](docs/plan-ux-brukervennlighet-admin.md))
+  - Helhetlig gjennomgang av admin-siden med fokus på brukeropplevelse
+  - Vurder: navigasjon, arbeidsflyt, feilmeldinger, responstid, mobilvennlighet, visuelt hierarki
+  - 7 steg: brødsmuler, skeleton-loadere, kontekstuelle feilmeldinger, lagrestatus, berøringsmål, dashboard-tall, overganger
+  - ✅ Steg 1: modul-header med brødsmuler og elementtelling
+  - Steg 2 neste: skeleton-loadere
 
 ## Backlog
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
@@ -44,10 +49,6 @@
   - Vurder om koden er lesbar nok eller om ytterligere forenkling trengs
   - Fokusområder: kompleksitet, navngiving, modulstruktur, duplisering
 
-- [ ] **UX- og brukervennlighetsgjennomgang av admin-panelet** ([plan](docs/plan-ux-brukervennlighet-admin.md))
-  - Helhetlig gjennomgang av admin-siden med fokus på brukeropplevelse
-  - Vurder: navigasjon, arbeidsflyt, feilmeldinger, responstid, mobilvennlighet, visuelt hierarki
-  - 7 steg: brødsmuler, skeleton-loadere, kontekstuelle feilmeldinger, lagrestatus, berøringsmål, dashboard-tall, overganger
 
 ## Fullført
 

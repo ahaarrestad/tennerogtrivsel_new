@@ -158,10 +158,15 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
         <!-- MODUL-SEKSJONER -->
         <div id="module-container" class="hidden admin-dashboard-container">
             <div class="flex justify-between items-center">
-                <button id="back-to-dashboard" class="text-brand font-bold flex items-center gap-2 hover:text-brand-hover transition-colors uppercase tracking-wider text-xs">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    Tilbake
-                </button>
+                <nav aria-label="Brødsmule" class="admin-breadcrumb">
+                    <button id="back-to-dashboard" class="admin-breadcrumb-back" aria-label="Tilbake til dashboard">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        Dashboard
+                    </button>
+                    <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
+                    <span id="breadcrumb-module" class="admin-breadcrumb-current"></span>
+                    <span id="breadcrumb-count" class="admin-item-count hidden"></span>
+                </nav>
                 <div id="module-actions"></div>
             </div>
             
