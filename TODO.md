@@ -29,9 +29,10 @@
 
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
-  - Dekke hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering, dataflyt
-  - 6 steg: CloudFront-headere, input-validering, filopplasting, API-nøkkel, tester, dokumentasjon
-  - Steg 1–4 uavhengige, steg 5 avhenger av 2+3, steg 6 sist
+  - CloudFront-headere allerede håndtert (CloudFront test ferdig, prod følger oppgave 1)
+  - Nye funn: HTML-attributt-escaping mangler i admin-template literals
+  - 6 steg: HTML-escaping (M1), filopplasting (M2), input-validering (M3), API-nøkkel (L1), tester, dokumentasjon
+  - Steg 1–4 uavhengige, steg 5 avhenger av 1+2+3, steg 6 sist
 
 - [ ] **Optimaliser testsuiten — fjern redundante tester** ([plan](docs/plan-optimaliser-testsuite.md))
   - Gå gjennom alle enhetstester og E2E-tester og identifiser overlapp/duplisering
