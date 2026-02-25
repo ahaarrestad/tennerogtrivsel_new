@@ -14,7 +14,7 @@ Hovedproblemene identifisert:
 
 ## Steg (7 steg, uavhengige og separat committbare)
 
-### Steg 1: Modul-header med brødsmuler og elementtelling
+### ✅ Steg 1: Modul-header med brødsmuler og elementtelling
 **Impakt: HØY** — Mest desorienterende problem i dag.
 
 Nåværende: Tilbake-knapp er en pil uten label. Ingen brødsmuler. Ingen elementtelling i lister.
@@ -30,7 +30,7 @@ Filer: `index.astro`, `admin-init.js`, `admin-dashboard.js`, `admin-module-setti
 
 ---
 
-### Steg 2: Skeleton-loadere for modulinnhold
+### ✅ Steg 2: Skeleton-loadere for modulinnhold
 **Impakt: HØY** — I dag ser brukeren bare "Henter..." med pulse-animasjon.
 
 Endringer:
