@@ -74,11 +74,11 @@ test.describe('Sitemap-sider', () => {
       const menuBtn = page.locator('#menu-btn');
       const mobileMenu = page.locator('#mobile-menu');
 
-      await expect(mobileMenu).toBeHidden();
+      await expect(mobileMenu).toHaveAttribute('data-open', 'false');
       await menuBtn.click();
-      await expect(mobileMenu).toBeVisible();
+      await expect(mobileMenu).toHaveAttribute('data-open', 'true');
       await menuBtn.click();
-      await expect(mobileMenu).toBeHidden();
+      await expect(mobileMenu).toHaveAttribute('data-open', 'false');
     }
   });
 

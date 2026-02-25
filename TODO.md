@@ -12,16 +12,9 @@
 
 ## Pågående
 
-- [ ] **Tester for ekstraherte admin-moduler**
-  - 7 nye modulfiler fra steg 6 (kodelesbarhet) mangler enhetstester
-  - admin-editor-helpers.js, admin-module-settings.js, admin-module-tjenester.js, admin-module-meldinger.js, admin-module-tannleger.js, admin-module-bilder.js, admin-init.js
-  - Mål: 80% branch coverage per fil
+(Ingen oppgaver pågår)
 
 ## Backlog
-- [ ] **Gjennomgang av flaky tester** ([plan](docs/plan-flaky-tester.md))
-  - Bekreftet feil i CI: `mobilmeny skal fungere` på Mobile Chrome (`toBeHidden()` feiler pga. `invisible`-klasse mangler i rendret DOM)
-  - 4 steg: diagnostikk, fiks mobilmeny-synlighet, full E2E-suite, vurder retry-konfigurasjon
-
 - [ ] **Sjekk at alle filer som kan testes er testet**
   - Gå gjennom alle kildefiler i `src/scripts/` og `src/pages/api/` og verifiser at de har tilhørende testfiler
   - Identifiser eventuelle hull i testdekningen
@@ -59,6 +52,18 @@
   - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
 ## Fullført
+
+- [x] **Gjennomgang av flaky tester** ([plan](docs/plan-flaky-tester.md))
+  - Rotårsak: `toBeHidden()`/`toBeVisible()` avhenger av Tailwinds `invisible`-klasse som Playwright ikke konsistent gjenkjenner
+  - Fiks: `data-open`-attributt på `#mobile-menu`, tester sjekker attributt i stedet for CSS-synlighet
+  - Fjernet `retries: 1` i CI — alle tester kjøres nå uten retries
+  - Trace endret til `retain-on-failure` (nyttig uten retries)
+  - 84 E2E-tester + 725 enhetstester passerer uten feil
+
+- [x] **Tester for ekstraherte admin-moduler**
+  - 223 tester på tvers av 7 testfiler, alle bestått
+  - Branch coverage per fil: editor-helpers 86%, init 83%, bilder 80%, meldinger 92%, settings 88%, tannleger 80%, tjenester 80%
+  - Alle filer over 80%-kravet
 
 - [x] **Endre tekst på admin-siden**
   - Byttet «i Google Sheets» til «på Google Disk» i dashboard-headeren

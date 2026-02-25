@@ -47,7 +47,7 @@ const navLinks = [
         </div>
     </div>
 
-    <div id="mobile-menu" class="lg:hidden bg-white/95 backdrop-blur-sm border-t border-brand-border/60 absolute w-full left-0 shadow-xl z-50 transition-all duration-200 opacity-0 invisible pointer-events-none">
+    <div id="mobile-menu" data-open="false" class="lg:hidden bg-white/95 backdrop-blur-sm border-t border-brand-border/60 absolute w-full left-0 shadow-xl z-50 transition-all duration-200 opacity-0 invisible pointer-events-none">
         <div class="flex flex-col p-6 gap-4">
             {navLinks.map(link => (
                     <a href={link.mobileHref} class="nav-link text-lg py-2 mobile-link border-b border-brand-light last:border-0">
