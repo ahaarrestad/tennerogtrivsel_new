@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
 vi.mock('snarkdown', () => ({ default: vi.fn(text => `<p>${text}</p>`) }));
@@ -28,6 +28,7 @@ vi.mock('../textFormatter.js', () => ({
 
 vi.mock('../admin-dashboard.js', () => ({
     loadTjenesterModule: vi.fn(),
+    formatTimestamp: vi.fn(() => '26. feb kl. 14:00'),
 }));
 
 vi.mock('../admin-editor-helpers.js', () => ({
@@ -38,6 +39,8 @@ vi.mock('../admin-editor-helpers.js', () => ({
     attachToggleClick: vi.fn(),
     showDeletionToast: vi.fn(),
     initMarkdownEditor: vi.fn(),
+    showSaveBar: vi.fn(),
+    hideSaveBar: vi.fn(),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({
@@ -48,8 +51,8 @@ vi.mock('../admin-api-retry.js', () => ({
 import { deleteFile, getFileContent, parseMarkdown, saveFile, createFile, stringifyMarkdown } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { classifyError } from '../admin-api-retry.js';
-import { loadTjenesterModule } from '../admin-dashboard.js';
-import { showDeletionToast, initMarkdownEditor } from '../admin-editor-helpers.js';
+import { loadTjenesterModule, formatTimestamp } from '../admin-dashboard.js';
+import { showDeletionToast, initMarkdownEditor, attachToggleClick, showSaveBar, hideSaveBar } from '../admin-editor-helpers.js';
 import { initTjenesterModule, reloadTjenester } from '../admin-module-tjenester.js';
 
 function setupDOM() {
@@ -63,6 +66,11 @@ function setupDOM() {
 beforeEach(() => {
     setupDOM();
     vi.clearAllMocks();
+    vi.useFakeTimers();
+});
+
+afterEach(() => {
+    vi.useRealTimers();
 });
 
 describe('initTjenesterModule', () => {
@@ -153,7 +161,7 @@ describe('editTjeneste', () => {
         const inner = document.getElementById('module-inner');
         expect(inner.innerHTML).toContain('Tannbleking');
         expect(inner.innerHTML).toContain('Fin');
-        expect(initMarkdownEditor).toHaveBeenCalledWith(expect.any(Function));
+        expect(initMarkdownEditor).toHaveBeenCalled();
     });
 
     it('should render empty form for new tjeneste', async () => {
@@ -178,77 +186,210 @@ describe('editTjeneste', () => {
         await expect(window.editTjeneste('id1', 'Test')).resolves.toBeUndefined();
     });
 
-    it('should save existing tjeneste on save callback', async () => {
-        getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({
-            data: { title: 'Old', ingress: '', id: 'old', active: true },
-            body: 'Body'
+    describe('existing tjeneste (auto-save)', () => {
+        beforeEach(async () => {
+            getFileContent.mockResolvedValue('raw');
+            parseMarkdown.mockReturnValue({
+                data: { title: 'Old', ingress: '', id: 'old', active: true },
+                body: 'Body'
+            });
+            stringifyMarkdown.mockReturnValue('---\n---\n');
+            saveFile.mockResolvedValue();
         });
-        stringifyMarkdown.mockReturnValue('---\n---\n');
-        saveFile.mockResolvedValue();
 
-        await window.editTjeneste('id1', 'Old');
-
-        // Get the onSave callback passed to initMarkdownEditor
-        const onSave = initMarkdownEditor.mock.calls[0][0];
-        await onSave(null);
-
-        expect(saveFile).toHaveBeenCalledWith('id1', expect.any(String), expect.any(String));
-        expect(loadTjenesterModule).toHaveBeenCalled();
-    });
-
-    it('should create new tjeneste when no id', async () => {
-        stringifyMarkdown.mockReturnValue('---\n---\n');
-        createFile.mockResolvedValue();
-
-        await window.editTjeneste(null, null);
-
-        const onSave = initMarkdownEditor.mock.calls[0][0];
-        await onSave(null);
-
-        expect(createFile).toHaveBeenCalledWith('test-folder', expect.any(String), expect.any(String));
-    });
-
-    it('should show error toast when save fails', async () => {
-        getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({
-            data: { title: 'T', ingress: '', id: 't', active: true },
-            body: ''
+        it('should show "Tilbake til listen" instead of save button for existing', async () => {
+            await window.editTjeneste('id1', 'Old');
+            const inner = document.getElementById('module-inner');
+            expect(inner.querySelector('#btn-save-tjeneste')).toBeNull();
+            expect(inner.innerHTML).toContain('Tilbake til listen');
         });
-        saveFile.mockRejectedValue(new Error('save fail'));
 
-        await window.editTjeneste('id1', 'T');
+        it('should auto-save on title input change', async () => {
+            await window.editTjeneste('id1', 'Old');
 
-        const onSave = initMarkdownEditor.mock.calls[0][0];
-        await onSave(null);
+            document.getElementById('edit-title').value = 'New Title';
+            document.getElementById('edit-title').dispatchEvent(new Event('input'));
 
-        expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
+            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
+            vi.advanceTimersByTime(1500);
+            await vi.runAllTimersAsync();
+
+            expect(showSaveBar).toHaveBeenCalledWith('saving', '💾 Lagrer til Google Drive...');
+            expect(saveFile).toHaveBeenCalledWith('id1', expect.any(String), expect.any(String));
+            expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('✅ Lagret'));
+            expect(hideSaveBar).toHaveBeenCalledWith(5000);
+        });
+
+        it('should auto-save on ingress input change', async () => {
+            await window.editTjeneste('id1', 'Old');
+
+            document.getElementById('edit-ingress').value = 'New ingress';
+            document.getElementById('edit-ingress').dispatchEvent(new Event('input'));
+
+            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
+            vi.advanceTimersByTime(1500);
+            await vi.runAllTimersAsync();
+
+            expect(saveFile).toHaveBeenCalled();
+        });
+
+        it('should auto-save on EasyMDE change', async () => {
+            const mockCodemirror = { on: vi.fn() };
+            const mockEasyMDE = { value: vi.fn(() => 'content'), codemirror: mockCodemirror };
+            initMarkdownEditor.mockReturnValueOnce(mockEasyMDE);
+
+            await window.editTjeneste('id1', 'Old');
+
+            expect(mockCodemirror.on).toHaveBeenCalledWith('change', expect.any(Function));
+            const changeHandler = mockCodemirror.on.mock.calls[0][1];
+            changeHandler();
+
+            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
+            vi.advanceTimersByTime(1500);
+            await vi.runAllTimersAsync();
+
+            expect(saveFile).toHaveBeenCalled();
+        });
+
+        it('should auto-save on toggle click', async () => {
+            await window.editTjeneste('id1', 'Old');
+
+            // attachToggleClick was called with onChange callback for existing
+            expect(attachToggleClick).toHaveBeenCalledWith('edit-active-toggle', expect.any(Function));
+            const onToggleChange = attachToggleClick.mock.calls[0][1];
+            onToggleChange();
+
+            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
+            vi.advanceTimersByTime(1500);
+            await vi.runAllTimersAsync();
+
+            expect(saveFile).toHaveBeenCalled();
+        });
+
+        it('should debounce auto-save (reset timer on multiple changes)', async () => {
+            await window.editTjeneste('id1', 'Old');
+
+            const titleInput = document.getElementById('edit-title');
+            titleInput.value = 'First';
+            titleInput.dispatchEvent(new Event('input'));
+            vi.advanceTimersByTime(1000);
+
+            titleInput.value = 'Second';
+            titleInput.dispatchEvent(new Event('input'));
+            vi.advanceTimersByTime(1000);
+
+            // First timeout (1500) should have been cleared, only second fires
+            expect(saveFile).not.toHaveBeenCalled();
+
+            vi.advanceTimersByTime(500);
+            await vi.runAllTimersAsync();
+
+            expect(saveFile).toHaveBeenCalledTimes(1);
+        });
+
+        it('should show error save bar when save fails', async () => {
+            saveFile.mockRejectedValue(new Error('save fail'));
+
+            await window.editTjeneste('id1', 'Old');
+
+            document.getElementById('edit-title').value = 'New';
+            document.getElementById('edit-title').dispatchEvent(new Event('input'));
+            vi.advanceTimersByTime(1500);
+            await vi.runAllTimersAsync();
+
+            expect(showSaveBar).toHaveBeenCalledWith('error', '❌ Feil ved lagring!');
+            expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
+        });
+
+        it('should show auth toast when save fails with auth error', async () => {
+            classifyError.mockReturnValueOnce('auth');
+            saveFile.mockRejectedValue({ status: 401 });
+
+            await window.editTjeneste('id1', 'Old');
+
+            document.getElementById('edit-title').dispatchEvent(new Event('input'));
+            vi.advanceTimersByTime(1500);
+            await vi.runAllTimersAsync();
+
+            expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
+        });
+
+        it('should show network toast when save fails with retryable error', async () => {
+            classifyError.mockReturnValueOnce('retryable');
+            saveFile.mockRejectedValue(new Error('network'));
+
+            await window.editTjeneste('id1', 'Old');
+
+            document.getElementById('edit-title').dispatchEvent(new Event('input'));
+            vi.advanceTimersByTime(1500);
+            await vi.runAllTimersAsync();
+
+            expect(showToast).toHaveBeenCalledWith('Nettverksfeil — prøv igjen.', 'error');
+        });
     });
 
-    it('should show auth toast when save fails with auth error', async () => {
-        classifyError.mockReturnValueOnce('auth');
-        getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({ data: { title: 'T', ingress: '', id: 't', active: true }, body: '' });
-        saveFile.mockRejectedValue({ status: 401 });
+    describe('new tjeneste (manual create)', () => {
+        it('should show "Opprett tjeneste" button for new tjeneste', async () => {
+            await window.editTjeneste(null, null);
+            const saveBtn = document.getElementById('btn-save-tjeneste');
+            expect(saveBtn).not.toBeNull();
+            expect(saveBtn.textContent).toContain('Opprett tjeneste');
+        });
 
-        await window.editTjeneste('id1', 'T');
-        const onSave = initMarkdownEditor.mock.calls[0][0];
-        await onSave(null);
+        it('should create file on Opprett button click', async () => {
+            stringifyMarkdown.mockReturnValue('---\n---\n');
+            createFile.mockResolvedValue();
 
-        expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
-    });
+            await window.editTjeneste(null, null);
 
-    it('should show network toast when save fails with retryable error', async () => {
-        classifyError.mockReturnValueOnce('retryable');
-        getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({ data: { title: 'T', ingress: '', id: 't', active: true }, body: '' });
-        saveFile.mockRejectedValue(new Error('network'));
+            const saveBtn = document.getElementById('btn-save-tjeneste');
+            await saveBtn.onclick();
 
-        await window.editTjeneste('id1', 'T');
-        const onSave = initMarkdownEditor.mock.calls[0][0];
-        await onSave(null);
+            expect(createFile).toHaveBeenCalledWith('test-folder', expect.any(String), expect.any(String));
+            expect(loadTjenesterModule).toHaveBeenCalled();
+        });
 
-        expect(showToast).toHaveBeenCalledWith('Nettverksfeil — prøv igjen.', 'error');
+        it('should disable button and show Oppretter text while saving', async () => {
+            createFile.mockReturnValue(new Promise(() => {}));
+
+            await window.editTjeneste(null, null);
+
+            const saveBtn = document.getElementById('btn-save-tjeneste');
+            saveBtn.onclick();
+
+            expect(saveBtn.disabled).toBe(true);
+            expect(saveBtn.textContent).toBe('Oppretter...');
+        });
+
+        it('should re-enable button on create failure', async () => {
+            createFile.mockRejectedValue(new Error('fail'));
+
+            await window.editTjeneste(null, null);
+
+            const saveBtn = document.getElementById('btn-save-tjeneste');
+            await saveBtn.onclick();
+
+            expect(saveBtn.disabled).toBe(false);
+            expect(saveBtn.textContent).toBe('Opprett tjeneste');
+            expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
+        });
+
+        it('should not trigger auto-save on input for new tjeneste', async () => {
+            await window.editTjeneste(null, null);
+
+            document.getElementById('edit-title').value = 'New';
+            document.getElementById('edit-title').dispatchEvent(new Event('input'));
+            vi.advanceTimersByTime(2000);
+
+            expect(showSaveBar).not.toHaveBeenCalled();
+            expect(saveFile).not.toHaveBeenCalled();
+        });
+
+        it('should call attachToggleClick without onChange for new', async () => {
+            await window.editTjeneste(null, null);
+
+            expect(attachToggleClick).toHaveBeenCalledWith('edit-active-toggle');
+        });
     });
 });
 

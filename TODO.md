@@ -12,12 +12,6 @@
 
 ## Pågående
 
-- [ ] **Auto-lagring i admin når bruker forlater et felt (blur)** ([plan](docs/plan-auto-lagring-admin.md))
-  - Innstillinger, tannleger og bilder har allerede auto-save — kun **Meldinger** og **Tjenester** gjenstår
-  - Debounced auto-save (1500ms) med save bar, samme mønster som tannleger/bilder
-  - Nye oppføringer: «Opprett»-knapp først, deretter auto-save
-  - Refaktorer `initEditors`/`initMarkdownEditor` for å støtte auto-save uten knapp-binding
-
 ## Backlog
 
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
@@ -63,6 +57,13 @@
 
 
 ## Fullført
+
+- [x] **Auto-lagring i admin (Meldinger og Tjenester)** ([plan](docs/plan-auto-lagring-admin.md))
+  - Debounced auto-save (1500ms) med save bar for eksisterende meldinger og tjenester
+  - Nye oppføringer: «Opprett»-knapp, deretter auto-save etter opprettelse
+  - Refaktorert `initMarkdownEditor()` og `initEditors()` — fjernet knapp-binding, returnerer instanser
+  - Dato-validering forhindrer auto-save i meldinger (endDate < startDate)
+  - 99 tester bestått, ≥85% branch coverage for alle berørte filer
 
 - [x] **Flaky tests i E2E-tester** ([plan](docs/plan-flaky-e2e.md))
   - Mobilmeny-test: bekreftet fikset med `data-open`-attributt (0 feil av 550 kjøringer)
