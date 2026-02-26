@@ -123,12 +123,23 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
-      - name: Deploy to S3
+      - name: Deploy to S3 TEST
         run: |
           aws s3 sync dist/ s3://test2.aarrestad.com --delete
 
-      - name: Invalidate CloudFront cache
+#      - name: Deploy to S3 PROD
+#        run: |
+#          aws s3 sync dist/ s3://www.tennerogtrivsel.no --delete
+
+
+      - name: Invalidate CloudFront cache TEST
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_TEST }} \
+            --paths "/*"
+
+      - name: Invalidate CloudFront cache PROD
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }} \
             --paths "/*"
