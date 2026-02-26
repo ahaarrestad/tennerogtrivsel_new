@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
 vi.mock('snarkdown', () => ({ default: vi.fn(text => `<p>${text}</p>`) }));
@@ -29,6 +29,7 @@ vi.mock('../textFormatter.js', () => ({
 
 vi.mock('../admin-dashboard.js', () => ({
     loadMeldingerModule: vi.fn(),
+    formatTimestamp: vi.fn(() => '26. feb kl. 14:00'),
 }));
 
 vi.mock('../admin-editor-helpers.js', () => ({
@@ -36,7 +37,9 @@ vi.mock('../admin-editor-helpers.js', () => ({
         MELDINGER_FOLDER: 'test-meldinger-folder',
     })),
     showDeletionToast: vi.fn(),
-    initEditors: vi.fn(),
+    initEditors: vi.fn(() => ({ easyMDE: null, flatpickrInstances: [] })),
+    showSaveBar: vi.fn(),
+    hideSaveBar: vi.fn(),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({
@@ -48,7 +51,7 @@ import { deleteFile, getFileContent, parseMarkdown, saveFile, createFile, string
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { classifyError } from '../admin-api-retry.js';
 import { loadMeldingerModule } from '../admin-dashboard.js';
-import { showDeletionToast, initEditors } from '../admin-editor-helpers.js';
+import { showDeletionToast, initEditors, showSaveBar, hideSaveBar } from '../admin-editor-helpers.js';
 import { initMeldingerModule, reloadMeldinger } from '../admin-module-meldinger.js';
 
 function setupDOM() {
@@ -62,6 +65,11 @@ function setupDOM() {
 beforeEach(() => {
     setupDOM();
     vi.clearAllMocks();
+    vi.useFakeTimers();
+});
+
+afterEach(() => {
+    vi.useRealTimers();
 });
 
 describe('initMeldingerModule', () => {
@@ -152,7 +160,7 @@ describe('editMelding', () => {
         expect(inner.querySelector('#edit-title').value).toBe('Sommeråpent');
         expect(inner.querySelector('#edit-start').value).toBe('2024-06-01');
         expect(inner.querySelector('#edit-end').value).toBe('2024-08-31');
-        expect(initEditors).toHaveBeenCalledWith(expect.any(Function), expect.any(Function));
+        expect(initEditors).toHaveBeenCalledWith(expect.any(Function));
     });
 
     it('should render empty form for new melding', async () => {
@@ -176,134 +184,255 @@ describe('editMelding', () => {
         await expect(window.editMelding('id1', 'Test')).resolves.toBeUndefined();
     });
 
-    it('should save existing melding on save callback', async () => {
-        getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({
-            data: { title: 'Melding', startDate: '2024-01-01', endDate: '2024-12-31' },
-            body: 'Innhold'
+    describe('existing melding (auto-save)', () => {
+        beforeEach(async () => {
+            getFileContent.mockResolvedValue('raw');
+            parseMarkdown.mockReturnValue({
+                data: { title: 'Melding', startDate: '2024-01-01', endDate: '2024-12-31' },
+                body: 'Innhold'
+            });
+            stringifyMarkdown.mockReturnValue('md');
+            saveFile.mockResolvedValue();
         });
-        stringifyMarkdown.mockReturnValue('md');
-        saveFile.mockResolvedValue();
 
-        await window.editMelding('id1', 'Melding');
-
-        const onSave = initEditors.mock.calls[0][1];
-        await onSave(null);
-
-        expect(saveFile).toHaveBeenCalledWith('id1', expect.any(String), 'md');
-        expect(loadMeldingerModule).toHaveBeenCalled();
-    });
-
-    it('should create new melding when no id', async () => {
-        stringifyMarkdown.mockReturnValue('md');
-        createFile.mockResolvedValue();
-
-        await window.editMelding(null, null);
-
-        const onSave = initEditors.mock.calls[0][1];
-        await onSave(null);
-
-        expect(createFile).toHaveBeenCalledWith('test-meldinger-folder', expect.any(String), 'md');
-    });
-
-    it('should show error toast when save fails', async () => {
-        getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({
-            data: { title: 'M', startDate: '', endDate: '' },
-            body: ''
+        it('should show "Tilbake til listen" instead of save button for existing', async () => {
+            await window.editMelding('id1', 'Melding');
+            const inner = document.getElementById('module-inner');
+            expect(inner.querySelector('#btn-save-melding')).toBeNull();
+            expect(inner.innerHTML).toContain('Tilbake til listen');
         });
-        saveFile.mockRejectedValue(new Error('save fail'));
 
-        await window.editMelding('id1', 'M');
+        it('should auto-save on title input change', async () => {
+            await window.editMelding('id1', 'Melding');
 
-        const onSave = initEditors.mock.calls[0][1];
-        await onSave(null);
+            document.getElementById('edit-title').value = 'New Title';
+            document.getElementById('edit-title').dispatchEvent(new Event('input'));
 
-        expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
+            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
+            vi.advanceTimersByTime(1500);
+            await vi.runAllTimersAsync();
+
+            expect(showSaveBar).toHaveBeenCalledWith('saving', '💾 Lagrer til Google Drive...');
+            expect(saveFile).toHaveBeenCalledWith('id1', expect.any(String), 'md');
+            expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('✅ Lagret'));
+            expect(hideSaveBar).toHaveBeenCalledWith(5000);
+        });
+
+        it('should auto-save on EasyMDE change', async () => {
+            const mockCodemirror = { on: vi.fn() };
+            const mockEasyMDE = { value: vi.fn(() => 'content'), codemirror: mockCodemirror };
+            initEditors.mockReturnValueOnce({ easyMDE: mockEasyMDE, flatpickrInstances: [] });
+
+            await window.editMelding('id1', 'Melding');
+
+            expect(mockCodemirror.on).toHaveBeenCalledWith('change', expect.any(Function));
+            const changeHandler = mockCodemirror.on.mock.calls[0][1];
+            changeHandler();
+
+            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
+            vi.advanceTimersByTime(1500);
+            await vi.runAllTimersAsync();
+
+            expect(saveFile).toHaveBeenCalled();
+        });
+
+        it('should auto-save on date change when dates are valid', async () => {
+            await window.editMelding('id1', 'Melding');
+
+            const startInput = document.getElementById('edit-start');
+            const endInput = document.getElementById('edit-end');
+            startInput.value = '2024-01-01';
+            endInput.value = '2024-12-31';
+            startInput.dispatchEvent(new Event('change'));
+
+            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
+            vi.advanceTimersByTime(1500);
+            await vi.runAllTimersAsync();
+
+            expect(saveFile).toHaveBeenCalled();
+        });
+
+        it('should NOT auto-save when dates are invalid', async () => {
+            await window.editMelding('id1', 'Melding');
+
+            const startInput = document.getElementById('edit-start');
+            const endInput = document.getElementById('edit-end');
+            startInput.value = '2024-06-01';
+            endInput.value = '2024-01-01';
+            startInput.dispatchEvent(new Event('change'));
+
+            // date-error should be shown
+            const errorBox = document.getElementById('date-error');
+            expect(errorBox.classList.contains('hidden')).toBe(false);
+
+            // Should NOT trigger auto-save
+            expect(showSaveBar).not.toHaveBeenCalled();
+            vi.advanceTimersByTime(2000);
+            expect(saveFile).not.toHaveBeenCalled();
+        });
+
+        it('should debounce auto-save (reset timer on multiple changes)', async () => {
+            await window.editMelding('id1', 'Melding');
+
+            const titleInput = document.getElementById('edit-title');
+            titleInput.value = 'First';
+            titleInput.dispatchEvent(new Event('input'));
+            vi.advanceTimersByTime(1000);
+
+            titleInput.value = 'Second';
+            titleInput.dispatchEvent(new Event('input'));
+            vi.advanceTimersByTime(1000);
+
+            expect(saveFile).not.toHaveBeenCalled();
+
+            vi.advanceTimersByTime(500);
+            await vi.runAllTimersAsync();
+
+            expect(saveFile).toHaveBeenCalledTimes(1);
+        });
+
+        it('should show error save bar when save fails', async () => {
+            saveFile.mockRejectedValue(new Error('save fail'));
+
+            await window.editMelding('id1', 'Melding');
+
+            document.getElementById('edit-title').dispatchEvent(new Event('input'));
+            vi.advanceTimersByTime(1500);
+            await vi.runAllTimersAsync();
+
+            expect(showSaveBar).toHaveBeenCalledWith('error', '❌ Feil ved lagring!');
+            expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
+        });
+
+        it('should show auth toast when save fails with auth error', async () => {
+            classifyError.mockReturnValueOnce('auth');
+            saveFile.mockRejectedValue({ status: 401 });
+
+            await window.editMelding('id1', 'Melding');
+
+            document.getElementById('edit-title').dispatchEvent(new Event('input'));
+            vi.advanceTimersByTime(1500);
+            await vi.runAllTimersAsync();
+
+            expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
+        });
+
+        it('should show network toast when save fails with retryable error', async () => {
+            classifyError.mockReturnValueOnce('retryable');
+            saveFile.mockRejectedValue(new Error('network'));
+
+            await window.editMelding('id1', 'Melding');
+
+            document.getElementById('edit-title').dispatchEvent(new Event('input'));
+            vi.advanceTimersByTime(1500);
+            await vi.runAllTimersAsync();
+
+            expect(showToast).toHaveBeenCalledWith('Nettverksfeil — prøv igjen.', 'error');
+        });
     });
 
-    it('should show auth toast when save fails with auth error', async () => {
-        classifyError.mockReturnValueOnce('auth');
-        getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({ data: { title: 'M', startDate: '', endDate: '' }, body: '' });
-        saveFile.mockRejectedValue({ status: 401 });
+    describe('new melding (manual create)', () => {
+        it('should show "Opprett melding" button for new melding', async () => {
+            await window.editMelding(null, null);
+            const saveBtn = document.getElementById('btn-save-melding');
+            expect(saveBtn).not.toBeNull();
+            expect(saveBtn.textContent).toContain('Opprett melding');
+        });
 
-        await window.editMelding('id1', 'M');
-        const onSave = initEditors.mock.calls[0][1];
-        await onSave(null);
+        it('should create file on Opprett button click', async () => {
+            stringifyMarkdown.mockReturnValue('md');
+            createFile.mockResolvedValue();
 
-        expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
-    });
+            await window.editMelding(null, null);
 
-    it('should show network toast when save fails with retryable error', async () => {
-        classifyError.mockReturnValueOnce('retryable');
-        getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({ data: { title: 'M', startDate: '', endDate: '' }, body: '' });
-        saveFile.mockRejectedValue(new Error('network'));
+            const saveBtn = document.getElementById('btn-save-melding');
+            await saveBtn.onclick();
 
-        await window.editMelding('id1', 'M');
-        const onSave = initEditors.mock.calls[0][1];
-        await onSave(null);
+            expect(createFile).toHaveBeenCalledWith('test-meldinger-folder', expect.any(String), 'md');
+            expect(loadMeldingerModule).toHaveBeenCalled();
+        });
 
-        expect(showToast).toHaveBeenCalledWith('Nettverksfeil — prøv igjen.', 'error');
-    });
+        it('should disable button and show Oppretter text while saving', async () => {
+            createFile.mockReturnValue(new Promise(() => {}));
 
-    it('should bind date change listeners', async () => {
-        await window.editMelding(null, null);
+            await window.editMelding(null, null);
 
-        const startInput = document.getElementById('edit-start');
-        const endInput = document.getElementById('edit-end');
-        expect(startInput).not.toBeNull();
-        expect(endInput).not.toBeNull();
-    });
+            const saveBtn = document.getElementById('btn-save-melding');
+            saveBtn.onclick();
 
-    it('should validate date order on change', async () => {
-        await window.editMelding(null, null);
+            expect(saveBtn.disabled).toBe(true);
+            expect(saveBtn.textContent).toBe('Oppretter...');
+        });
 
-        const startInput = document.getElementById('edit-start');
-        const endInput = document.getElementById('edit-end');
-        const saveBtn = document.getElementById('btn-save-melding');
+        it('should re-enable button on create failure', async () => {
+            createFile.mockRejectedValue(new Error('fail'));
 
-        // Set end date before start date
-        startInput.value = '2024-06-01';
-        endInput.value = '2024-01-01';
-        startInput.dispatchEvent(new Event('change'));
+            await window.editMelding(null, null);
 
-        const errorBox = document.getElementById('date-error');
-        expect(errorBox.classList.contains('hidden')).toBe(false);
-        expect(saveBtn.disabled).toBe(true);
-    });
+            const saveBtn = document.getElementById('btn-save-melding');
+            await saveBtn.onclick();
 
-    it('should enable save button when dates are valid', async () => {
-        await window.editMelding(null, null);
+            expect(saveBtn.disabled).toBe(false);
+            expect(saveBtn.textContent).toBe('Opprett melding');
+            expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
+        });
 
-        const startInput = document.getElementById('edit-start');
-        const endInput = document.getElementById('edit-end');
-        const saveBtn = document.getElementById('btn-save-melding');
+        it('should not trigger auto-save on input for new melding', async () => {
+            await window.editMelding(null, null);
 
-        startInput.value = '2024-01-01';
-        endInput.value = '2024-06-01';
-        startInput.dispatchEvent(new Event('change'));
+            document.getElementById('edit-title').value = 'New';
+            document.getElementById('edit-title').dispatchEvent(new Event('input'));
+            vi.advanceTimersByTime(2000);
 
-        expect(saveBtn.disabled).toBe(false);
-    });
+            expect(showSaveBar).not.toHaveBeenCalled();
+            expect(saveFile).not.toHaveBeenCalled();
+        });
 
-    it('should not save when save button is disabled', async () => {
-        await window.editMelding(null, null);
+        it('should validate date order for new melding', async () => {
+            await window.editMelding(null, null);
 
-        const startInput = document.getElementById('edit-start');
-        const endInput = document.getElementById('edit-end');
-        const saveBtn = document.getElementById('btn-save-melding');
+            const startInput = document.getElementById('edit-start');
+            const endInput = document.getElementById('edit-end');
+            const saveBtn = document.getElementById('btn-save-melding');
 
-        // Make save disabled
-        startInput.value = '2024-06-01';
-        endInput.value = '2024-01-01';
-        startInput.dispatchEvent(new Event('change'));
+            startInput.value = '2024-06-01';
+            endInput.value = '2024-01-01';
+            startInput.dispatchEvent(new Event('change'));
 
-        const onSave = initEditors.mock.calls[0][1];
-        await onSave(null);
+            const errorBox = document.getElementById('date-error');
+            expect(errorBox.classList.contains('hidden')).toBe(false);
+            expect(saveBtn.disabled).toBe(true);
+        });
 
-        expect(saveFile).not.toHaveBeenCalled();
-        expect(createFile).not.toHaveBeenCalled();
+        it('should enable save button when dates are valid for new melding', async () => {
+            await window.editMelding(null, null);
+
+            const startInput = document.getElementById('edit-start');
+            const endInput = document.getElementById('edit-end');
+            const saveBtn = document.getElementById('btn-save-melding');
+
+            startInput.value = '2024-01-01';
+            endInput.value = '2024-06-01';
+            startInput.dispatchEvent(new Event('change'));
+
+            expect(saveBtn.disabled).toBe(false);
+        });
+
+        it('should not save when save button is disabled', async () => {
+            await window.editMelding(null, null);
+
+            const startInput = document.getElementById('edit-start');
+            const endInput = document.getElementById('edit-end');
+
+            startInput.value = '2024-06-01';
+            endInput.value = '2024-01-01';
+            startInput.dispatchEvent(new Event('change'));
+
+            const saveBtn = document.getElementById('btn-save-melding');
+            await saveBtn.onclick();
+
+            expect(saveFile).not.toHaveBeenCalled();
+            expect(createFile).not.toHaveBeenCalled();
+        });
     });
 });

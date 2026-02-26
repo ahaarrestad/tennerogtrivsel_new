@@ -83,7 +83,7 @@ export function showDeletionToast(deletedName, recoveryText) {
     setTimeout(() => { if (toast.parentNode) toast.remove(); }, 30000);
 }
 
-export function initMarkdownEditor(onSave) {
+export function initMarkdownEditor() {
     let easyMDE = null;
     const EasyMDEGlobal = window['EasyMDE'];
     if (typeof EasyMDEGlobal !== 'undefined') {
@@ -99,12 +99,10 @@ export function initMarkdownEditor(onSave) {
             }
         });
     }
-    const saveBtn = document.getElementById('btn-save-tjeneste');
-    if (saveBtn) saveBtn.onclick = () => onSave(easyMDE);
     return easyMDE;
 }
 
-export function initEditors(onDateChange, onSave) {
+export function initEditors(onDateChange) {
     let easyMDE = null;
     const EasyMDEGlobal = window['EasyMDE'];
     if (typeof EasyMDEGlobal !== 'undefined') {
@@ -121,6 +119,7 @@ export function initEditors(onDateChange, onSave) {
         });
     }
 
+    let flatpickrInstances = [];
     const flatpickrGlobal = window['flatpickr'];
     if (typeof flatpickrGlobal !== 'undefined') {
         const fpConfig = {
@@ -137,13 +136,13 @@ export function initEditors(onDateChange, onSave) {
         const noLocale = l10ns ? (l10ns.no || l10ns.nb || l10ns.Norwegian) : null;
         if (noLocale) fpConfig.locale = noLocale;
 
-        flatpickrGlobal("#edit-start", fpConfig);
-        flatpickrGlobal("#edit-end", fpConfig);
+        flatpickrInstances = [
+            flatpickrGlobal("#edit-start", fpConfig),
+            flatpickrGlobal("#edit-end", fpConfig)
+        ];
     }
 
-    const saveBtn = document.getElementById('btn-save-melding');
-    if (saveBtn) saveBtn.onclick = () => onSave(easyMDE);
-    return easyMDE;
+    return { easyMDE, flatpickrInstances };
 }
 
 export function bindSliderStepButtons(container) {

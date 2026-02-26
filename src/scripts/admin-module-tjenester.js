@@ -5,11 +5,13 @@ import {
 import { showToast, showConfirm } from './admin-dialog.js';
 import { classifyError } from './admin-api-retry.js';
 import { stripStackEditData, slugify } from './textFormatter.js';
-import { loadTjenesterModule } from './admin-dashboard.js';
+import { loadTjenesterModule, formatTimestamp } from './admin-dashboard.js';
 import {
     getAdminConfig, renderToggleHtml, attachToggleClick,
-    showDeletionToast, initMarkdownEditor
+    showDeletionToast, initMarkdownEditor, showSaveBar, hideSaveBar
 } from './admin-editor-helpers.js';
+
+let tjenesteSaveTimeout = null;
 
 async function deleteTjeneste(id, name) {
     if (await showConfirm(`Vil du slette «${name}»?`, { destructive: true })) {
@@ -53,6 +55,11 @@ async function editTjeneste(id, name) {
 
         const isActive = data.active !== false && data.active !== 'false';
 
+        const buttonHtml = id
+            ? `<button onclick="window.loadTjenesterModule()" class="admin-btn-cancel">Tilbake til listen</button>`
+            : `<button id="btn-save-tjeneste" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Opprett tjeneste</button>
+                    <button onclick="window.loadTjenesterModule()" class="admin-btn-cancel">Avbryt</button>`;
+
         inner.innerHTML = `
             <div class="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div class="grid grid-cols-1 gap-6">
@@ -71,22 +78,17 @@ async function editTjeneste(id, name) {
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-admin-border">
-                    <button id="btn-save-tjeneste" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Lagre tjeneste</button>
-                    <button onclick="window.loadTjenesterModule()" class="admin-btn-cancel">Avbryt</button>
+                    ${buttonHtml}
                 </div>
             </div>`;
 
-        attachToggleClick('edit-active-toggle');
+        const easyMDE = initMarkdownEditor();
 
-        const onSave = async (easyMDE) => {
+        const doSave = async () => {
             const title = document.getElementById('edit-title').value;
             const safeTitle = slugify(title) || 'u-navngitt-tjeneste';
             const entryId = data.id || safeTitle;
             const newFileName = `${safeTitle}-${Date.now()}.md`;
-            const saveBtn = document.getElementById('btn-save-tjeneste');
-
-            saveBtn.disabled = true;
-            saveBtn.textContent = "Lagrer...";
 
             const toggleBtn = document.getElementById('edit-active-toggle');
             const activeVal = toggleBtn?.dataset.active === 'true';
@@ -100,9 +102,16 @@ async function editTjeneste(id, name) {
             const content = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
 
             try {
-                if (id) await saveFile(id, newFileName, stringifyMarkdown(frontmatter, content));
-                else await createFile(TJENESTER_FOLDER, newFileName, stringifyMarkdown(frontmatter, content));
-                reloadTjenester();
+                if (id) {
+                    showSaveBar('saving', '💾 Lagrer til Google Drive...');
+                    await saveFile(id, newFileName, stringifyMarkdown(frontmatter, content));
+                    const ts = formatTimestamp(new Date());
+                    showSaveBar('saved', `✅ Lagret ${ts}`);
+                    hideSaveBar(5000);
+                } else {
+                    await createFile(TJENESTER_FOLDER, newFileName, stringifyMarkdown(frontmatter, content));
+                    reloadTjenester();
+                }
             } catch (e) {
                 console.error("Lagring feilet:", e);
                 const kind = classifyError(e);
@@ -112,12 +121,42 @@ async function editTjeneste(id, name) {
                     : 'Kunne ikke lagre endringene.',
                     'error'
                 );
-                saveBtn.disabled = false;
-                saveBtn.textContent = "Lagre tjeneste";
+                if (id) {
+                    showSaveBar('error', '❌ Feil ved lagring!');
+                } else {
+                    const saveBtn = document.getElementById('btn-save-tjeneste');
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = "Opprett tjeneste";
+                    }
+                }
             }
         };
 
-        initMarkdownEditor(onSave);
+        if (id) {
+            // Auto-save for existing tjenester
+            const triggerAutoSave = () => {
+                showSaveBar('changed', '⏳ Endringer oppdaget...');
+                clearTimeout(tjenesteSaveTimeout);
+                tjenesteSaveTimeout = setTimeout(() => doSave(), 1500);
+            };
+
+            document.getElementById('edit-title')?.addEventListener('input', triggerAutoSave);
+            document.getElementById('edit-ingress')?.addEventListener('input', triggerAutoSave);
+            if (easyMDE) easyMDE.codemirror.on('change', triggerAutoSave);
+            attachToggleClick('edit-active-toggle', triggerAutoSave);
+        } else {
+            // Manual create for new tjenester
+            attachToggleClick('edit-active-toggle');
+            const saveBtn = document.getElementById('btn-save-tjeneste');
+            if (saveBtn) {
+                saveBtn.onclick = async () => {
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = "Oppretter...";
+                    await doSave();
+                };
+            }
+        }
     } catch (e) {
         console.error("Klarte ikke laste editor:", e);
         inner.innerHTML = `<div class="admin-alert-error">❌ En feil oppstod under lasting av editoren. Sjekk konsollen for detaljer.</div>`;

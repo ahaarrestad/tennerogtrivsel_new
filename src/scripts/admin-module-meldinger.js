@@ -5,8 +5,13 @@ import {
 import { showToast, showConfirm } from './admin-dialog.js';
 import { classifyError } from './admin-api-retry.js';
 import { formatDate, stripStackEditData, slugify } from './textFormatter.js';
-import { loadMeldingerModule } from './admin-dashboard.js';
-import { getAdminConfig, showDeletionToast, initEditors } from './admin-editor-helpers.js';
+import { loadMeldingerModule, formatTimestamp } from './admin-dashboard.js';
+import {
+    getAdminConfig, showDeletionToast, initEditors,
+    showSaveBar, hideSaveBar
+} from './admin-editor-helpers.js';
+
+let meldingSaveTimeout = null;
 
 async function deleteMelding(id, name) {
     if (await showConfirm(`Vil du slette «${name}»?`, { destructive: true })) {
@@ -28,6 +33,17 @@ async function deleteMelding(id, name) {
     }
 }
 
+function areDatesValid() {
+    const startInp = document.getElementById('edit-start');
+    const endInp = document.getElementById('edit-end');
+    const startVal = startInp?.value;
+    const endVal = endInp?.value;
+    if (startVal && endVal && new Date(endVal) < new Date(startVal)) {
+        return false;
+    }
+    return true;
+}
+
 async function editMelding(id, name) {
     const { MELDINGER_FOLDER } = getAdminConfig();
     const inner = document.getElementById('module-inner');
@@ -45,6 +61,11 @@ async function editMelding(id, name) {
             const { data, body } = parseMarkdown(raw);
             msgData = { ...data, content: stripStackEditData(body) };
         }
+
+        const buttonHtml = id
+            ? `<button onclick="window.loadMeldingerModule()" class="admin-btn-cancel">Tilbake til listen</button>`
+            : `<button id="btn-save-melding" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Opprett melding</button>
+                    <button onclick="window.loadMeldingerModule()" class="admin-btn-cancel">Avbryt</button>`;
 
         inner.innerHTML = `
             <div class="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -83,8 +104,7 @@ async function editMelding(id, name) {
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-admin-border">
-                    <button id="btn-save-melding" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Lagre melding</button>
-                    <button onclick="window.loadMeldingerModule()" class="admin-btn-cancel">Avbryt</button>
+                    ${buttonHtml}
                 </div>
             </div>`;
 
@@ -94,7 +114,6 @@ async function editMelding(id, name) {
             const startEl = document.getElementById('preview-start');
             const endEl = document.getElementById('preview-end');
             const errorBox = document.getElementById('date-error');
-            const saveBtn = document.getElementById('btn-save-melding');
 
             if (startEl && startInp) startEl.textContent = formatDate(startInp.value);
             if (endEl && endInp) endEl.textContent = formatDate(endInp.value);
@@ -104,28 +123,33 @@ async function editMelding(id, name) {
 
             if (startVal && endVal && new Date(endVal) < new Date(startVal)) {
                 errorBox?.classList.remove('hidden');
-                saveBtn.disabled = true;
-                saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                // For new meldinger, also disable the save button
+                const saveBtn = document.getElementById('btn-save-melding');
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                    saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+                return false;
             } else {
                 errorBox?.classList.add('hidden');
-                saveBtn.disabled = false;
-                saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                const saveBtn = document.getElementById('btn-save-melding');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+                return true;
             }
         };
 
-        const onSave = async (easyMDE) => {
+        const { easyMDE } = initEditors(onDateChange);
+
+        const doSave = async () => {
             const title = document.getElementById('edit-title').value;
             const startDate = document.getElementById('edit-start').value;
             const endDate = document.getElementById('edit-end').value;
-            const saveBtn = document.getElementById('btn-save-melding');
-
-            if (saveBtn.disabled) return;
 
             const safeTitle = slugify(title) || 'u-navnet';
             const newFileName = `${safeTitle}-${Date.now()}.md`;
-
-            saveBtn.disabled = true;
-            saveBtn.textContent = "Lagrer...";
 
             const data = {
                 title: title,
@@ -136,9 +160,16 @@ async function editMelding(id, name) {
             const body = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
 
             try {
-                if (id) await saveFile(id, newFileName, stringifyMarkdown(data, body));
-                else await createFile(MELDINGER_FOLDER, newFileName, stringifyMarkdown(data, body));
-                reloadMeldinger();
+                if (id) {
+                    showSaveBar('saving', '💾 Lagrer til Google Drive...');
+                    await saveFile(id, newFileName, stringifyMarkdown(data, body));
+                    const ts = formatTimestamp(new Date());
+                    showSaveBar('saved', `✅ Lagret ${ts}`);
+                    hideSaveBar(5000);
+                } else {
+                    await createFile(MELDINGER_FOLDER, newFileName, stringifyMarkdown(data, body));
+                    reloadMeldinger();
+                }
             } catch (e) {
                 console.error("Lagring feilet:", e);
                 const kind = classifyError(e);
@@ -148,15 +179,54 @@ async function editMelding(id, name) {
                     : 'Kunne ikke lagre endringene.',
                     'error'
                 );
-                saveBtn.disabled = false;
-                saveBtn.textContent = "Lagre melding";
+                if (id) {
+                    showSaveBar('error', '❌ Feil ved lagring!');
+                } else {
+                    const saveBtn = document.getElementById('btn-save-melding');
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = "Opprett melding";
+                    }
+                }
             }
         };
 
-        initEditors(onDateChange, onSave);
+        if (id) {
+            // Auto-save for existing meldinger
+            const triggerAutoSave = () => {
+                if (!areDatesValid()) return;
+                showSaveBar('changed', '⏳ Endringer oppdaget...');
+                clearTimeout(meldingSaveTimeout);
+                meldingSaveTimeout = setTimeout(() => doSave(), 1500);
+            };
 
-        document.getElementById('edit-start')?.addEventListener('change', () => onDateChange());
-        document.getElementById('edit-end')?.addEventListener('change', () => onDateChange());
+            document.getElementById('edit-title')?.addEventListener('input', triggerAutoSave);
+            if (easyMDE) easyMDE.codemirror.on('change', triggerAutoSave);
+
+            // Override onDateChange for existing to also trigger auto-save
+            const originalOnDateChange = onDateChange;
+            const onDateChangeWithAutoSave = () => {
+                const valid = originalOnDateChange();
+                if (valid) triggerAutoSave();
+            };
+
+            document.getElementById('edit-start')?.addEventListener('change', onDateChangeWithAutoSave);
+            document.getElementById('edit-end')?.addEventListener('change', onDateChangeWithAutoSave);
+        } else {
+            // Manual create for new meldinger
+            const saveBtn = document.getElementById('btn-save-melding');
+            if (saveBtn) {
+                saveBtn.onclick = async () => {
+                    if (saveBtn.disabled) return;
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = "Oppretter...";
+                    await doSave();
+                };
+            }
+
+            document.getElementById('edit-start')?.addEventListener('change', () => onDateChange());
+            document.getElementById('edit-end')?.addEventListener('change', () => onDateChange());
+        }
     } catch (e) {
         console.error("Klarte ikke laste editor:", e);
         inner.innerHTML = `<div class="admin-alert-error">❌ En feil oppstod under lasting av editoren. Sjekk konsollen for detaljer.</div>`;

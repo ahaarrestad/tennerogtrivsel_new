@@ -181,9 +181,9 @@ describe('initMarkdownEditor', () => {
     it('should create EasyMDE when available on window', () => {
         const mockInstance = { value: vi.fn(() => 'content') };
         window.EasyMDE = vi.fn(function() { return mockInstance; });
-        document.body.innerHTML = '<textarea id="edit-content"></textarea><button id="btn-save-tjeneste"></button>';
+        document.body.innerHTML = '<textarea id="edit-content"></textarea>';
 
-        const result = initMarkdownEditor(vi.fn());
+        const result = initMarkdownEditor();
         expect(window.EasyMDE).toHaveBeenCalled();
         expect(result).toBe(mockInstance);
         delete window.EasyMDE;
@@ -191,16 +191,8 @@ describe('initMarkdownEditor', () => {
 
     it('should return null when EasyMDE is not available', () => {
         document.body.innerHTML = '<textarea id="edit-content"></textarea>';
-        const result = initMarkdownEditor(vi.fn());
+        const result = initMarkdownEditor();
         expect(result).toBeNull();
-    });
-
-    it('should bind save button to onSave callback', () => {
-        document.body.innerHTML = '<textarea id="edit-content"></textarea><button id="btn-save-tjeneste"></button>';
-        const onSave = vi.fn();
-        initMarkdownEditor(onSave);
-        document.getElementById('btn-save-tjeneste').click();
-        expect(onSave).toHaveBeenCalledWith(null);
     });
 });
 
@@ -208,15 +200,18 @@ describe('initEditors', () => {
     it('should create flatpickr instances when available', () => {
         const mockInstance = { value: vi.fn(() => '') };
         window.EasyMDE = vi.fn(function() { return mockInstance; });
-        const mockFp = vi.fn();
+        const mockFpInstance = { destroy: vi.fn() };
+        const mockFp = vi.fn(() => mockFpInstance);
         mockFp.l10ns = null;
         window.flatpickr = mockFp;
-        document.body.innerHTML = '<textarea id="edit-content"></textarea><input id="edit-start"><input id="edit-end"><button id="btn-save-melding"></button>';
+        document.body.innerHTML = '<textarea id="edit-content"></textarea><input id="edit-start"><input id="edit-end">';
 
-        initEditors(vi.fn(), vi.fn());
+        const result = initEditors(vi.fn());
         expect(mockFp).toHaveBeenCalledTimes(2);
         expect(mockFp).toHaveBeenCalledWith('#edit-start', expect.any(Object));
         expect(mockFp).toHaveBeenCalledWith('#edit-end', expect.any(Object));
+        expect(result.easyMDE).toBe(mockInstance);
+        expect(result.flatpickrInstances).toHaveLength(2);
         delete window.flatpickr;
         delete window.EasyMDE;
     });
@@ -225,9 +220,9 @@ describe('initEditors', () => {
         const mockFp = vi.fn();
         mockFp.l10ns = { no: { firstDayOfWeek: 1 } };
         window.flatpickr = mockFp;
-        document.body.innerHTML = '<textarea id="edit-content"></textarea><input id="edit-start"><input id="edit-end"><button id="btn-save-melding"></button>';
+        document.body.innerHTML = '<textarea id="edit-content"></textarea><input id="edit-start"><input id="edit-end">';
 
-        initEditors(vi.fn(), vi.fn());
+        initEditors(vi.fn());
         expect(mockFp).toHaveBeenCalledWith('#edit-start', expect.objectContaining({ locale: { firstDayOfWeek: 1 } }));
         delete window.flatpickr;
     });
@@ -236,25 +231,18 @@ describe('initEditors', () => {
         const mockFp = vi.fn();
         mockFp.l10ns = { nb: { firstDayOfWeek: 1 } };
         window.flatpickr = mockFp;
-        document.body.innerHTML = '<textarea id="edit-content"></textarea><input id="edit-start"><input id="edit-end"><button id="btn-save-melding"></button>';
+        document.body.innerHTML = '<textarea id="edit-content"></textarea><input id="edit-start"><input id="edit-end">';
 
-        initEditors(vi.fn(), vi.fn());
+        initEditors(vi.fn());
         expect(mockFp).toHaveBeenCalledWith('#edit-start', expect.objectContaining({ locale: { firstDayOfWeek: 1 } }));
         delete window.flatpickr;
     });
 
-    it('should bind save button to onSave callback', () => {
-        document.body.innerHTML = '<textarea id="edit-content"></textarea><button id="btn-save-melding"></button>';
-        const onSave = vi.fn();
-        initEditors(vi.fn(), onSave);
-        document.getElementById('btn-save-melding').click();
-        expect(onSave).toHaveBeenCalledWith(null);
-    });
-
-    it('should return null when EasyMDE is not available', () => {
+    it('should return easyMDE null and empty flatpickr when nothing available', () => {
         document.body.innerHTML = '<textarea id="edit-content"></textarea>';
-        const result = initEditors(vi.fn(), vi.fn());
-        expect(result).toBeNull();
+        const result = initEditors(vi.fn());
+        expect(result.easyMDE).toBeNull();
+        expect(result.flatpickrInstances).toHaveLength(0);
     });
 });
 
