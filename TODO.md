@@ -14,6 +14,11 @@
 
 ## Backlog
 
+- [ ] **Tilbake-navigasjon fra editor til liste i admin**
+  - Når man redigerer et element (melding, bilde, tjeneste, tannlege) mangler det en enkel måte å navigere tilbake til listen man kom fra
+  - Legg til en tydelig «Tilbake til [liste]»-knapp/lenke øverst i editor-visningen
+  - Skal fungere for alle moduler: meldinger, galleri, tjenester, tannleger
+
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
   - Samme oppsett som test-siden, tilpasset produksjonsdomenet
   - SSL-sertifikat (ACM us-east-1), CloudFront-distribusjon med OAC, cache-policy, DNS-pekere
