@@ -12,10 +12,6 @@
 
 ## Pågående
 
-- [ ] **Flaky tests i E2E-tester** ([plan](docs/plan-flaky-e2e.md))
-  - Mobilmeny `toBeHidden()` feiler fortsatt sporadisk i CI (sist sett 26. feb på main)
-  - `data-open`-fiksen fra 25. feb løste ikke problemet fullstendig
-
 ## Backlog
 
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
@@ -60,6 +56,11 @@
 
 
 ## Fullført
+
+- [x] **Flaky tests i E2E-tester** ([plan](docs/plan-flaky-e2e.md))
+  - Mobilmeny-test: bekreftet fikset med `data-open`-attributt (0 feil av 550 kjøringer)
+  - Tjeneste-undersider-test: timeout under parallell last — fikset med `test.setTimeout(60_000)` + `waitUntil: 'domcontentloaded'`
+  - Verifisert: 0 feil av 1100 kjøringer etter fiks, full testsuite bestått (84 E2E + 787 unit)
 
 - [x] **Fiks galleri-relaterte E2E-feil og vis tom-melding på gallerisiden** ([plan](docs/plan-galleri-e2e.md))
   - `galleri.astro`: erstatt `Astro.redirect('/')` med tom-tilstand-melding (overskrift + "Galleriet er tomt for øyeblikket")
