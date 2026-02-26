@@ -1,10 +1,17 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { getSiteSettings } from '../scripts/getSettings';
+import { getCollection } from 'astro:content';
 
 import GalleriSide from '../components/Galleri.astro';
 
 const settings = await getSiteSettings();
+const galleri = await getCollection('galleri');
+const hasGalleryImages = galleri.some(item => (item.data.type ?? 'galleri') !== 'forsidebilde');
+
+if (!hasGalleryImages) {
+    return Astro.redirect('/');
+}
 ---
 <Layout
     title={`${settings.galleriTittel} | Tenner og Trivsel`}

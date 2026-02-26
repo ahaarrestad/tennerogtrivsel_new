@@ -13,13 +13,10 @@
 ## Pågående
 
 ## Backlog
-- [ ] **Skjul galleri-lenke i meny når galleriet er tomt**
-  - Hvis det ikke finnes noen bilder i bildegalleriet, skal lenken til galleriet ikke vises i navigasjonsmenyen
-  - Gjelder både desktop- og mobilmenyen
-
-- [ ] **Forbedre visuell synlighet på aktiv melding i info-banner**
+- [ ] **Forbedre visuell synlighet på aktiv melding i info-banner** ([plan](docs/plan-info-banner-synlighet.md))
   - Fjern "prikken" (dot-indikatoren) i banneret på toppen
   - Gjør teksten mer visuelt fremtredende/synlig
+  - Erstatt prikk med info-ikon (SVG), øk tekststørrelse og font-weight
 
 - [ ] **Flaky tests i E2E-tester** ([plan](docs/plan-flaky-e2e.md))
   - Mobilmeny `toBeHidden()` feiler fortsatt sporadisk i CI (sist sett 26. feb på main)
@@ -57,6 +54,11 @@
 
 
 ## Fullført
+
+- [x] **Skjul galleri-lenke i meny når galleriet er tomt**
+  - Layout.astro beregner `showGalleri` fra galleri-collectionen (ekskluderer forsidebilde-type)
+  - Navbar.astro filtrerer bort galleri-lenken i desktop- og mobilmeny når `showGalleri` er `false`
+  - galleri.astro redirecter til forsiden ved direkte tilgang til tom galleri-side
 
 - [x] **Galleri-navigasjon: scroll vs. standalone-side — er det konsistent?** ([plan](docs/plan-galleri-navigasjon.md))
   - Forsiden begrenset til 4 bilder + «Se alle bilder»-lenke på alle skjermstørrelser
