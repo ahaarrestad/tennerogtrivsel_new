@@ -1,5 +1,7 @@
 # Plan: Fiks galleri-relaterte E2E-feil og vis tom-melding
 
+**Status: Fullført**
+
 ## Problem
 
 5 E2E-tester feiler når galleriet er tomt (kun forsidebilde, ingen galleri-bilder):
