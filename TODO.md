@@ -13,6 +13,14 @@
 ## Pågående
 
 ## Backlog
+- [ ] **Skjul galleri-lenke i meny når galleriet er tomt**
+  - Hvis det ikke finnes noen bilder i bildegalleriet, skal lenken til galleriet ikke vises i navigasjonsmenyen
+  - Gjelder både desktop- og mobilmenyen
+
+- [ ] **Forbedre visuell synlighet på aktiv melding i info-banner**
+  - Fjern "prikken" (dot-indikatoren) i banneret på toppen
+  - Gjør teksten mer visuelt fremtredende/synlig
+
 - [ ] **Flaky tests i E2E-tester** ([plan](docs/plan-flaky-e2e.md))
   - Mobilmeny `toBeHidden()` feiler fortsatt sporadisk i CI (sist sett 26. feb på main)
   - `data-open`-fiksen fra 25. feb løste ikke problemet fullstendig
