@@ -60,6 +60,11 @@
   - Viewport/safe-area forbedringer, dialog-fallback, sticky-verifisering
   - 6 steg: Playwright-config, testfeil-fiks, viewport, dialog, sticky, kvalitetssjekk
 
+- [ ] **Dev-Test-Prod miljø oppsett**
+    - Nåværende oppsett har én testside (test.tennerogtrivsel.no) og én produksjonsside (www.tennerogtrivsel.no) uten isolasjon av miljøer
+    - Sett opp tre separate miljøer: dev (lokalt), test (staging), prod
+    - Test og prod har allerede egen S3 bucket, CloudFront-distribusjon, og eventuelt subdomene
+    - Hvordan kan det enkelt settes opp slik at jeg kan drive med test utvikling mot lokalt og test, og prodsette dette når jeg har lyst til det?
 
 ## Fullført
 
