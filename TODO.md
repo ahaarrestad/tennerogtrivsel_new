@@ -11,10 +11,6 @@
 - Flytt oppgaven til «Fullført» når den er ferdig.
 
 ## Pågående
-- [ ] **Fiks galleri-relaterte E2E-feil og vis tom-melding på gallerisiden** ([plan](docs/plan-galleri-e2e.md))
-  - 5 pre-eksisterende E2E-feil knyttet til tomt galleri (galleri-lenke i nav + SEO canonical/tittel)
-  - `galleri.astro` redirecter til forsiden ved tomt galleri — bør heller vise en melding om at galleriet er tomt
-  - E2E-tester for galleri-lenke i meny må håndtere tilfellet der galleriet er tomt
 
 ## Backlog
 
@@ -58,6 +54,12 @@
 
 
 ## Fullført
+
+- [x] **Fiks galleri-relaterte E2E-feil og vis tom-melding på gallerisiden** ([plan](docs/plan-galleri-e2e.md))
+  - `galleri.astro`: erstatt `Astro.redirect('/')` med tom-tilstand-melding (overskrift + "Galleriet er tomt for øyeblikket")
+  - Galleri-siden beholder nå egen `<title>`, canonical URL og SEO-metadata ved tomt galleri
+  - E2E-test for galleri-nav håndterer tomt galleri gracefully (early return hvis lenke mangler)
+  - 5 E2E-feil fikset: canonical-tag, unik tittel, galleri-nav-lenke (3 nettlesere)
 
 - [x] **URL-slug for tjenestesider skal baseres på overskrift, ikke filnavn**
   - Ny `slugify()` funksjon i `src/scripts/slugify.ts` (æ→ae, ø→o, å→a, spesialtegn→bindestrek)
