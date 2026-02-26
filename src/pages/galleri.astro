@@ -8,16 +8,21 @@ import GalleriSide from '../components/Galleri.astro';
 const settings = await getSiteSettings();
 const galleri = await getCollection('galleri');
 const hasGalleryImages = galleri.some(item => (item.data.type ?? 'galleri') !== 'forsidebilde');
-
-if (!hasGalleryImages) {
-    return Astro.redirect('/');
-}
 ---
 <Layout
     title={`${settings.galleriTittel} | Tenner og Trivsel`}
     description={settings.galleriBeskrivelse}
 >
     <main class="min-h-[50vh]">
-        <GalleriSide variant="white" standalone />
+        {hasGalleryImages ? (
+            <GalleriSide variant="white" standalone />
+        ) : (
+            <section class="section-container bg-white">
+                <div class="section-content text-center py-16">
+                    <h1 class="font-heading text-2xl md:text-3xl font-bold text-heading mb-4">{settings.galleriTittel}</h1>
+                    <p class="text-body">Galleriet er tomt for øyeblikket.</p>
+                </div>
+            </section>
+        )}
     </main>
 </Layout>
