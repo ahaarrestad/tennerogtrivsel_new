@@ -4,6 +4,7 @@ import Layout from '../../layouts/Layout.astro';
 import TelefonKnapp from "../../components/TelefonKnapp.astro";
 import EpostKnapp from "../../components/EpostKnapp.astro";
 import KontaktKnapp from "../../components/KontaktKnapp.astro";
+import { slugify } from '../../scripts/slugify';
 
 // 1. Generer stier for alle tjenestene
 export async function getStaticPaths() {
@@ -11,7 +12,7 @@ export async function getStaticPaths() {
     return tjenesteEntries
         .filter(entry => entry.data.active !== false)
         .map(entry => ({
-            params: {id: entry.id},
+            params: {id: slugify(entry.data.title)},
             props: {entry},
         }));
 }
@@ -21,6 +22,7 @@ const {entry} = Astro.props;
 const {Content} = await render(entry);
 
 const tjenester = (await getCollection('tjenester')).filter(s => s.data.active !== false);
+const currentSlug = slugify(entry.data.title);
 ---
 <Layout title={`${entry.data.title} | Tenner og Trivsel`} description={entry.data.ingress}>
     <div class="flex-grow bg-white w-full">
@@ -76,14 +78,15 @@ const tjenester = (await getCollection('tjenester')).filter(s => s.data.active !
                         {tjenester
                             .sort((a, b) => a.data.title.localeCompare(b.data.title, 'nb'))
                             .map(s => {
-                                const isCurrent = s.id === entry.id;
+                                const slug = slugify(s.data.title);
+                                const isCurrent = slug === currentSlug;
                                 return (
                                         <li class="flex items-center gap-2 py-1">
                                             <span class={isCurrent ? "text-brand-hover font-bold" : "text-brand"}>→</span>
                                             {isCurrent ? (
                                                     <span class="text-sm font-bold text-brand-hover">{s.data.title}</span>
                                             ) : (
-                                                    <a href={`/tjenester/${s.id}`}
+                                                    <a href={`/tjenester/${slug}`}
                                                        class="text-sm font-medium text-brand hover:text-brand-hover transition-colors">
                                                         {s.data.title}
                                                     </a>
