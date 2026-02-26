@@ -13,6 +13,11 @@
 ## Pågående
 
 ## Backlog
+- [ ] **Fiks galleri-relaterte E2E-feil og vis tom-melding på gallerisiden**
+  - 5 pre-eksisterende E2E-feil knyttet til tomt galleri (galleri-lenke i nav + SEO canonical/tittel)
+  - `galleri.astro` redirecter til forsiden ved tomt galleri — bør heller vise en melding om at galleriet er tomt
+  - E2E-tester for galleri-lenke i meny må håndtere tilfellet der galleriet er tomt
+
 - [ ] **Flaky tests i E2E-tester** ([plan](docs/plan-flaky-e2e.md))
   - Mobilmeny `toBeHidden()` feiler fortsatt sporadisk i CI (sist sett 26. feb på main)
   - `data-open`-fiksen fra 25. feb løste ikke problemet fullstendig
@@ -49,6 +54,13 @@
 
 
 ## Fullført
+
+- [x] **URL-slug for tjenestesider skal baseres på overskrift, ikke filnavn**
+  - Ny `slugify()` funksjon i `src/scripts/slugify.ts` (æ→ae, ø→o, å→a, spesialtegn→bindestrek)
+  - URL genereres fra `title`-feltet i frontmatter i stedet for `id`
+  - F.eks. «Krone / Bro / Fasetter» → `/tjenester/krone-bro-fasetter` (var `/tjenester/gjenoppretting`)
+  - Oppdatert `[id].astro` (params + sidebar) og `Tjenester.astro` (kortlenker)
+  - 7 enhetstester, 100% coverage
 
 - [x] **Forbedre visuell synlighet på aktiv melding i info-banner** ([plan](docs/plan-info-banner-synlighet.md))
   - Fjernet pulserende prikk, erstattet med SVG info-ikon (`w-4 h-4`, sirkel med "i")

@@ -4,6 +4,7 @@ import Card from './Card.astro';
 import { getSiteSettings } from '../scripts/getSettings';
 import { getSectionClasses, type SectionVariant } from '../scripts/sectionVariant';
 import SectionHeader from './SectionHeader.astro';
+import { slugify } from '../scripts/slugify';
 
 // 1. Hent alle filene fra src/content/tjenester/
 const allServices = await getCollection('tjenester');
@@ -31,7 +32,7 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                             minHeight="250px"
                             centered={false}
                             isStack={true}
-                            href={`/tjenester/${service.id}`}
+                            href={`/tjenester/${slugify(service.data.title)}`}
                     >
                         <p class="card-text line-clamp-3">
                             {service.data.ingress}
