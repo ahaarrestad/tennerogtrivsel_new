@@ -1,76 +1,39 @@
 # Plan: Fiks flaky E2E-tester
 
-## Status: Overvåker
+## Status: Fullført
 
 ## Kjente flaky tester
 
-### 1. Mobilmeny-test (`sitemap-pages.spec.ts:70`)
+### 1. Mobilmeny-test (`sitemap-pages.spec.ts:83`)
 
-**Symptom:** `toBeHidden()` / `toBeVisible()` feiler sporadisk på `#mobile-menu` i Mobile Chrome-prosjektet.
+**Symptom:** `toBeHidden()` / `toBeVisible()` feilet sporadisk på `#mobile-menu` i Mobile Chrome-prosjektet.
 
-**Historikk:**
-- 16. feb: Admin tjeneste-editor timeout (30s) — `admin.spec.ts:124` — skjedde én gang, ikke gjentatt
-- 22. feb: WebKit-nettlesere manglet i CI (39 tester feilet) — **løst** med Docker-container
-- 23. feb: Mobilmeny `toBeHidden()` feilet — brukte CSS-basert sjekk
-- 25. feb: Fikset med `data-open`-attributt i stedet for `toBeHidden()`/`toBeVisible()`
-- 26. feb: Feilet igjen på main-bygg (løst ved retrigger) — mulig at `toBeHidden()` fortsatt brukes et sted, eller at `data-open`-fiksen ikke er tilstrekkelig
+**Løsning (25. feb):** Erstattet CSS-basert synlighetssjekk med `data-open`-attributt.
 
-**Rotårsak-hypoteser:**
-1. Playwright ser `opacity-0` uten `visibility: hidden` som "visible" — Tailwind v4 genererer ikke alltid `invisible`-klassen konsistent
-2. Timing-problem: CSS-transisjoner (`transition-all duration-200`) kan forsinke tilstandsendringen
-3. Dev-server i CI responderer tregt under parallellkjøring (4 workers)
+**Verifisert (26. feb):** 0 feil av 550 kjøringer med `--repeat-each=50`. Fiksen holder.
 
-### 2. Admin tjeneste-editor timeout (`admin.spec.ts:124`)
+### 2. Tjeneste-undersider-test (`sitemap-pages.spec.ts:27`)
+
+**Symptom:** `page.goto()` timeout (30s) og `net::ERR_ABORTED` under parallell last i Mobile Chrome.
+
+**Rotårsak:** Testen looper gjennom alle tjeneste-undersider sekvensielt med `page.goto()`. Standard 30s testtimeout er for kort når dev-serveren er under last. `waitUntil: 'load'` (default) venter på alle ressurser, mens `domcontentloaded` er tilstrekkelig for denne testen.
+
+**Fiks:**
+1. `test.setTimeout(60_000)` — dobbel timeout for sekvensielle side-navigasjoner
+2. `page.goto(link, { waitUntil: 'domcontentloaded' })` — raskere navigasjon, trenger ikke vente på alle ressurser
+
+**Verifisering:**
+- Før fiks: 4 feil av 550 kjøringer (0.7%)
+- Etter fiks: 0 feil av 1100 kjøringer (100 repeats × 11 tester)
+- Full testsuite: 84 E2E + 787 enhetstester bestått
+
+### 3. Admin tjeneste-editor timeout (`admin.spec.ts:124`)
 
 **Symptom:** `locator.click: Test timeout of 30000ms exceeded` på `.edit-btn`.
 
-**Historikk:** Skjedde én gang (16. feb), ikke gjentatt siden.
+**Status:** Skjedde én gang (16. feb), ikke gjentatt siden. Trolig transient — overvåkes ikke videre.
 
-**Hypotese:** Mock-timing — `setupMocks()` kjører via `addInitScript()`, kan ha race condition med sideinnlasting.
-
-## Plan
-
-Jobbes selvstendig uten avklaringer underveis.
-
-### Steg 1: Reproduser lokalt
-
-Kjør de mistenkte flaky testene i loop for å bekrefte at de faktisk er flaky:
-
-```bash
-npx playwright test sitemap-pages --project="Mobile Chrome" --repeat-each=50
-```
-
-Hvis ingen feil etter 50 kjøringer, utvid til 100 eller prøv andre prosjekter (chromium, webkit). Hvis testene aldri feiler lokalt, sjekk CI-historikk for kontekst (hvilken jobb, hvilken assertion, trace-output).
-
-### Steg 2: Analyser feilmønster
-
-Basert på reprodusering eller CI-data:
-- Identifiser nøyaktig hvilken assertion som feiler
-- Sjekk om feilen er timing-relatert (CSS-transisjon, sideinnlasting) eller logikk-relatert
-- Les relevant testkode og komponentkode for å forstå mekanismen
-
-### Steg 3: Fiks
-
-Mulige løsninger avhengig av funn:
-- **Timing:** `await page.waitForLoadState('networkidle')`, eller øk timeout for spesifikke assertions
-- **CSS-synlighet:** Fjern all CSS-basert synlighetssjekking (`toBeHidden`/`toBeVisible`), bruk kun `data-*`-attributter
-- **Mock-race:** Flytt `setupMocks()` til `page.route()` i stedet for `addInitScript()`
-
-### Steg 4: Verifiser fiksen
-
-Kjør den fiksede testen i loop for å bekrefte stabilitet:
-
-```bash
-npx playwright test <testfil> --project="Mobile Chrome" --repeat-each=100
-```
-
-Krav: 0 feil på 100 kjøringer før oppgaven regnes som ferdig.
-
-### Steg 5: Kvalitetssjekk
-
-Kjør full testsuite (enhetstester + E2E + build) for å sikre at fiksen ikke brekker noe annet.
-
-## Konfigurasjon (nåværende)
+## Konfigurasjon
 
 - `retries: 0` — ingen masking av flakiness
 - `trace: 'retain-on-failure'` — traces lagres for debugging

@@ -25,6 +25,9 @@ test.describe('Sitemap-sider', () => {
   }
 
   test('alle tjeneste-undersider skal laste uten feil', async ({ page }) => {
+    // Denne testen besøker mange sider sekvensielt — trenger ekstra tid
+    test.setTimeout(60_000);
+
     // Naviger til tjenester-siden og finn alle tjeneste-lenker
     await page.goto('/tjenester/');
     await page.setViewportSize({ width: 1280, height: 800 });
@@ -36,7 +39,7 @@ test.describe('Sitemap-sider', () => {
     expect(tjenesteLinks.length).toBeGreaterThan(0);
 
     for (const link of tjenesteLinks) {
-      const response = await page.goto(link!);
+      const response = await page.goto(link!, { waitUntil: 'domcontentloaded' });
       expect(response?.status(), `Tjeneste ${link} ga uventet status`).toBe(200);
       await expect(page).toHaveTitle(/Tenner og Trivsel/);
     }
