@@ -12,6 +12,12 @@
 
 ## Pågående
 
+- [ ] **Auto-lagring i admin når bruker forlater et felt (blur)** ([plan](docs/plan-auto-lagring-admin.md))
+  - Innstillinger, tannleger og bilder har allerede auto-save — kun **Meldinger** og **Tjenester** gjenstår
+  - Debounced auto-save (1500ms) med save bar, samme mønster som tannleger/bilder
+  - Nye oppføringer: «Opprett»-knapp først, deretter auto-save
+  - Refaktorer `initEditors`/`initMarkdownEditor` for å støtte auto-save uten knapp-binding
+
 ## Backlog
 
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
@@ -21,6 +27,12 @@
   - Oppdater deploy-workflow for prod-bucket
   - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
+
+- [ ] **Dobbelt linjeskift i markdown rendres ikke som mellomrom**
+  - Dobbelt linjeskift i `.md`-filer (f.eks. tjenestebeskrivelser) gir ikke visuelt mellomrom i preview eller på nettsiden
+  - Undersøk hvordan markdown parses og rendres (remark/rehype-pipeline i Astro)
+  - Finn ut om problemet er i parsingen, CSS (`p`-margins) eller noe annet
+  - Fiks slik at avsnittsskift gir tydelig visuelt mellomrom
 
 - [ ] **Sjekk at alle filer som kan testes er testet**
   - Gå gjennom alle kildefiler i `src/scripts/` og `src/pages/api/` og verifiser at de har tilhørende testfiler
@@ -43,16 +55,11 @@
   - Vurder om koden er lesbar nok eller om ytterligere forenkling trengs
   - Fokusområder: kompleksitet, navngiving, modulstruktur, duplisering
 
-- [ ] **Auto-lagring i admin når bruker forlater et felt (blur)** ([plan](docs/plan-auto-lagring-admin.md))
-  - Innstillinger, tannleger og bilder har allerede auto-save — kun **Meldinger** og **Tjenester** gjenstår
-  - Debounced auto-save (1500ms) med save bar, samme mønster som tannleger/bilder
-  - Nye oppføringer: «Opprett»-knapp først, deretter auto-save
-  - Refaktorer `initEditors`/`initMarkdownEditor` for å støtte auto-save uten knapp-binding
-  - 4 steg: tjenester, meldinger, editor-helpers refaktor, tester
-
-- [ ] **Sjekk hvordan sidene fungerer på iPhone**
-  - Test den offentlige nettsiden og admin-panelet på iPhone (Safari/WebKit)
-  - Sjekk layout, touch-interaksjoner, scrolling og eventuelle iOS-spesifikke problemer
+- [ ] **Sjekk hvordan sidene fungerer på iPhone** ([plan](docs/plan-sjekk-iphone.md))
+  - Legg til Mobile Safari (iPhone 14) i Playwright-config
+  - Kjør testsuite, fiks Safari-spesifikke feil
+  - Viewport/safe-area forbedringer, dialog-fallback, sticky-verifisering
+  - 6 steg: Playwright-config, testfeil-fiks, viewport, dialog, sticky, kvalitetssjekk
 
 
 ## Fullført
