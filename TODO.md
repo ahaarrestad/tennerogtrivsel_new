@@ -13,11 +13,6 @@
 ## Pågående
 
 ## Backlog
-- [ ] **Forbedre visuell synlighet på aktiv melding i info-banner** ([plan](docs/plan-info-banner-synlighet.md))
-  - Fjern "prikken" (dot-indikatoren) i banneret på toppen
-  - Gjør teksten mer visuelt fremtredende/synlig
-  - Erstatt prikk med info-ikon (SVG), øk tekststørrelse og font-weight
-
 - [ ] **Flaky tests i E2E-tester** ([plan](docs/plan-flaky-e2e.md))
   - Mobilmeny `toBeHidden()` feiler fortsatt sporadisk i CI (sist sett 26. feb på main)
   - `data-open`-fiksen fra 25. feb løste ikke problemet fullstendig
@@ -54,6 +49,11 @@
 
 
 ## Fullført
+
+- [x] **Forbedre visuell synlighet på aktiv melding i info-banner** ([plan](docs/plan-info-banner-synlighet.md))
+  - Fjernet pulserende prikk, erstattet med SVG info-ikon (`w-4 h-4`, sirkel med "i")
+  - Økt tekststørrelse fra `text-xs md:text-sm` til `text-sm md:text-base`
+  - Økt font-weight fra `font-medium` til `font-semibold`
 
 - [x] **Skjul galleri-lenke i meny når galleriet er tomt**
   - Layout.astro beregner `showGalleri` fra galleri-collectionen (ekskluderer forsidebilde-type)
