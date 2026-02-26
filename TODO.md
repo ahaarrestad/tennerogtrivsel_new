@@ -16,11 +16,6 @@
 - [ ] **Flaky tests i E2E-tester**
   - Identifiser og fiks ustabile E2E-tester som feiler sporadisk
   - Disse må enten løses permanent eller håndteres med en klar strategi
-- [ ] **Galleri-navigasjon: scroll vs. standalone-side — er det konsistent?** ([plan](docs/plan-galleri-navigasjon.md))
-  - ✅ Forsiden begrenset til 4 bilder + «Se alle bilder»-lenke på alle skjermstørrelser
-  - Gjenstår: vurder om desktop-opplevelsen bør vise flere bilder (f.eks. 8) for å utnytte plassen
-  - Gjenstår: navbar-lenke er ulik — desktop `/#galleri` vs. mobil `/galleri` — bør dette samkjøres?
-
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
   - Samme oppsett som test-siden, tilpasset produksjonsdomenet
   - SSL-sertifikat (ACM us-east-1), CloudFront-distribusjon med OAC, cache-policy, DNS-pekere
@@ -52,6 +47,10 @@
 
 
 ## Fullført
+
+- [x] **Galleri-navigasjon: scroll vs. standalone-side — er det konsistent?** ([plan](docs/plan-galleri-navigasjon.md))
+  - Forsiden begrenset til 4 bilder + «Se alle bilder»-lenke på alle skjermstørrelser
+  - Navbar-lenke følger samme mønster som Tjenester/Tannleger (scroll på desktop, standalone på mobil) — konsistent
 
 - [x] **UX- og brukervennlighetsgjennomgang av admin-panelet** ([plan](docs/plan-ux-brukervennlighet-admin.md))
   - 7 steg fullført: brødsmuler, skeleton-loadere, kontekstuelle feilmeldinger, lagrestatus, berøringsmål, dashboard-tall, overganger
