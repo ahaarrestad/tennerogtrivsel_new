@@ -1,6 +1,6 @@
 # Plan: Sett opp CloudFront på produksjon
 
-> **Status: PÅGÅR** — Steg 1, 2, 4, 5 fullført · Steg 3 delvis · Steg 6, 7 gjenstår
+> **Status: PÅGÅR** — Steg 1, 2, 4, 5 fullført · Steg 3 delvis · Steg 6 delvis · Steg 7 gjenstår
 
 ## Bakgrunn
 
@@ -288,7 +288,9 @@ dig www.tennerogtrivsel.no
 
 ---
 
-## Steg 6: Oppdater deploy-workflow
+## Steg 6: Oppdater deploy-workflow — ⚠️ Delvis fullført
+
+> Lagt til i deploy-workflow på main, men ikke aktivert ennå.
 
 Deploy-workflowen trenger en prod-deploy-jobb eller oppdatert S3-bucket. Endringer:
 
