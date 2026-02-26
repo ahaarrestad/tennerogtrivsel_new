@@ -28,23 +28,47 @@
 
 **Hypotese:** Mock-timing — `setupMocks()` kjører via `addInitScript()`, kan ha race condition med sideinnlasting.
 
-## Neste steg
+## Plan
 
-Når nok datapunkter er samlet:
+Jobbes selvstendig uten avklaringer underveis.
 
-1. **Samle data:** Overvåk CI-historikk for gjentatte feil. Noter testnavn, prosjekt (chromium/webkit/mobile), og feilmelding.
+### Steg 1: Reproduser lokalt
 
-2. **Reproduser lokalt:** Kjør den flaky testen i loop for å reprodusere:
-   ```bash
-   npx playwright test sitemap-pages --project="Mobile Chrome" --repeat-each=20
-   ```
+Kjør de mistenkte flaky testene i loop for å bekrefte at de faktisk er flaky:
 
-3. **Fiks basert på funn:**
-   - Hvis timing: legg til `await page.waitForLoadState('networkidle')` eller øk timeout for spesifikke assertions
-   - Hvis CSS: fjern all CSS-basert synlighetssjekking, bruk kun `data-*`-attributter
-   - Hvis mock-race: flytt `setupMocks()` til `page.route()` i stedet for `addInitScript()`
+```bash
+npx playwright test sitemap-pages --project="Mobile Chrome" --repeat-each=50
+```
 
-4. **Verifiser:** Kjør testen 50+ ganger lokalt og i CI uten feil før lukking.
+Hvis ingen feil etter 50 kjøringer, utvid til 100 eller prøv andre prosjekter (chromium, webkit). Hvis testene aldri feiler lokalt, sjekk CI-historikk for kontekst (hvilken jobb, hvilken assertion, trace-output).
+
+### Steg 2: Analyser feilmønster
+
+Basert på reprodusering eller CI-data:
+- Identifiser nøyaktig hvilken assertion som feiler
+- Sjekk om feilen er timing-relatert (CSS-transisjon, sideinnlasting) eller logikk-relatert
+- Les relevant testkode og komponentkode for å forstå mekanismen
+
+### Steg 3: Fiks
+
+Mulige løsninger avhengig av funn:
+- **Timing:** `await page.waitForLoadState('networkidle')`, eller øk timeout for spesifikke assertions
+- **CSS-synlighet:** Fjern all CSS-basert synlighetssjekking (`toBeHidden`/`toBeVisible`), bruk kun `data-*`-attributter
+- **Mock-race:** Flytt `setupMocks()` til `page.route()` i stedet for `addInitScript()`
+
+### Steg 4: Verifiser fiksen
+
+Kjør den fiksede testen i loop for å bekrefte stabilitet:
+
+```bash
+npx playwright test <testfil> --project="Mobile Chrome" --repeat-each=100
+```
+
+Krav: 0 feil på 100 kjøringer før oppgaven regnes som ferdig.
+
+### Steg 5: Kvalitetssjekk
+
+Kjør full testsuite (enhetstester + E2E + build) for å sikre at fiksen ikke brekker noe annet.
 
 ## Konfigurasjon (nåværende)
 
