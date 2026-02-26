@@ -13,6 +13,9 @@
 ## Pågående
 
 ## Backlog
+- [ ] **Flaky tests i E2E-tester**
+  - Identifiser og fiks ustabile E2E-tester som feiler sporadisk
+  - Disse må enten løses permanent eller håndteres med en klar strategi
 - [ ] **Galleri-navigasjon: scroll vs. standalone-side — er det konsistent?** ([plan](docs/plan-galleri-navigasjon.md))
   - ✅ Forsiden begrenset til 4 bilder + «Se alle bilder»-lenke på alle skjermstørrelser
   - Gjenstår: vurder om desktop-opplevelsen bør vise flere bilder (f.eks. 8) for å utnytte plassen
