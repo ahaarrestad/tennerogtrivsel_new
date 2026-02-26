@@ -13,9 +13,11 @@
 ## Pågående
 
 ## Backlog
-- [ ] **Flaky tests i E2E-tester**
-  - Identifiser og fiks ustabile E2E-tester som feiler sporadisk
-  - Disse må enten løses permanent eller håndteres med en klar strategi
+- [ ] **Flaky tests i E2E-tester** ([plan](docs/plan-flaky-e2e.md))
+  - Mobilmeny `toBeHidden()` feiler fortsatt sporadisk i CI (sist sett 26. feb på main)
+  - `data-open`-fiksen fra 25. feb løste ikke problemet fullstendig
+  - Status: overvåker — trenger flere datapunkter fra CI-historikk
+
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
   - Samme oppsett som test-siden, tilpasset produksjonsdomenet
   - SSL-sertifikat (ACM us-east-1), CloudFront-distribusjon med OAC, cache-policy, DNS-pekere
