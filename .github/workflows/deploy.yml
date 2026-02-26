@@ -138,8 +138,8 @@ jobs:
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_TEST }} \
             --paths "/*"
 
-      - name: Invalidate CloudFront cache PROD
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }} \
-            --paths "/*"
+#      - name: Invalidate CloudFront cache PROD
+#        run: |
+#          aws cloudfront create-invalidation \
+#            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }} \
+#            --paths "/*"
