@@ -47,10 +47,12 @@
   - Vurder om koden er lesbar nok eller om ytterligere forenkling trengs
   - Fokusområder: kompleksitet, navngiving, modulstruktur, duplisering
 
-- [ ] **Auto-lagring i admin når bruker forlater et felt (blur)**
-  - Meldinger, tannleger, tjenester og bilder: lagre automatisk når brukeren går ut av feltet som redigeres
-  - Dagens mønster med manuell «Lagre»-knapp er forvirrende og lett å glemme, spesielt når andre deler allerede auto-lagrer
-  - Utred hvilke moduler som allerede har auto-save vs. manuell lagring, og hva som trengs for å gjøre det konsistent
+- [ ] **Auto-lagring i admin når bruker forlater et felt (blur)** ([plan](docs/plan-auto-lagring-admin.md))
+  - Innstillinger, tannleger og bilder har allerede auto-save — kun **Meldinger** og **Tjenester** gjenstår
+  - Debounced auto-save (1500ms) med save bar, samme mønster som tannleger/bilder
+  - Nye oppføringer: «Opprett»-knapp først, deretter auto-save
+  - Refaktorer `initEditors`/`initMarkdownEditor` for å støtte auto-save uten knapp-binding
+  - 4 steg: tjenester, meldinger, editor-helpers refaktor, tester
 
 - [ ] **Sjekk hvordan sidene fungerer på iPhone**
   - Test den offentlige nettsiden og admin-panelet på iPhone (Safari/WebKit)
