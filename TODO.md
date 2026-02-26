@@ -11,12 +11,12 @@
 - Flytt oppgaven til «Fullført» når den er ferdig.
 
 ## Pågående
-
-## Backlog
-- [ ] **Fiks galleri-relaterte E2E-feil og vis tom-melding på gallerisiden**
+- [ ] **Fiks galleri-relaterte E2E-feil og vis tom-melding på gallerisiden** ([plan](docs/plan-galleri-e2e.md))
   - 5 pre-eksisterende E2E-feil knyttet til tomt galleri (galleri-lenke i nav + SEO canonical/tittel)
   - `galleri.astro` redirecter til forsiden ved tomt galleri — bør heller vise en melding om at galleriet er tomt
   - E2E-tester for galleri-lenke i meny må håndtere tilfellet der galleriet er tomt
+
+## Backlog
 
 - [ ] **Flaky tests i E2E-tester** ([plan](docs/plan-flaky-e2e.md))
   - Mobilmeny `toBeHidden()` feiler fortsatt sporadisk i CI (sist sett 26. feb på main)
@@ -51,6 +51,10 @@
   - Analyser dagens tilstand av kodebasen etter tidligere refaktoreringer
   - Vurder om koden er lesbar nok eller om ytterligere forenkling trengs
   - Fokusområder: kompleksitet, navngiving, modulstruktur, duplisering
+
+- [ ] **Sjekk hvordan sidene fungerer på iPhone**
+  - Test den offentlige nettsiden og admin-panelet på iPhone (Safari/WebKit)
+  - Sjekk layout, touch-interaksjoner, scrolling og eventuelle iOS-spesifikke problemer
 
 
 ## Fullført
