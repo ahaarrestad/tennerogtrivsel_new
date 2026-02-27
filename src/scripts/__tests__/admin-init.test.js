@@ -96,8 +96,10 @@ function setupDOM() {
         <div id="login-container"></div>
         <div id="dashboard" class="hidden"></div>
         <div id="module-container" class="hidden">
-            <span id="breadcrumb-module"></span>
+            <button id="breadcrumb-module"></button>
             <span id="breadcrumb-count" class="hidden"></span>
+            <span id="breadcrumb-editor-sep" class="admin-breadcrumb-sep hidden"></span>
+            <span id="breadcrumb-editor" class="admin-breadcrumb-current hidden"></span>
             <div id="module-title"></div>
             <div id="module-actions"></div>
             <div id="module-inner"></div>
@@ -379,5 +381,102 @@ describe('admin-init', () => {
         document.getElementById('remember-me').checked = true;
         document.getElementById('login-btn').click();
         expect(setRememberMe).toHaveBeenCalledWith(true);
+    });
+
+    it('should register setBreadcrumbEditor and clearBreadcrumbEditor as window globals', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+        expect(typeof window.setBreadcrumbEditor).toBe('function');
+        expect(typeof window.clearBreadcrumbEditor).toBe('function');
+    });
+
+    it('setBreadcrumbEditor should show editor label and make module clickable', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+
+        const onBack = vi.fn();
+        window.setBreadcrumbEditor('Redigerer melding', onBack);
+
+        const sep = document.getElementById('breadcrumb-editor-sep');
+        const editor = document.getElementById('breadcrumb-editor');
+        const moduleBtn = document.getElementById('breadcrumb-module');
+
+        expect(sep.classList.contains('hidden')).toBe(false);
+        expect(editor.classList.contains('hidden')).toBe(false);
+        expect(editor.textContent).toBe('Redigerer melding');
+        expect(moduleBtn.dataset.clickable).toBe('true');
+
+        moduleBtn.click();
+        expect(onBack).toHaveBeenCalled();
+    });
+
+    it('clearBreadcrumbEditor should hide editor elements and remove clickable', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+
+        window.setBreadcrumbEditor('Test', vi.fn());
+        window.clearBreadcrumbEditor();
+
+        const sep = document.getElementById('breadcrumb-editor-sep');
+        const editor = document.getElementById('breadcrumb-editor');
+        const moduleBtn = document.getElementById('breadcrumb-module');
+
+        expect(sep.classList.contains('hidden')).toBe(true);
+        expect(editor.classList.contains('hidden')).toBe(true);
+        expect(editor.textContent).toBe('');
+        expect(moduleBtn.dataset.clickable).toBeUndefined();
+        expect(moduleBtn.onclick).toBeNull();
+    });
+
+    it('setBreadcrumbEditor should handle missing DOM elements gracefully', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+
+        // Remove breadcrumb elements
+        document.getElementById('breadcrumb-editor-sep')?.remove();
+        document.getElementById('breadcrumb-editor')?.remove();
+        document.getElementById('breadcrumb-module')?.remove();
+
+        // Should not throw
+        expect(() => window.setBreadcrumbEditor('Test', vi.fn())).not.toThrow();
+    });
+
+    it('clearBreadcrumbEditor should handle missing DOM elements gracefully', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+
+        document.getElementById('breadcrumb-editor-sep')?.remove();
+        document.getElementById('breadcrumb-editor')?.remove();
+        document.getElementById('breadcrumb-module')?.remove();
+
+        expect(() => window.clearBreadcrumbEditor()).not.toThrow();
+    });
+
+    it('setBreadcrumbEditor onclick should not call callback if _onBackToList was cleared', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+
+        const onBack = vi.fn();
+        window.setBreadcrumbEditor('Test', onBack);
+        const moduleBtn = document.getElementById('breadcrumb-module');
+
+        // Clear the callback manually (simulates a race condition)
+        delete moduleBtn._onBackToList;
+        moduleBtn.click();
+        expect(onBack).not.toHaveBeenCalled();
+    });
+
+    it('openModule should clear editor breadcrumb as safety net', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+
+        // Set editor breadcrumb
+        window.setBreadcrumbEditor('Test', vi.fn());
+        expect(document.getElementById('breadcrumb-editor').classList.contains('hidden')).toBe(false);
+
+        // Opening a module should clear it
+        document.getElementById('card-settings').click();
+        expect(document.getElementById('breadcrumb-editor').classList.contains('hidden')).toBe(true);
+        expect(document.getElementById('breadcrumb-editor-sep').classList.contains('hidden')).toBe(true);
     });
 });

@@ -63,7 +63,7 @@ async function editMelding(id, name) {
         }
 
         const buttonHtml = id
-            ? `<button onclick="window.loadMeldingerModule()" class="admin-btn-cancel">Tilbake til listen</button>`
+            ? ''
             : `<button id="btn-save-melding" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Opprett melding</button>
                     <button onclick="window.loadMeldingerModule()" class="admin-btn-cancel">Avbryt</button>`;
 
@@ -142,6 +142,10 @@ async function editMelding(id, name) {
         };
 
         const { easyMDE } = initEditors(onDateChange);
+
+        if (id) {
+            window.setBreadcrumbEditor?.('Redigerer melding', reloadMeldinger);
+        }
 
         const doSave = async () => {
             const title = document.getElementById('edit-title').value;
@@ -234,6 +238,7 @@ async function editMelding(id, name) {
 }
 
 function reloadMeldinger() {
+    window.clearBreadcrumbEditor?.();
     const { MELDINGER_FOLDER } = getAdminConfig();
     loadMeldingerModule(MELDINGER_FOLDER, editMelding, deleteMelding);
 }

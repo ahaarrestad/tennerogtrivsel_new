@@ -56,7 +56,7 @@ async function editTjeneste(id, name) {
         const isActive = data.active !== false && data.active !== 'false';
 
         const buttonHtml = id
-            ? `<button onclick="window.loadTjenesterModule()" class="admin-btn-cancel">Tilbake til listen</button>`
+            ? ''
             : `<button id="btn-save-tjeneste" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Opprett tjeneste</button>
                     <button onclick="window.loadTjenesterModule()" class="admin-btn-cancel">Avbryt</button>`;
 
@@ -83,6 +83,10 @@ async function editTjeneste(id, name) {
             </div>`;
 
         const easyMDE = initMarkdownEditor();
+
+        if (id) {
+            window.setBreadcrumbEditor?.('Redigerer tjeneste', reloadTjenester);
+        }
 
         const doSave = async () => {
             const title = document.getElementById('edit-title').value;
@@ -195,6 +199,7 @@ async function toggleTjenesteActive(driveId, fileName, service) {
 }
 
 function reloadTjenester() {
+    window.clearBreadcrumbEditor?.();
     const { TJENESTER_FOLDER } = getAdminConfig();
     loadTjenesterModule(TJENESTER_FOLDER, editTjeneste, deleteTjeneste, toggleTjenesteActive);
 }

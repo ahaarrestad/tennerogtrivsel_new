@@ -37,12 +37,8 @@ async function editTannlege(rowIndex, data = null) {
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
 
-    actions.innerHTML = `
-        <button onclick="window.openTannlegerModule()" class="admin-btn-secondary text-xs py-2 px-4 shadow-md flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Tilbake til oversikten
-        </button>
-    `;
+    actions.innerHTML = '';
+    window.setBreadcrumbEditor?.('Redigerer profil', reloadTannleger);
     inner.innerHTML = '<div class="text-admin-muted italic text-sm animate-pulse">Henter profil og bilde fra Google...</div>';
 
     const t = data || { name: '', title: '', description: '', image: '', active: true, scale: 1.0, positionX: 50, positionY: 50 };
@@ -145,12 +141,6 @@ async function editTannlege(rowIndex, data = null) {
                     </div>
                 </div>
 
-                <div class="pt-6 border-t border-admin-border">
-                    <button onclick="window.openTannlegerModule()" class="btn-primary w-full py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        Lagre og gå tilbake
-                    </button>
-                </div>
             </div>
 
             <!-- HØYRE: Preview -->
@@ -373,6 +363,7 @@ async function toggleTannlegeActive(rowIndex, t) {
 }
 
 function reloadTannleger() {
+    window.clearBreadcrumbEditor?.();
     const { SHEET_ID, TANNLEGER_FOLDER } = getAdminConfig();
     loadTannlegerModule(SHEET_ID, editTannlege, deleteTannlege, TANNLEGER_FOLDER, toggleTannlegeActive);
 }

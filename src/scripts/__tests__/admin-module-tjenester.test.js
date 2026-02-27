@@ -92,6 +92,12 @@ describe('reloadTjenester', () => {
             expect.any(Function)
         );
     });
+
+    it('should call clearBreadcrumbEditor', () => {
+        window.clearBreadcrumbEditor = vi.fn();
+        reloadTjenester();
+        expect(window.clearBreadcrumbEditor).toHaveBeenCalled();
+    });
 });
 
 describe('deleteTjeneste', () => {
@@ -197,11 +203,16 @@ describe('editTjeneste', () => {
             saveFile.mockResolvedValue();
         });
 
-        it('should show "Tilbake til listen" instead of save button for existing', async () => {
+        it('should not show save button for existing (navigation via breadcrumb)', async () => {
             await window.editTjeneste('id1', 'Old');
             const inner = document.getElementById('module-inner');
             expect(inner.querySelector('#btn-save-tjeneste')).toBeNull();
-            expect(inner.innerHTML).toContain('Tilbake til listen');
+        });
+
+        it('should set breadcrumb editor for existing tjeneste', async () => {
+            window.setBreadcrumbEditor = vi.fn();
+            await window.editTjeneste('id1', 'Old');
+            expect(window.setBreadcrumbEditor).toHaveBeenCalledWith('Redigerer tjeneste', expect.any(Function));
         });
 
         it('should auto-save on title input change', async () => {
