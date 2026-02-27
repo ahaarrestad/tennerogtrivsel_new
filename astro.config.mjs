@@ -7,5 +7,7 @@ export default defineConfig({
         plugins: [tailwindcss()]
     },
     site: 'https://www.tennerogtrivsel.no',
-    integrations: [sitemap()],
+    integrations: [sitemap({
+        filter: (page) => !page.includes('/admin') && !page.includes('/robots.txt'),
+    })],
 });
