@@ -12,15 +12,6 @@
 
 ## Pågående
 
-## Backlog
-
-- [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
-  - Samme oppsett som test-siden, tilpasset produksjonsdomenet
-  - SSL-sertifikat (ACM us-east-1), CloudFront-distribusjon med OAC, cache-policy, DNS-pekere
-  - Gjenbruk Response Headers Policy og CloudFront Function fra test
-  - Oppdater deploy-workflow for prod-bucket
-  - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
-
 - [ ] **Kodelesbarhet — ny gjennomgang og forenkling** ([plan](docs/plan-kodelesbarhet-2.md))
   - Revidert plan: 6 steg (opprinnelig 5), SVG-ikoner droppet (lav verdi), 2 nye mønstre identifisert
   - Steg 1: Slider-template (bilder+tannleger) → felles `renderImageCropSliders()`
@@ -31,16 +22,32 @@
   - Steg 6: Splitt `admin-client.js` (997 linjer) → `admin-auth.js` + `admin-drive.js` + `admin-sheets.js`
   - Steg 1–5 sekvensielt (endrer editor-helpers), steg 6 selvstendig
 
+## Backlog
+
+- [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
+  - Samme oppsett som test-siden, tilpasset produksjonsdomenet
+  - SSL-sertifikat (ACM us-east-1), CloudFront-distribusjon med OAC, cache-policy, DNS-pekere
+  - Gjenbruk Response Headers Policy og CloudFront Function fra test
+  - Oppdater deploy-workflow for prod-bucket
+  - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
+
 - [ ] **Sjekk hvordan sidene fungerer på iPhone** ([plan](docs/plan-sjekk-iphone.md))
   - Legg til Mobile Safari (iPhone 14) i Playwright-config
   - Kjør testsuite, fiks Safari-spesifikke feil
   - Viewport/safe-area forbedringer, dialog-fallback, sticky-verifisering
   - 6 steg: Playwright-config, testfeil-fiks, viewport, dialog, sticky, kvalitetssjekk
 
-- [ ] **Cache-Control og grønn hosting — gjør siden nesten «karbon-negativ»**
-  - Utred optimal Cache-Control-strategi for CloudFront (immutable assets, stale-while-revalidate, lange TTL-er)
-  - Mål: minimere origin-forespørsler og dataoverføring — lavest mulig karbonfotavtrykk
-  - Vurder om S3-buckets kan flyttes til en region nærmere Norge (eu-north-1 Stockholm?) for lavere latens og kortere nettverksvei
+- [ ] **Cache-Control og grønn hosting — gjør siden nesten «karbon-negativ»** ([plan](docs/plan-cache-control-gronn-hosting.md))
+  - Splitt S3-sync i tre kommandoer med passende Cache-Control-headere
+  - Hashed assets (`/_astro/*`) og fonter: `immutable, max-age=31536000` (1 år)
+  - HTML/API/øvrig: `max-age=3600, stale-while-revalidate=86400` (1t frisk, 24t stale)
+  - Smartere CloudFront-invalidering — kun ikke-hashed innhold (skip `/_astro/*` og `/fonts/*`)
+  - S3-region: behold eu-west-1 (CloudFront edge-cacher gjør origin-region neglisjerbar)
+  - 3 steg: deploy-workflow, invalidering, verifisering
+
+- [ ] **Flaky tests — sporadiske testfeil**
+  - Noen tester feiler av og til, usikkert hvilke
+  - Undersøk: identifiser hvilke tester som er ustabile, finn rotårsak og fiks
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plan-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
