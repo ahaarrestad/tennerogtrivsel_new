@@ -26,6 +26,7 @@ function openModule(id, title) {
     if (breadcrumbModule) breadcrumbModule.textContent = title;
     const breadcrumbCount = document.getElementById('breadcrumb-count');
     if (breadcrumbCount) { breadcrumbCount.textContent = ''; breadcrumbCount.classList.add('hidden'); }
+    clearBreadcrumbEditor();
 
     if (id === 'settings') loadSettingsModule();
     else if (id === 'meldinger') reloadMeldinger();
@@ -35,6 +36,32 @@ function openModule(id, title) {
     else {
         const inner = document.getElementById('module-inner');
         if (inner) inner.innerHTML = `<p class="text-admin-muted italic">Denne modulen er under utvikling.</p>`;
+    }
+}
+
+function setBreadcrumbEditor(label, onBackToList) {
+    const sep = document.getElementById('breadcrumb-editor-sep');
+    const editorEl = document.getElementById('breadcrumb-editor');
+    const moduleBtn = document.getElementById('breadcrumb-module');
+    if (sep) { sep.classList.remove('hidden'); }
+    if (editorEl) { editorEl.textContent = label; editorEl.classList.remove('hidden'); }
+    if (moduleBtn) {
+        moduleBtn.dataset.clickable = 'true';
+        moduleBtn._onBackToList = onBackToList;
+        moduleBtn.onclick = () => { if (moduleBtn._onBackToList) moduleBtn._onBackToList(); };
+    }
+}
+
+function clearBreadcrumbEditor() {
+    const sep = document.getElementById('breadcrumb-editor-sep');
+    const editorEl = document.getElementById('breadcrumb-editor');
+    const moduleBtn = document.getElementById('breadcrumb-module');
+    if (sep) sep.classList.add('hidden');
+    if (editorEl) { editorEl.textContent = ''; editorEl.classList.add('hidden'); }
+    if (moduleBtn) {
+        delete moduleBtn.dataset.clickable;
+        moduleBtn.onclick = null;
+        delete moduleBtn._onBackToList;
     }
 }
 
@@ -66,6 +93,8 @@ async function handleAuth(userInfo = null) {
 const setup = async () => {
     try {
         // Register window globals for HTML onclick handlers
+        window.setBreadcrumbEditor = setBreadcrumbEditor;
+        window.clearBreadcrumbEditor = clearBreadcrumbEditor;
         initTjenesterModule();
         initMeldingerModule();
         initTannlegerModule();

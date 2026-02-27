@@ -90,6 +90,12 @@ describe('reloadMeldinger', () => {
             expect.any(Function)
         );
     });
+
+    it('should call clearBreadcrumbEditor', () => {
+        window.clearBreadcrumbEditor = vi.fn();
+        reloadMeldinger();
+        expect(window.clearBreadcrumbEditor).toHaveBeenCalled();
+    });
 });
 
 describe('deleteMelding', () => {
@@ -195,11 +201,16 @@ describe('editMelding', () => {
             saveFile.mockResolvedValue();
         });
 
-        it('should show "Tilbake til listen" instead of save button for existing', async () => {
+        it('should not show save button for existing (navigation via breadcrumb)', async () => {
             await window.editMelding('id1', 'Melding');
             const inner = document.getElementById('module-inner');
             expect(inner.querySelector('#btn-save-melding')).toBeNull();
-            expect(inner.innerHTML).toContain('Tilbake til listen');
+        });
+
+        it('should set breadcrumb editor for existing melding', async () => {
+            window.setBreadcrumbEditor = vi.fn();
+            await window.editMelding('id1', 'Melding');
+            expect(window.setBreadcrumbEditor).toHaveBeenCalledWith('Redigerer melding', expect.any(Function));
         });
 
         it('should auto-save on title input change', async () => {

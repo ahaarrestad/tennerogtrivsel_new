@@ -83,6 +83,13 @@ afterEach(() => {
 });
 
 describe('loadBilderModule', () => {
+    it('should call clearBreadcrumbEditor on load', async () => {
+        window.clearBreadcrumbEditor = vi.fn();
+        getSheetParentFolder.mockReturnValue(new Promise(() => {}));
+        loadBilderModule();
+        expect(window.clearBreadcrumbEditor).toHaveBeenCalled();
+    });
+
     it('should show loading state initially', async () => {
         getSheetParentFolder.mockReturnValue(new Promise(() => {}));
         loadBilderModule(); // don't await
@@ -335,7 +342,8 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         expect(inner.querySelector('#galleri-edit-title')).toBeNull();
     });
 
-    it('should handle back button', async () => {
+    it('should set breadcrumb editor when editing', async () => {
+        window.setBreadcrumbEditor = vi.fn();
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -350,8 +358,7 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
 
         await editFn(2);
 
-        const backBtn = document.getElementById('btn-back-to-bilder');
-        expect(backBtn).not.toBeNull();
+        expect(window.setBreadcrumbEditor).toHaveBeenCalledWith('Redigerer bilde', expect.any(Function));
     });
 
     it('should bind slider step buttons and wheel prevent', async () => {
@@ -950,7 +957,10 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         expect(previewImg.style.objectPosition).toBe('20% 50%');
     });
 
-    it('should handle back button click in editor', async () => {
+    it('should navigate back via breadcrumb editor callback', async () => {
+        let breadcrumbCallback;
+        window.setBreadcrumbEditor = vi.fn((label, cb) => { breadcrumbCallback = cb; });
+        window.clearBreadcrumbEditor = vi.fn();
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -968,8 +978,8 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
 
-        const backBtn = document.getElementById('btn-back-to-bilder');
-        backBtn.click();
+        // Trigger the breadcrumb back callback (simulates clicking module name)
+        breadcrumbCallback();
 
         // Should trigger loadBilderModule (re-renders the list)
         await vi.waitFor(() => {

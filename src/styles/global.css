@@ -645,7 +645,10 @@
         @apply text-admin-muted-light;
     }
     .admin-breadcrumb-current {
-        @apply font-bold text-brand uppercase tracking-wider;
+        @apply font-bold text-brand uppercase tracking-wider bg-transparent border-none p-0 cursor-default;
+    }
+    .admin-breadcrumb-current[data-clickable="true"] {
+        @apply cursor-pointer hover:text-brand-hover hover:underline transition-colors;
     }
     .admin-item-count {
         @apply text-admin-muted-light;

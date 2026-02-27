@@ -14,6 +14,7 @@ import {
 } from './admin-editor-helpers.js';
 
 export async function loadBilderModule() {
+    window.clearBreadcrumbEditor?.();
     const { SHEET_ID } = getAdminConfig();
     const inner = document.getElementById('module-inner');
     const actions = document.getElementById('module-actions');
@@ -70,7 +71,6 @@ export async function loadBilderModule() {
             if (!inner2) return;
             inner2.innerHTML = DOMPurify.sanitize(`
                 <div class="max-w-4xl animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <button id="btn-back-to-bilder" class="text-xs text-brand font-bold uppercase tracking-widest mb-6 hover:underline cursor-pointer">&larr; Tilbake til oversikten</button>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                         <div class="space-y-6">
                             <div id="galleri-active-field">
@@ -210,8 +210,9 @@ export async function loadBilderModule() {
             if (valX) valX.textContent = `${item.positionX ?? 50}%`;
             if (valY) valY.textContent = `${item.positionY ?? 50}%`;
 
-            // Back buttons
-            document.getElementById('btn-back-to-bilder')?.addEventListener('click', () => loadBilderModule());
+            // Breadcrumb editor navigation
+            window.setBreadcrumbEditor?.('Redigerer bilde', loadBilderModule);
+            // "Lagre og gå tilbake" button
             document.getElementById('btn-ferdig-galleri')?.addEventListener('click', () => loadBilderModule());
 
             // Forsidebilde toggle

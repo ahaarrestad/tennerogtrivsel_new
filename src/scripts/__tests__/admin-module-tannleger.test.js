@@ -95,6 +95,12 @@ describe('reloadTannleger', () => {
             expect.any(Function)
         );
     });
+
+    it('should call clearBreadcrumbEditor', () => {
+        window.clearBreadcrumbEditor = vi.fn();
+        reloadTannleger();
+        expect(window.clearBreadcrumbEditor).toHaveBeenCalled();
+    });
 });
 
 describe('deleteTannlege', () => {
@@ -221,11 +227,13 @@ describe('editTannlege', () => {
         expect(getDriveImageBlob).toHaveBeenCalledWith('1234567890abcdefghijk');
     });
 
-    it('should render back button in actions', async () => {
+    it('should set breadcrumb editor and clear actions', async () => {
+        window.setBreadcrumbEditor = vi.fn();
         await window.editTannlege(null);
 
         const actions = document.getElementById('module-actions');
-        expect(actions.innerHTML).toContain('Tilbake til oversikten');
+        expect(actions.innerHTML).toBe('');
+        expect(window.setBreadcrumbEditor).toHaveBeenCalledWith('Redigerer profil', expect.any(Function));
     });
 
     it('should not crash when module-inner is missing', async () => {
