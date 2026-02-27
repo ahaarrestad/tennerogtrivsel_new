@@ -34,10 +34,11 @@
   - 6 steg: HTML-escaping (M1), filopplasting (M2), input-validering (M3), API-nøkkel (L1), tester, dokumentasjon
   - Steg 1–4 uavhengige, steg 5 avhenger av 1+2+3, steg 6 sist
 
-- [ ] **Bekreft tilgangskontroll på adminsiden**
+- [ ] **Bekreft tilgangskontroll på adminsiden** ([plan](docs/plan-tilgangskontroll.md))
   - Verifiser at brukere kun får tilgang til moduler de har tilgang til på Google Disk
   - Test kombinasjoner: kun meldinger, kun tjenester, kun «innstillinger + tannleger + galleri», osv.
   - Bekreft at bruker logges ut hvis det ikke er tilgang til noe i det hele tatt
+  - 4 steg: tilgangskombinasjoner (5 scenarioer), checkMultipleAccess-tester, edge cases, verifisering/dokumentasjon
 
 - [ ] **Kodelesbarhet — ny gjennomgang og forenkling**
   - Analyser dagens tilstand av kodebasen etter tidligere refaktoreringer
