@@ -39,10 +39,14 @@
   - Bekreft at bruker logges ut hvis det ikke er tilgang til noe i det hele tatt
   - 4 steg: tilgangskombinasjoner (5 scenarioer), checkMultipleAccess-tester, edge cases, verifisering/dokumentasjon
 
-- [ ] **Kodelesbarhet — ny gjennomgang og forenkling**
-  - Analyser dagens tilstand av kodebasen etter tidligere refaktoreringer
-  - Vurder om koden er lesbar nok eller om ytterligere forenkling trengs
-  - Fokusområder: kompleksitet, navngiving, modulstruktur, duplisering
+- [ ] **Kodelesbarhet — ny gjennomgang og forenkling** ([plan](docs/plan-kodelesbarhet-2.md))
+  - Analyse fullført: 5 konkrete forbedringspunkter identifisert
+  - Steg 1: Slider-template (bilder+tannleger) → felles `renderImageCropSliders()`
+  - Steg 2: Auto-save debounce (4 moduler) → felles `createAutoSaver()`
+  - Steg 3: Bilde-preview-oppslag (bilder+tannleger) → felles `resolveImagePreview()`
+  - Steg 4: Splitt `admin-client.js` (987 linjer) → `admin-auth.js` + `admin-drive.js` + `admin-sheets.js`
+  - Steg 5: SVG-ikoner → egen `admin-icons.js`
+  - Steg 1–3+5 uavhengige, steg 4 selvstendig men størst
 
 - [ ] **Sjekk hvordan sidene fungerer på iPhone** ([plan](docs/plan-sjekk-iphone.md))
   - Legg til Mobile Safari (iPhone 14) i Playwright-config
