@@ -30,6 +30,27 @@ CSP inkluderer `blob:` i `connect-src` for å støtte thumbnail-forhåndsvisning
 
 `tests/csp-check.spec.ts` verifiserer CSP-brudd på tvers av nøkkelsider. Kjør ved endringer i `src/middleware.ts` (se `/security-audit`-skill).
 
+## Tilgangskontroll (admin)
+
+Admin-panelet bruker Google Drive-deling som tilgangsmodell. Brukeren autentiserer seg via Google OAuth, og `enforceAccessControl()` i `admin-dashboard.js` sjekker hvilke Google Drive-ressurser (mapper/sheets) brukeren har tilgang til.
+
+**Modul-ressurs-mapping:**
+
+| Modul | Krever tilgang til | Logikk |
+|-------|-------------------|--------|
+| Innstillinger | `SHEET_ID` | Enkel sjekk |
+| Tjenester | `TJENESTER_FOLDER` | Enkel sjekk |
+| Meldinger | `MELDINGER_FOLDER` | Enkel sjekk |
+| Tannleger | `TANNLEGER_FOLDER` + `SHEET_ID` | Begge må være tilgjengelige |
+| Bilder | `SHEET_ID` | Enkel sjekk |
+
+- Kort vises (`display: flex`) eller skjules (`display: none`) basert på tilgangssjekk
+- Hvis brukeren ikke har tilgang til noen ressurser, logges de ut og sendes til `/?access_denied=true`
+- Tom config (ingen ressurs-IDer) utløser **ikke** utlogging — `ids.length === 0` håndteres separat
+- Selve tilgangskontrollen skjer via Google Drive API (`gapi.client.drive.files.get`) — 403 = ingen tilgang
+
+**Nøkkelfiler:** `admin-dashboard.js` (`enforceAccessControl`), `admin-client.js` (`checkAccess`, `checkMultipleAccess`), `admin-init.js` (`handleAuth`)
+
 ## Web Storage og modul-tilstand i tester
 
 - Når kode under test bruker Web Storage, SKAL **begge** `localStorage.clear()` og
