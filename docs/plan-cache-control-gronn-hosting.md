@@ -72,9 +72,71 @@ curl -sI https://test2.aarrestad.com/ | grep -i cache-control
 curl -sI https://test2.aarrestad.com/fonts/inter-v18-latin-regular.woff2 | grep -i cache-control
 ```
 
-## S3-region (eu-west-1 → eu-north-1?)
+## Steg 4 (valgfritt): Flytt S3-bucket til eu-north-1 (Stockholm)
 
-**Anbefaling: Behold eu-west-1.** CloudFront serverer fra edge-lokasjoner uansett, så origin-regionen har minimal effekt på sluttbrukerlatens. Å flytte bucket krever gjenskaping, oppdatering av IAM/OAC-policies og DNS — stor innsats for neglisjerbar gevinst.
+Kortere nettverksvei fra CloudFront edge → origin for norske brukere. OAC-innstillingen i CloudFront trenger ikke røres — kun origin-domenet endres.
+
+### 4a. Opprett ny bucket i eu-north-1
+
+```bash
+aws s3 mb s3://test2.aarrestad.com-eu-north-1 --region eu-north-1
+```
+
+### 4b. Blokker offentlig tilgang
+
+```bash
+aws s3api put-public-access-block \
+  --bucket test2.aarrestad.com-eu-north-1 \
+  --public-access-block-configuration \
+  BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true \
+  --region eu-north-1
+```
+
+### 4c. Sett bucket policy for CloudFront OAC
+
+```bash
+aws s3api put-bucket-policy --bucket test2.aarrestad.com-eu-north-1 --policy '{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {"Service": "cloudfront.amazonaws.com"},
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::test2.aarrestad.com-eu-north-1/*",
+    "Condition": {
+      "StringEquals": {
+        "AWS:SourceArn": "arn:aws:cloudfront::ACCOUNT_ID:distribution/DISTRIBUTION_ID"
+      }
+    }
+  }]
+}' --region eu-north-1
+```
+
+### 4d. Pek CloudFront til ny bucket
+
+```bash
+# Hent nåværende config
+aws cloudfront get-distribution-config --id DISTRIBUTION_ID > cf-config.json
+
+# Endre origin domain fra:
+#   test2.aarrestad.com.s3.eu-west-1.amazonaws.com
+# til:
+#   test2.aarrestad.com-eu-north-1.s3.eu-north-1.amazonaws.com
+# Oppdater ETag og lagre som cf-config-updated.json
+
+aws cloudfront update-distribution --id DISTRIBUTION_ID \
+  --if-match ETAG \
+  --distribution-config file://cf-config-updated.json
+```
+
+### 4e. Oppdater deploy.yml
+
+Bytt bucket-navn i `aws s3 sync`-kommandoene (steg 1) til ny bucket.
+
+### 4f. Slett gammel bucket
+
+```bash
+aws s3 rb s3://test2.aarrestad.com --force
+```
 
 ## Ikke i scope
 

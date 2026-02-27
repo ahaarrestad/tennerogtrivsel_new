@@ -42,8 +42,8 @@
   - Hashed assets (`/_astro/*`) og fonter: `immutable, max-age=31536000` (1 år)
   - HTML/API/øvrig: `max-age=3600, stale-while-revalidate=86400` (1t frisk, 24t stale)
   - Smartere CloudFront-invalidering — kun ikke-hashed innhold (skip `/_astro/*` og `/fonts/*`)
-  - S3-region: behold eu-west-1 (CloudFront edge-cacher gjør origin-region neglisjerbar)
-  - 3 steg: deploy-workflow, invalidering, verifisering
+  - Valgfritt steg 4: flytt S3-bucket til eu-north-1 (Stockholm) — ny bucket, OAC-policy, pek CloudFront, oppdater workflow, slett gammel
+  - 3+1 steg: deploy-workflow, invalidering, verifisering, (valgfritt) regionflytt
 
 - [ ] **Flaky tests — sporadiske testfeil**
   - Noen tester feiler av og til, usikkert hvilke
