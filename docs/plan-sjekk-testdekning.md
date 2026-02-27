@@ -1,5 +1,7 @@
 # Plan: Sjekk at alle filer som kan testes er testet
 
+> **Status: FULLFØRT**
+
 ## 1. Kartlegging av alle testbare kildefiler
 
 ### 1.1 src/scripts/ (24 kildefiler)

@@ -1,5 +1,7 @@
 # Plan: Galleri-navigasjon — konsistens mellom mobil og desktop
 
+> **Status: FULLFØRT**
+
 ## Problemstilling
 
 Galleriet har inkonsistent oppførsel mellom mobil og desktop:

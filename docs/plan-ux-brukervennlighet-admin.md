@@ -1,5 +1,7 @@
 # Plan: UX- og brukervennlighetsgjennomgang av admin-panelet
 
+> **Status: FULLFØRT** — 7 steg fullført
+
 ## Kontekst
 
 Admin-panelet har allerede vært gjennom en design/a11y-gjennomgang (tokens, CSS-opprydding, ARIA, CLS-fiks). Denne oppgaven fokuserer på **brukervennlighet for den daglige brukeren** — en tannklinikk-resepsjonist eller tannlege som bruker admin-panelet på mobil eller desktop.

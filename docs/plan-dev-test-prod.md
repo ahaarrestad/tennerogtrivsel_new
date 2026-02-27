@@ -1,5 +1,7 @@
 # Plan: Dev-Test-Prod miljø oppsett
 
+> **Status: BACKLOG** — ikke startet
+
 ## Mål
 
 Kontrollere **når** endringer når produksjon, uten å duplisere datakilder.

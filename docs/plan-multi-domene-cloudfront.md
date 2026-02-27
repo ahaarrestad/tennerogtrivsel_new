@@ -1,5 +1,7 @@
 # Plan: Flere domener på samme CloudFront (Alternativ C — Hybrid)
 
+> **Status: BACKLOG** — ikke startet
+
 ## Bakgrunn
 
 I dag har vi flere S3-buckets som redirecter til `www.tennerogtrivsel.no`. Besøkende ser alltid `www.tennerogtrivsel.no` i adressefeltet uansett hvilket domene de skrev inn.

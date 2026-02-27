@@ -1,5 +1,7 @@
 # Plan: Optimaliser testsuiten — fjern redundante tester
 
+> **Status: FULLFØRT**
+
 ## Nåsituasjon
 
 | Kategori | Filer | Tester | Tid |

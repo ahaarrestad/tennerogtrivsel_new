@@ -1,5 +1,7 @@
 # Plan: Forbedre visuell synlighet på aktiv melding i info-banner
 
+> **Status: FULLFØRT**
+
 ## Kontekst
 
 InfoBanner-komponenten viser aktive meldinger øverst på siden. I dag har den en liten pulserende prikk (`animate-pulse w-2 h-2`) og relativt liten tekst (`text-xs md:text-sm font-medium`). Brukeren ønsker å fjerne prikken, erstatte den med et info-ikon, og gjøre teksten litt mer fremtredende.
