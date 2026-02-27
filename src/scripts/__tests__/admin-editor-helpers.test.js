@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
-vi.mock('snarkdown', () => ({ default: vi.fn(text => `<p>${text}</p>`) }));
+vi.mock('marked', () => ({ marked: { parse: vi.fn(text => `<p>${text}</p>`) } }));
 vi.mock('../admin-api-retry.js', () => ({
     createAuthRefresher: vi.fn(() => 'mock-refresher')
 }));

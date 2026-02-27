@@ -1,5 +1,5 @@
 import DOMPurify from 'dompurify';
-import snarkdown from 'snarkdown';
+import { marked } from 'marked';
 import { createAuthRefresher } from './admin-api-retry.js';
 import { silentLogin } from './admin-client.js';
 
@@ -95,7 +95,7 @@ export function initMarkdownEditor() {
             placeholder: "Skriv innholdet her...",
             toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
             previewRender: (plainText) => {
-                return `<div class="markdown-content prose">${DOMPurify.sanitize(snarkdown(plainText))}</div>`;
+                return `<div class="markdown-content prose">${DOMPurify.sanitize(marked.parse(plainText))}</div>`;
             }
         });
     }
@@ -114,7 +114,7 @@ export function initEditors(onDateChange) {
             placeholder: "Skriv innholdet her...",
             toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
             previewRender: (plainText) => {
-                return `<div class="markdown-content prose">${DOMPurify.sanitize(snarkdown(plainText))}</div>`;
+                return `<div class="markdown-content prose">${DOMPurify.sanitize(marked.parse(plainText))}</div>`;
             }
         });
     }
