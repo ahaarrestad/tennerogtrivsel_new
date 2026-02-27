@@ -38,8 +38,8 @@ vi.mock('../admin-editor-helpers.js', () => ({
     })),
     showDeletionToast: vi.fn(),
     initEditors: vi.fn(() => ({ easyMDE: null, flatpickrInstances: [] })),
+    createAutoSaver: vi.fn((saveFn) => ({ trigger: vi.fn(), cancel: vi.fn(), _saveFn: saveFn })),
     showSaveBar: vi.fn(),
-    hideSaveBar: vi.fn(),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({
@@ -51,7 +51,7 @@ import { deleteFile, getFileContent, parseMarkdown, saveFile, createFile, string
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { classifyError } from '../admin-api-retry.js';
 import { loadMeldingerModule } from '../admin-dashboard.js';
-import { showDeletionToast, initEditors, showSaveBar, hideSaveBar } from '../admin-editor-helpers.js';
+import { showDeletionToast, initEditors, showSaveBar, createAutoSaver } from '../admin-editor-helpers.js';
 import { initMeldingerModule, reloadMeldinger } from '../admin-module-meldinger.js';
 
 function setupDOM() {
@@ -216,17 +216,11 @@ describe('editMelding', () => {
         it('should auto-save on title input change', async () => {
             await window.editMelding('id1', 'Melding');
 
+            const autoSaver = createAutoSaver.mock.results[0].value;
             document.getElementById('edit-title').value = 'New Title';
             document.getElementById('edit-title').dispatchEvent(new Event('input'));
 
-            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
-            vi.advanceTimersByTime(1500);
-            await vi.runAllTimersAsync();
-
-            expect(showSaveBar).toHaveBeenCalledWith('saving', '💾 Lagrer til Google Drive...');
-            expect(saveFile).toHaveBeenCalledWith('id1', expect.any(String), 'md');
-            expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('✅ Lagret'));
-            expect(hideSaveBar).toHaveBeenCalledWith(5000);
+            expect(autoSaver.trigger).toHaveBeenCalled();
         });
 
         it('should auto-save on EasyMDE change', async () => {
@@ -240,27 +234,21 @@ describe('editMelding', () => {
             const changeHandler = mockCodemirror.on.mock.calls[0][1];
             changeHandler();
 
-            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
-            vi.advanceTimersByTime(1500);
-            await vi.runAllTimersAsync();
-
-            expect(saveFile).toHaveBeenCalled();
+            const autoSaver = createAutoSaver.mock.results[0].value;
+            expect(autoSaver.trigger).toHaveBeenCalled();
         });
 
         it('should auto-save on date change when dates are valid', async () => {
             await window.editMelding('id1', 'Melding');
 
+            const autoSaver = createAutoSaver.mock.results[0].value;
             const startInput = document.getElementById('edit-start');
             const endInput = document.getElementById('edit-end');
             startInput.value = '2024-01-01';
             endInput.value = '2024-12-31';
             startInput.dispatchEvent(new Event('change'));
 
-            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
-            vi.advanceTimersByTime(1500);
-            await vi.runAllTimersAsync();
-
-            expect(saveFile).toHaveBeenCalled();
+            expect(autoSaver.trigger).toHaveBeenCalled();
         });
 
         it('should NOT auto-save when dates are invalid', async () => {
@@ -282,24 +270,26 @@ describe('editMelding', () => {
             expect(saveFile).not.toHaveBeenCalled();
         });
 
-        it('should debounce auto-save (reset timer on multiple changes)', async () => {
+        it('should debounce auto-save (trigger called for each input change)', async () => {
             await window.editMelding('id1', 'Melding');
 
+            const autoSaver = createAutoSaver.mock.results[0].value;
             const titleInput = document.getElementById('edit-title');
             titleInput.value = 'First';
             titleInput.dispatchEvent(new Event('input'));
-            vi.advanceTimersByTime(1000);
-
             titleInput.value = 'Second';
             titleInput.dispatchEvent(new Event('input'));
-            vi.advanceTimersByTime(1000);
 
-            expect(saveFile).not.toHaveBeenCalled();
+            expect(autoSaver.trigger).toHaveBeenCalledTimes(2);
+        });
 
-            vi.advanceTimersByTime(500);
-            await vi.runAllTimersAsync();
+        it('should pass saveFn that calls saveFile to createAutoSaver', async () => {
+            await window.editMelding('id1', 'Melding');
 
-            expect(saveFile).toHaveBeenCalledTimes(1);
+            const saveFn = createAutoSaver.mock.calls[0][0];
+            await saveFn();
+
+            expect(saveFile).toHaveBeenCalledWith('id1', expect.any(String), 'md');
         });
 
         it('should show error save bar when save fails', async () => {
@@ -307,11 +297,9 @@ describe('editMelding', () => {
 
             await window.editMelding('id1', 'Melding');
 
-            document.getElementById('edit-title').dispatchEvent(new Event('input'));
-            vi.advanceTimersByTime(1500);
-            await vi.runAllTimersAsync();
+            const saveFn = createAutoSaver.mock.calls[0][0];
+            await expect(saveFn()).rejects.toThrow('save fail');
 
-            expect(showSaveBar).toHaveBeenCalledWith('error', '❌ Feil ved lagring!');
             expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
         });
 
@@ -321,9 +309,8 @@ describe('editMelding', () => {
 
             await window.editMelding('id1', 'Melding');
 
-            document.getElementById('edit-title').dispatchEvent(new Event('input'));
-            vi.advanceTimersByTime(1500);
-            await vi.runAllTimersAsync();
+            const saveFn = createAutoSaver.mock.calls[0][0];
+            await expect(saveFn()).rejects.toEqual({ status: 401 });
 
             expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
         });
@@ -334,9 +321,8 @@ describe('editMelding', () => {
 
             await window.editMelding('id1', 'Melding');
 
-            document.getElementById('edit-title').dispatchEvent(new Event('input'));
-            vi.advanceTimersByTime(1500);
-            await vi.runAllTimersAsync();
+            const saveFn = createAutoSaver.mock.calls[0][0];
+            await expect(saveFn()).rejects.toThrow('network');
 
             expect(showToast).toHaveBeenCalledWith('Nettverksfeil — prøv igjen.', 'error');
         });

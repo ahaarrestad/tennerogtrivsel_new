@@ -5,13 +5,11 @@ import {
 import { showToast, showConfirm } from './admin-dialog.js';
 import { classifyError } from './admin-api-retry.js';
 import { stripStackEditData, slugify } from './textFormatter.js';
-import { loadTjenesterModule, formatTimestamp } from './admin-dashboard.js';
+import { loadTjenesterModule } from './admin-dashboard.js';
 import {
     getAdminConfig, renderToggleHtml, attachToggleClick,
-    showDeletionToast, initMarkdownEditor, showSaveBar, hideSaveBar
+    showDeletionToast, initMarkdownEditor, createAutoSaver, showSaveBar
 } from './admin-editor-helpers.js';
-
-let tjenesteSaveTimeout = null;
 
 async function deleteTjeneste(id, name) {
     if (await showConfirm(`Vil du slette «${name}»?`, { destructive: true })) {
@@ -93,12 +91,11 @@ async function editTjeneste(id, name) {
             window.setBreadcrumbEditor?.('Redigerer tjeneste', reloadTjenester);
         }
 
-        const doSave = async () => {
+        const buildTjenestePayload = () => {
             const title = document.getElementById('edit-title').value;
             const safeTitle = slugify(title) || 'u-navngitt-tjeneste';
             const entryId = data.id || safeTitle;
             const newFileName = `${safeTitle}-${Date.now()}.md`;
-
             const toggleBtn = document.getElementById('edit-active-toggle');
             const activeVal = toggleBtn?.dataset.active === 'true';
             const frontmatter = {
@@ -107,53 +104,38 @@ async function editTjeneste(id, name) {
                 ingress: document.getElementById('edit-ingress').value,
                 active: activeVal
             };
-
             const content = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
+            return { newFileName, frontmatter, content };
+        };
 
-            try {
-                if (id) {
-                    showSaveBar('saving', '💾 Lagrer til Google Drive...');
-                    await saveFile(id, newFileName, stringifyMarkdown(frontmatter, content));
-                    const ts = formatTimestamp(new Date());
-                    showSaveBar('saved', `✅ Lagret ${ts}`);
-                    hideSaveBar(5000);
-                } else {
-                    await createFile(TJENESTER_FOLDER, newFileName, stringifyMarkdown(frontmatter, content));
-                    reloadTjenester();
-                }
-            } catch (e) {
-                console.error("Lagring feilet:", e);
-                const kind = classifyError(e);
-                showToast(
-                    kind === 'auth' ? 'Økten din er utløpt. Last siden på nytt.'
-                    : kind === 'retryable' ? 'Nettverksfeil — prøv igjen.'
-                    : 'Kunne ikke lagre endringene.',
-                    'error'
-                );
-                if (id) {
-                    showSaveBar('error', '❌ Feil ved lagring!');
-                } else {
-                    const saveBtn = document.getElementById('btn-save-tjeneste');
-                    if (saveBtn) {
-                        saveBtn.disabled = false;
-                        saveBtn.textContent = "Opprett tjeneste";
-                    }
-                }
-            }
+        const handleSaveError = (e) => {
+            console.error("Lagring feilet:", e);
+            const kind = classifyError(e);
+            showToast(
+                kind === 'auth' ? 'Økten din er utløpt. Last siden på nytt.'
+                : kind === 'retryable' ? 'Nettverksfeil — prøv igjen.'
+                : 'Kunne ikke lagre endringene.',
+                'error'
+            );
         };
 
         if (id) {
             // Auto-save for existing tjenester
-            const triggerAutoSave = () => {
-                showSaveBar('changed', '⏳ Endringer oppdaget...');
-                clearTimeout(tjenesteSaveTimeout);
-                tjenesteSaveTimeout = setTimeout(() => doSave(), 1500);
+            const saveTjeneste = async () => {
+                const { newFileName, frontmatter, content } = buildTjenestePayload();
+                try {
+                    await saveFile(id, newFileName, stringifyMarkdown(frontmatter, content));
+                } catch (e) {
+                    handleSaveError(e);
+                    throw e;
+                }
             };
+            const autoSaver = createAutoSaver(saveTjeneste);
 
-            document.getElementById('edit-title')?.addEventListener('input', triggerAutoSave);
-            document.getElementById('edit-ingress')?.addEventListener('input', triggerAutoSave);
-            if (easyMDE) easyMDE.codemirror.on('change', triggerAutoSave);
-            attachToggleClick('edit-active-toggle', triggerAutoSave);
+            document.getElementById('edit-title')?.addEventListener('input', () => autoSaver.trigger());
+            document.getElementById('edit-ingress')?.addEventListener('input', () => autoSaver.trigger());
+            if (easyMDE) easyMDE.codemirror.on('change', () => autoSaver.trigger());
+            attachToggleClick('edit-active-toggle', () => autoSaver.trigger());
         } else {
             // Manual create for new tjenester
             attachToggleClick('edit-active-toggle');
@@ -162,7 +144,15 @@ async function editTjeneste(id, name) {
                 saveBtn.onclick = async () => {
                     saveBtn.disabled = true;
                     saveBtn.textContent = "Oppretter...";
-                    await doSave();
+                    const { newFileName, frontmatter, content } = buildTjenestePayload();
+                    try {
+                        await createFile(TJENESTER_FOLDER, newFileName, stringifyMarkdown(frontmatter, content));
+                        reloadTjenester();
+                    } catch (e) {
+                        handleSaveError(e);
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = "Opprett tjeneste";
+                    }
                 };
             }
         }

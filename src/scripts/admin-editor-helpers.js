@@ -1,7 +1,8 @@
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { createAuthRefresher } from './admin-api-retry.js';
-import { silentLogin } from './admin-client.js';
+import { silentLogin, findFileByName, getDriveImageBlob } from './admin-client.js';
+import { formatTimestamp } from './admin-dashboard.js';
 
 /**
  * Escaper HTML-spesialtegn for sikker innsetting i template literals.
@@ -172,6 +173,47 @@ export function initEditors(onDateChange) {
     return { easyMDE, flatpickrInstances };
 }
 
+export function renderImageCropSliders({ prefix, valPrefix, scale = 1, posX = 50, posY = 50 }) {
+    return `<div class="space-y-6 pt-4 border-t border-admin-border">
+        <h4 class="text-brand font-black text-xs uppercase tracking-widest">Bildeutsnitt (Zoom og posisjon)</h4>
+        <div class="space-y-4">
+            <div>
+                <div class="flex justify-between mb-2">
+                    <label for="${prefix}-scale" class="admin-label !mb-0">Zoom (Skala)</label>
+                    <span id="${valPrefix}-scale" class="text-[10px] font-bold text-brand">${scale}x</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" class="slider-step-btn" data-target="${prefix}-scale" data-step="-0.1">&minus;</button>
+                    <input type="range" id="${prefix}-scale" min="1.0" max="3.0" step="0.01" value="${scale}" class="flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
+                    <button type="button" class="slider-step-btn" data-target="${prefix}-scale" data-step="0.1">+</button>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between mb-2">
+                    <label for="${prefix}-x" class="admin-label !mb-0">Fokuspunkt Horisontalt (X)</label>
+                    <span id="${valPrefix}-x" class="text-[10px] font-bold text-brand">${posX}%</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" class="slider-step-btn" data-target="${prefix}-x" data-step="-1">&minus;</button>
+                    <input type="range" id="${prefix}-x" min="0" max="100" value="${posX}" class="flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
+                    <button type="button" class="slider-step-btn" data-target="${prefix}-x" data-step="1">+</button>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between mb-2">
+                    <label for="${prefix}-y" class="admin-label !mb-0">Fokuspunkt Vertikalt (Y)</label>
+                    <span id="${valPrefix}-y" class="text-[10px] font-bold text-brand">${posY}%</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" class="slider-step-btn" data-target="${prefix}-y" data-step="-1">&minus;</button>
+                    <input type="range" id="${prefix}-y" min="0" max="100" value="${posY}" class="flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
+                    <button type="button" class="slider-step-btn" data-target="${prefix}-y" data-step="1">+</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
 export function bindSliderStepButtons(container) {
     container.querySelectorAll('.slider-step-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -191,6 +233,88 @@ export function bindWheelPrevent(container) {
     container.querySelectorAll('input[type="range"]').forEach(el => {
         el.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
     });
+}
+
+export async function resolveImagePreview(imageName, folderId, options = {}) {
+    const { localFallbackDir } = options;
+    let src = '';
+    let imageId = null;
+
+    if (!imageName) return { src, imageId };
+
+    try {
+        if (imageName.length > 20 && !imageName.includes('.')) {
+            imageId = imageName;
+        } else {
+            const file = await findFileByName(imageName, folderId);
+            if (file) imageId = file.id;
+        }
+        if (imageId) {
+            const blobUrl = await getDriveImageBlob(imageId);
+            if (blobUrl) src = blobUrl;
+        }
+    } catch (err) {
+        console.warn("[Admin] Kunne ikke hente bilde-preview fra Drive.");
+    }
+
+    if (!src && localFallbackDir && imageName.includes('.')) {
+        src = `${localFallbackDir}${imageName}`;
+    }
+
+    return { src, imageId };
+}
+
+export async function verifySave({ fetchFn, rowIndex, compareField, expectedValue, timestampElId, reloadFn }) {
+    try {
+        const freshData = await fetchFn();
+        const fetchedEl = document.getElementById(timestampElId);
+        if (fetchedEl) fetchedEl.textContent = formatTimestamp(new Date());
+        const freshRow = freshData.find(r => r.rowIndex === rowIndex);
+        if (freshRow && freshRow[compareField] !== expectedValue) {
+            console.warn(`[Admin] Mismatch etter lagring: forventet "${expectedValue}", fikk "${freshRow[compareField]}"`);
+            reloadFn();
+            throw new Error('Mismatch');
+        }
+    } catch (verifyErr) {
+        if (verifyErr.message === 'Mismatch') throw verifyErr;
+        console.warn("[Admin] Verifisering feilet, men lagring gikk OK:", verifyErr);
+    }
+}
+
+export async function handleImageSelected({ fileId, fileName, inputEl, previewImgEl, placeholderEl }) {
+    if (!inputEl) return;
+    inputEl.value = fileName;
+    const blobUrl = await getDriveImageBlob(fileId);
+    if (blobUrl && previewImgEl) {
+        previewImgEl.src = blobUrl;
+        previewImgEl.classList.remove('hidden');
+        placeholderEl?.classList.add('hidden');
+    }
+    inputEl.dispatchEvent(new Event('input'));
+}
+
+export function createAutoSaver(saveFn, delay = 1500) {
+    let timeout = null;
+    return {
+        trigger() {
+            showSaveBar('changed', '⏳ Endringer oppdaget...');
+            clearTimeout(timeout);
+            timeout = setTimeout(async () => {
+                showSaveBar('saving', '💾 Lagrer…');
+                try {
+                    await saveFn();
+                    const ts = formatTimestamp(new Date());
+                    showSaveBar('saved', `✅ Lagret ${ts}`);
+                    hideSaveBar(5000);
+                } catch (e) {
+                    showSaveBar('error', '❌ Feil ved lagring!');
+                }
+            }, delay);
+        },
+        cancel() {
+            clearTimeout(timeout);
+        }
+    };
 }
 
 let _hideSaveBarTimer = null;

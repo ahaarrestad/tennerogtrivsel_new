@@ -39,8 +39,8 @@ vi.mock('../admin-editor-helpers.js', () => ({
     attachToggleClick: vi.fn(),
     showDeletionToast: vi.fn(),
     initMarkdownEditor: vi.fn(),
+    createAutoSaver: vi.fn((saveFn) => ({ trigger: vi.fn(), cancel: vi.fn(), _saveFn: saveFn })),
     showSaveBar: vi.fn(),
-    hideSaveBar: vi.fn(),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({
@@ -52,7 +52,7 @@ import { deleteFile, getFileContent, parseMarkdown, saveFile, createFile, string
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { classifyError } from '../admin-api-retry.js';
 import { loadTjenesterModule, formatTimestamp } from '../admin-dashboard.js';
-import { showDeletionToast, initMarkdownEditor, attachToggleClick, showSaveBar, hideSaveBar } from '../admin-editor-helpers.js';
+import { showDeletionToast, initMarkdownEditor, attachToggleClick, showSaveBar, createAutoSaver } from '../admin-editor-helpers.js';
 import { initTjenesterModule, reloadTjenester } from '../admin-module-tjenester.js';
 
 function setupDOM() {
@@ -219,30 +219,21 @@ describe('editTjeneste', () => {
         it('should auto-save on title input change', async () => {
             await window.editTjeneste('id1', 'Old');
 
+            const autoSaver = createAutoSaver.mock.results[0].value;
             document.getElementById('edit-title').value = 'New Title';
             document.getElementById('edit-title').dispatchEvent(new Event('input'));
 
-            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
-            vi.advanceTimersByTime(1500);
-            await vi.runAllTimersAsync();
-
-            expect(showSaveBar).toHaveBeenCalledWith('saving', '💾 Lagrer til Google Drive...');
-            expect(saveFile).toHaveBeenCalledWith('id1', expect.any(String), expect.any(String));
-            expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('✅ Lagret'));
-            expect(hideSaveBar).toHaveBeenCalledWith(5000);
+            expect(autoSaver.trigger).toHaveBeenCalled();
         });
 
         it('should auto-save on ingress input change', async () => {
             await window.editTjeneste('id1', 'Old');
 
+            const autoSaver = createAutoSaver.mock.results[0].value;
             document.getElementById('edit-ingress').value = 'New ingress';
             document.getElementById('edit-ingress').dispatchEvent(new Event('input'));
 
-            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
-            vi.advanceTimersByTime(1500);
-            await vi.runAllTimersAsync();
-
-            expect(saveFile).toHaveBeenCalled();
+            expect(autoSaver.trigger).toHaveBeenCalled();
         });
 
         it('should auto-save on EasyMDE change', async () => {
@@ -256,85 +247,63 @@ describe('editTjeneste', () => {
             const changeHandler = mockCodemirror.on.mock.calls[0][1];
             changeHandler();
 
-            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
-            vi.advanceTimersByTime(1500);
-            await vi.runAllTimersAsync();
-
-            expect(saveFile).toHaveBeenCalled();
+            const autoSaver = createAutoSaver.mock.results[0].value;
+            expect(autoSaver.trigger).toHaveBeenCalled();
         });
 
         it('should auto-save on toggle click', async () => {
             await window.editTjeneste('id1', 'Old');
 
-            // attachToggleClick was called with onChange callback for existing
             expect(attachToggleClick).toHaveBeenCalledWith('edit-active-toggle', expect.any(Function));
             const onToggleChange = attachToggleClick.mock.calls[0][1];
             onToggleChange();
 
-            expect(showSaveBar).toHaveBeenCalledWith('changed', '⏳ Endringer oppdaget...');
-            vi.advanceTimersByTime(1500);
-            await vi.runAllTimersAsync();
-
-            expect(saveFile).toHaveBeenCalled();
+            const autoSaver = createAutoSaver.mock.results[0].value;
+            expect(autoSaver.trigger).toHaveBeenCalled();
         });
 
-        it('should debounce auto-save (reset timer on multiple changes)', async () => {
+        it('should debounce auto-save (trigger called for each input change)', async () => {
             await window.editTjeneste('id1', 'Old');
 
+            const autoSaver = createAutoSaver.mock.results[0].value;
             const titleInput = document.getElementById('edit-title');
             titleInput.value = 'First';
             titleInput.dispatchEvent(new Event('input'));
-            vi.advanceTimersByTime(1000);
-
             titleInput.value = 'Second';
             titleInput.dispatchEvent(new Event('input'));
-            vi.advanceTimersByTime(1000);
 
-            // First timeout (1500) should have been cleared, only second fires
-            expect(saveFile).not.toHaveBeenCalled();
-
-            vi.advanceTimersByTime(500);
-            await vi.runAllTimersAsync();
-
-            expect(saveFile).toHaveBeenCalledTimes(1);
+            expect(autoSaver.trigger).toHaveBeenCalledTimes(2);
         });
 
-        it('should show error save bar when save fails', async () => {
-            saveFile.mockRejectedValue(new Error('save fail'));
-
+        it('should pass saveFn that calls saveFile to createAutoSaver', async () => {
             await window.editTjeneste('id1', 'Old');
 
-            document.getElementById('edit-title').value = 'New';
-            document.getElementById('edit-title').dispatchEvent(new Event('input'));
-            vi.advanceTimersByTime(1500);
-            await vi.runAllTimersAsync();
+            const saveFn = createAutoSaver.mock.calls[0][0];
+            await saveFn();
 
-            expect(showSaveBar).toHaveBeenCalledWith('error', '❌ Feil ved lagring!');
-            expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
+            expect(saveFile).toHaveBeenCalledWith('id1', expect.any(String), expect.any(String));
         });
 
-        it('should show auth toast when save fails with auth error', async () => {
+        it('should show auth toast when saveFn fails with auth error', async () => {
             classifyError.mockReturnValueOnce('auth');
             saveFile.mockRejectedValue({ status: 401 });
 
             await window.editTjeneste('id1', 'Old');
 
-            document.getElementById('edit-title').dispatchEvent(new Event('input'));
-            vi.advanceTimersByTime(1500);
-            await vi.runAllTimersAsync();
+            const saveFn = createAutoSaver.mock.calls[0][0];
+            await expect(saveFn()).rejects.toEqual({ status: 401 });
 
             expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
         });
 
-        it('should show network toast when save fails with retryable error', async () => {
+        it('should show network toast when saveFn fails with retryable error', async () => {
             classifyError.mockReturnValueOnce('retryable');
             saveFile.mockRejectedValue(new Error('network'));
 
             await window.editTjeneste('id1', 'Old');
 
-            document.getElementById('edit-title').dispatchEvent(new Event('input'));
-            vi.advanceTimersByTime(1500);
-            await vi.runAllTimersAsync();
+            const saveFn = createAutoSaver.mock.calls[0][0];
+            await expect(saveFn()).rejects.toThrow('network');
 
             expect(showToast).toHaveBeenCalledWith('Nettverksfeil — prøv igjen.', 'error');
         });

@@ -1,16 +1,16 @@
 import DOMPurify from 'dompurify';
 import {
     getSheetParentFolder, getGalleriRaw, updateGalleriRow, addGalleriRow,
-    deleteGalleriRowPermanently, setForsideBildeInGalleri, migrateForsideBildeToGalleri,
-    getDriveImageBlob, findFileByName
+    deleteGalleriRowPermanently, setForsideBildeInGalleri, migrateForsideBildeToGalleri
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { loadGallery, setupUploadHandler } from './admin-gallery.js';
 import { loadGalleriListeModule, reorderGalleriItem, formatTimestamp } from './admin-dashboard.js';
 import {
     getAdminConfig, renderToggleHtml, setToggleState, attachToggleClick,
-    showDeletionToast, bindSliderStepButtons, bindWheelPrevent,
-    showSaveBar, hideSaveBar
+    showDeletionToast, renderImageCropSliders, createAutoSaver,
+    bindSliderStepButtons, bindWheelPrevent,
+    showSaveBar, hideSaveBar, resolveImagePreview, handleImageSelected, verifySave
 } from './admin-editor-helpers.js';
 
 export async function loadBilderModule() {
@@ -56,16 +56,7 @@ export async function loadBilderModule() {
             const isForsidebilde = item.type === 'forsidebilde';
             const previewLabel = isForsidebilde ? 'Forhåndsvisning (16:10)' : 'Forhåndsvisning (4:3)';
 
-            let itemPreviewSrc = '';
-            if (item.image) {
-                try {
-                    const file = await findFileByName(item.image, parentFolderId);
-                    if (file) {
-                        const blobUrl = await getDriveImageBlob(file.id);
-                        if (blobUrl) itemPreviewSrc = blobUrl;
-                    }
-                } catch (_) {}
-            }
+            const { src: itemPreviewSrc } = await resolveImagePreview(item.image, parentFolderId);
 
             const inner2 = document.getElementById('module-inner');
             if (!inner2) return;
@@ -98,44 +89,7 @@ export async function loadBilderModule() {
                                 </div>
                                 <input type="checkbox" id="galleri-edit-forsidebilde" class="w-5 h-5 accent-amber-500 cursor-pointer">
                             </div>
-                            <div class="space-y-6 pt-4 border-t border-admin-border">
-                                <h4 class="text-brand font-black text-xs uppercase tracking-widest">Bildeutsnitt (Zoom og posisjon)</h4>
-                                <div class="space-y-4">
-                                    <div>
-                                        <div class="flex justify-between mb-2">
-                                            <label for="galleri-edit-scale" class="admin-label !mb-0">Zoom (Skala)</label>
-                                            <span id="galleri-val-scale" class="text-[10px] font-bold text-brand">1x</span>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <button type="button" class="slider-step-btn" data-target="galleri-edit-scale" data-step="-0.1">&minus;</button>
-                                            <input type="range" id="galleri-edit-scale" min="1.0" max="3.0" step="0.01" value="1" class="flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
-                                            <button type="button" class="slider-step-btn" data-target="galleri-edit-scale" data-step="0.1">+</button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between mb-2">
-                                            <label for="galleri-edit-x" class="admin-label !mb-0">Fokuspunkt Horisontalt (X)</label>
-                                            <span id="galleri-val-x" class="text-[10px] font-bold text-brand">50%</span>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <button type="button" class="slider-step-btn" data-target="galleri-edit-x" data-step="-1">&minus;</button>
-                                            <input type="range" id="galleri-edit-x" min="0" max="100" value="50" class="flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
-                                            <button type="button" class="slider-step-btn" data-target="galleri-edit-x" data-step="1">+</button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between mb-2">
-                                            <label for="galleri-edit-y" class="admin-label !mb-0">Fokuspunkt Vertikalt (Y)</label>
-                                            <span id="galleri-val-y" class="text-[10px] font-bold text-brand">50%</span>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <button type="button" class="slider-step-btn" data-target="galleri-edit-y" data-step="-1">&minus;</button>
-                                            <input type="range" id="galleri-edit-y" min="0" max="100" value="50" class="flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
-                                            <button type="button" class="slider-step-btn" data-target="galleri-edit-y" data-step="1">+</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            ${renderImageCropSliders({ prefix: 'galleri-edit', valPrefix: 'galleri-val' })}
                             <div class="pt-6 border-t border-admin-border">
                                 <button id="btn-ferdig-galleri" class="btn-primary w-full py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs flex items-center justify-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -273,16 +227,7 @@ export async function loadBilderModule() {
                 btnPickImage.addEventListener('click', () => {
                     modal2.showModal();
                     loadGallery(parentFolderId, async (fileId, fileName) => {
-                        if (imageInput) {
-                            imageInput.value = fileName;
-                            const blobUrl = await getDriveImageBlob(fileId);
-                            if (blobUrl && gPreviewImg) {
-                                gPreviewImg.src = blobUrl;
-                                gPreviewImg.classList.remove('hidden');
-                                gNoImage?.classList.add('hidden');
-                            }
-                            imageInput.dispatchEvent(new Event('input'));
-                        }
+                        await handleImageSelected({ fileId, fileName, inputEl: imageInput, previewImgEl: gPreviewImg, placeholderEl: gNoImage });
                         modal2.close();
                     });
                 });
@@ -290,21 +235,37 @@ export async function loadBilderModule() {
 
             // Auto-select uploaded image
             setupUploadHandler(parentFolderId, async (newFile) => {
-                if (newFile && imageInput) {
-                    imageInput.value = newFile.name;
-                    const blobUrl = await getDriveImageBlob(newFile.id);
-                    if (blobUrl && gPreviewImg) {
-                        gPreviewImg.src = blobUrl;
-                        gPreviewImg.classList.remove('hidden');
-                        gNoImage?.classList.add('hidden');
-                    }
-                    imageInput.dispatchEvent(new Event('input'));
+                if (newFile) {
+                    await handleImageSelected({ fileId: newFile.id, fileName: newFile.name, inputEl: imageInput, previewImgEl: gPreviewImg, placeholderEl: gNoImage });
                     modal2?.close();
                 }
             });
 
             // Auto-save for gallery item
-            let galleriSaveTimeout = null;
+            const saveGalleri = async () => {
+                const saveData = {
+                    title: titleInput?.value || '',
+                    image: imageInput?.value || '',
+                    altText: altInput?.value || '',
+                    active: activeToggle?.dataset.active === 'true',
+                    order: item.order,
+                    scale: parseFloat(scaleInput?.value || '1'),
+                    positionX: parseInt(xInput?.value || '50'),
+                    positionY: parseInt(yInput?.value || '50'),
+                    type: forsideCheckbox?.checked ? 'forsidebilde' : 'galleri'
+                };
+                await updateGalleriRow(SHEET_ID, rowIndex, saveData);
+                await verifySave({
+                    fetchFn: () => getGalleriRaw(SHEET_ID),
+                    rowIndex,
+                    compareField: 'title',
+                    expectedValue: saveData.title,
+                    timestampElId: 'galleri-last-fetched',
+                    reloadFn: loadBilderModule
+                });
+            };
+            const autoSaver = createAutoSaver(saveGalleri);
+
             const updateGalleriPreview = () => {
                 const s = scaleInput?.value || '1';
                 const x = xInput?.value || '50';
@@ -320,47 +281,7 @@ export async function loadBilderModule() {
                 if (valX) valX.textContent = `${x}%`;
                 if (valY) valY.textContent = `${y}%`;
 
-                showSaveBar('changed', '⏳ Endringer oppdaget...');
-
-                clearTimeout(galleriSaveTimeout);
-                galleriSaveTimeout = setTimeout(async () => {
-                    showSaveBar('saving', '💾 Lagrer til Google Sheets...');
-                    try {
-                        const saveData = {
-                            title: titleInput?.value || '',
-                            image: imageInput?.value || '',
-                            altText: altInput?.value || '',
-                            active: activeToggle?.dataset.active === 'true',
-                            order: item.order,
-                            scale: parseFloat(scaleInput?.value || '1'),
-                            positionX: parseInt(xInput?.value || '50'),
-                            positionY: parseInt(yInput?.value || '50'),
-                            type: forsideCheckbox?.checked ? 'forsidebilde' : 'galleri'
-                        };
-                        await updateGalleriRow(SHEET_ID, rowIndex, saveData);
-                        // Stille verifisering
-                        const savedTime = new Date();
-                        try {
-                            const freshData = await getGalleriRaw(SHEET_ID);
-                            const fetchedEl = document.getElementById('galleri-last-fetched');
-                            if (fetchedEl) fetchedEl.textContent = formatTimestamp(new Date());
-                            const freshRow = freshData.find(r => r.rowIndex === rowIndex);
-                            if (freshRow && freshRow.title !== saveData.title) {
-                                console.warn(`[Admin] Galleri-mismatch etter lagring: forventet "${saveData.title}", fikk "${freshRow.title}"`);
-                                showSaveBar('error', '⚠️ Laster på nytt…');
-                                loadBilderModule();
-                                return;
-                            }
-                        } catch (verifyErr) {
-                            console.warn("[Admin] Galleri-verifisering feilet, men lagring gikk OK:", verifyErr);
-                        }
-                        const ts = formatTimestamp(savedTime);
-                        showSaveBar('saved', `✅ Lagret ${ts}`);
-                        hideSaveBar(5000);
-                    } catch (e) {
-                        showSaveBar('error', '❌ Feil ved lagring!');
-                    }
-                }, 1500);
+                autoSaver.trigger();
             };
 
             attachToggleClick('galleri-edit-active-toggle', updateGalleriPreview);

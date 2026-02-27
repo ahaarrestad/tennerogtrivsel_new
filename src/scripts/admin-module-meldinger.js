@@ -5,13 +5,11 @@ import {
 import { showToast, showConfirm } from './admin-dialog.js';
 import { classifyError } from './admin-api-retry.js';
 import { formatDate, stripStackEditData, slugify } from './textFormatter.js';
-import { loadMeldingerModule, formatTimestamp } from './admin-dashboard.js';
+import { loadMeldingerModule } from './admin-dashboard.js';
 import {
     getAdminConfig, showDeletionToast, initEditors,
-    showSaveBar, hideSaveBar
+    createAutoSaver, showSaveBar
 } from './admin-editor-helpers.js';
-
-let meldingSaveTimeout = null;
 
 async function deleteMelding(id, name) {
     if (await showConfirm(`Vil du slette «${name}»?`, { destructive: true })) {
@@ -153,61 +151,44 @@ async function editMelding(id, name) {
             window.setBreadcrumbEditor?.('Redigerer melding', reloadMeldinger);
         }
 
-        const doSave = async () => {
+        const buildMeldingPayload = () => {
             const title = document.getElementById('edit-title').value;
             const startDate = document.getElementById('edit-start').value;
             const endDate = document.getElementById('edit-end').value;
-
             const safeTitle = slugify(title) || 'u-navnet';
             const newFileName = `${safeTitle}-${Date.now()}.md`;
-
-            const data = {
-                title: title,
-                startDate: startDate,
-                endDate: endDate
-            };
-
+            const data = { title, startDate, endDate };
             const body = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
+            return { newFileName, data, body };
+        };
 
-            try {
-                if (id) {
-                    showSaveBar('saving', '💾 Lagrer til Google Drive...');
-                    await saveFile(id, newFileName, stringifyMarkdown(data, body));
-                    const ts = formatTimestamp(new Date());
-                    showSaveBar('saved', `✅ Lagret ${ts}`);
-                    hideSaveBar(5000);
-                } else {
-                    await createFile(MELDINGER_FOLDER, newFileName, stringifyMarkdown(data, body));
-                    reloadMeldinger();
-                }
-            } catch (e) {
-                console.error("Lagring feilet:", e);
-                const kind = classifyError(e);
-                showToast(
-                    kind === 'auth' ? 'Økten din er utløpt. Last siden på nytt.'
-                    : kind === 'retryable' ? 'Nettverksfeil — prøv igjen.'
-                    : 'Kunne ikke lagre endringene.',
-                    'error'
-                );
-                if (id) {
-                    showSaveBar('error', '❌ Feil ved lagring!');
-                } else {
-                    const saveBtn = document.getElementById('btn-save-melding');
-                    if (saveBtn) {
-                        saveBtn.disabled = false;
-                        saveBtn.textContent = "Opprett melding";
-                    }
-                }
-            }
+        const handleSaveError = (e) => {
+            console.error("Lagring feilet:", e);
+            const kind = classifyError(e);
+            showToast(
+                kind === 'auth' ? 'Økten din er utløpt. Last siden på nytt.'
+                : kind === 'retryable' ? 'Nettverksfeil — prøv igjen.'
+                : 'Kunne ikke lagre endringene.',
+                'error'
+            );
         };
 
         if (id) {
             // Auto-save for existing meldinger
+            const saveMelding = async () => {
+                const { newFileName, data, body } = buildMeldingPayload();
+                try {
+                    await saveFile(id, newFileName, stringifyMarkdown(data, body));
+                } catch (e) {
+                    handleSaveError(e);
+                    throw e;
+                }
+            };
+            const autoSaver = createAutoSaver(saveMelding);
+
             const triggerAutoSave = () => {
                 if (!areDatesValid()) return;
-                showSaveBar('changed', '⏳ Endringer oppdaget...');
-                clearTimeout(meldingSaveTimeout);
-                meldingSaveTimeout = setTimeout(() => doSave(), 1500);
+                autoSaver.trigger();
             };
 
             document.getElementById('edit-title')?.addEventListener('input', triggerAutoSave);
@@ -230,7 +211,15 @@ async function editMelding(id, name) {
                     if (saveBtn.disabled) return;
                     saveBtn.disabled = true;
                     saveBtn.textContent = "Oppretter...";
-                    await doSave();
+                    const { newFileName, data, body } = buildMeldingPayload();
+                    try {
+                        await createFile(MELDINGER_FOLDER, newFileName, stringifyMarkdown(data, body));
+                        reloadMeldinger();
+                    } catch (e) {
+                        handleSaveError(e);
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = "Opprett melding";
+                    }
                 };
             }
 
