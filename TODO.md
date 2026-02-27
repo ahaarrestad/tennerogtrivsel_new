@@ -48,7 +48,7 @@
 - [ ] **Flere domener på samme CloudFront (hybrid)** ([plan](docs/plan-multi-domene-cloudfront.md))
   - 3 www-domener direkte på CloudFront (ingen redirect), 3 apex redirecter til sin egen www-variant
   - Ett ACM-sertifikat med alle 6 domener, DNS hos eksisterende registrar
-  - 7 steg: ACM-sertifikat, DNS-validering, CloudFront CNAMEs, www DNS-records, apex-redirect, fjern S3-buckets, verifisering
+  - 9 steg: ACM-sertifikat, DNS-validering, CloudFront CNAMEs, www DNS-records, apex-redirect, Google OAuth origins, Maps API referrere, fjern S3-buckets, verifisering
   - Kostnad: $0/mnd ekstra
 
 - [ ] **Flaky tests — sporadiske testfeil**
