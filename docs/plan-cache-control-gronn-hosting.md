@@ -78,65 +78,64 @@ Kortere nettverksvei fra CloudFront edge → origin for norske brukere. OAC-inns
 
 ### 4a. Opprett ny bucket i eu-north-1
 
-```bash
-aws s3 mb s3://test2.aarrestad.com-eu-north-1 --region eu-north-1
-```
+1. Gå til **S3** i AWS Console
+2. Klikk **Create bucket**
+3. Bucket name: velg et passende navn (f.eks. `test2.aarrestad.com-eu-north-1`)
+4. Region: **EU (Stockholm) eu-north-1**
+5. Under **Block Public Access**: la alle fire avkrysninger stå **på** (blokkert)
+6. Resten: behold standardverdier → **Create bucket**
 
-### 4b. Blokker offentlig tilgang
+### 4b. Sett bucket policy for CloudFront OAC
 
-```bash
-aws s3api put-public-access-block \
-  --bucket test2.aarrestad.com-eu-north-1 \
-  --public-access-block-configuration \
-  BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true \
-  --region eu-north-1
-```
+1. Åpne den nye bucketen → fanen **Permissions**
+2. Scroll til **Bucket policy** → klikk **Edit**
+3. Lim inn policyen under (bytt ut `BUCKET-NAVN`, `ACCOUNT_ID` og `DISTRIBUTION_ID`):
 
-### 4c. Sett bucket policy for CloudFront OAC
-
-```bash
-aws s3api put-bucket-policy --bucket test2.aarrestad.com-eu-north-1 --policy '{
+```json
+{
   "Version": "2012-10-17",
   "Statement": [{
     "Effect": "Allow",
     "Principal": {"Service": "cloudfront.amazonaws.com"},
     "Action": "s3:GetObject",
-    "Resource": "arn:aws:s3:::test2.aarrestad.com-eu-north-1/*",
+    "Resource": "arn:aws:s3:::BUCKET-NAVN/*",
     "Condition": {
       "StringEquals": {
         "AWS:SourceArn": "arn:aws:cloudfront::ACCOUNT_ID:distribution/DISTRIBUTION_ID"
       }
     }
   }]
-}' --region eu-north-1
+}
 ```
 
-### 4d. Pek CloudFront til ny bucket
+4. Klikk **Save changes**
 
-```bash
-# Hent nåværende config
-aws cloudfront get-distribution-config --id DISTRIBUTION_ID > cf-config.json
+> Tips: Du finner Account ID øverst til høyre i konsollen, og Distribution ID under CloudFront → Distributions.
 
-# Endre origin domain fra:
-#   test2.aarrestad.com.s3.eu-west-1.amazonaws.com
-# til:
-#   test2.aarrestad.com-eu-north-1.s3.eu-north-1.amazonaws.com
-# Oppdater ETag og lagre som cf-config-updated.json
+### 4c. Pek CloudFront til ny bucket
 
-aws cloudfront update-distribution --id DISTRIBUTION_ID \
-  --if-match ETAG \
-  --distribution-config file://cf-config-updated.json
-```
+1. Gå til **CloudFront** → velg distribusjonen
+2. Fanen **Origins** → velg originen → **Edit**
+3. Under **Origin domain**: endre til den nye bucketen (`BUCKET-NAVN.s3.eu-north-1.amazonaws.com`)
+4. OAC-innstillingen skal allerede stå riktig — ikke endre den
+5. Klikk **Save changes**
+6. Vent til distribusjonen er ferdig deployet (Status: **Deployed**)
 
-### 4e. Oppdater deploy.yml
+### 4d. Oppdater deploy.yml
 
-Bytt bucket-navn i `aws s3 sync`-kommandoene (steg 1) til ny bucket.
+Bytt bucket-navn i `aws s3 sync`-kommandoene (steg 1) til det nye bucket-navnet.
+
+### 4e. Deploy og verifiser
+
+1. Push en endring / kjør workflow manuelt
+2. Sjekk at siden fungerer som før
+3. Verifiser at S3-bucketen i Stockholm mottar filene
 
 ### 4f. Slett gammel bucket
 
-```bash
-aws s3 rb s3://test2.aarrestad.com --force
-```
+1. Gå til **S3** → velg den gamle bucketen
+2. Klikk **Empty** → bekreft tømming
+3. Klikk **Delete** → bekreft sletting
 
 ## Ikke i scope
 
