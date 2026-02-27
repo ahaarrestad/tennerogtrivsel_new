@@ -2,7 +2,7 @@
 name: quality-gate
 description: "Run the full quality gate checklist: unit tests, per-file branch coverage, E2E tests, and build. Use when completing a task, before committing, or when asked to verify quality. Trigger on: 'quality gate', 'kjør kvalitetssjekk', 'run checks', 'er alt klart', 'verify tests'."
 disable-model-invocation: false
-allowed-tools: ["Bash(npm test:*)", "Bash(npm run test*)", "Bash(npm run build:*)", "Bash(node --input-type=commonjs:*)", "Bash(npx playwright:*)"]
+allowed-tools: ["Bash(npm test:*)", "Bash(npm run test*)", "Bash(npm run build:*)", "Bash(node --input-type=commonjs:*)", "Bash(npx playwright:*)", "Bash(npm audit:*)"]
 ---
 
 # Quality Gate
@@ -73,11 +73,21 @@ npm run build 2>&1
 
 If the build fails, stop and report errors.
 
-## Step 5: CI/CD Variable Check
+## Step 5: Security Audit
+
+Run npm audit with the same level as CI (`--audit-level=high`):
+
+```bash
+npm audit --audit-level=high 2>&1
+```
+
+If the audit finds high or critical vulnerabilities, stop and report them. Include the package name, severity, and suggested fix (e.g., `npm audit fix` or specific version upgrade). This matches the CI check in `.github/workflows/deploy.yml` so issues are caught locally before push.
+
+## Step 6: CI/CD Variable Check
 
 If this session added new environment variables (in `.env`, `src/env.d.ts`, or `sync-data.js`), verify they are present in `.github/workflows/` for both test and build steps. Flag any missing variables.
 
-## Step 6: Report
+## Step 7: Report
 
 Present a single consolidated report:
 
@@ -98,6 +108,9 @@ Coverage: FAIL = below 80%, OK = 80-90%, GOOD = above 90%
 X passed, Y failed, Z skipped
 
 ### Build: PASS/FAIL
+
+### Security Audit: PASS/FAIL
+X vulnerabilities (Y high, Z critical) / No vulnerabilities found
 
 ---
 **Overall: PASS / FAIL**
