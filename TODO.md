@@ -12,12 +12,6 @@
 
 ## Pågående
 
-- [ ] **Sjekk at alle filer som kan testes er testet** ([plan](docs/plan-sjekk-testdekning.md))
-  - Alle 26 testbare kildefiler har allerede testfiler — ingen hull funnet
-  - Hovedoppgave: heve branch coverage-marginen på 7 filer som ligger mellom 81–87%
-  - Prioritet A (3 filer nærmest 80%): content.config, admin-module-bilder, admin-module-tannleger
-  - Prioritet B (4 filer, 84–87%): admin-init, admin-module-tjenester, admin-dialog, admin-editor-helpers
-
 ## Backlog
 
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
@@ -63,6 +57,12 @@
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
 ## Fullført
+
+- [x] **Sjekk at alle filer som kan testes er testet** ([plan](docs/plan-sjekk-testdekning.md))
+  - Alle 26 testbare kildefiler har testfiler — ingen hull funnet
+  - 37 nye tester (816 → 853), totalt branch coverage 88.87% → 90.87%
+  - 6 filer forbedret: content.config (100%), admin-module-tjenester (98%), admin-dialog (96%), admin-editor-helpers (95%), admin-module-tannleger (89%), admin-module-bilder (82%)
+  - Resterende udekte grener er defensive null-guards og jsdom-begrensninger
 
 - [x] **Optimaliser testsuiten — fjern redundante tester** ([plan](docs/plan-optimaliser-testsuite.md))
   - `admin.spec.ts`: alle 7 tester → chromium-only (14 instanser spart)

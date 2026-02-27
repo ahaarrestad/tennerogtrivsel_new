@@ -1788,4 +1788,41 @@ describe('toggleGalleriActive with DOM elements', () => {
         const btn = document.querySelector('.toggle-active-btn[data-row="8"]');
         expect(btn.dataset.active).toBe('true'); // reverted
     });
+
+    it('should handle toggle error without btn/card in DOM', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        // No toggle button in DOM
+        updateGalleriRow.mockRejectedValue(new Error('fail'));
+        const toggleFn = loadGalleriListeModule.mock.calls[0][5];
+        const img = { active: true };
+        await toggleFn(999, img);
+
+        // Should not crash and should reload
+        expect(loadGalleriListeModule).toHaveBeenCalledTimes(2);
+    });
+});
+
+describe('handleReorder sort — both forsidebilde', () => {
+    it('should sort by order when both items are forsidebilde', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        getGalleriRaw.mockResolvedValue([
+            { rowIndex: 3, type: 'forsidebilde', order: 2 },
+            { rowIndex: 2, type: 'forsidebilde', order: 1 },
+        ]);
+        reorderGalleriItem.mockResolvedValue();
+
+        const handleReorder = loadGalleriListeModule.mock.calls[0][3];
+        await handleReorder(2, 1);
+
+        const sortedItems = reorderGalleriItem.mock.calls[0][1];
+        // Both forsidebilde → falls through to order comparison
+        expect(sortedItems[0].order).toBe(1);
+        expect(sortedItems[1].order).toBe(2);
+    });
 });

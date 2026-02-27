@@ -129,6 +129,45 @@ describe('content.config.ts - Loaders', () => {
         });
     });
 
+    describe('galleri loader', () => {
+        it('bør lese galleri fra JSON-fil korrekt', async () => {
+            const mockGalleri = [
+                { id: 'bilde-1', title: 'Venterom', image: 'venterom.jpg' },
+            ];
+
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockGalleri));
+
+            const loader = (collections.galleri as any).loader;
+            const result = await loader();
+
+            expect(result).toEqual(mockGalleri);
+        });
+
+        it('bør bruke generert ID hvis id mangler i JSON', async () => {
+            const mockGalleri = [
+                { title: 'Uten ID' },
+            ];
+
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockGalleri));
+
+            const loader = (collections.galleri as any).loader;
+            const result = await loader();
+
+            expect(result[0].id).toBe('galleri-0');
+        });
+
+        it('bør returnere tom liste hvis filen ikke finnes', async () => {
+            (fs.existsSync as any).mockReturnValue(false);
+
+            const loader = (collections.galleri as any).loader;
+            const result = await loader();
+
+            expect(result).toEqual([]);
+        });
+    });
+
     describe('tannleger loader', () => {
         it('bør lese tannleger fra JSON-fil korrekt', async () => {
             const mockTannleger = [

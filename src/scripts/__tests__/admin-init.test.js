@@ -69,6 +69,44 @@ vi.mock('../admin-gallery.js', () => ({
     setupUploadHandler: vi.fn(),
 }));
 
+vi.mock('../admin-module-bilder.js', () => ({
+    loadBilderModule: vi.fn(),
+}));
+
+vi.mock('../admin-module-settings.js', () => ({
+    loadSettingsModule: vi.fn(),
+}));
+
+const mockReloadTjenester = vi.fn();
+vi.mock('../admin-module-tjenester.js', () => ({
+    initTjenesterModule: vi.fn(() => {
+        window.deleteTjeneste = vi.fn();
+        window.editTjeneste = vi.fn();
+        window.loadTjenesterModule = mockReloadTjenester;
+    }),
+    reloadTjenester: mockReloadTjenester,
+}));
+
+const mockReloadMeldinger = vi.fn();
+vi.mock('../admin-module-meldinger.js', () => ({
+    initMeldingerModule: vi.fn(() => {
+        window.deleteMelding = vi.fn();
+        window.editMelding = vi.fn();
+        window.loadMeldingerModule = mockReloadMeldinger;
+    }),
+    reloadMeldinger: mockReloadMeldinger,
+}));
+
+const mockReloadTannleger = vi.fn();
+vi.mock('../admin-module-tannleger.js', () => ({
+    initTannlegerModule: vi.fn(() => {
+        window.deleteTannlege = vi.fn();
+        window.editTannlege = vi.fn();
+        window.openTannlegerModule = mockReloadTannleger;
+    }),
+    reloadTannleger: mockReloadTannleger,
+}));
+
 vi.mock('../textFormatter.js', () => ({
     formatDate: vi.fn(d => d),
     stripStackEditData: vi.fn(s => s),
@@ -83,6 +121,8 @@ import {
 import { showConfirm } from '../admin-dialog.js';
 import { initPwaPrompt, showInstallPromptIfEligible } from '../pwa-prompt.js';
 import { updateUIWithUser, enforceAccessControl } from '../admin-dashboard.js';
+import { loadBilderModule } from '../admin-module-bilder.js';
+import { loadSettingsModule } from '../admin-module-settings.js';
 
 function setupDOM() {
     document.body.innerHTML = `
@@ -478,5 +518,53 @@ describe('admin-init', () => {
         document.getElementById('card-settings').click();
         expect(document.getElementById('breadcrumb-editor').classList.contains('hidden')).toBe(true);
         expect(document.getElementById('breadcrumb-editor-sep').classList.contains('hidden')).toBe(true);
+    });
+});
+
+describe('admin-init openModule branches', () => {
+    it('openModule bilder should call loadBilderModule', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+
+        document.getElementById('card-bilder').click();
+
+        expect(loadBilderModule).toHaveBeenCalled();
+        expect(document.getElementById('module-title').textContent).toBe('Bilder');
+    });
+
+    it('openModule settings should call loadSettingsModule', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+
+        document.getElementById('card-settings').click();
+
+        expect(loadSettingsModule).toHaveBeenCalled();
+    });
+
+    it('openModule tjenester should call reloadTjenester', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+
+        document.getElementById('card-tjenester').click();
+
+        expect(mockReloadTjenester).toHaveBeenCalled();
+    });
+
+    it('openModule meldinger should call reloadMeldinger', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+
+        document.getElementById('card-meldinger').click();
+
+        expect(mockReloadMeldinger).toHaveBeenCalled();
+    });
+
+    it('openModule tannleger should call reloadTannleger', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+
+        document.getElementById('card-tannleger').click();
+
+        expect(mockReloadTannleger).toHaveBeenCalled();
     });
 });
