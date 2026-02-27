@@ -28,11 +28,16 @@
   - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
-  - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
-  - CloudFront-headere allerede håndtert (CloudFront test ferdig, prod følger oppgave 1)
-  - Nye funn: HTML-attributt-escaping mangler i admin-template literals
-  - 6 steg: HTML-escaping (M1), filopplasting (M2), input-validering (M3), API-nøkkel (L1), tester, dokumentasjon
-  - Steg 1–4 uavhengige, steg 5 avhenger av 1+2+3, steg 6 sist
+  - Plan oppdatert 27. feb 2026 etter ny kodebase-gjennomgang
+  - 7 medium-funn (M1–M7), 6 lave (L1–L6), 0 kritiske
+  - M1: HTML-attributt-escaping mangler i 5 filer, 15+ injeksjonspunkter (tannleger, meldinger, tjenester, settings, gallery)
+  - M2: Filopplasting uten MIME/størrelses-validering
+  - M3: Ingen input-validering på Sheets-mutasjoner
+  - M7 (NYTT): CDN-scripts (EasyMDE, Flatpickr) lastes uten Subresource Integrity
+  - L6 (NYTT): `repository_dispatch` hopper over tester ved deploy
+  - Bilder-modulen er allerede sikret (DOMPurify + programmatisk verdi-setting) — bra referanse
+  - 7 steg: HTML-escaping (M1), filopplasting (M2), input-validering (M3), SRI (M7), API-nøkkel (L1), tester, dokumentasjon
+  - Steg 1–5 uavhengige, steg 6 avhenger av 1+2+3, steg 7 sist
 
 - [ ] **Bekreft tilgangskontroll på adminsiden** ([plan](docs/plan-tilgangskontroll.md))
   - Verifiser at brukere kun får tilgang til moduler de har tilgang til på Google Disk
