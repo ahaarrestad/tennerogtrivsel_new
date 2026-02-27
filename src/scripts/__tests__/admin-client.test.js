@@ -569,6 +569,18 @@ describe('admin-client.js', () => {
             const result = await checkAccess(null);
             expect(result).toBe(false);
         });
+
+        it('checkMultipleAccess skal returnere blandede resultater', async () => {
+            gapi.client.drive.files.get
+                .mockResolvedValueOnce({ result: { name: 'OK' } })
+                .mockRejectedValueOnce({ status: 403 })
+                .mockResolvedValueOnce({ result: { name: 'Also OK' } });
+
+            const result = await checkMultipleAccess(['a', 'b', 'c']);
+            expect(result['a']).toBe(true);
+            expect(result['b']).toBe(false);
+            expect(result['c']).toBe(true);
+        });
     });
 
     describe('Google Drive Operations', () => {

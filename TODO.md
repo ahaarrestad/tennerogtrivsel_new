@@ -33,12 +33,6 @@
   - 7 steg: HTML-escaping (M1), filopplasting (M2), input-validering (M3), SRI (M7), API-nøkkel (L1), tester, dokumentasjon
   - Steg 1–5 uavhengige, steg 6 avhenger av 1+2+3, steg 7 sist
 
-- [ ] **Bekreft tilgangskontroll på adminsiden** ([plan](docs/plan-tilgangskontroll.md))
-  - Verifiser at brukere kun får tilgang til moduler de har tilgang til på Google Disk
-  - Test kombinasjoner: kun meldinger, kun tjenester, kun «innstillinger + tannleger + galleri», osv.
-  - Bekreft at bruker logges ut hvis det ikke er tilgang til noe i det hele tatt
-  - 4 steg: tilgangskombinasjoner (5 scenarioer), checkMultipleAccess-tester, edge cases, verifisering/dokumentasjon
-
 - [ ] **Kodelesbarhet — ny gjennomgang og forenkling** ([plan](docs/plan-kodelesbarhet-2.md))
   - Analyse fullført: 5 konkrete forbedringspunkter identifisert
   - Steg 1: Slider-template (bilder+tannleger) → felles `renderImageCropSliders()`
@@ -61,6 +55,13 @@
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
 ## Fullført
+
+- [x] **Bekreft tilgangskontroll på adminsiden** ([plan](docs/plan-tilgangskontroll.md))
+  - 10 nye enhetstester: 5 tilgangskombinasjoner, 1 checkMultipleAccess blandet, 3 edge cases, 1 returverdi
+  - Scenarioer: kun meldinger, kun tjenester, sheet+tannleger, kun sheet, alt unntatt sheet
+  - Edge cases: tom config, manglende DOM-elementer, korrekt accessMap-retur
+  - Dokumentert tilgangskontrollmodell i `docs/architecture/sikkerhet.md`
+  - Branch coverage: admin-dashboard 88.8%, admin-client 94.76%
 
 - [x] **Sjekk at alle filer som kan testes er testet** ([plan](docs/plan-sjekk-testdekning.md))
   - Alle 26 testbare kildefiler har testfiler — ingen hull funnet

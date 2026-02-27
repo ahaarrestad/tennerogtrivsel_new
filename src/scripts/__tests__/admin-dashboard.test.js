@@ -1632,6 +1632,119 @@ describe('admin-dashboard.js', () => {
             const cardBilder = document.getElementById('card-bilder');
             expect(cardBilder.style.display).toBe('none');
         });
+
+        it('should show only meldinger when user has access to meldinger folder only', async () => {
+            const config = { MELDINGER_FOLDER: 'm' };
+            adminClient.checkMultipleAccess.mockResolvedValue({ 'm': true });
+
+            const result = await enforceAccessControl(config);
+
+            expect(document.getElementById('card-meldinger').style.display).toBe('flex');
+            expect(document.getElementById('card-settings').style.display).toBe('none');
+            expect(document.getElementById('card-tjenester').style.display).toBe('none');
+            expect(document.getElementById('card-tannleger').style.display).toBe('none');
+            expect(document.getElementById('card-bilder').style.display).toBe('none');
+            expect(adminClient.logout).not.toHaveBeenCalled();
+            expect(result['m']).toBe(true);
+        });
+
+        it('should show only tjenester when user has access to tjenester folder only', async () => {
+            const config = { TJENESTER_FOLDER: 'tj' };
+            adminClient.checkMultipleAccess.mockResolvedValue({ 'tj': true });
+
+            const result = await enforceAccessControl(config);
+
+            expect(document.getElementById('card-tjenester').style.display).toBe('flex');
+            expect(document.getElementById('card-settings').style.display).toBe('none');
+            expect(document.getElementById('card-meldinger').style.display).toBe('none');
+            expect(document.getElementById('card-tannleger').style.display).toBe('none');
+            expect(document.getElementById('card-bilder').style.display).toBe('none');
+            expect(adminClient.logout).not.toHaveBeenCalled();
+            expect(result['tj']).toBe(true);
+        });
+
+        it('should show innstillinger, tannleger and bilder when user has sheet + tannleger folder', async () => {
+            const config = { SHEET_ID: 's', TANNLEGER_FOLDER: 'ta' };
+            adminClient.checkMultipleAccess.mockResolvedValue({ 's': true, 'ta': true });
+
+            const result = await enforceAccessControl(config);
+
+            expect(document.getElementById('card-settings').style.display).toBe('flex');
+            expect(document.getElementById('card-tannleger').style.display).toBe('flex');
+            expect(document.getElementById('card-bilder').style.display).toBe('flex');
+            expect(document.getElementById('card-tjenester').style.display).toBe('none');
+            expect(document.getElementById('card-meldinger').style.display).toBe('none');
+            expect(adminClient.logout).not.toHaveBeenCalled();
+            expect(result['s']).toBe(true);
+            expect(result['ta']).toBe(true);
+        });
+
+        it('should show only innstillinger and bilder when user has sheet but no folders', async () => {
+            const config = { SHEET_ID: 's' };
+            adminClient.checkMultipleAccess.mockResolvedValue({ 's': true });
+
+            const result = await enforceAccessControl(config);
+
+            expect(document.getElementById('card-settings').style.display).toBe('flex');
+            expect(document.getElementById('card-bilder').style.display).toBe('flex');
+            expect(document.getElementById('card-tjenester').style.display).toBe('none');
+            expect(document.getElementById('card-meldinger').style.display).toBe('none');
+            expect(document.getElementById('card-tannleger').style.display).toBe('none');
+            expect(adminClient.logout).not.toHaveBeenCalled();
+        });
+
+        it('should show tjenester and meldinger but not tannleger when user has folders but not sheet', async () => {
+            const config = { TJENESTER_FOLDER: 'tj', MELDINGER_FOLDER: 'm', TANNLEGER_FOLDER: 'ta' };
+            adminClient.checkMultipleAccess.mockResolvedValue({ 'tj': true, 'm': true, 'ta': true });
+
+            const result = await enforceAccessControl(config);
+
+            expect(document.getElementById('card-tjenester').style.display).toBe('flex');
+            expect(document.getElementById('card-meldinger').style.display).toBe('flex');
+            // Tannleger requires BOTH folder AND sheet — no sheet means hidden
+            expect(document.getElementById('card-tannleger').style.display).toBe('none');
+            expect(document.getElementById('card-settings').style.display).toBe('none');
+            expect(document.getElementById('card-bilder').style.display).toBe('none');
+            expect(adminClient.logout).not.toHaveBeenCalled();
+        });
+
+        it('should return correct accessMap object', async () => {
+            const config = {
+                SHEET_ID: 's',
+                TJENESTER_FOLDER: 'tj',
+                MELDINGER_FOLDER: 'm',
+                TANNLEGER_FOLDER: 'ta'
+            };
+            const mockMap = { 's': true, 'tj': false, 'm': true, 'ta': false };
+            adminClient.checkMultipleAccess.mockResolvedValue(mockMap);
+
+            const result = await enforceAccessControl(config);
+
+            expect(result).toEqual(mockMap);
+        });
+
+        it('should not logout when config has no resource IDs (empty config)', async () => {
+            adminClient.checkMultipleAccess.mockResolvedValue({});
+
+            await enforceAccessControl({});
+
+            // ids.length === 0, so logout should NOT be called
+            expect(adminClient.logout).not.toHaveBeenCalled();
+        });
+
+        it('should not crash when card elements are missing from DOM', async () => {
+            // Remove all cards from DOM
+            ['card-settings', 'card-tjenester', 'card-meldinger', 'card-tannleger', 'card-bilder'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.remove();
+            });
+
+            const config = { SHEET_ID: 's', TJENESTER_FOLDER: 'tj' };
+            adminClient.checkMultipleAccess.mockResolvedValue({ 's': true, 'tj': true });
+
+            // Should not throw
+            await expect(enforceAccessControl(config)).resolves.toBeDefined();
+        });
     });
 
     describe('handleModuleError', () => {
