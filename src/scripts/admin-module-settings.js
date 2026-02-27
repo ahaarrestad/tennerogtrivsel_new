@@ -5,7 +5,7 @@ import {
     reorderSettingItem, formatTimestamp, updateLastFetchedTime, updateBreadcrumbCount,
     handleModuleError
 } from './admin-dashboard.js';
-import { getAdminConfig, getRefreshAuth } from './admin-editor-helpers.js';
+import { getAdminConfig, getRefreshAuth, escapeHtml } from './admin-editor-helpers.js';
 
 const SETTING_HINTS = {
     // Forside (hero)
@@ -112,18 +112,26 @@ export async function loadSettingsModule() {
                                     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                 </button>
                             </div>` : ''}
-                            <label class="admin-label !mb-0 ${settingsReorderMode ? '' : 'cursor-pointer'}">${label}</label>
+                            <label class="admin-label !mb-0 ${settingsReorderMode ? '' : 'cursor-pointer'}">${escapeHtml(label)}</label>
                         </div>
                         <div id="status-${i}" class="shrink-0 h-5"></div>
                     </div>
                     ${hint ? `<p class="text-xs text-admin-muted-light -mt-0.5">${settingsReorderMode ? '' : 'Vises på: '}${hint}</p>` : ''}
                     ${settingsReorderMode ? '' : (isLong ?
-                        `<textarea id="setting-input-${i}" data-index="${i}" class="setting-field admin-input resize-none overflow-hidden">${setting.value}</textarea>` :
-                        `<input type="text" id="setting-input-${i}" data-index="${i}" value="${setting.value}" class="setting-field admin-input">`
+                        `<textarea id="setting-input-${i}" data-index="${i}" class="setting-field admin-input resize-none overflow-hidden"></textarea>` :
+                        `<input type="text" id="setting-input-${i}" data-index="${i}" value="" class="setting-field admin-input">`
                     )}
                 </div>`;
         });
         inner.innerHTML = html + `</div>`;
+
+        // Sett form-verdier programmatisk (sikkert — ingen HTML-parsing)
+        if (!settingsReorderMode) {
+            allSettings.forEach((setting, i) => {
+                const el = document.getElementById(`setting-input-${i}`);
+                if (el) el.value = setting.value;
+            });
+        }
 
         // Toggle reorder-modus
         document.getElementById('settings-reorder-toggle')?.addEventListener('click', () => {

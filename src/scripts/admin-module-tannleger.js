@@ -8,7 +8,7 @@ import { loadTannlegerModule, formatTimestamp } from './admin-dashboard.js';
 import {
     getAdminConfig, renderToggleHtml, attachToggleClick,
     showDeletionToast, bindSliderStepButtons, bindWheelPrevent,
-    showSaveBar, hideSaveBar
+    showSaveBar, hideSaveBar, escapeHtml
 } from './admin-editor-helpers.js';
 
 let tannlegeSaveTimeout = null;
@@ -79,7 +79,7 @@ async function editTannlege(rowIndex, data = null) {
                     <div class="admin-field-container">
                         <label class="admin-label">Profilbilde</label>
                         <div class="flex items-center gap-3">
-                            <input type="text" id="edit-t-image" value="${t.image}" class="admin-input flex-grow text-xs text-admin-muted font-mono" placeholder="Ingen bilde valgt" readonly>
+                            <input type="text" id="edit-t-image" value="" class="admin-input flex-grow text-xs text-admin-muted font-mono" placeholder="Ingen bilde valgt" readonly>
                             <button id="btn-open-gallery" class="btn-primary py-3 px-4 text-xs shrink-0 whitespace-nowrap">Velg bilde</button>
                         </div>
                         <p class="text-[10px] text-admin-muted-light mt-1 italic">Lastes fra Google Drive (mappe: tannleger)</p>
@@ -87,15 +87,15 @@ async function editTannlege(rowIndex, data = null) {
 
                     <div class="admin-field-container">
                         <label class="admin-label">Fullt navn</label>
-                        <input type="text" id="edit-t-name" value="${t.name}" class="admin-input" placeholder="Navn Navnesen">
+                        <input type="text" id="edit-t-name" value="" class="admin-input" placeholder="Navn Navnesen">
                     </div>
                     <div class="admin-field-container">
                         <label class="admin-label">Tittel / Rolle</label>
-                        <input type="text" id="edit-t-title" value="${t.title}" class="admin-input" placeholder="Tannlege / Spesialist">
+                        <input type="text" id="edit-t-title" value="" class="admin-input" placeholder="Tannlege / Spesialist">
                     </div>
                     <div class="admin-field-container">
                         <label class="admin-label">Kort beskrivelse</label>
-                        <textarea id="edit-t-desc" rows="4" class="admin-input resize-none">${t.description}</textarea>
+                        <textarea id="edit-t-desc" rows="4" class="admin-input resize-none"></textarea>
                     </div>
                 </div>
 
@@ -165,10 +165,10 @@ async function editTannlege(rowIndex, data = null) {
                         </div>
 
                         <div class="relative z-10 w-full flex flex-col grow">
-                            <h3 id="preview-name" class="h3 mb-1">${t.name || 'Navn'}</h3>
+                            <h3 id="preview-name" class="h3 mb-1">${escapeHtml(t.name) || 'Navn'}</h3>
                             <div class="card-text space-y-1 grow">
-                                <p id="preview-title" class="card-subtitle">${t.title || 'Tittel'}</p>
-                                <p id="preview-desc" class="line-clamp-6">${t.description || 'Beskrivelse kommer her...'}</p>
+                                <p id="preview-title" class="card-subtitle">${escapeHtml(t.title) || 'Tittel'}</p>
+                                <p id="preview-desc" class="line-clamp-6">${escapeHtml(t.description) || 'Beskrivelse kommer her...'}</p>
                             </div>
                         </div>
 
@@ -178,6 +178,16 @@ async function editTannlege(rowIndex, data = null) {
             </div>
         </div>
     `;
+
+    // Sett form-verdier programmatisk (sikkert — ingen HTML-parsing)
+    const imageInput = document.getElementById('edit-t-image');
+    const nameInput = document.getElementById('edit-t-name');
+    const titleInput = document.getElementById('edit-t-title');
+    const descInput = document.getElementById('edit-t-desc');
+    if (imageInput) imageInput.value = t.image || '';
+    if (nameInput) nameInput.value = t.name || '';
+    if (titleInput) titleInput.value = t.title || '';
+    if (descInput) descInput.value = t.description || '';
 
     // --- IMAGE GALLERY LOGIC ---
     const btnGallery = document.getElementById('btn-open-gallery');

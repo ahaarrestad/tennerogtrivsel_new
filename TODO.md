@@ -21,18 +21,6 @@
   - Oppdater deploy-workflow for prod-bucket
   - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
-- [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
-  - Plan oppdatert 27. feb 2026 etter ny kodebase-gjennomgang
-  - 7 medium-funn (M1–M7), 6 lave (L1–L6), 0 kritiske
-  - M1: HTML-attributt-escaping mangler i 5 filer, 15+ injeksjonspunkter (tannleger, meldinger, tjenester, settings, gallery)
-  - M2: Filopplasting uten MIME/størrelses-validering
-  - M3: Ingen input-validering på Sheets-mutasjoner
-  - M7 (NYTT): CDN-scripts (EasyMDE, Flatpickr) lastes uten Subresource Integrity
-  - L6 (NYTT): `repository_dispatch` hopper over tester ved deploy
-  - Bilder-modulen er allerede sikret (DOMPurify + programmatisk verdi-setting) — bra referanse
-  - 7 steg: HTML-escaping (M1), filopplasting (M2), input-validering (M3), SRI (M7), API-nøkkel (L1), tester, dokumentasjon
-  - Steg 1–5 uavhengige, steg 6 avhenger av 1+2+3, steg 7 sist
-
 - [ ] **Kodelesbarhet — ny gjennomgang og forenkling** ([plan](docs/plan-kodelesbarhet-2.md))
   - Analyse fullført: 5 konkrete forbedringspunkter identifisert
   - Steg 1: Slider-template (bilder+tannleger) → felles `renderImageCropSliders()`
@@ -55,6 +43,14 @@
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
 ## Fullført
+
+- [x] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
+  - M1: HTML-escaping (`escapeHtml()`) + programmatisk verdi-setting i 5 admin-moduler (15+ injeksjonspunkter)
+  - M2: Filopplastings-validering (MIME-type + filstørrelse) i `uploadImage()`
+  - M3: Input-validering (`validateSheetInput()`) for Sheets-mutasjoner
+  - M7: SRI (Subresource Integrity) på alle 6 CDN-ressurser i admin
+  - 15 nye sikkerhetstester (escapeHtml, validateSheetInput, uploadImage-validering)
+  - Dokumentert i `docs/architecture/sikkerhet.md`
 
 - [x] **Bekreft tilgangskontroll på adminsiden** ([plan](docs/plan-tilgangskontroll.md))
   - 10 nye enhetstester: 5 tilgangskombinasjoner, 1 checkMultipleAccess blandet, 3 edge cases, 1 returverdi

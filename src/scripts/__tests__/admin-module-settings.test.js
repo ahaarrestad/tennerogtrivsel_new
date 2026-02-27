@@ -35,6 +35,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
         HARD_DEFAULTS: { key1: 'val1' },
     })),
     getRefreshAuth: vi.fn(() => 'mock-refresher'),
+    escapeHtml: vi.fn(s => String(s ?? '')),
 }));
 
 import { getSettingsWithNotes, updateSettingByKey, updateSettingOrder } from '../admin-client.js';
@@ -92,7 +93,8 @@ describe('loadSettingsModule', () => {
 
         const inner = document.getElementById('module-inner');
         expect(inner.innerHTML).toContain('Telefon');
-        expect(inner.innerHTML).toContain('12345678');
+        // Values are now set programmatically, not in innerHTML
+        expect(document.getElementById('setting-input-0').value).toBe('12345678');
     });
 
     it('should write virtual settings to sheet', async () => {

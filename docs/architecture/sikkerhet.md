@@ -51,6 +51,53 @@ Admin-panelet bruker Google Drive-deling som tilgangsmodell. Brukeren autentiser
 
 **Nøkkelfiler:** `admin-dashboard.js` (`enforceAccessControl`), `admin-client.js` (`checkAccess`, `checkMultipleAccess`), `admin-init.js` (`handleAuth`)
 
+## HTML-escaping og programmatisk verdi-setting
+
+Admin-editor-moduler bruker to teknikker for å hindre HTML-injeksjon fra Sheets/Drive-data:
+
+1. **Programmatisk verdi-setting** for skjemaelementer (input, textarea): Render tomt skjema, sett verdier med `.value = data` etter innerHTML. Dette unngår HTML-parsing helt.
+2. **`escapeHtml()`** for preview-tekst (h3, p, span): Escaper `<`, `>`, `"` og `&`.
+
+```js
+// Mønster for editor-skjemaer:
+inner.innerHTML = `<input id="edit-name" value="">`;
+document.getElementById('edit-name').value = data.name; // Sikkert
+
+// Mønster for preview/lister:
+`<h3>${escapeHtml(data.name)}</h3>`
+```
+
+**Berørte filer:** `admin-module-tannleger.js`, `admin-module-meldinger.js`, `admin-module-tjenester.js`, `admin-module-settings.js`, `admin-gallery.js`
+
+**Referanse-implementasjon:** `admin-module-bilder.js` — bruker DOMPurify.sanitize() + programmatisk verdi-setting.
+
+## Filopplastings-validering
+
+`uploadImage()` i `admin-client.js` validerer:
+- **MIME-type**: Kun `image/jpeg`, `image/png`, `image/webp` aksepteres
+- **Filstørrelse**: Maks 10 MB
+
+Kaller (`admin-gallery.js`) har allerede try/catch med `showToast` — feilmeldinger propagerer.
+
+## Subresource Integrity (SRI)
+
+Alle CDN-lastede scripts og stylesheets i `admin/index.astro` har:
+- Pinnede versjoner (EasyMDE 2.20.0, Flatpickr 4.6.13, Font Awesome 4.7.0)
+- `integrity="sha384-..."` hasher
+- `crossorigin="anonymous"`
+
+Dette beskytter mot forsyningskjede-angrep der et kompromittert CDN endrer filinnholdet.
+
+## Akseptert risiko
+
+| Funn | Begrunnelse |
+|------|-------------|
+| `unsafe-inline` i CSP (M4) | Nødvendig for Google OAuth og Tailwind v4. Mitigert av script-src whitelist og DOMPurify. |
+| Token i localStorage (M5) | Ingen HTTPOnly-alternativ for klient-side OAuth. Mitigert av token-expiry og CSP. |
+| Ingen audit-logging (M6) | Krever ekstra infrastruktur. Kan vurderes som egen oppgave. |
+| `repository_dispatch` uten tester (L6) | Akseptert avveining — koden er allerede testet på main, risiko begrenset til kompromittert Drive-innhold. |
+| Admin-side offentlig (L5) | Alle data/funksjonalitet krever gyldig OAuth-token. `noindex` + `robots.txt Disallow` hindrer indeksering. |
+
 ## Web Storage og modul-tilstand i tester
 
 - Når kode under test bruker Web Storage, SKAL **begge** `localStorage.clear()` og

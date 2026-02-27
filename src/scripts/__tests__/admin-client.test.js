@@ -210,14 +210,32 @@ describe('admin-client.js', () => {
 
         it('skal kaste feil hvis opplasting feiler (http feil)', async () => {
             global.fetch.mockResolvedValue({ ok: false, statusText: 'Bad Request' });
-            const mockFile = new File([''], 'test.png');
+            const mockFile = new File([''], 'test.png', { type: 'image/png' });
             await expect(uploadImage('folder-123', mockFile)).rejects.toThrow('Upload failed: Bad Request');
         });
 
         it('skal kaste feil hvis fetch kaster feil (nettverk)', async () => {
             global.fetch.mockRejectedValue(new Error('Network error'));
-            const mockFile = new File([''], 'test.png');
+            const mockFile = new File([''], 'test.png', { type: 'image/png' });
             await expect(uploadImage('folder-123', mockFile)).rejects.toThrow('Network error');
+        });
+
+        it('skal avvise ugyldig filtype', async () => {
+            const mockFile = new File([''], 'test.pdf', { type: 'application/pdf' });
+            await expect(uploadImage('folder-123', mockFile)).rejects.toThrow('Ugyldig filtype');
+        });
+
+        it('skal avvise for stor fil', async () => {
+            const mockFile = new File(['x'], 'big.jpg', { type: 'image/jpeg' });
+            Object.defineProperty(mockFile, 'size', { value: 11 * 1024 * 1024 });
+            await expect(uploadImage('folder-123', mockFile)).rejects.toThrow('for stor');
+        });
+
+        it('skal godta gyldig webp-fil', async () => {
+            global.fetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({ id: 'new' }) });
+            const mockFile = new File(['data'], 'img.webp', { type: 'image/webp' });
+            const result = await uploadImage('folder-123', mockFile);
+            expect(result).toEqual({ id: 'new' });
         });
     });
 

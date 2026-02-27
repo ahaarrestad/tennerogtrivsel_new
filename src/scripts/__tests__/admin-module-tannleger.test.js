@@ -46,6 +46,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
     bindWheelPrevent: vi.fn(),
     showSaveBar: vi.fn(),
     hideSaveBar: vi.fn(),
+    escapeHtml: vi.fn(s => String(s ?? '')),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({

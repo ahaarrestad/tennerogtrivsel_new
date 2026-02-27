@@ -226,6 +226,16 @@ export async function listImages(folderId) {
  * Laster opp et bilde til Drive
  */
 export async function uploadImage(folderId, file) {
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+    const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+        throw new Error(`Ugyldig filtype: ${file.type}. Kun JPEG, PNG og WebP er tillatt.`);
+    }
+    if (file.size > MAX_SIZE) {
+        throw new Error(`Filen er for stor (${(file.size / 1024 / 1024).toFixed(1)} MB). Maks 10 MB.`);
+    }
+
     try {
         const metadata = {
             name: file.name,

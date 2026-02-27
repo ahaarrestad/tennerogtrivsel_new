@@ -1,6 +1,7 @@
 // src/scripts/admin-gallery.js
 import { checkAccess, listImages, uploadImage } from './admin-client.js';
 import { showToast } from './admin-dialog.js';
+import { escapeHtml } from './admin-editor-helpers.js';
 
 /**
  * Laster bildegalleri fra Google Drive og rendrer thumbnails i grid-elementet.
@@ -38,14 +39,14 @@ export async function loadGallery(folderId, onSelect) {
                 el.innerHTML = `
                     <img src="${img.thumbnailLink}" referrerpolicy="no-referrer" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
                     <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2 text-center">
-                        <span class="text-white text-[10px] font-bold break-all line-clamp-2">${img.name}</span>
+                        <span class="text-white text-[10px] font-bold break-all line-clamp-2">${escapeHtml(img.name)}</span>
                     </div>
                 `;
             } else {
                 el.innerHTML = `
                     <div class="flex flex-col items-center justify-center text-admin-muted-light p-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        <span class="text-[8px] font-bold break-all line-clamp-2 text-center">${img.name}</span>
+                        <span class="text-[8px] font-bold break-all line-clamp-2 text-center">${escapeHtml(img.name)}</span>
                     </div>
                 `;
             }

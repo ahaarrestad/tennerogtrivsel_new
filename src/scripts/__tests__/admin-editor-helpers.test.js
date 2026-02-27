@@ -15,7 +15,8 @@ vi.mock('../admin-client.js', () => ({
 import {
     getAdminConfig, getRefreshAuth, setToggleState, renderToggleHtml,
     attachToggleClick, showDeletionToast, initMarkdownEditor, initEditors,
-    bindSliderStepButtons, bindWheelPrevent, showSaveBar, hideSaveBar
+    bindSliderStepButtons, bindWheelPrevent, showSaveBar, hideSaveBar,
+    escapeHtml, validateSheetInput
 } from '../admin-editor-helpers.js';
 import { createAuthRefresher } from '../admin-api-retry.js';
 
@@ -529,5 +530,62 @@ describe('initEditors — previewRender and flatpickr callbacks', () => {
 
         initEditors(vi.fn());
         expect(mockFp).toHaveBeenCalledWith('#edit-start', expect.not.objectContaining({ locale: expect.anything() }));
+    });
+});
+
+describe('escapeHtml', () => {
+    it('should escape < and >', () => {
+        expect(escapeHtml('<script>alert("xss")</script>')).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+    });
+
+    it('should escape &', () => {
+        expect(escapeHtml('Tom & Jerry')).toBe('Tom &amp; Jerry');
+    });
+
+    it('should escape double quotes', () => {
+        expect(escapeHtml('value="injected"')).toBe('value=&quot;injected&quot;');
+    });
+
+    it('should handle null and undefined', () => {
+        expect(escapeHtml(null)).toBe('');
+        expect(escapeHtml(undefined)).toBe('');
+    });
+
+    it('should handle numbers', () => {
+        expect(escapeHtml(42)).toBe('42');
+    });
+
+    it('should return empty string as-is', () => {
+        expect(escapeHtml('')).toBe('');
+    });
+
+    it('should not modify safe text', () => {
+        expect(escapeHtml('Dr. Hansen')).toBe('Dr. Hansen');
+    });
+});
+
+describe('validateSheetInput', () => {
+    it('should return null for valid text', () => {
+        expect(validateSheetInput('hello')).toBeNull();
+    });
+
+    it('should reject text exceeding maxLength', () => {
+        const result = validateSheetInput('a'.repeat(501));
+        expect(result).toContain('Maks');
+        expect(result).toContain('501');
+    });
+
+    it('should use custom maxLength', () => {
+        expect(validateSheetInput('ab', { maxLength: 1 })).toContain('Maks');
+        expect(validateSheetInput('a', { maxLength: 1 })).toBeNull();
+    });
+
+    it('should validate numbers', () => {
+        expect(validateSheetInput('42', { type: 'number' })).toBeNull();
+        expect(validateSheetInput('abc', { type: 'number' })).toContain('tall');
+    });
+
+    it('should accept empty strings', () => {
+        expect(validateSheetInput('')).toBeNull();
     });
 });
