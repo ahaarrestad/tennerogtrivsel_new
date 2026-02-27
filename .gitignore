@@ -41,6 +41,7 @@ playwright-report/
 test-results/
 /.claude/settings.local.json
 /.claude/agents
+!/.claude/agents/
 /.claude/commands
 /.claude/settings.json
 
