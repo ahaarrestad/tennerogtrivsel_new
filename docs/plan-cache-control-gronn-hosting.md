@@ -1,5 +1,7 @@
 # Plan: Cache-Control og grønn hosting
 
+> **Status: BACKLOG** — ikke startet
+
 ## Kontekst
 
 Nettsiden serveres fra S3 via CloudFront, men har **ingen eksplisitte Cache-Control-headere** på S3-objektene. Astro bygger hashed assets (`/_astro/filnavn.AbCd1234.js`) som er trygge å cache evig, men CloudFront behandler alt likt. Resultatet er unødvendige origin-forespørsler og dataoverføring — høyere kostnad og karbonfotavtrykk enn nødvendig.

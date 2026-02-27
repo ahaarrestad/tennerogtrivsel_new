@@ -1,5 +1,7 @@
 # Plan: Bekreft tilgangskontroll på adminsiden
 
+> **Status: FULLFØRT**
+
 ## Bakgrunn
 
 Admin-panelet bruker Google Drive-deling som tilgangsmodell. Funksjonen `enforceAccessControl()` i `admin-dashboard.js` sjekker hvilke Google Drive-ressurser (mapper/sheets) brukeren har tilgang til, og viser/skjuler modulkort basert på dette. Hvis brukeren ikke har tilgang til noen ressurser, logges de ut og sendes til forsiden.

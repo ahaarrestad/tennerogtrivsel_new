@@ -1,5 +1,7 @@
 # Plan: Sjekk hvordan sidene fungerer på iPhone
 
+> **Status: BACKLOG** — ikke startet
+
 ## Bakgrunn
 
 Prosjektet tester i dag med Desktop Chrome, Desktop Safari og Mobile Chrome (Pixel 5) i Playwright — men **Mobile Safari mangler**. iOS Safari har kjente forskjeller fra desktop Safari, spesielt rundt sticky-posisjonering, `<dialog>`-elementet, fixed positioning og viewport-beregninger.

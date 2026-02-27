@@ -1,5 +1,7 @@
 # Plan: Kodelesbarhet — ny gjennomgang og forenkling
 
+> **Status: FULLFØRT** — 6 steg fullført
+
 ## Kontekst
 
 Kodebasen gjennomgikk en stor refaktorering (6 steg, [forrige plan](plan-kodelesbarhet.md)) som reduserte `admin/index.astro` fra 1797→231 linjer og konsoliderte bilde-parsing, CRUD-operasjoner, event-binding og HTML-templates. Denne oppgaven vurderer **hva som gjenstår** og gjør målrettede forbedringer.

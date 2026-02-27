@@ -1,5 +1,7 @@
 # Plan: Grundig sikkerhetssjekk av hele prosjektet
 
+> **Status: FULLFØRT**
+
 ## Bakgrunn
 
 Det er gjort en uformell sikkerhetsgjennomgang tidligere, men mye kode er endret siden da. Denne planen dekker hele stacken: frontend, admin-panel, API-endepunkter, CSP, autentisering og dataflyt.

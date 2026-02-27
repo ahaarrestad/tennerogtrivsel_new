@@ -127,16 +127,15 @@ describe('messageClient.js', () => {
     });
 
     it('skal bruke start-of-day og end-of-day for datofiltrering', async () => {
-        // En melding som starter og slutter i dag skal være aktiv
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+        // Bruker statisk dato for å unngå midnatt-problemer med tidssoner
+        vi.useFakeTimers({ now: new Date('2025-06-15T12:00:00') });
 
         const mockApiResponse = [
             {
                 title: 'Dagens melding',
                 content: 'Vises hele dagen',
-                startDate: todayStr,
-                endDate: todayStr
+                startDate: '2025-06-15',
+                endDate: '2025-06-15'
             }
         ];
 
@@ -148,6 +147,8 @@ describe('messageClient.js', () => {
         const result = await getActiveMessage();
         expect(result).not.toBeNull();
         expect(result.title).toBe('Dagens melding');
+
+        vi.useRealTimers();
     });
 
     it('skal returnere null hvis ingen meldinger finnes i API-svaret', async () => {
