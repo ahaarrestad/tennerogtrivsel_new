@@ -22,13 +22,14 @@
   - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
 - [ ] **Kodelesbarhet — ny gjennomgang og forenkling** ([plan](docs/plan-kodelesbarhet-2.md))
-  - Analyse fullført: 5 konkrete forbedringspunkter identifisert
+  - Revidert plan: 6 steg (opprinnelig 5), SVG-ikoner droppet (lav verdi), 2 nye mønstre identifisert
   - Steg 1: Slider-template (bilder+tannleger) → felles `renderImageCropSliders()`
   - Steg 2: Auto-save debounce (4 moduler) → felles `createAutoSaver()`
   - Steg 3: Bilde-preview-oppslag (bilder+tannleger) → felles `resolveImagePreview()`
-  - Steg 4: Splitt `admin-client.js` (987 linjer) → `admin-auth.js` + `admin-drive.js` + `admin-sheets.js`
-  - Steg 5: SVG-ikoner → egen `admin-icons.js`
-  - Steg 1–3+5 uavhengige, steg 4 selvstendig men størst
+  - Steg 4: Bildevelger-modal (bilder+tannleger) → felles `setupImagePicker()`
+  - Steg 5: Lagreverifisering (bilder+tannleger) → felles `verifySave()`
+  - Steg 6: Splitt `admin-client.js` (997 linjer) → `admin-auth.js` + `admin-drive.js` + `admin-sheets.js`
+  - Steg 1–5 sekvensielt (endrer editor-helpers), steg 6 selvstendig
 
 - [ ] **Sjekk hvordan sidene fungerer på iPhone** ([plan](docs/plan-sjekk-iphone.md))
   - Legg til Mobile Safari (iPhone 14) i Playwright-config
