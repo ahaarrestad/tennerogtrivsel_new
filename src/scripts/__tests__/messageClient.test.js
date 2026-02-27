@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getActiveMessage } from '../messageClient.js';
 
-// Mock snarkdown
-vi.mock('snarkdown', () => ({
-    default: vi.fn((markdown) => `<html>${markdown}</html>`)
+// Mock marked
+vi.mock('marked', () => ({
+    marked: { parse: vi.fn((markdown) => `<html>${markdown}</html>`) }
 }));
 
 // Mock dompurify – tester kjører i node-miljø uten DOM
@@ -21,7 +21,7 @@ describe('messageClient.js', () => {
         vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
-    it('skal hente aktiv melding og formatere med snarkdown', async () => {
+    it('skal hente aktiv melding og formatere med marked', async () => {
         const now = new Date();
         const yesterday = new Date(now);
         yesterday.setDate(now.getDate() - 1);

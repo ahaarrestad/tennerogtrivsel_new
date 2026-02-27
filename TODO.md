@@ -21,14 +21,6 @@
   - Oppdater deploy-workflow for prod-bucket
   - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
-
-- [ ] **Dobbelt linjeskift i markdown rendres ikke som mellomrom** ([plan](docs/plan-markdown-linjeskift.md))
-  - Snarkdown lager `<br />` i stedet for `<p>`-tagger — CSS-margins treffer aldri
-  - Berører: meldinger på forsiden (`messageClient.js`) og admin-preview (`admin-editor-helpers.js`)
-  - Tjeneste-sider OK (bruker Astro's innebygde remark/rehype via `render()`)
-  - Løsning: Erstatt `snarkdown` med `marked` (standard CommonMark-parser)
-  - 5 steg: bytt dep, oppdater messageClient, oppdater admin-editor-helpers, oppdater tester, verifiser
-
 - [ ] **Sjekk at alle filer som kan testes er testet**
   - Gå gjennom alle kildefiler i `src/scripts/` og `src/pages/api/` og verifiser at de har tilhørende testfiler
   - Identifiser eventuelle hull i testdekningen
@@ -63,6 +55,12 @@
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
 ## Fullført
+
+- [x] **Dobbelt linjeskift i markdown rendres ikke som mellomrom** ([plan](docs/plan-markdown-linjeskift.md))
+  - Erstattet `snarkdown` med `marked` — avsnitt wrapes nå korrekt i `<p>`-tagger
+  - Oppdatert `messageClient.js` og `admin-editor-helpers.js` (2 previewRender-funksjoner)
+  - Oppdatert 7 testfiler med ny mock (`vi.mock('marked', ...)`)
+  - Alle 816+ tester bestått, ≥80% branch coverage, bygg OK
 
 - [x] **Tilbake-navigasjon fra editor til liste i admin**
   - Utvidet brødsmulen til tre nivåer: `← Dashboard / Meldinger / Redigerer melding`

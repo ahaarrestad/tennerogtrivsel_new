@@ -1,54 +1,40 @@
 # Plan: Dobbelt linjeskift i markdown rendres ikke som mellomrom
 
+**Status: Fullført**
+
 ## Kontekst
 
-Markdown-innhold (meldinger, admin-preview) mister avsnittsskift fordi **snarkdown** ikke lager `<p>`-tagger. Doble linjeskift (`\n\n`) konverteres til `<br />` i stedet for paragraf-elementer. CSS-en `.markdown-content.prose p { mb-6 }` treffer aldri fordi `<p>` ikke eksisterer i output.
+Markdown-innhold (meldinger, admin-preview) mistet avsnittsskift fordi **snarkdown** ikke laget `<p>`-tagger. Doble linjeskift (`\n\n`) ble konvertert til `<br />` i stedet for paragraf-elementer. CSS-en `.markdown-content.prose p { mb-6 }` traff aldri fordi `<p>` ikke eksisterte i output.
 
 **Berørte steder:**
-1. **Meldinger på forsiden** — `messageClient.js:27` bruker `snarkdown(aktiv.content)` → ingen `<p>`-tagger
-2. **Admin-preview (tjenester)** — `admin-editor-helpers.js:98` bruker snarkdown i EasyMDE `previewRender`
+1. **Meldinger på forsiden** — `messageClient.js:27` brukte `snarkdown(aktiv.content)`
+2. **Admin-preview (tjenester)** — `admin-editor-helpers.js:98` brukte snarkdown i EasyMDE `previewRender`
 3. **Admin-preview (meldinger)** — `admin-editor-helpers.js:117` samme
 
-**Ikke berørt:** Tjeneste-sider (`/tjenester/[id].astro`) bruker Astro's innebygde `render()` med remark/rehype — paragraf-håndtering fungerer korrekt der.
+**Ikke berørt:** Tjeneste-sider (`/tjenester/[id].astro`) bruker Astro's innebygde `render()` med remark/rehype — fungerte korrekt allerede.
 
-## Løsning: Erstatt snarkdown med marked
+## Løsning: Erstattet snarkdown med marked
 
-`snarkdown` er en minimalistisk markdown-parser (80KB) som ikke støtter paragraf-wrapping. `marked` er standard CommonMark-parser som korrekt lager `<p>`-tagger for avsnitt.
+`snarkdown` var en minimalistisk markdown-parser (80KB) uten paragraf-wrapping. Erstattet med `marked`, standard CommonMark-parser som korrekt lager `<p>`-tagger.
 
-## Steg
+## Gjennomførte steg
 
-### Steg 1: Bytt dependency
+### Steg 1: Byttet dependency
 - `npm uninstall snarkdown && npm install marked`
-- Oppdater `package.json`
 
-### Steg 2: Oppdater messageClient.js
-- **Fil:** `src/scripts/messageClient.js`
-- Erstatt `import snarkdown from 'snarkdown'` → `import { marked } from 'marked'`
-- Konfigurer marked: `marked.setOptions({ breaks: false, gfm: true })`
-- Linje 27: `snarkdown(aktiv.content)` → `marked.parse(aktiv.content)`
-- DOMPurify.sanitize wrapping beholdes
+### Steg 2: Oppdaterte messageClient.js
+- `import snarkdown from 'snarkdown'` → `import { marked } from 'marked'`
+- `snarkdown(aktiv.content)` → `marked.parse(aktiv.content)`
+- DOMPurify.sanitize wrapping beholdt
 
-### Steg 3: Oppdater admin-editor-helpers.js
-- **Fil:** `src/scripts/admin-editor-helpers.js`
-- Erstatt `import snarkdown from 'snarkdown'` → `import { marked } from 'marked'`
-- Linje 98 (tjenester preview): `snarkdown(plainText)` → `marked.parse(plainText)`
-- Linje 117 (meldinger preview): `snarkdown(plainText)` → `marked.parse(plainText)`
+### Steg 3: Oppdaterte admin-editor-helpers.js
+- `import snarkdown from 'snarkdown'` → `import { marked } from 'marked'`
+- Begge `previewRender`-funksjoner: `snarkdown(plainText)` → `marked.parse(plainText)`
 
-### Steg 4: Oppdater tester
-- **Filer:** Alle testfiler som mocker snarkdown:
-  - `src/scripts/__tests__/messageClient.test.js`
-  - `src/scripts/__tests__/admin-editor-helpers.test.js`
-  - `src/scripts/__tests__/admin-module-meldinger.test.js`
-  - `src/scripts/__tests__/admin-module-tjenester.test.js`
-  - `src/scripts/__tests__/admin-module-bilder.test.js`
-  - `src/scripts/__tests__/admin-module-tannleger.test.js`
-  - `src/scripts/__tests__/admin-module-settings.test.js`
-  - `src/scripts/__tests__/admin-init.test.js`
-- Endre `vi.mock('snarkdown', ...)` → `vi.mock('marked', ...)`
-- Mock-funksjonen returnerer `{ marked: { parse: vi.fn(html => html), setOptions: vi.fn() } }`
+### Steg 4: Oppdaterte tester
+- 7 testfiler: `vi.mock('snarkdown', ...)` → `vi.mock('marked', ...)`
+- Mock: `{ marked: { parse: vi.fn(text => '<p>' + text + '</p>') } }`
 
-### Steg 5: Verifisering
-- Kjør `npm run test` — alle enhetstester bestått, ≥80% branch coverage
-- Kjør `npm run build` — bygget fungerer
-- Kjør `npm run test:e2e` — E2E-tester bestått
-- Manuell visuell sjekk: start dev-server, se at meldinger på forsiden har synlig avsnittsskift
+### Steg 5: Verifisert
+- 816+ enhetstester bestått, ≥80% branch coverage for alle filer
+- Bygg OK (`npm run build:ci`)
