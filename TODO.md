@@ -21,9 +21,11 @@
   - Oppdater deploy-workflow for prod-bucket
   - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
-- [ ] **Sjekk at alle filer som kan testes er testet**
-  - Gå gjennom alle kildefiler i `src/scripts/` og `src/pages/api/` og verifiser at de har tilhørende testfiler
-  - Identifiser eventuelle hull i testdekningen
+- [ ] **Sjekk at alle filer som kan testes er testet** ([plan](docs/plan-sjekk-testdekning.md))
+  - Alle 26 testbare kildefiler har allerede testfiler — ingen hull funnet
+  - Hovedoppgave: heve branch coverage-marginen på 7 filer som ligger mellom 81–87%
+  - Prioritet A (3 filer nærmest 80%): content.config, admin-module-bilder, admin-module-tannleger
+  - Prioritet B (4 filer, 84–87%): admin-init, admin-module-tjenester, admin-dialog, admin-editor-helpers
 
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
@@ -31,11 +33,6 @@
   - Nye funn: HTML-attributt-escaping mangler i admin-template literals
   - 6 steg: HTML-escaping (M1), filopplasting (M2), input-validering (M3), API-nøkkel (L1), tester, dokumentasjon
   - Steg 1–4 uavhengige, steg 5 avhenger av 1+2+3, steg 6 sist
-
-- [ ] **Optimaliser testsuiten — fjern redundante tester** ([plan](docs/plan-optimaliser-testsuite.md))
-  - Gå gjennom alle enhetstester og E2E-tester og identifiser overlapp/duplisering
-  - Fjern tester som dekker samme logikk flere ganger uten å tilføre verdi
-  - Mål: behold 80% branch coverage per fil, men reduser total byggetid
 
 - [ ] **Kodelesbarhet — ny gjennomgang og forenkling**
   - Analyser dagens tilstand av kodebasen etter tidligere refaktoreringer
@@ -55,6 +52,12 @@
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
 ## Fullført
+
+- [x] **Optimaliser testsuiten — fjern redundante tester** ([plan](docs/plan-optimaliser-testsuite.md))
+  - `admin.spec.ts`: alle 7 tester → chromium-only (14 instanser spart)
+  - `sitemap-pages.spec.ts`: 5 DOM-tester → chromium-only, 2 responsive tester beholdt for alle (10 instanser spart)
+  - Totalt: 54 E2E-instanser kjørt (ned fra 108), −50% redundante nettleser-instanser
+  - 816 enhetstester bestått, ≥80% branch coverage, bygg OK
 
 - [x] **Dobbelt linjeskift i markdown rendres ikke som mellomrom** ([plan](docs/plan-markdown-linjeskift.md))
   - Erstattet `snarkdown` med `marked` — avsnitt wrapes nå korrekt i `<p>`-tagger

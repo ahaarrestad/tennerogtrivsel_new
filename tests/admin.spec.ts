@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Admin-panel Fase 1', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'Admin-tester er nettleser-uavhengige');
     page.on('console', msg => {
       if (msg.type() === 'error') {
         console.error(`BROWSER ERROR: ${msg.text()}`);

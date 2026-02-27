@@ -15,7 +15,8 @@ const sitemapPages = [
 
 test.describe('Sitemap-sider', () => {
   for (const { path, name } of sitemapPages) {
-    test(`${name} (${path}) skal laste uten feil`, async ({ page }) => {
+    test(`${name} (${path}) skal laste uten feil`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== 'chromium', 'DOM-sjekk er nettleser-uavhengig');
       const response = await page.goto(path);
       expect(response?.status(), `${name} ga uventet status`).toBe(200);
       await expect(page).toHaveTitle(/Tenner og Trivsel/);
@@ -24,7 +25,8 @@ test.describe('Sitemap-sider', () => {
     });
   }
 
-  test('alle tjeneste-undersider skal laste uten feil', async ({ page }) => {
+  test('alle tjeneste-undersider skal laste uten feil', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'DOM-sjekk er nettleser-uavhengig');
     // Denne testen besøker mange sider sekvensielt — trenger ekstra tid
     test.setTimeout(60_000);
 
@@ -45,7 +47,8 @@ test.describe('Sitemap-sider', () => {
     }
   });
 
-  test('standalone-sider skal ha hvit bakgrunn (ikke brand-light)', async ({ page }) => {
+  test('standalone-sider skal ha hvit bakgrunn (ikke brand-light)', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'DOM-sjekk er nettleser-uavhengig');
     // Kontakt, Tjenester og Tannleger på egne sider skal ha hvit bakgrunn
     for (const path of ['/kontakt/', '/tannleger/', '/tjenester/', '/galleri/']) {
       await page.goto(path);
@@ -95,7 +98,8 @@ test.describe('Sitemap-sider', () => {
     }
   });
 
-  test('skal kunne navigere til en tjeneste og se innholdet', async ({ page }) => {
+  test('skal kunne navigere til en tjeneste og se innholdet', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'DOM-sjekk er nettleser-uavhengig');
     await page.goto('/tjenester/');
     await page.setViewportSize({ width: 1280, height: 800 });
 
@@ -112,7 +116,8 @@ test.describe('Sitemap-sider', () => {
     await expect(page.locator('.markdown-content p')).not.toHaveCount(0);
   });
 
-  test('kontakt-info i sidebaren skal være synlig på tjeneste-sider', async ({ page }) => {
+  test('kontakt-info i sidebaren skal være synlig på tjeneste-sider', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'DOM-sjekk er nettleser-uavhengig');
     await page.goto('/tjenester/');
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.locator('.card-base').first().click();
