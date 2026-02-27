@@ -45,6 +45,11 @@
   - Valgfritt steg 4: flytt S3-bucket til eu-north-1 (Stockholm) — ny bucket, OAC-policy, pek CloudFront, oppdater workflow, slett gammel
   - 3+1 steg: deploy-workflow, invalidering, verifisering, (valgfritt) regionflytt
 
+- [ ] **Flere domener på samme CloudFront (uten redirect)**
+  - I dag har flere S3 buckets redirect til `www.tennerogtrivsel.no` — brukere ser alltid dette domenet i URL
+  - Ønsket: hvert domene skal vises i URL (ikke redirecte), men servere samme innhold
+  - Undersøk: legg til ekstra CNAME/Alternate Domain Names i CloudFront-distribusjonen, ACM-sertifikat som dekker alle domener, og fjern S3-redirect-buckets
+
 - [ ] **Flaky tests — sporadiske testfeil**
   - Noen tester feiler av og til, usikkert hvilke
   - Undersøk: identifiser hvilke tester som er ustabile, finn rotårsak og fiks
