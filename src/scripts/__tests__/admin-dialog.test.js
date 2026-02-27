@@ -321,5 +321,92 @@ describe('admin-dialog.js', () => {
             const result = showAuthExpired(null, vi.fn());
             expect(result).toBeNull();
         });
+
+        it('skal ikke krasje hvis onLogin er null/undefined ved klikk', () => {
+            showAuthExpired(container, null);
+            const btn = container.querySelector('.auth-expired-login-btn');
+            expect(btn).not.toBeNull();
+            // Click login button with null onLogin — should not throw
+            expect(() => btn.click()).not.toThrow();
+            // Banner should still be removed
+            expect(container.querySelector('[role="alert"]')).toBeNull();
+        });
+
+        it('skal ikke krasje hvis onLogin er undefined ved klikk', () => {
+            showAuthExpired(container, undefined);
+            const btn = container.querySelector('.auth-expired-login-btn');
+            expect(() => btn.click()).not.toThrow();
+            expect(container.querySelector('[role="alert"]')).toBeNull();
+        });
+    });
+});
+
+describe('admin-dialog.js — additional branch coverage', () => {
+    beforeEach(() => {
+        document.body.innerHTML = '';
+        vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    describe('showToast parentNode check on auto-removal', () => {
+        it('should not throw when toast is already removed before timer fires', () => {
+            const toast = showToast('Fjern meg', 'info', { duration: 3000 });
+            const container = document.getElementById('admin-toast-container');
+            expect(container.children.length).toBe(1);
+
+            // Manually remove the toast before the timer fires (simulates close button click)
+            toast.remove();
+            expect(container.children.length).toBe(0);
+
+            // Timer fires — toast.parentNode is null, so remove() should be skipped
+            expect(() => vi.advanceTimersByTime(3000)).not.toThrow();
+        });
+    });
+
+    describe('showBanner parentNode check on auto-removal', () => {
+        beforeEach(() => {
+            const c = document.createElement('div');
+            c.id = 'test-container';
+            document.body.appendChild(c);
+        });
+
+        it('should not throw when banner is already removed before timer fires', () => {
+            const banner = showBanner('test-container', 'Fjern meg', 'info', { duration: 5000 });
+            const container = document.getElementById('test-container');
+            expect(container.children.length).toBe(1);
+
+            // Manually remove the banner before the timer fires
+            banner.remove();
+            expect(container.children.length).toBe(0);
+
+            // Timer fires — banner.parentNode is null, so remove() should be skipped
+            expect(() => vi.advanceTimersByTime(5000)).not.toThrow();
+        });
+    });
+
+    describe('showBanner with unknown type (fallback to info)', () => {
+        beforeEach(() => {
+            const c = document.createElement('div');
+            c.id = 'test-container';
+            document.body.appendChild(c);
+        });
+
+        it('should fall back to info colors for unknown type', () => {
+            const banner = showBanner('test-container', 'Unknown type', 'nonexistent');
+            // Falls back to TOAST_COLORS.info (amber) and TOAST_ICONS.info
+            expect(banner.className).toContain('bg-amber-50');
+            expect(banner.className).toContain('border-amber-200');
+        });
+
+        it('should fall back to info icon for unknown type', () => {
+            const banner = showBanner('test-container', 'Unknown type', 'nonexistent');
+            // The icon span should contain the info icon SVG (circle with line)
+            const iconSpan = banner.querySelector('span');
+            expect(iconSpan.className).toContain('text-amber-500');
+            expect(iconSpan.innerHTML).toContain('svg');
+        });
     });
 });

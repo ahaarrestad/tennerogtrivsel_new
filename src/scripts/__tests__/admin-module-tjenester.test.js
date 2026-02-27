@@ -491,3 +491,148 @@ describe('toggleTjenesteActive', () => {
         expect(card.classList.contains('opacity-60')).toBe(true);
     });
 });
+
+describe('toggleTjenesteActive — additional branch coverage', () => {
+    let toggleFn;
+
+    beforeEach(() => {
+        initTjenesterModule();
+        reloadTjenester();
+        toggleFn = loadTjenesterModule.mock.calls[0][3];
+        vi.clearAllMocks();
+    });
+
+    it('should toggle inactive→active with label showing "Aktiv"', async () => {
+        document.body.innerHTML += `
+            <div class="admin-card-interactive">
+                <button class="toggle-active-btn" data-id="drive1" data-active="false">
+                    <span class="toggle-label">Inaktiv</span>
+                </button>
+            </div>
+        `;
+
+        getFileContent.mockResolvedValue('raw');
+        parseMarkdown.mockReturnValue({ data: { active: false, title: 'T' }, body: 'B' });
+        stringifyMarkdown.mockReturnValue('md');
+        saveFile.mockResolvedValue();
+
+        const service = { active: false };
+        await toggleFn('drive1', 'file.md', service);
+
+        const btn = document.querySelector('.toggle-active-btn[data-id="drive1"]');
+        expect(btn.dataset.active).toBe('true');
+        expect(btn.querySelector('.toggle-label').textContent).toBe('Aktiv');
+        expect(service.active).toBe(true);
+    });
+
+    it('should revert inactive→active toggle on failure with label showing "Inaktiv"', async () => {
+        document.body.innerHTML += `
+            <div class="admin-card-interactive">
+                <button class="toggle-active-btn" data-id="drive1" data-active="false">
+                    <span class="toggle-label">Inaktiv</span>
+                </button>
+            </div>
+        `;
+
+        getFileContent.mockResolvedValue('raw');
+        parseMarkdown.mockReturnValue({ data: { active: false }, body: '' });
+        saveFile.mockRejectedValue(new Error('fail'));
+
+        const service = { active: false };
+        await toggleFn('drive1', 'file.md', service);
+
+        const btn = document.querySelector('.toggle-active-btn[data-id="drive1"]');
+        // Reverted back to the original inactive state
+        expect(btn.dataset.active).toBe('false');
+        expect(btn.querySelector('.toggle-label').textContent).toBe('Inaktiv');
+        expect(showToast).toHaveBeenCalledWith('Kunne ikke oppdatere synlighet.', 'error');
+    });
+
+    it('should succeed toggle without btn/card in DOM', async () => {
+        // No toggle button or card in DOM for this driveId
+        getFileContent.mockResolvedValue('raw');
+        parseMarkdown.mockReturnValue({ data: { active: true, title: 'T' }, body: 'B' });
+        stringifyMarkdown.mockReturnValue('md');
+        saveFile.mockResolvedValue();
+
+        const service = { active: true };
+        await toggleFn('no-btn', 'file.md', service);
+
+        expect(saveFile).toHaveBeenCalled();
+        expect(service.active).toBe(false);
+    });
+
+    it('should handle toggle error without btn/card in DOM', async () => {
+        // No toggle button or card in DOM
+        getFileContent.mockResolvedValue('raw');
+        parseMarkdown.mockReturnValue({ data: { active: true }, body: '' });
+        saveFile.mockRejectedValue(new Error('fail'));
+
+        const service = { active: true };
+        await toggleFn('no-btn', 'file.md', service);
+
+        expect(showToast).toHaveBeenCalledWith('Kunne ikke oppdatere synlighet.', 'error');
+        expect(loadTjenesterModule).toHaveBeenCalled();
+    });
+
+    it('should succeed toggle without label span', async () => {
+        document.body.innerHTML += `
+            <div class="admin-card-interactive">
+                <button class="toggle-active-btn" data-id="drive1" data-active="true">
+                </button>
+            </div>
+        `;
+
+        getFileContent.mockResolvedValue('raw');
+        parseMarkdown.mockReturnValue({ data: { active: true, title: 'T' }, body: 'B' });
+        stringifyMarkdown.mockReturnValue('md');
+        saveFile.mockResolvedValue();
+
+        const service = { active: true };
+        await toggleFn('drive1', 'file.md', service);
+
+        const btn = document.querySelector('.toggle-active-btn[data-id="drive1"]');
+        expect(btn.dataset.active).toBe('false');
+        // No label to update, but toggle should still work
+        expect(service.active).toBe(false);
+    });
+});
+
+describe('editTjeneste — saveBtn null-check branches', () => {
+    beforeEach(() => {
+        initTjenesterModule();
+    });
+
+    it('should handle create failure when save button has been removed from DOM', async () => {
+        createFile.mockImplementation(() => {
+            // Simulate button removal before rejection (e.g., user navigated away)
+            document.getElementById('btn-save-tjeneste')?.remove();
+            return Promise.reject(new Error('fail'));
+        });
+
+        await window.editTjeneste(null, null);
+
+        const saveBtn = document.getElementById('btn-save-tjeneste');
+        // The onclick disables the button, then doSave runs createFile which removes it and rejects
+        await saveBtn.onclick();
+
+        // Should not throw even though btn was removed — the null-check protects it
+        expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
+        // Button should no longer be in DOM
+        expect(document.getElementById('btn-save-tjeneste')).toBeNull();
+    });
+
+    it('should handle setup when btn-save-tjeneste is missing from rendered HTML', async () => {
+        // Override initMarkdownEditor to clear the module-inner HTML before the saveBtn binding
+        initMarkdownEditor.mockImplementation(() => {
+            // Remove the save button after rendering, simulating a race condition
+            document.getElementById('btn-save-tjeneste')?.remove();
+            return null;
+        });
+
+        await window.editTjeneste(null, null);
+
+        // editTjeneste should not throw when saveBtn is null at binding time
+        expect(document.getElementById('btn-save-tjeneste')).toBeNull();
+    });
+});

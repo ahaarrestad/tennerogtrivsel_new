@@ -387,3 +387,147 @@ describe('hideSaveBar', () => {
         expect(() => hideSaveBar()).not.toThrow();
     });
 });
+
+describe('showDeletionToast — parentNode check on auto-removal', () => {
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('should not throw when toast is already removed before 30s timer fires', () => {
+        showDeletionToast('Item', 'Recovery text');
+        const toast = document.getElementById('deletion-toast');
+        expect(toast).not.toBeNull();
+
+        // Manually remove the toast before the 30s timer fires (simulates close button click)
+        toast.remove();
+        expect(document.getElementById('deletion-toast')).toBeNull();
+
+        // Timer fires — toast.parentNode is null, so remove() should be skipped
+        expect(() => vi.advanceTimersByTime(30000)).not.toThrow();
+    });
+});
+
+describe('initMarkdownEditor — previewRender callback', () => {
+    afterEach(() => {
+        delete window.EasyMDE;
+    });
+
+    it('should invoke previewRender callback that sanitizes and parses markdown', () => {
+        let capturedConfig = null;
+        const mockInstance = { value: vi.fn(() => 'content') };
+        window.EasyMDE = vi.fn(function(config) {
+            capturedConfig = config;
+            return mockInstance;
+        });
+        document.body.innerHTML = '<textarea id="edit-content"></textarea>';
+
+        initMarkdownEditor();
+
+        expect(capturedConfig).not.toBeNull();
+        expect(typeof capturedConfig.previewRender).toBe('function');
+
+        // Call the previewRender callback
+        const result = capturedConfig.previewRender('**bold text**');
+        expect(result).toContain('markdown-content');
+        expect(result).toContain('prose');
+        // DOMPurify.sanitize and marked.parse are mocked, so the result includes the mock output
+        expect(result).toContain('<p>**bold text**</p>');
+    });
+});
+
+describe('initEditors — previewRender and flatpickr callbacks', () => {
+    afterEach(() => {
+        delete window.EasyMDE;
+        delete window.flatpickr;
+    });
+
+    it('should invoke initEditors previewRender callback', () => {
+        let capturedConfig = null;
+        const mockInstance = { value: vi.fn(() => '') };
+        window.EasyMDE = vi.fn(function(config) {
+            capturedConfig = config;
+            return mockInstance;
+        });
+        document.body.innerHTML = '<textarea id="edit-content"></textarea>';
+
+        initEditors(vi.fn());
+
+        expect(capturedConfig).not.toBeNull();
+        expect(typeof capturedConfig.previewRender).toBe('function');
+
+        const result = capturedConfig.previewRender('# heading');
+        expect(result).toContain('markdown-content');
+        expect(result).toContain('<p># heading</p>');
+    });
+
+    it('should call onDateChange callback from flatpickr onChange when provided', () => {
+        const mockFpInstance = { destroy: vi.fn() };
+        let capturedFpConfig = null;
+        const mockFp = vi.fn((selector, config) => {
+            capturedFpConfig = config;
+            return mockFpInstance;
+        });
+        mockFp.l10ns = null;
+        window.flatpickr = mockFp;
+        document.body.innerHTML = '<textarea id="edit-content"></textarea><input id="edit-start"><input id="edit-end">';
+
+        const onDateChange = vi.fn();
+        initEditors(onDateChange);
+
+        expect(capturedFpConfig).not.toBeNull();
+        expect(typeof capturedFpConfig.onChange).toBe('function');
+
+        // Simulate flatpickr calling onChange
+        const mockElement = { value: '' };
+        const mockFpInst = { element: mockElement };
+        capturedFpConfig.onChange([new Date('2025-01-15')], '2025-01-15', mockFpInst);
+
+        expect(mockElement.value).toBe('2025-01-15');
+        expect(onDateChange).toHaveBeenCalledWith(
+            [expect.any(Date)],
+            '2025-01-15',
+            mockFpInst
+        );
+    });
+
+    it('should not call onDateChange when it is null/undefined', () => {
+        const mockFpInstance = { destroy: vi.fn() };
+        let capturedFpConfig = null;
+        const mockFp = vi.fn((selector, config) => {
+            capturedFpConfig = config;
+            return mockFpInstance;
+        });
+        mockFp.l10ns = null;
+        window.flatpickr = mockFp;
+        document.body.innerHTML = '<textarea id="edit-content"></textarea><input id="edit-start"><input id="edit-end">';
+
+        initEditors(null);
+
+        const mockElement = { value: '' };
+        const mockFpInst = { element: mockElement };
+
+        // Should not throw when onDateChange is null
+        expect(() => capturedFpConfig.onChange([new Date()], '2025-01-15', mockFpInst)).not.toThrow();
+        expect(mockElement.value).toBe('2025-01-15');
+    });
+
+    it('should try Norwegian locale fallback chain', () => {
+        const mockFp = vi.fn();
+        // l10ns exists but has 'Norwegian' key instead of 'no' or 'nb'
+        mockFp.l10ns = { Norwegian: { firstDayOfWeek: 1 } };
+        window.flatpickr = mockFp;
+        document.body.innerHTML = '<textarea id="edit-content"></textarea><input id="edit-start"><input id="edit-end">';
+
+        initEditors(vi.fn());
+        expect(mockFp).toHaveBeenCalledWith('#edit-start', expect.objectContaining({ locale: { firstDayOfWeek: 1 } }));
+    });
+
+    it('should not set locale when l10ns has no matching Norwegian key', () => {
+        const mockFp = vi.fn();
+        mockFp.l10ns = { sv: { firstDayOfWeek: 1 } }; // Swedish only, no Norwegian
+        window.flatpickr = mockFp;
+        document.body.innerHTML = '<textarea id="edit-content"></textarea><input id="edit-start"><input id="edit-end">';
+
+        initEditors(vi.fn());
+        expect(mockFp).toHaveBeenCalledWith('#edit-start', expect.not.objectContaining({ locale: expect.anything() }));
+    });
+});
