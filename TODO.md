@@ -37,6 +37,11 @@
   - Viewport/safe-area forbedringer, dialog-fallback, sticky-verifisering
   - 6 steg: Playwright-config, testfeil-fiks, viewport, dialog, sticky, kvalitetssjekk
 
+- [ ] **Cache-Control og grønn hosting — gjør siden nesten «karbon-negativ»**
+  - Utred optimal Cache-Control-strategi for CloudFront (immutable assets, stale-while-revalidate, lange TTL-er)
+  - Mål: minimere origin-forespørsler og dataoverføring — lavest mulig karbonfotavtrykk
+  - Vurder om S3-buckets kan flyttes til en region nærmere Norge (eu-north-1 Stockholm?) for lavere latens og kortere nettverksvei
+
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plan-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
