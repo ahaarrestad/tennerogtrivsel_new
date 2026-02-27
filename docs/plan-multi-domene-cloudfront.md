@@ -102,7 +102,39 @@ Hos registraren, sett opp URL-forwarding/redirect for apex-domenene:
 
 De fleste registrarer (Domeneshop, Namecheap, GoDaddy) har dette som innebygd funksjon under DNS-innstillinger, ofte kalt «URL forwarding» eller «Web redirect».
 
-### Steg 6: Fjern gamle S3-redirect-buckets
+### Steg 6: Google OAuth — legg til nye domener
+
+**Hvor:** Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client ID
+
+Admin-panelet bruker Google Identity Services (GIS) for innlogging. OAuth-klienten må vite hvilke domener som er tillatt.
+
+Under **Authorized JavaScript origins**, legg til:
+```
+https://www.tennerogtrivsel.com
+https://www.tennerogtrivsel.net
+```
+
+(`https://www.tennerogtrivsel.no` skal allerede ligge der.)
+
+Apex-domenene trenger **ikke** legges til — de redirecter til www før admin-siden lastes.
+
+### Steg 7: Google Maps API-nøkkel — legg til nye referrere
+
+**Hvor:** Google Cloud Console → APIs & Services → Credentials → API key (`PUBLIC_GOOGLE_API_KEY`)
+
+Maps-embedden på kontaktsiden bruker en API-nøkkel som sannsynligvis har HTTP referrer-begrensning. Uten oppdatering vil kartet feile på de nye domenene.
+
+Under **Application restrictions → HTTP referrers**, legg til:
+```
+www.tennerogtrivsel.com/*
+www.tennerogtrivsel.net/*
+```
+
+(`www.tennerogtrivsel.no/*` skal allerede ligge der.)
+
+**Merk:** Samme nøkkel brukes for Sheets API ved byggetid (server-side) — det påvirkes ikke av referrer-begrensninger.
+
+### Steg 8: Fjern gamle S3-redirect-buckets
 
 Etter at alt er verifisert:
 
@@ -111,7 +143,7 @@ Etter at alt er verifisert:
 3. Slett bucketen
 4. Behold kun prod-bucketen (`www.tennerogtrivsel.no`) som CloudFront-origin
 
-### Steg 7: Verifisering
+### Steg 9: Verifisering
 
 Test alle 6 domener:
 
