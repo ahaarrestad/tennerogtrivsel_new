@@ -60,11 +60,11 @@
   - Viewport/safe-area forbedringer, dialog-fallback, sticky-verifisering
   - 6 steg: Playwright-config, testfeil-fiks, viewport, dialog, sticky, kvalitetssjekk
 
-- [ ] **Dev-Test-Prod miljø oppsett**
-    - Nåværende oppsett har én testside (test.tennerogtrivsel.no) og én produksjonsside (www.tennerogtrivsel.no) uten isolasjon av miljøer
-    - Sett opp tre separate miljøer: dev (lokalt), test (staging), prod
-    - Test og prod har allerede egen S3 bucket, CloudFront-distribusjon, og eventuelt subdomene
-    - Hvordan kan det enkelt settes opp slik at jeg kan drive med test utvikling mot lokalt og test, og prodsette dette når jeg har lyst til det?
+- [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plan-dev-test-prod.md))
+    - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
+    - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
+    - `repository_dispatch` alltid til prod, push til main alltid til test
+    - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
 ## Fullført
 
