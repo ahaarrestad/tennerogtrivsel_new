@@ -4,6 +4,33 @@ import { createAuthRefresher } from './admin-api-retry.js';
 import { silentLogin } from './admin-client.js';
 
 /**
+ * Escaper HTML-spesialtegn for sikker innsetting i template literals.
+ * Brukes for tekst i lister/preview der programmatisk setting ikke er mulig.
+ */
+export function escapeHtml(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+/**
+ * Validerer input-verdier før de sendes til Google Sheets API.
+ * @returns {string|null} Feilmelding eller null hvis OK.
+ */
+export function validateSheetInput(value, { maxLength = 500, type = 'text' } = {}) {
+    if (type === 'text' && typeof value === 'string' && value.length > maxLength) {
+        return `Maks ${maxLength} tegn (har ${value.length})`;
+    }
+    if (type === 'number') {
+        const n = parseFloat(value);
+        if (isNaN(n)) return 'Må være et tall';
+    }
+    return null;
+}
+
+/**
  * Leser admin-konfigurasjonen fra DOM-elementet #admin-config.
  */
 export function getAdminConfig() {

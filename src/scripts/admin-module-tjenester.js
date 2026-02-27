@@ -66,21 +66,26 @@ async function editTjeneste(id, name) {
                     ${renderToggleHtml('edit-active-toggle', isActive)}
                     <div class="flex flex-col gap-2">
                         <label class="admin-label">Tittel</label>
-                        <input type="text" id="edit-title" value="${data.title || ''}" placeholder="Navn på tjenesten..." class="admin-input">
+                        <input type="text" id="edit-title" value="" placeholder="Navn på tjenesten..." class="admin-input">
                     </div>
                     <div class="flex flex-col gap-2">
                         <label class="admin-label">Ingress (kort sammendrag)</label>
-                        <textarea id="edit-ingress" rows="3" class="admin-input resize-none">${data.ingress || ''}</textarea>
+                        <textarea id="edit-ingress" rows="3" class="admin-input resize-none"></textarea>
                     </div>
                     <div class="flex flex-col gap-2 editor-container">
                         <label class="admin-label">Beskrivelse (Innhold)</label>
-                        <textarea id="edit-content" placeholder="Full beskrivelse her...">${body}</textarea>
+                        <textarea id="edit-content" placeholder="Full beskrivelse her..."></textarea>
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-admin-border">
                     ${buttonHtml}
                 </div>
             </div>`;
+
+        // Sett form-verdier programmatisk (sikkert — ingen HTML-parsing)
+        document.getElementById('edit-title').value = data.title || '';
+        document.getElementById('edit-ingress').value = data.ingress || '';
+        document.getElementById('edit-content').value = body || '';
 
         const easyMDE = initMarkdownEditor();
 

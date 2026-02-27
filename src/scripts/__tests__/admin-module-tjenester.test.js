@@ -165,8 +165,9 @@ describe('editTjeneste', () => {
         await window.editTjeneste('id1', 'Tannbleking');
 
         const inner = document.getElementById('module-inner');
-        expect(inner.innerHTML).toContain('Tannbleking');
-        expect(inner.innerHTML).toContain('Fin');
+        // Values are now set programmatically, not in innerHTML
+        expect(document.getElementById('edit-title').value).toBe('Tannbleking');
+        expect(document.getElementById('edit-ingress').value).toBe('Fin');
         expect(initMarkdownEditor).toHaveBeenCalled();
     });
 

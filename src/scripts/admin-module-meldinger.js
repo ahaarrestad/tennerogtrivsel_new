@@ -72,7 +72,7 @@ async function editMelding(id, name) {
                 <div class="grid grid-cols-1 gap-6">
                     <div class="flex flex-col gap-2">
                         <label class="admin-label">Tittel</label>
-                        <input type="text" id="edit-title" value="${msgData.title || ''}" placeholder="Skriv en tittel..." class="admin-input">
+                        <input type="text" id="edit-title" value="" placeholder="Skriv en tittel..." class="admin-input">
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-2">
@@ -80,19 +80,19 @@ async function editMelding(id, name) {
                                 <label class="admin-label">Fra og med</label>
                                 <span id="preview-start" class="text-[10px] text-admin-muted-light font-bold">${formatDate(msgData.startDate)}</span>
                             </div>
-                            <input type="text" id="edit-start" value="${msgData.startDate || ''}" placeholder="Velg dato..." class="admin-input cursor-pointer bg-white">
+                            <input type="text" id="edit-start" value="" placeholder="Velg dato..." class="admin-input cursor-pointer bg-white">
                         </div>
                         <div class="flex flex-col gap-2">
                             <div class="flex justify-between items-center">
                                 <label class="admin-label">Til og med</label>
                                 <span id="preview-end" class="text-[10px] text-admin-muted-light font-bold">${formatDate(msgData.endDate)}</span>
                             </div>
-                            <input type="text" id="edit-end" value="${msgData.endDate || ''}" placeholder="Velg dato..." class="admin-input cursor-pointer bg-white">
+                            <input type="text" id="edit-end" value="" placeholder="Velg dato..." class="admin-input cursor-pointer bg-white">
                         </div>
                     </div>
                     <div class="flex flex-col gap-2 editor-container">
                         <label class="admin-label">Innhold</label>
-                        <textarea id="edit-content" placeholder="Skriv meldingen her...">${msgData.content || ''}</textarea>
+                        <textarea id="edit-content" placeholder="Skriv meldingen her..."></textarea>
                     </div>
 
                     <!-- DYNAMISK FEILMELDING -->
@@ -107,6 +107,12 @@ async function editMelding(id, name) {
                     ${buttonHtml}
                 </div>
             </div>`;
+
+        // Sett form-verdier programmatisk (sikkert — ingen HTML-parsing)
+        document.getElementById('edit-title').value = msgData.title || '';
+        document.getElementById('edit-start').value = msgData.startDate || '';
+        document.getElementById('edit-end').value = msgData.endDate || '';
+        document.getElementById('edit-content').value = msgData.content || '';
 
         const onDateChange = () => {
             const startInp = document.getElementById('edit-start');
