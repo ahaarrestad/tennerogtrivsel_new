@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Admin-panel Fase 1', () => {
+  // Admin tests share a Vite dev-server; running them in parallel overloads it
+  // and causes flaky dashboard-visibility failures.
+  test.describe.configure({ mode: 'serial' });
+
   test.beforeEach(async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'chromium', 'Admin-tester er nettleser-uavhengige');
     page.on('console', msg => {
@@ -12,6 +16,15 @@ test.describe('Admin-panel Fase 1', () => {
       console.error(`PAGE ERROR: ${err.message}`);
     });
   });
+
+  /** Navigate to /admin and wait for the dashboard to become visible (mock auth flow). */
+  const gotoAdminDashboard = async (page) => {
+    await page.goto('/admin');
+    // In CI the Vite dev-server can be slow to serve module scripts, so the
+    // async setup() in admin-init.js may not have completed by the time goto()
+    // resolves.  Use a generous timeout to avoid flaky failures.
+    await expect(page.locator('#dashboard')).toBeVisible({ timeout: 15000 });
+  };
 
   const setupMocks = async (page, options: any = {}) => {
     await page.addInitScript(({ messages = [], services = [], dentists = [] }) => {
@@ -114,8 +127,7 @@ test.describe('Admin-panel Fase 1', () => {
         ]
     });
 
-    await page.goto('/admin');
-    await expect(page.locator('#dashboard')).toBeVisible();
+    await gotoAdminDashboard(page);
     await page.locator('#card-meldinger').click();
     
     const titles = page.locator('#module-inner h3');
@@ -132,10 +144,9 @@ test.describe('Admin-panel Fase 1', () => {
         ]
     });
 
-    await page.goto('/admin');
-    await expect(page.locator('#dashboard')).toBeVisible();
+    await gotoAdminDashboard(page);
     await page.locator('#card-tjenester').click();
-    
+
     const titles = page.locator('#module-inner h3');
     await expect(titles.first()).toHaveText('Ape');
 
@@ -152,8 +163,7 @@ test.describe('Admin-panel Fase 1', () => {
         ]
     });
 
-    await page.goto('/admin');
-    await expect(page.locator('#dashboard')).toBeVisible();
+    await gotoAdminDashboard(page);
     await page.click('#card-tannleger');
 
     await expect(page.locator('#module-inner h3').filter({ hasText: 'Ape' })).toBeVisible();
@@ -169,8 +179,7 @@ test.describe('Admin-panel Fase 1', () => {
         ]
     });
 
-    await page.goto('/admin');
-    await expect(page.locator('#dashboard')).toBeVisible();
+    await gotoAdminDashboard(page);
     await page.locator('#card-tjenester').click();
     await expect(page.locator('#module-inner h3').filter({ hasText: 'Bleking' })).toBeVisible();
 
