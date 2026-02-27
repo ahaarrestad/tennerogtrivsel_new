@@ -1,69 +1,33 @@
-# Plan: Flere domener på samme CloudFront (uten redirect)
+# Plan: Flere domener på samme CloudFront (Alternativ C — Hybrid)
 
 ## Bakgrunn
 
 I dag har vi flere S3-buckets som redirecter til `www.tennerogtrivsel.no`. Besøkende ser alltid `www.tennerogtrivsel.no` i adressefeltet uansett hvilket domene de skrev inn.
 
-**Ønsket:** Alle domener skal vise samme innhold, men beholde sitt eget domenenavn i URL-en.
+**Ønsket:** Alle domener skal vise samme innhold og beholde sitt eget domenenavn i URL-en.
 
-## Domener
+**Valgt løsning:** Hybrid-tilnærming uten Route 53. De tre `www`-domenene serveres direkte fra CloudFront (ingen redirect). Apex-domenene redirecter til sin egen `www`-variant via registrarens URL-forwarding.
 
-| Domene | Type |
-|--------|------|
-| `tennerogtrivsel.no` | Apex |
-| `www.tennerogtrivsel.no` | www |
-| `tennerogtrivsel.com` | Apex |
-| `www.tennerogtrivsel.com` | www |
-| `tennerogtrivsel.net` | Apex |
-| `www.tennerogtrivsel.net` | www |
+## Resultat etter gjennomføring
 
-DNS administreres hos ekstern registrar (ikke Route 53).
+| Bruker skriver | Ser i adressefeltet | Redirect? |
+|----------------|---------------------|-----------|
+| `www.tennerogtrivsel.no` | `www.tennerogtrivsel.no` | Nei |
+| `www.tennerogtrivsel.com` | `www.tennerogtrivsel.com` | Nei |
+| `www.tennerogtrivsel.net` | `www.tennerogtrivsel.net` | Nei |
+| `tennerogtrivsel.no` | `www.tennerogtrivsel.no` | Ja (301) |
+| `tennerogtrivsel.com` | `www.tennerogtrivsel.com` | Ja (301) |
+| `tennerogtrivsel.net` | `www.tennerogtrivsel.net` | Ja (301) |
 
-## Viktig avklaring: Apex-domener
+Apex-domener redirecter kun til sin **egen** www-variant — ikke til `www.tennerogtrivsel.no`.
 
-Apex-domener (uten `www`) kan **ikke** bruke CNAME-records i DNS — det er en DNS-standard-begrensning. For å peke apex-domener til CloudFront uten redirect finnes tre alternativer:
+## Steg-for-steg
 
-| Alternativ | Fordel | Ulempe |
-|-----------|--------|--------|
-| **A) ALIAS/ANAME hos registrar** | Enkelt, ingen endring av DNS-leverandør | Ikke alle registrarer støtter det |
-| **B) Flytt DNS til Route 53** | Full ALIAS-støtte, best CloudFront-integrasjon | Koster ~$0.50/mnd per zone, krever nameserver-bytte |
-| **C) Hybrid: apex redirecter, www på CloudFront** | Fungerer med alle registrarer | Apex-domener redirecter fortsatt (bare til sin egen www) |
+### Steg 1: ACM-sertifikat med alle 6 domener
 
-**Anbefaling:** Alternativ **B** (Route 53) gir best kontroll og null redirect. Alternativ C er et kompromiss om dere ikke vil flytte DNS.
+**Hvor:** AWS Console → Certificate Manager → **us-east-1 (N. Virginia)**
 
-## Steg-for-steg (Alternativ B — Route 53)
-
-### Steg 1: ACM-sertifikat for alle domener
-
-Opprett et SAN-sertifikat (Subject Alternative Name) i ACM **us-east-1** som dekker alle 6 domener:
-
-- `tennerogtrivsel.no`
-- `www.tennerogtrivsel.no`
-- `tennerogtrivsel.com`
-- `www.tennerogtrivsel.com`
-- `tennerogtrivsel.net`
-- `www.tennerogtrivsel.net`
-
-**DNS-validering:** ACM krever en CNAME-record per domene for validering. Disse legges i eksisterende DNS-leverandør (eller Route 53 om det allerede er flyttet).
-
-### Steg 2: Opprett Route 53 Hosted Zones
-
-Opprett tre hosted zones i Route 53:
-- `tennerogtrivsel.no`
-- `tennerogtrivsel.com`
-- `tennerogtrivsel.net`
-
-Noter nameserverne for hver zone — disse må settes hos registraren.
-
-### Steg 3: Bytt nameservere hos registrar
-
-Hos den eksterne registraren: endre nameservere til de Route 53 tildelte (4 NS-records per domene).
-
-**NB:** DNS-propagering kan ta opptil 48 timer. Planlegg dette i en rolig periode.
-
-### Steg 4: Legg til Alternate Domain Names i CloudFront
-
-I CloudFront-distribusjonen (prod), legg til alle 6 domener som **Alternate Domain Names (CNAMEs)**:
+Opprett ett SAN-sertifikat som dekker alle 6 domener:
 
 ```
 tennerogtrivsel.no
@@ -74,54 +38,97 @@ tennerogtrivsel.net
 www.tennerogtrivsel.net
 ```
 
-Knytt det nye ACM-sertifikatet (fra steg 1) til distribusjonen.
+1. Klikk **Request a certificate** → **Request a public certificate**
+2. Legg inn alle 6 domener (ett per linje)
+3. Velg **DNS validation**
+4. ACM viser CNAME-records som må legges til for hvert domene
 
-### Steg 5: DNS-records i Route 53
+**Obs:** Apex- og www-variant av samme domene deler vanligvis én CNAME-record, så det blir typisk 3–6 records å legge til.
 
-For hvert domene, opprett records som peker til CloudFront-distribusjonen:
+### Steg 2: DNS-validering hos registrar
+
+For hvert domene ACM ber om validering for:
+
+1. Logg inn hos domeneregistraren
+2. Legg til CNAME-recorden ACM oppgir (navn → verdi)
+3. Vent til ACM viser **Issued** (kan ta 5–30 minutter)
+
+| Domene | CNAME-navn | CNAME-verdi |
+|--------|-----------|-------------|
+| `tennerogtrivsel.no` | `_abc123.tennerogtrivsel.no` | `_def456.acm-validations.aws` |
+| `tennerogtrivsel.com` | `_abc123.tennerogtrivsel.com` | `_def456.acm-validations.aws` |
+| `tennerogtrivsel.net` | `_abc123.tennerogtrivsel.net` | `_def456.acm-validations.aws` |
+
+*(Verdiene over er eksempler — ACM gir de faktiske verdiene.)*
+
+### Steg 3: Legg til www-domener i CloudFront
+
+**Hvor:** AWS Console → CloudFront → Prod-distribusjonen → **General** → **Edit**
+
+1. Under **Alternate domain names (CNAMEs)**, legg til:
+   ```
+   www.tennerogtrivsel.com
+   www.tennerogtrivsel.net
+   ```
+   (`www.tennerogtrivsel.no` skal allerede ligge der.)
+
+2. Under **Custom SSL certificate**, velg det nye sertifikatet fra steg 1
+3. Klikk **Save changes**
+
+### Steg 4: DNS — pek www-domener til CloudFront
+
+Hos registraren, legg til CNAME-records for de to nye www-domenene:
 
 | Record | Type | Verdi |
 |--------|------|-------|
-| `tennerogtrivsel.no` | A (Alias → CloudFront) | `dXXXXXXXX.cloudfront.net` |
-| `www.tennerogtrivsel.no` | A (Alias → CloudFront) | `dXXXXXXXX.cloudfront.net` |
-| `tennerogtrivsel.com` | A (Alias → CloudFront) | `dXXXXXXXX.cloudfront.net` |
-| `www.tennerogtrivsel.com` | A (Alias → CloudFront) | `dXXXXXXXX.cloudfront.net` |
-| `tennerogtrivsel.net` | A (Alias → CloudFront) | `dXXXXXXXX.cloudfront.net` |
-| `www.tennerogtrivsel.net` | A (Alias → CloudFront) | `dXXXXXXXX.cloudfront.net` |
+| `www.tennerogtrivsel.com` | CNAME | `dXXXXXXXX.cloudfront.net` |
+| `www.tennerogtrivsel.net` | CNAME | `dXXXXXXXX.cloudfront.net` |
 
-Alle bruker Route 53 Alias-records (gratis, ingen TTL-forsinkelse, fungerer med apex).
+Erstatt `dXXXXXXXX.cloudfront.net` med den faktiske CloudFront-distribusjonens domenenavn (finnes under **Distribution domain name** i CloudFront Console).
+
+`www.tennerogtrivsel.no` peker allerede til CloudFront.
+
+### Steg 5: Apex-redirect via registrar
+
+Hos registraren, sett opp URL-forwarding/redirect for apex-domenene:
+
+| Apex-domene | Redirecter til | Type |
+|-------------|---------------|------|
+| `tennerogtrivsel.no` | `https://www.tennerogtrivsel.no` | 301 (permanent) |
+| `tennerogtrivsel.com` | `https://www.tennerogtrivsel.com` | 301 (permanent) |
+| `tennerogtrivsel.net` | `https://www.tennerogtrivsel.net` | 301 (permanent) |
+
+**Viktig:** Hvert apex-domene redirecter til sin **egen** www-variant.
+
+De fleste registrarer (Domeneshop, Namecheap, GoDaddy) har dette som innebygd funksjon under DNS-innstillinger, ofte kalt «URL forwarding» eller «Web redirect».
 
 ### Steg 6: Fjern gamle S3-redirect-buckets
 
-Etter at alt fungerer:
-1. Verifiser at alle 6 domener serverer riktig innhold
-2. Slett S3-redirect-buckets som ikke lenger trengs
-3. Behold kun prod-bucketen (`www.tennerogtrivsel.no`) som CloudFront-origin
+Etter at alt er verifisert:
+
+1. List opp S3-redirect-buckets som redirecter til `www.tennerogtrivsel.no`
+2. Tøm hver bucket (`aws s3 rm s3://bucket-name --recursive` eller via Console)
+3. Slett bucketen
+4. Behold kun prod-bucketen (`www.tennerogtrivsel.no`) som CloudFront-origin
 
 ### Steg 7: Verifisering
 
-For hvert av de 6 domenene, sjekk:
-- [ ] HTTPS fungerer (gyldig sertifikat)
-- [ ] Innholdet vises korrekt
-- [ ] URL i adressefeltet endres **ikke** (ingen redirect)
-- [ ] Sikkerhetsheadere er på plass (CSP, HSTS, etc.)
+Test alle 6 domener:
 
-## Kostnadsoverslag
+| Sjekk | Kommando/metode |
+|-------|-----------------|
+| HTTPS fungerer | Åpne `https://www.tennerogtrivsel.com` i nettleser |
+| Riktig sertifikat | Klikk hengelåsen → sjekk at SAN-listen inkluderer domenet |
+| Innhold vises | Verifiser at forsiden laster korrekt |
+| Ingen uønsket redirect | `curl -I https://www.tennerogtrivsel.com` → skal gi `200`, ikke `301/302` |
+| Apex redirecter riktig | `curl -I http://tennerogtrivsel.com` → `301` til `https://www.tennerogtrivsel.com` |
+| Sikkerhetsheadere | `curl -I https://www.tennerogtrivsel.com` → CSP, HSTS, X-Frame-Options |
+
+## Kostnader
 
 | Ressurs | Kostnad |
 |---------|---------|
-| Route 53 Hosted Zone | $0.50/mnd × 3 = **$1.50/mnd** |
-| Route 53 DNS-spørringer | ~$0.40/mnd (estimat) |
-| ACM-sertifikat | Gratis |
+| ACM-sertifikat | **Gratis** |
 | CloudFront (allerede i bruk) | Ingen ekstra kostnad |
-| **Totalt** | **~$2/mnd** |
-
-## Alternativ C: Hybrid (uten Route 53)
-
-Om du ikke vil flytte DNS, kan du:
-1. Legg til de 3 **www**-domenene som Alternate Domain Names i CloudFront
-2. ACM-sertifikat for de 3 www-domenene
-3. CNAME-records hos registrar: `www.tennerogtrivsel.com` → CloudFront
-4. Apex-domenene redirecter til sin egen www-variant (via S3 redirect-bucket eller registrarens URL-forwarding)
-
-Ulempen: apex-domener (`tennerogtrivsel.com`) vil fortsatt redirecte til `www.tennerogtrivsel.com`.
+| Registrar URL-forwarding | Vanligvis inkludert |
+| **Totalt ekstra** | **$0/mnd** |

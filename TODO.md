@@ -45,11 +45,11 @@
   - Valgfritt steg 4: flytt S3-bucket til eu-north-1 (Stockholm) — ny bucket, OAC-policy, pek CloudFront, oppdater workflow, slett gammel
   - 3+1 steg: deploy-workflow, invalidering, verifisering, (valgfritt) regionflytt
 
-- [ ] **Flere domener på samme CloudFront (uten redirect)** ([plan](docs/plan-multi-domene-cloudfront.md))
-  - 6 domener: tennerogtrivsel.no/.com/.net + www-varianter — alle skal vise samme innhold uten redirect
-  - Anbefalt: flytt DNS til Route 53 (~$2/mnd) for ALIAS-støtte på apex-domener
-  - Alternativ: hybrid med kun www-domener på CloudFront, apex redirecter til www
-  - 7 steg: ACM-sertifikat, Route 53 zones, nameserver-bytte, CloudFront CNAMEs, DNS-records, fjern redirect-buckets, verifisering
+- [ ] **Flere domener på samme CloudFront (hybrid)** ([plan](docs/plan-multi-domene-cloudfront.md))
+  - 3 www-domener direkte på CloudFront (ingen redirect), 3 apex redirecter til sin egen www-variant
+  - Ett ACM-sertifikat med alle 6 domener, DNS hos eksisterende registrar
+  - 7 steg: ACM-sertifikat, DNS-validering, CloudFront CNAMEs, www DNS-records, apex-redirect, fjern S3-buckets, verifisering
+  - Kostnad: $0/mnd ekstra
 
 - [ ] **Flaky tests — sporadiske testfeil**
   - Noen tester feiler av og til, usikkert hvilke
