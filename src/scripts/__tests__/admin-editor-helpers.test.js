@@ -9,15 +9,22 @@ vi.mock('../admin-api-retry.js', () => ({
     createAuthRefresher: vi.fn(() => 'mock-refresher')
 }));
 vi.mock('../admin-client.js', () => ({
-    silentLogin: vi.fn()
+    silentLogin: vi.fn(),
+    findFileByName: vi.fn(),
+    getDriveImageBlob: vi.fn(),
+}));
+vi.mock('../admin-dashboard.js', () => ({
+    formatTimestamp: vi.fn((date) => '27. feb kl. 23:00')
 }));
 
 import {
     getAdminConfig, getRefreshAuth, setToggleState, renderToggleHtml,
     attachToggleClick, showDeletionToast, initMarkdownEditor, initEditors,
-    bindSliderStepButtons, bindWheelPrevent, showSaveBar, hideSaveBar,
+    renderImageCropSliders, createAutoSaver, bindSliderStepButtons, bindWheelPrevent,
+    showSaveBar, hideSaveBar, resolveImagePreview, handleImageSelected, verifySave,
     escapeHtml, validateSheetInput
 } from '../admin-editor-helpers.js';
+import { findFileByName, getDriveImageBlob } from '../admin-client.js';
 import { createAuthRefresher } from '../admin-api-retry.js';
 
 beforeEach(() => {
@@ -244,6 +251,110 @@ describe('initEditors', () => {
         const result = initEditors(vi.fn());
         expect(result.easyMDE).toBeNull();
         expect(result.flatpickrInstances).toHaveLength(0);
+    });
+});
+
+describe('renderImageCropSliders', () => {
+    it('should render sliders with given prefix and valPrefix', () => {
+        const html = renderImageCropSliders({ prefix: 'test', valPrefix: 'test-val' });
+        expect(html).toContain('id="test-scale"');
+        expect(html).toContain('id="test-x"');
+        expect(html).toContain('id="test-y"');
+        expect(html).toContain('id="test-val-scale"');
+        expect(html).toContain('id="test-val-x"');
+        expect(html).toContain('id="test-val-y"');
+    });
+
+    it('should use default values (1, 50, 50) when not provided', () => {
+        const html = renderImageCropSliders({ prefix: 'p', valPrefix: 'v' });
+        expect(html).toContain('value="1"');
+        expect(html).toContain('value="50"');
+        expect(html).toContain('1x');
+        expect(html).toContain('50%');
+    });
+
+    it('should use custom values when provided', () => {
+        const html = renderImageCropSliders({ prefix: 'p', valPrefix: 'v', scale: 2.5, posX: 30, posY: 70 });
+        expect(html).toContain('value="2.5"');
+        expect(html).toContain('value="30"');
+        expect(html).toContain('value="70"');
+        expect(html).toContain('2.5x');
+        expect(html).toContain('30%');
+        expect(html).toContain('70%');
+    });
+
+    it('should include step buttons with correct data-target', () => {
+        const html = renderImageCropSliders({ prefix: 'edit-t', valPrefix: 'val' });
+        expect(html).toContain('data-target="edit-t-scale"');
+        expect(html).toContain('data-target="edit-t-x"');
+        expect(html).toContain('data-target="edit-t-y"');
+    });
+
+    it('should include heading text', () => {
+        const html = renderImageCropSliders({ prefix: 'p', valPrefix: 'v' });
+        expect(html).toContain('Bildeutsnitt (Zoom og posisjon)');
+    });
+});
+
+describe('createAutoSaver', () => {
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('should debounce and call saveFn after delay', async () => {
+        const saveFn = vi.fn().mockResolvedValue(undefined);
+        const { trigger } = createAutoSaver(saveFn, 1000);
+        trigger();
+        expect(saveFn).not.toHaveBeenCalled();
+        await vi.advanceTimersByTimeAsync(1000);
+        expect(saveFn).toHaveBeenCalledTimes(1);
+    });
+
+    it('should show changed state on trigger', () => {
+        const saveFn = vi.fn().mockResolvedValue(undefined);
+        const { trigger } = createAutoSaver(saveFn);
+        trigger();
+        const bar = document.getElementById('admin-save-bar');
+        expect(bar).not.toBeNull();
+        expect(bar.className).toContain('admin-save-bar-changed');
+    });
+
+    it('should show saved state after successful save', async () => {
+        const saveFn = vi.fn().mockResolvedValue(undefined);
+        const { trigger } = createAutoSaver(saveFn, 500);
+        trigger();
+        await vi.advanceTimersByTimeAsync(500);
+        const bar = document.getElementById('admin-save-bar');
+        expect(bar.className).toContain('admin-save-bar-saved');
+    });
+
+    it('should show error state when saveFn throws', async () => {
+        const saveFn = vi.fn().mockRejectedValue(new Error('fail'));
+        const { trigger } = createAutoSaver(saveFn, 500);
+        trigger();
+        await vi.advanceTimersByTimeAsync(500);
+        const bar = document.getElementById('admin-save-bar');
+        expect(bar.className).toContain('admin-save-bar-error');
+    });
+
+    it('should cancel pending save on cancel()', async () => {
+        const saveFn = vi.fn().mockResolvedValue(undefined);
+        const { trigger, cancel } = createAutoSaver(saveFn, 1000);
+        trigger();
+        cancel();
+        await vi.advanceTimersByTimeAsync(1000);
+        expect(saveFn).not.toHaveBeenCalled();
+    });
+
+    it('should reset debounce on repeated trigger calls', async () => {
+        const saveFn = vi.fn().mockResolvedValue(undefined);
+        const { trigger } = createAutoSaver(saveFn, 1000);
+        trigger();
+        await vi.advanceTimersByTimeAsync(500);
+        trigger(); // resets timer
+        await vi.advanceTimersByTimeAsync(500);
+        expect(saveFn).not.toHaveBeenCalled();
+        await vi.advanceTimersByTimeAsync(500);
+        expect(saveFn).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -587,5 +698,211 @@ describe('validateSheetInput', () => {
 
     it('should accept empty strings', () => {
         expect(validateSheetInput('')).toBeNull();
+    });
+});
+
+describe('resolveImagePreview', () => {
+    beforeEach(() => {
+        findFileByName.mockReset();
+        getDriveImageBlob.mockReset();
+    });
+
+    it('should return empty result when imageName is empty', async () => {
+        const result = await resolveImagePreview('', 'folder-id');
+        expect(result).toEqual({ src: '', imageId: null });
+        expect(findFileByName).not.toHaveBeenCalled();
+    });
+
+    it('should return empty result when imageName is falsy', async () => {
+        const result = await resolveImagePreview(null, 'folder-id');
+        expect(result).toEqual({ src: '', imageId: null });
+    });
+
+    it('should use imageName as Drive ID when long and no dot', async () => {
+        getDriveImageBlob.mockResolvedValue('blob:drive-url');
+        const longId = 'abcdefghijklmnopqrstuv'; // >20 chars, no dot
+        const result = await resolveImagePreview(longId, 'folder-id');
+        expect(findFileByName).not.toHaveBeenCalled();
+        expect(getDriveImageBlob).toHaveBeenCalledWith(longId);
+        expect(result).toEqual({ src: 'blob:drive-url', imageId: longId });
+    });
+
+    it('should look up file by name when imageName has a dot', async () => {
+        findFileByName.mockResolvedValue({ id: 'file-123' });
+        getDriveImageBlob.mockResolvedValue('blob:found');
+        const result = await resolveImagePreview('photo.jpg', 'folder-id');
+        expect(findFileByName).toHaveBeenCalledWith('photo.jpg', 'folder-id');
+        expect(getDriveImageBlob).toHaveBeenCalledWith('file-123');
+        expect(result).toEqual({ src: 'blob:found', imageId: 'file-123' });
+    });
+
+    it('should use local fallback when Drive lookup fails', async () => {
+        findFileByName.mockResolvedValue(null);
+        const result = await resolveImagePreview('photo.jpg', 'folder-id', { localFallbackDir: '/images/' });
+        expect(result).toEqual({ src: '/images/photo.jpg', imageId: null });
+    });
+
+    it('should use local fallback when getDriveImageBlob returns null', async () => {
+        findFileByName.mockResolvedValue({ id: 'file-123' });
+        getDriveImageBlob.mockResolvedValue(null);
+        const result = await resolveImagePreview('photo.jpg', 'folder-id', { localFallbackDir: '/images/' });
+        expect(result).toEqual({ src: '/images/photo.jpg', imageId: 'file-123' });
+    });
+
+    it('should not use local fallback for Drive IDs (no dot)', async () => {
+        getDriveImageBlob.mockResolvedValue(null);
+        const longId = 'abcdefghijklmnopqrstuv';
+        const result = await resolveImagePreview(longId, 'folder-id', { localFallbackDir: '/images/' });
+        expect(result).toEqual({ src: '', imageId: longId });
+    });
+
+    it('should handle Drive API error gracefully', async () => {
+        findFileByName.mockRejectedValue(new Error('Network error'));
+        const result = await resolveImagePreview('photo.jpg', 'folder-id', { localFallbackDir: '/images/' });
+        expect(result).toEqual({ src: '/images/photo.jpg', imageId: null });
+    });
+
+    it('should return empty src when no fallback and Drive fails', async () => {
+        findFileByName.mockRejectedValue(new Error('Network error'));
+        const result = await resolveImagePreview('photo.jpg', 'folder-id');
+        expect(result).toEqual({ src: '', imageId: null });
+    });
+});
+
+describe('handleImageSelected', () => {
+    beforeEach(() => {
+        getDriveImageBlob.mockReset();
+    });
+
+    it('should set input value and fetch blob preview', async () => {
+        document.body.innerHTML = '<input id="img"><img id="preview" class="hidden"><div id="placeholder"></div>';
+        getDriveImageBlob.mockResolvedValue('blob:test');
+
+        await handleImageSelected({
+            fileId: 'file-123', fileName: 'photo.jpg',
+            inputEl: document.getElementById('img'),
+            previewImgEl: document.getElementById('preview'),
+            placeholderEl: document.getElementById('placeholder')
+        });
+
+        expect(document.getElementById('img').value).toBe('photo.jpg');
+        expect(getDriveImageBlob).toHaveBeenCalledWith('file-123');
+        expect(document.getElementById('preview').src).toContain('blob:test');
+        expect(document.getElementById('preview').classList.contains('hidden')).toBe(false);
+        expect(document.getElementById('placeholder').classList.contains('hidden')).toBe(true);
+    });
+
+    it('should dispatch input event on inputEl', async () => {
+        document.body.innerHTML = '<input id="img">';
+        getDriveImageBlob.mockResolvedValue(null);
+        const handler = vi.fn();
+        document.getElementById('img').addEventListener('input', handler);
+
+        await handleImageSelected({
+            fileId: 'f', fileName: 'n',
+            inputEl: document.getElementById('img'),
+            previewImgEl: null, placeholderEl: null
+        });
+
+        expect(handler).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not show preview when blob is null', async () => {
+        document.body.innerHTML = '<input id="img"><img id="preview" class="hidden">';
+        getDriveImageBlob.mockResolvedValue(null);
+
+        await handleImageSelected({
+            fileId: 'f', fileName: 'n',
+            inputEl: document.getElementById('img'),
+            previewImgEl: document.getElementById('preview'),
+            placeholderEl: null
+        });
+
+        expect(document.getElementById('preview').classList.contains('hidden')).toBe(true);
+    });
+
+    it('should do nothing when inputEl is null', async () => {
+        await handleImageSelected({
+            fileId: 'f', fileName: 'n',
+            inputEl: null,
+            previewImgEl: null, placeholderEl: null
+        });
+
+        expect(getDriveImageBlob).not.toHaveBeenCalled();
+    });
+
+    it('should work without placeholderEl', async () => {
+        document.body.innerHTML = '<input id="img"><img id="preview" class="hidden">';
+        getDriveImageBlob.mockResolvedValue('blob:ok');
+
+        await handleImageSelected({
+            fileId: 'f', fileName: 'n',
+            inputEl: document.getElementById('img'),
+            previewImgEl: document.getElementById('preview'),
+            placeholderEl: null
+        });
+
+        expect(document.getElementById('preview').classList.contains('hidden')).toBe(false);
+    });
+});
+
+describe('verifySave', () => {
+    it('should update timestamp and pass when data matches', async () => {
+        document.body.innerHTML = '<span id="ts"></span>';
+        const fetchFn = vi.fn().mockResolvedValue([{ rowIndex: 2, name: 'Test' }]);
+        const reloadFn = vi.fn();
+
+        await verifySave({
+            fetchFn, rowIndex: 2, compareField: 'name',
+            expectedValue: 'Test', timestampElId: 'ts', reloadFn
+        });
+
+        expect(document.getElementById('ts').textContent).toContain('27. feb');
+        expect(reloadFn).not.toHaveBeenCalled();
+    });
+
+    it('should throw Mismatch and call reloadFn when data differs', async () => {
+        const fetchFn = vi.fn().mockResolvedValue([{ rowIndex: 2, name: 'Different' }]);
+        const reloadFn = vi.fn();
+
+        await expect(verifySave({
+            fetchFn, rowIndex: 2, compareField: 'name',
+            expectedValue: 'Expected', timestampElId: 'ts', reloadFn
+        })).rejects.toThrow('Mismatch');
+
+        expect(reloadFn).toHaveBeenCalled();
+    });
+
+    it('should handle fetch error gracefully (non-mismatch)', async () => {
+        const fetchFn = vi.fn().mockRejectedValue(new Error('Network'));
+        const reloadFn = vi.fn();
+
+        await expect(verifySave({
+            fetchFn, rowIndex: 2, compareField: 'name',
+            expectedValue: 'V', timestampElId: 'ts', reloadFn
+        })).resolves.toBeUndefined();
+
+        expect(reloadFn).not.toHaveBeenCalled();
+    });
+
+    it('should pass when row is not found in fresh data', async () => {
+        const fetchFn = vi.fn().mockResolvedValue([{ rowIndex: 99, name: 'Other' }]);
+        const reloadFn = vi.fn();
+
+        await expect(verifySave({
+            fetchFn, rowIndex: 2, compareField: 'name',
+            expectedValue: 'V', timestampElId: 'ts', reloadFn
+        })).resolves.toBeUndefined();
+
+        expect(reloadFn).not.toHaveBeenCalled();
+    });
+
+    it('should work without timestamp element', async () => {
+        const fetchFn = vi.fn().mockResolvedValue([{ rowIndex: 2, name: 'OK' }]);
+
+        await expect(verifySave({
+            fetchFn, rowIndex: 2, compareField: 'name',
+            expectedValue: 'OK', timestampElId: 'nonexistent', reloadFn: vi.fn()
+        })).resolves.toBeUndefined();
     });
 });

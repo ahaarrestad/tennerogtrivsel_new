@@ -1,17 +1,16 @@
 import {
     updateTannlegeRow, addTannlegeRow, deleteTannlegeRowPermanently,
-    getDriveImageBlob, findFileByName, backupToSlettetSheet, getTannlegerRaw
+    backupToSlettetSheet, getTannlegerRaw
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { loadGallery, setupUploadHandler } from './admin-gallery.js';
 import { loadTannlegerModule, formatTimestamp } from './admin-dashboard.js';
 import {
     getAdminConfig, renderToggleHtml, attachToggleClick,
-    showDeletionToast, bindSliderStepButtons, bindWheelPrevent,
-    showSaveBar, hideSaveBar, escapeHtml
+    showDeletionToast, renderImageCropSliders, createAutoSaver,
+    bindSliderStepButtons, bindWheelPrevent,
+    escapeHtml, resolveImagePreview, handleImageSelected, verifySave
 } from './admin-editor-helpers.js';
-
-let tannlegeSaveTimeout = null;
 
 async function deleteTannlege(rowIndex, name) {
     const { SHEET_ID } = getAdminConfig();
@@ -43,30 +42,7 @@ async function editTannlege(rowIndex, data = null) {
 
     const t = data || { name: '', title: '', description: '', image: '', active: true, scale: 1.0, positionX: 50, positionY: 50 };
 
-    let previewSrc = '';
-    let currentImageId = null;
-
-    if (t.image) {
-        try {
-            if (t.image.length > 20 && !t.image.includes('.')) {
-                currentImageId = t.image;
-            } else {
-                const file = await findFileByName(t.image, TANNLEGER_FOLDER);
-                if (file) currentImageId = file.id;
-            }
-
-            if (currentImageId) {
-                const blobUrl = await getDriveImageBlob(currentImageId);
-                if (blobUrl) previewSrc = blobUrl;
-            }
-        } catch (err) {
-            console.warn("[Admin] Kunne ikke hente bilde-preview fra Drive.");
-        }
-
-        if (!previewSrc && t.image && t.image.includes('.')) {
-            previewSrc = `/src/assets/tannleger/${t.image}`;
-        }
-    }
+    const { src: previewSrc } = await resolveImagePreview(t.image, TANNLEGER_FOLDER, { localFallbackDir: '/src/assets/tannleger/' });
 
     inner.innerHTML = `
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 max-w-6xl animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -99,47 +75,7 @@ async function editTannlege(rowIndex, data = null) {
                     </div>
                 </div>
 
-                <div class="space-y-6 pt-4 border-t border-admin-border">
-                    <h4 class="text-brand font-black text-xs uppercase tracking-widest">Bildeutsnitt (Zoom og posisjon)</h4>
-
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between mb-2">
-                                <label for="edit-t-scale" class="admin-label !mb-0">Zoom (Skala)</label>
-                                <span id="val-scale" class="text-[10px] font-bold text-brand">${t.scale}x</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button type="button" class="slider-step-btn" data-target="edit-t-scale" data-step="-0.1">&minus;</button>
-                                <input type="range" id="edit-t-scale" min="1.0" max="3.0" step="0.01" value="${t.scale}" class="flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
-                                <button type="button" class="slider-step-btn" data-target="edit-t-scale" data-step="0.1">+</button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="flex justify-between mb-2">
-                                <label for="edit-t-x" class="admin-label !mb-0">Fokuspunkt Horisontalt (X)</label>
-                                <span id="val-x" class="text-[10px] font-bold text-brand">${t.positionX}%</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button type="button" class="slider-step-btn" data-target="edit-t-x" data-step="-1">&minus;</button>
-                                <input type="range" id="edit-t-x" min="0" max="100" value="${t.positionX}" class="flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
-                                <button type="button" class="slider-step-btn" data-target="edit-t-x" data-step="1">+</button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="flex justify-between mb-2">
-                                <label for="edit-t-y" class="admin-label !mb-0">Fokuspunkt Vertikalt (Y)</label>
-                                <span id="val-y" class="text-[10px] font-bold text-brand">${t.positionY}%</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button type="button" class="slider-step-btn" data-target="edit-t-y" data-step="-1">&minus;</button>
-                                <input type="range" id="edit-t-y" min="0" max="100" value="${t.positionY}" class="flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
-                                <button type="button" class="slider-step-btn" data-target="edit-t-y" data-step="1">+</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                ${renderImageCropSliders({ prefix: 'edit-t', valPrefix: 'val', scale: t.scale, posX: t.positionX, posY: t.positionY })}
 
             </div>
 
@@ -197,24 +133,12 @@ async function editTannlege(rowIndex, data = null) {
         btnGallery.onclick = () => {
             modal.showModal();
             loadGallery(TANNLEGER_FOLDER, async (fileId, fileName) => {
-                const imgInput = document.getElementById('edit-t-image');
-                const previewImg = document.getElementById('preview-img');
-                const placeholder = document.getElementById('no-image-placeholder');
-
-                if (imgInput) {
-                    imgInput.value = fileName;
-
-                    if (previewImg) {
-                        const blobUrl = await getDriveImageBlob(fileId);
-                        if (blobUrl) {
-                            previewImg.src = blobUrl;
-                            previewImg.classList.remove('hidden');
-                            placeholder?.classList.add('hidden');
-                        }
-                    }
-
-                    imgInput.dispatchEvent(new Event('input'));
-                }
+                await handleImageSelected({
+                    fileId, fileName,
+                    inputEl: document.getElementById('edit-t-image'),
+                    previewImgEl: document.getElementById('preview-img'),
+                    placeholderEl: document.getElementById('no-image-placeholder')
+                });
                 modal.close();
             });
         };
@@ -222,29 +146,17 @@ async function editTannlege(rowIndex, data = null) {
 
     setupUploadHandler(TANNLEGER_FOLDER, async (newFile) => {
         if (newFile) {
-             const imgInput = document.getElementById('edit-t-image');
-             const previewImg = document.getElementById('preview-img');
-             const placeholder = document.getElementById('no-image-placeholder');
-
-             if (imgInput) {
-                 imgInput.value = newFile.name;
-
-                 if (previewImg) {
-                     const blobUrl = await getDriveImageBlob(newFile.id);
-                     if (blobUrl) {
-                         previewImg.src = blobUrl;
-                         previewImg.classList.remove('hidden');
-                         placeholder?.classList.add('hidden');
-                     }
-                 }
-
-                 imgInput.dispatchEvent(new Event('input'));
-             }
-             modal.close();
+            await handleImageSelected({
+                fileId: newFile.id, fileName: newFile.name,
+                inputEl: document.getElementById('edit-t-image'),
+                previewImgEl: document.getElementById('preview-img'),
+                placeholderEl: document.getElementById('no-image-placeholder')
+            });
+            modal.close();
         }
     });
 
-    const updatePreview = () => {
+    const saveTannlege = async () => {
         const nameInp = document.getElementById('edit-t-name');
         const titleInp = document.getElementById('edit-t-title');
         const descInp = document.getElementById('edit-t-desc');
@@ -254,79 +166,67 @@ async function editTannlege(rowIndex, data = null) {
         const yInp = document.getElementById('edit-t-y');
         const activeToggle = document.getElementById('edit-t-active-toggle');
 
-        const name = nameInp.value;
-        const title = titleInp.value;
-        const desc = descInp.value;
-        const image = imageInp.value;
-        const scale = scaleInp.value;
-        const posX = xInp.value;
-        const posY = yInp.value;
-        const active = activeToggle?.dataset.active === 'true';
+        const updateData = {
+            name: nameInp.value,
+            title: titleInp.value,
+            description: descInp.value,
+            active: activeToggle?.dataset.active === 'true',
+            image: imageInp.value,
+            scale: parseFloat(scaleInp.value),
+            positionX: parseInt(xInp.value),
+            positionY: parseInt(yInp.value)
+        };
+
+        if (rowIndex) {
+            await updateTannlegeRow(SHEET_ID, rowIndex, updateData);
+        } else {
+            await addTannlegeRow(SHEET_ID, updateData);
+            reloadTannleger();
+            return;
+        }
+        await verifySave({
+            fetchFn: () => getTannlegerRaw(SHEET_ID),
+            rowIndex,
+            compareField: 'name',
+            expectedValue: updateData.name,
+            timestampElId: 'tannleger-last-fetched',
+            reloadFn: reloadTannleger
+        });
+    };
+    const autoSaver = createAutoSaver(saveTannlege);
+
+    const updatePreview = () => {
+        const nameInp = document.getElementById('edit-t-name');
+        const titleInp = document.getElementById('edit-t-title');
+        const descInp = document.getElementById('edit-t-desc');
+        const scaleInp = document.getElementById('edit-t-scale');
+        const xInp = document.getElementById('edit-t-x');
+        const yInp = document.getElementById('edit-t-y');
 
         const nameEl = document.getElementById('preview-name');
         const titleEl = document.getElementById('preview-title');
         const descEl = document.getElementById('preview-desc');
-        if (nameEl) nameEl.textContent = name || 'Navn';
-        if (titleEl) titleEl.textContent = title || 'Tittel';
-        if (descEl) descEl.textContent = desc || 'Beskrivelse kommer her...';
+        if (nameEl) nameEl.textContent = nameInp.value || 'Navn';
+        if (titleEl) titleEl.textContent = titleInp.value || 'Tittel';
+        if (descEl) descEl.textContent = descInp.value || 'Beskrivelse kommer her...';
 
         const img = document.getElementById('preview-img');
         if (img) {
+            const posX = xInp.value;
+            const posY = yInp.value;
             img.style.objectPosition = `${posX}% ${posY}%`;
-            img.style.transform = `scale(${parseFloat(scale)})`;
+            img.style.transform = `scale(${parseFloat(scaleInp.value)})`;
             img.style.transformOrigin = `${posX}% ${posY}%`;
         }
 
         const valScale = document.getElementById('val-scale');
         const valX = document.getElementById('val-x');
         const valY = document.getElementById('val-y');
-        if (valScale) valScale.textContent = `${scale}x`;
-        if (valX) valX.textContent = `${posX}%`;
-        if (valY) valY.textContent = `${posY}%`;
+        if (valScale) valScale.textContent = `${scaleInp.value}x`;
+        if (valX) valX.textContent = `${xInp.value}%`;
+        if (valY) valY.textContent = `${yInp.value}%`;
 
-        showSaveBar('changed', '⏳ Endringer oppdaget...');
-
-        clearTimeout(tannlegeSaveTimeout);
-        tannlegeSaveTimeout = setTimeout(async () => {
-            showSaveBar('saving', '💾 Lagrer til Google Sheets...');
-            const updateData = {
-                name, title, description: desc, active,
-                image: image,
-                scale: parseFloat(scale),
-                positionX: parseInt(posX),
-                positionY: parseInt(posY)
-            };
-
-            try {
-                if (rowIndex) {
-                    await updateTannlegeRow(SHEET_ID, rowIndex, updateData);
-                } else {
-                    await addTannlegeRow(SHEET_ID, updateData);
-                    return reloadTannleger();
-                }
-                // Stille verifisering
-                const savedTime = new Date();
-                try {
-                    const freshData = await getTannlegerRaw(SHEET_ID);
-                    const fetchedEl = document.getElementById('tannleger-last-fetched');
-                    if (fetchedEl) fetchedEl.textContent = formatTimestamp(new Date());
-                    const freshRow = freshData.find(d => d.rowIndex === rowIndex);
-                    if (freshRow && freshRow.name !== name) {
-                        console.warn(`[Admin] Tannlege-mismatch etter lagring: forventet "${name}", fikk "${freshRow.name}"`);
-                        showSaveBar('error', '⚠️ Laster på nytt…');
-                        reloadTannleger();
-                        return;
-                    }
-                } catch (verifyErr) {
-                    console.warn("[Admin] Tannlege-verifisering feilet, men lagring gikk OK:", verifyErr);
-                }
-                const ts = formatTimestamp(savedTime);
-                showSaveBar('saved', `✅ Lagret ${ts}`);
-                hideSaveBar(5000);
-            } catch (e) {
-                showSaveBar('error', '❌ Feil ved lagring!');
-            }
-        }, 1500);
+        autoSaver.trigger();
     };
 
     attachToggleClick('edit-t-active-toggle', updatePreview);

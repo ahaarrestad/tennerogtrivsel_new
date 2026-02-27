@@ -12,15 +12,7 @@
 
 ## Pågående
 
-- [ ] **Kodelesbarhet — ny gjennomgang og forenkling** ([plan](docs/plan-kodelesbarhet-2.md))
-  - Revidert plan: 6 steg (opprinnelig 5), SVG-ikoner droppet (lav verdi), 2 nye mønstre identifisert
-  - Steg 1: Slider-template (bilder+tannleger) → felles `renderImageCropSliders()`
-  - Steg 2: Auto-save debounce (4 moduler) → felles `createAutoSaver()`
-  - Steg 3: Bilde-preview-oppslag (bilder+tannleger) → felles `resolveImagePreview()`
-  - Steg 4: Bildevelger-modal (bilder+tannleger) → felles `setupImagePicker()`
-  - Steg 5: Lagreverifisering (bilder+tannleger) → felles `verifySave()`
-  - Steg 6: Splitt `admin-client.js` (997 linjer) → `admin-auth.js` + `admin-drive.js` + `admin-sheets.js`
-  - Steg 1–5 sekvensielt (endrer editor-helpers), steg 6 selvstendig
+(Ingen oppgaver pågår)
 
 ## Backlog
 
@@ -62,6 +54,25 @@
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
 ## Fullført
+
+- [x] **Estimer kostnader for nettsiden (månedlig / årlig)**
+  - AWS S3: ~1 kr/mnd (7 MB lagring, ~2 000 requests — neglisjerbart)
+  - AWS CloudFront: 0 kr (permanent gratis-kvote: 1 TB/mnd, 10M requests)
+  - AWS ACM, Google Maps Embed, Sheets/Drive API, OAuth, GitHub Actions: alt 0 kr
+  - Google Workspace: 0–90 kr/mnd (avhenger av om Drive-kontoen er personlig eller Workspace)
+  - Domener: ~100–500 kr/år (.no + evt. .com/.net)
+  - **Totalt uten Workspace: ~1 kr/mnd + 100–500 kr/år domener**
+  - **Totalt med Workspace: ~91 kr/mnd (~1 100–1 600 kr/år)**
+
+- [x] **Kodelesbarhet — ny gjennomgang og forenkling** ([plan](docs/plan-kodelesbarhet-2.md))
+  - 6 steg fullført: slider-template, auto-save, bilde-preview, bildevelger, lagreverifisering, admin-client-splitt
+  - Steg 1: `renderImageCropSliders()` — felles slider-template for bilder og tannleger
+  - Steg 2: `createAutoSaver()` — felles debounce-mønster for alle 4 editor-moduler
+  - Steg 3: `resolveImagePreview()` — felles bilde-preview-oppslag med Drive-ID og lokal fallback
+  - Steg 4: `handleImageSelected()` — felles bildevelger-callback for bilder og tannleger
+  - Steg 5: `verifySave()` — felles lagreverifisering med mismatch-deteksjon
+  - Steg 6: `admin-client.js` (997 linjer) → `admin-auth.js` + `admin-drive.js` + `admin-sheets.js` + re-export fasade
+  - 907 tester, alle ≥80% branch coverage
 
 - [x] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
   - M1: HTML-escaping (`escapeHtml()`) + programmatisk verdi-setting i 5 admin-moduler (15+ injeksjonspunkter)

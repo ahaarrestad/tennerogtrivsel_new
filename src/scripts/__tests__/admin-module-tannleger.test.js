@@ -42,11 +42,17 @@ vi.mock('../admin-editor-helpers.js', () => ({
     renderToggleHtml: vi.fn((id, active) => `<button id="${id}" data-active="${active}"><span class="toggle-label">${active ? 'Aktiv' : 'Inaktiv'}</span></button>`),
     attachToggleClick: vi.fn(),
     showDeletionToast: vi.fn(),
+    renderImageCropSliders: vi.fn(({ prefix, valPrefix, scale = 1, posX = 50, posY = 50 }) =>
+        `<div><input type="range" id="${prefix}-scale" value="${scale}"><span id="${valPrefix}-scale">${scale}x</span><input type="range" id="${prefix}-x" value="${posX}"><span id="${valPrefix}-x">${posX}%</span><input type="range" id="${prefix}-y" value="${posY}"><span id="${valPrefix}-y">${posY}%</span></div>`),
+    createAutoSaver: vi.fn((saveFn) => ({ trigger: vi.fn(), cancel: vi.fn(), _saveFn: saveFn })),
     bindSliderStepButtons: vi.fn(),
     bindWheelPrevent: vi.fn(),
     showSaveBar: vi.fn(),
     hideSaveBar: vi.fn(),
     escapeHtml: vi.fn(s => String(s ?? '')),
+    resolveImagePreview: vi.fn().mockResolvedValue({ src: '', imageId: null }),
+    handleImageSelected: vi.fn().mockResolvedValue(undefined),
+    verifySave: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({
@@ -55,11 +61,11 @@ vi.mock('../admin-api-retry.js', () => ({
 
 import {
     updateTannlegeRow, addTannlegeRow, deleteTannlegeRowPermanently, getTannlegerRaw,
-    backupToSlettetSheet, findFileByName, getDriveImageBlob
+    backupToSlettetSheet, getDriveImageBlob
 } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadTannlegerModule } from '../admin-dashboard.js';
-import { showDeletionToast, attachToggleClick, bindSliderStepButtons, bindWheelPrevent, showSaveBar, hideSaveBar } from '../admin-editor-helpers.js';
+import { showDeletionToast, attachToggleClick, bindSliderStepButtons, bindWheelPrevent, showSaveBar, hideSaveBar, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave } from '../admin-editor-helpers.js';
 import { initTannlegerModule, reloadTannleger } from '../admin-module-tannleger.js';
 
 function setupDOM() {
@@ -74,6 +80,7 @@ function setupDOM() {
 beforeEach(() => {
     setupDOM();
     vi.clearAllMocks();
+    resolveImagePreview.mockResolvedValue({ src: '', imageId: null });
 });
 
 describe('initTannlegerModule', () => {
@@ -156,7 +163,7 @@ describe('editTannlege', () => {
     });
 
     it('should show loading state', async () => {
-        findFileByName.mockReturnValue(new Promise(() => {}));
+        resolveImagePreview.mockReturnValueOnce(new Promise(() => {}));
         window.editTannlege(2, { name: 'Test', title: '', description: '', image: 'test.jpg', active: true, scale: 1, positionX: 50, positionY: 50 });
         expect(document.getElementById('module-inner').innerHTML).toContain('Henter profil');
     });
@@ -191,9 +198,8 @@ describe('editTannlege', () => {
         expect(inner.querySelector('#edit-t-scale').value).toBe('1.5');
     });
 
-    it('should try to load preview image for existing tannlege with image file', async () => {
-        findFileByName.mockResolvedValue({ id: 'file-id' });
-        getDriveImageBlob.mockResolvedValue('blob:test');
+    it('should call resolveImagePreview for existing tannlege with image file', async () => {
+        resolveImagePreview.mockResolvedValue({ src: 'blob:test', imageId: 'file-id' });
 
         await window.editTannlege(2, {
             name: 'Dr. Hansen',
@@ -206,12 +212,11 @@ describe('editTannlege', () => {
             positionY: 50
         });
 
-        expect(findFileByName).toHaveBeenCalledWith('hansen.jpg', 'test-tannleger-folder');
-        expect(getDriveImageBlob).toHaveBeenCalledWith('file-id');
+        expect(resolveImagePreview).toHaveBeenCalledWith('hansen.jpg', 'test-tannleger-folder', { localFallbackDir: '/src/assets/tannleger/' });
     });
 
-    it('should handle long image ID (Drive ID) directly', async () => {
-        getDriveImageBlob.mockResolvedValue('blob:test');
+    it('should call resolveImagePreview for Drive ID image', async () => {
+        resolveImagePreview.mockResolvedValue({ src: 'blob:test', imageId: '1234567890abcdefghijk' });
 
         await window.editTannlege(2, {
             name: 'Dr. Hansen',
@@ -224,8 +229,7 @@ describe('editTannlege', () => {
             positionY: 50
         });
 
-        expect(findFileByName).not.toHaveBeenCalled();
-        expect(getDriveImageBlob).toHaveBeenCalledWith('1234567890abcdefghijk');
+        expect(resolveImagePreview).toHaveBeenCalledWith('1234567890abcdefghijk', 'test-tannleger-folder', { localFallbackDir: '/src/assets/tannleger/' });
     });
 
     it('should set breadcrumb editor and clear actions', async () => {
@@ -292,23 +296,21 @@ describe('editTannlege', () => {
         expect(document.getElementById('val-scale').textContent).toBe('2.0x');
     });
 
-    it('should show status text on preview update', async () => {
-        vi.useFakeTimers();
+    it('should trigger autoSaver on preview update', async () => {
         await window.editTannlege(2, {
             name: 'N', title: 'T', description: 'D',
             image: '', active: true, scale: 1, positionX: 50, positionY: 50
         });
 
+        const autoSaver = createAutoSaver.mock.results[0].value;
         const nameInp = document.getElementById('edit-t-name');
         nameInp.value = 'Changed';
         nameInp.dispatchEvent(new Event('input'));
 
-        expect(showSaveBar).toHaveBeenCalledWith('changed', expect.stringContaining('Endringer oppdaget'));
-        vi.useRealTimers();
+        expect(autoSaver.trigger).toHaveBeenCalled();
     });
 
-    it('should auto-save after debounce for existing row', async () => {
-        vi.useFakeTimers();
+    it('should pass saveFn that calls updateTannlegeRow for existing row', async () => {
         updateTannlegeRow.mockResolvedValue();
         getTannlegerRaw.mockResolvedValue([{ rowIndex: 2, name: 'Changed' }]);
 
@@ -317,19 +319,14 @@ describe('editTannlege', () => {
             image: '', active: true, scale: 1, positionX: 50, positionY: 50
         });
 
-        const nameInp = document.getElementById('edit-t-name');
-        nameInp.value = 'Changed';
-        nameInp.dispatchEvent(new Event('input'));
-
-        // Advance past debounce
-        await vi.advanceTimersByTimeAsync(1500);
+        document.getElementById('edit-t-name').value = 'Changed';
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await saveFn();
 
         expect(updateTannlegeRow).toHaveBeenCalledWith('test-sheet', 2, expect.objectContaining({ name: 'Changed' }));
-        vi.useRealTimers();
     });
 
-    it('should add new tannlege row when no rowIndex', async () => {
-        vi.useFakeTimers();
+    it('should pass saveFn that calls addTannlegeRow when no rowIndex', async () => {
         addTannlegeRow.mockResolvedValue();
 
         await window.editTannlege(null, {
@@ -337,18 +334,14 @@ describe('editTannlege', () => {
             image: '', active: true, scale: 1, positionX: 50, positionY: 50
         });
 
-        const nameInp = document.getElementById('edit-t-name');
-        nameInp.value = 'New';
-        nameInp.dispatchEvent(new Event('input'));
-
-        await vi.advanceTimersByTimeAsync(1500);
+        document.getElementById('edit-t-name').value = 'New';
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await saveFn();
 
         expect(addTannlegeRow).toHaveBeenCalledWith('test-sheet', expect.objectContaining({ name: 'New' }));
-        vi.useRealTimers();
     });
 
-    it('should handle save error', async () => {
-        vi.useFakeTimers();
+    it('should handle save error in saveFn', async () => {
         updateTannlegeRow.mockRejectedValue(new Error('save fail'));
 
         await window.editTannlege(2, {
@@ -356,56 +349,42 @@ describe('editTannlege', () => {
             image: '', active: true, scale: 1, positionX: 50, positionY: 50
         });
 
-        const nameInp = document.getElementById('edit-t-name');
-        nameInp.value = 'X';
-        nameInp.dispatchEvent(new Event('input'));
-
-        await vi.advanceTimersByTimeAsync(1500);
-
-        expect(showSaveBar).toHaveBeenCalledWith('error', expect.stringContaining('Feil ved lagring'));
-        vi.useRealTimers();
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await expect(saveFn()).rejects.toThrow('save fail');
     });
 
     it('should handle verification mismatch after save', async () => {
-        vi.useFakeTimers();
         updateTannlegeRow.mockResolvedValue();
-        // Return a row with different name to trigger mismatch
-        getTannlegerRaw.mockResolvedValue([{ rowIndex: 2, name: 'Different' }]);
+        verifySave.mockRejectedValueOnce(new Error('Mismatch'));
 
         await window.editTannlege(2, {
             name: 'N', title: 'T', description: 'D',
             image: '', active: true, scale: 1, positionX: 50, positionY: 50
         });
 
-        const nameInp = document.getElementById('edit-t-name');
-        nameInp.value = 'Expected';
-        nameInp.dispatchEvent(new Event('input'));
-
-        await vi.advanceTimersByTimeAsync(1500);
-
-        expect(showSaveBar).toHaveBeenCalledWith('error', expect.stringContaining('Laster på nytt'));
-        vi.useRealTimers();
+        document.getElementById('edit-t-name').value = 'Expected';
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await expect(saveFn()).rejects.toThrow('Mismatch');
     });
 
-    it('should handle verification failure gracefully', async () => {
-        vi.useFakeTimers();
+    it('should call verifySave with correct args after save', async () => {
         updateTannlegeRow.mockResolvedValue();
-        getTannlegerRaw.mockRejectedValue(new Error('verify fail'));
 
         await window.editTannlege(2, {
             name: 'N', title: 'T', description: 'D',
             image: '', active: true, scale: 1, positionX: 50, positionY: 50
         });
 
-        const nameInp = document.getElementById('edit-t-name');
-        nameInp.value = 'Changed';
-        nameInp.dispatchEvent(new Event('input'));
+        document.getElementById('edit-t-name').value = 'Updated';
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await saveFn();
 
-        await vi.advanceTimersByTimeAsync(1500);
-
-        // Should still show success despite verify failure
-        expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('Lagret'));
-        vi.useRealTimers();
+        expect(verifySave).toHaveBeenCalledWith(expect.objectContaining({
+            rowIndex: 2,
+            compareField: 'name',
+            expectedValue: 'Updated',
+            timestampElId: 'tannleger-last-fetched'
+        }));
     });
 
     it('should update position X/Y preview labels', async () => {
@@ -425,8 +404,8 @@ describe('editTannlege', () => {
         expect(document.getElementById('val-y').textContent).toBe('70%');
     });
 
-    it('should use fallback preview path when Drive fetch fails', async () => {
-        findFileByName.mockRejectedValue(new Error('fail'));
+    it('should use fallback preview path from resolveImagePreview', async () => {
+        resolveImagePreview.mockResolvedValue({ src: '/src/assets/tannleger/bilde.jpg', imageId: null });
 
         await window.editTannlege(2, {
             name: 'N', title: 'T', description: 'D',
@@ -437,8 +416,8 @@ describe('editTannlege', () => {
         expect(img.src).toContain('/src/assets/tannleger/bilde.jpg');
     });
 
-    it('should handle image with no Drive result and no filename extension', async () => {
-        getDriveImageBlob.mockResolvedValue(null);
+    it('should handle image with no preview src', async () => {
+        resolveImagePreview.mockResolvedValue({ src: '', imageId: null });
 
         await window.editTannlege(2, {
             name: 'N', title: 'T', description: 'D',
@@ -446,7 +425,7 @@ describe('editTannlege', () => {
             active: true, scale: 1, positionX: 50, positionY: 50
         });
 
-        // No preview should be shown (no blob, no extension to fall back to)
+        // No preview should be shown (no src from resolveImagePreview)
         const img = document.getElementById('preview-img');
         expect(img.classList.contains('hidden')).toBe(true);
     });
@@ -465,37 +444,37 @@ describe('editTannlege', () => {
         expect(loadGallery).toHaveBeenCalledWith('test-tannleger-folder', expect.any(Function));
     });
 
-    it('should update image input when gallery file is selected', async () => {
+    it('should call handleImageSelected when gallery file is selected', async () => {
         const dialog = document.getElementById('image-picker-modal');
         dialog.showModal = vi.fn();
         dialog.close = vi.fn();
-        getDriveImageBlob.mockResolvedValue('blob:new-img');
 
         await window.editTannlege(null);
 
         document.getElementById('btn-open-gallery').click();
 
-        // Get the onSelect callback from loadGallery
         const onSelect = loadGallery.mock.calls[0][1];
         await onSelect('file-id-123', 'new-image.jpg');
 
-        expect(document.getElementById('edit-t-image').value).toBe('new-image.jpg');
+        expect(handleImageSelected).toHaveBeenCalledWith(expect.objectContaining({
+            fileId: 'file-id-123', fileName: 'new-image.jpg'
+        }));
         expect(dialog.close).toHaveBeenCalled();
     });
 
-    it('should handle upload handler callback', async () => {
+    it('should call handleImageSelected from upload handler', async () => {
         const dialog = document.getElementById('image-picker-modal');
         dialog.showModal = vi.fn();
         dialog.close = vi.fn();
-        getDriveImageBlob.mockResolvedValue('blob:uploaded');
 
         await window.editTannlege(null);
 
-        // Get the upload handler callback
         const onUpload = setupUploadHandler.mock.calls[0][1];
         await onUpload({ id: 'uploaded-id', name: 'uploaded.jpg' });
 
-        expect(document.getElementById('edit-t-image').value).toBe('uploaded.jpg');
+        expect(handleImageSelected).toHaveBeenCalledWith(expect.objectContaining({
+            fileId: 'uploaded-id', fileName: 'uploaded.jpg'
+        }));
         expect(dialog.close).toHaveBeenCalled();
     });
 
@@ -509,63 +488,24 @@ describe('editTannlege', () => {
         const onUpload = setupUploadHandler.mock.calls[0][1];
         await onUpload(null);
 
-        // Image input should remain empty
-        expect(document.getElementById('edit-t-image').value).toBe('');
+        expect(handleImageSelected).not.toHaveBeenCalled();
         expect(dialog.close).not.toHaveBeenCalled();
     });
 
-    it('should handle gallery select with null blob URL', async () => {
-        const dialog = document.getElementById('image-picker-modal');
-        dialog.showModal = vi.fn();
-        dialog.close = vi.fn();
-        getDriveImageBlob.mockResolvedValue(null);
-
-        await window.editTannlege(null);
-        document.getElementById('btn-open-gallery').click();
-
-        const onSelect = loadGallery.mock.calls[0][1];
-        await onSelect('file-id', 'new.jpg');
-
-        expect(document.getElementById('edit-t-image').value).toBe('new.jpg');
-        // Preview should remain hidden (blob was null)
-        const img = document.getElementById('preview-img');
-        expect(img.classList.contains('hidden')).toBe(true);
-    });
-
-    it('should handle upload with null blob URL', async () => {
-        const dialog = document.getElementById('image-picker-modal');
-        dialog.showModal = vi.fn();
-        dialog.close = vi.fn();
-        getDriveImageBlob.mockResolvedValue(null);
-
-        await window.editTannlege(null);
-
-        const onUpload = setupUploadHandler.mock.calls[0][1];
-        await onUpload({ id: 'new-id', name: 'uploaded.jpg' });
-
-        expect(document.getElementById('edit-t-image').value).toBe('uploaded.jpg');
-        const img = document.getElementById('preview-img');
-        expect(img.classList.contains('hidden')).toBe(true);
-    });
-
-    it('should handle findFileByName returning null', async () => {
-        findFileByName.mockResolvedValue(null);
+    it('should show fallback preview when resolveImagePreview returns local path', async () => {
+        resolveImagePreview.mockResolvedValue({ src: '/src/assets/tannleger/test.jpg', imageId: null });
 
         await window.editTannlege(2, {
             name: 'N', title: 'T', description: 'D',
             image: 'test.jpg', active: true, scale: 1, positionX: 50, positionY: 50
         });
 
-        // No Drive ID → falls back to local path
         const img = document.getElementById('preview-img');
         expect(img.src).toContain('/src/assets/tannleger/test.jpg');
     });
 
-    it('should update last-fetched time on verification', async () => {
-        vi.useFakeTimers();
-        document.body.innerHTML += '<span id="tannleger-last-fetched"></span>';
+    it('should pass timestampElId to verifySave', async () => {
         updateTannlegeRow.mockResolvedValue();
-        getTannlegerRaw.mockResolvedValue([{ rowIndex: 2, name: 'N' }]);
 
         await window.editTannlege(2, {
             name: 'N', title: 'T', description: 'D',
@@ -573,15 +513,15 @@ describe('editTannlege', () => {
         });
 
         document.getElementById('edit-t-name').value = 'N';
-        document.getElementById('edit-t-name').dispatchEvent(new Event('input'));
-        await vi.advanceTimersByTimeAsync(1500);
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await saveFn();
 
-        expect(document.getElementById('tannleger-last-fetched').textContent).toContain('24. feb');
-        vi.useRealTimers();
+        expect(verifySave).toHaveBeenCalledWith(expect.objectContaining({
+            timestampElId: 'tannleger-last-fetched'
+        }));
     });
 
-    it('should show saved and schedule hide after success', async () => {
-        vi.useFakeTimers();
+    it('should call createAutoSaver and trigger on input changes', async () => {
         updateTannlegeRow.mockResolvedValue();
         getTannlegerRaw.mockResolvedValue([{ rowIndex: 2, name: 'N' }]);
 
@@ -590,13 +530,13 @@ describe('editTannlege', () => {
             image: '', active: true, scale: 1, positionX: 50, positionY: 50
         });
 
+        expect(createAutoSaver).toHaveBeenCalledWith(expect.any(Function));
+
+        const autoSaver = createAutoSaver.mock.results[0].value;
         document.getElementById('edit-t-name').value = 'N';
         document.getElementById('edit-t-name').dispatchEvent(new Event('input'));
-        await vi.advanceTimersByTimeAsync(1500);
 
-        expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('Lagret'));
-        expect(hideSaveBar).toHaveBeenCalledWith(5000);
-        vi.useRealTimers();
+        expect(autoSaver.trigger).toHaveBeenCalled();
     });
 
     it('should update preview description on change', async () => {

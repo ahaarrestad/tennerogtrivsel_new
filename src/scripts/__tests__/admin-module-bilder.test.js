@@ -43,10 +43,16 @@ vi.mock('../admin-editor-helpers.js', () => ({
     setToggleState: vi.fn(),
     attachToggleClick: vi.fn(),
     showDeletionToast: vi.fn(),
+    renderImageCropSliders: vi.fn(({ prefix, valPrefix, scale = 1, posX = 50, posY = 50 }) =>
+        `<div><input type="range" id="${prefix}-scale" value="${scale}"><span id="${valPrefix}-scale">${scale}x</span><input type="range" id="${prefix}-x" value="${posX}"><span id="${valPrefix}-x">${posX}%</span><input type="range" id="${prefix}-y" value="${posY}"><span id="${valPrefix}-y">${posY}%</span></div>`),
+    createAutoSaver: vi.fn((saveFn) => ({ trigger: vi.fn(), cancel: vi.fn(), _saveFn: saveFn })),
     bindSliderStepButtons: vi.fn(),
     bindWheelPrevent: vi.fn(),
     showSaveBar: vi.fn(),
     hideSaveBar: vi.fn(),
+    resolveImagePreview: vi.fn().mockResolvedValue({ src: '', imageId: null }),
+    handleImageSelected: vi.fn().mockResolvedValue(undefined),
+    verifySave: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({
@@ -61,7 +67,7 @@ import {
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadGallery, setupUploadHandler } from '../admin-gallery.js';
 import { loadGalleriListeModule, reorderGalleriItem } from '../admin-dashboard.js';
-import { showDeletionToast, bindSliderStepButtons, bindWheelPrevent, showSaveBar } from '../admin-editor-helpers.js';
+import { showDeletionToast, bindSliderStepButtons, bindWheelPrevent, showSaveBar, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave } from '../admin-editor-helpers.js';
 import { loadBilderModule } from '../admin-module-bilder.js';
 
 function setupDOM() {
@@ -76,6 +82,7 @@ function setupDOM() {
 beforeEach(() => {
     setupDOM();
     vi.clearAllMocks();
+    resolveImagePreview.mockResolvedValue({ src: '', imageId: null });
 });
 
 afterEach(() => {
@@ -287,8 +294,7 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
                 type: 'galleri'
             }
         ]);
-        findFileByName.mockResolvedValue({ id: 'img-id' });
-        getDriveImageBlob.mockResolvedValue('blob:test');
+        resolveImagePreview.mockResolvedValue({ src: 'blob:test', imageId: 'img-id' });
 
         await editFn(2);
 
@@ -405,8 +411,29 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         expect(document.getElementById('galleri-val-scale').textContent).toBe('2.0x');
     });
 
-    it('should auto-save after debounce', async () => {
-        vi.useFakeTimers();
+    it('should trigger autoSaver on input change', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        const editFn = loadGalleriListeModule.mock.calls[0][1];
+        getGalleriRaw.mockResolvedValue([
+            {
+                rowIndex: 2, title: 'Old', image: '', altText: '',
+                active: true, order: 1, scale: 1, positionX: 50, positionY: 50, type: 'galleri'
+            }
+        ]);
+        await editFn(2);
+
+        const autoSaver = createAutoSaver.mock.results[0].value;
+        const titleInput = document.getElementById('galleri-edit-title');
+        titleInput.value = 'Updated';
+        titleInput.dispatchEvent(new Event('change'));
+
+        expect(autoSaver.trigger).toHaveBeenCalled();
+    });
+
+    it('should pass saveFn that calls updateGalleriRow', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -421,20 +448,16 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         await editFn(2);
 
         updateGalleriRow.mockResolvedValue();
-        getGalleriRaw.mockResolvedValue([{ rowIndex: 2, title: '' }]);
+        getGalleriRaw.mockResolvedValue([{ rowIndex: 2, title: 'Updated' }]);
 
-        const titleInput = document.getElementById('galleri-edit-title');
-        titleInput.value = 'Updated';
-        titleInput.dispatchEvent(new Event('change'));
-
-        await vi.advanceTimersByTimeAsync(1500);
+        document.getElementById('galleri-edit-title').value = 'Updated';
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await saveFn();
 
         expect(updateGalleriRow).toHaveBeenCalledWith('test-sheet', 2, expect.objectContaining({ title: 'Updated' }));
-        vi.useRealTimers();
     });
 
-    it('should show error on auto-save failure', async () => {
-        vi.useFakeTimers();
+    it('should handle save error in saveFn', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -450,14 +473,8 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
 
         updateGalleriRow.mockRejectedValue(new Error('save fail'));
 
-        const titleInput = document.getElementById('galleri-edit-title');
-        titleInput.value = 'X';
-        titleInput.dispatchEvent(new Event('change'));
-
-        await vi.advanceTimersByTimeAsync(1500);
-
-        expect(showSaveBar).toHaveBeenCalledWith('error', expect.stringContaining('Feil ved lagring'));
-        vi.useRealTimers();
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await expect(saveFn()).rejects.toThrow('save fail');
     });
 
     it('should handle forsidebilde checkbox toggle on', async () => {
@@ -537,7 +554,6 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
     });
 
     it('should handle verification mismatch during auto-save', async () => {
-        vi.useFakeTimers();
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -552,18 +568,11 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         await editFn(2);
 
         updateGalleriRow.mockResolvedValue();
-        // Return mismatched title in verification — triggers a reload
-        getGalleriRaw.mockResolvedValue([{ rowIndex: 2, title: 'Different' }]);
+        verifySave.mockRejectedValueOnce(new Error('Mismatch'));
 
-        const titleInput = document.getElementById('galleri-edit-title');
-        titleInput.value = 'Expected';
-        titleInput.dispatchEvent(new Event('change'));
-
-        await vi.advanceTimersByTimeAsync(1500);
-
-        // After mismatch, loadBilderModule is called (reload) — verify it was called again
-        expect(loadGalleriListeModule).toHaveBeenCalledTimes(2);
-        vi.useRealTimers();
+        document.getElementById('galleri-edit-title').value = 'Expected';
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await expect(saveFn()).rejects.toThrow('Mismatch');
     });
 
     it('should update X/Y preview labels', async () => {
@@ -629,7 +638,6 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         const dialog = document.getElementById('image-picker-modal');
         dialog.showModal = vi.fn();
         dialog.close = vi.fn();
-        getDriveImageBlob.mockResolvedValue('blob:test');
 
         const btnPick = document.getElementById('btn-galleri-pick-image');
         btnPick.click();
@@ -640,7 +648,10 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         // Simulate file selection
         const onSelect = loadGallery.mock.calls[loadGallery.mock.calls.length - 1][1];
         await onSelect('img-id', 'new.jpg');
-        expect(document.getElementById('galleri-edit-image').value).toBe('new.jpg');
+        expect(handleImageSelected).toHaveBeenCalledWith(expect.objectContaining({
+            fileId: 'img-id', fileName: 'new.jpg'
+        }));
+        expect(dialog.close).toHaveBeenCalled();
     });
 
     it('should handle "add new" button', async () => {
@@ -689,8 +700,7 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         expect(showToast).toHaveBeenCalledWith(expect.stringContaining('Kunne ikke legge til'), 'error');
     });
 
-    it('should handle verification OK after auto-save', async () => {
-        vi.useFakeTimers();
+    it('should call verifySave after updating gallery row', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -705,21 +715,19 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         await editFn(2);
 
         updateGalleriRow.mockResolvedValue();
-        // Matching title = verification OK
-        getGalleriRaw.mockResolvedValue([{ rowIndex: 2, title: 'Match' }]);
+        document.getElementById('galleri-edit-title').value = 'Match';
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await saveFn();
 
-        const titleInput = document.getElementById('galleri-edit-title');
-        titleInput.value = 'Match';
-        titleInput.dispatchEvent(new Event('change'));
-
-        await vi.advanceTimersByTimeAsync(1500);
-
-        expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('Lagret'));
-        vi.useRealTimers();
+        expect(verifySave).toHaveBeenCalledWith(expect.objectContaining({
+            rowIndex: 2,
+            compareField: 'title',
+            expectedValue: 'Match',
+            timestampElId: 'galleri-last-fetched'
+        }));
     });
 
-    it('should handle verification failure gracefully', async () => {
-        vi.useFakeTimers();
+    it('should handle verification failure gracefully via verifySave', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -734,17 +742,9 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         await editFn(2);
 
         updateGalleriRow.mockResolvedValue();
-        getGalleriRaw.mockRejectedValue(new Error('verify fail'));
-
-        const altInput = document.getElementById('galleri-edit-alt');
-        altInput.value = 'X';
-        altInput.dispatchEvent(new Event('change'));
-
-        await vi.advanceTimersByTimeAsync(1500);
-
-        // Should show success despite verification failure
-        expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('Lagret'));
-        vi.useRealTimers();
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        // verifySave is mocked to resolve — saveFn should resolve OK
+        await expect(saveFn()).resolves.toBeUndefined();
     });
 
     it('should hide active field for forsidebilde', async () => {
@@ -802,7 +802,7 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         expect(previewImg.classList.contains('hidden')).toBe(true);
     });
 
-    it('should handle findFileByName returning null for editor preview', async () => {
+    it('should handle resolveImagePreview returning empty src', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -814,15 +814,15 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
                 active: true, order: 1, scale: 1, positionX: 50, positionY: 50, type: 'galleri'
             }
         ]);
-        findFileByName.mockResolvedValue(null);
+        resolveImagePreview.mockResolvedValue({ src: '', imageId: null });
         await editFn(2);
 
-        // No file found → no preview shown
+        // No src → no preview shown
         const previewImg = document.getElementById('galleri-preview-img');
         expect(previewImg.classList.contains('hidden')).toBe(true);
     });
 
-    it('should handle getDriveImageBlob returning null for editor preview', async () => {
+    it('should call resolveImagePreview with correct args', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -834,16 +834,12 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
                 active: true, order: 1, scale: 1, positionX: 50, positionY: 50, type: 'galleri'
             }
         ]);
-        findFileByName.mockResolvedValue({ id: 'file-id' });
-        getDriveImageBlob.mockResolvedValue(null);
         await editFn(2);
 
-        // Blob null → no preview
-        const previewImg = document.getElementById('galleri-preview-img');
-        expect(previewImg.classList.contains('hidden')).toBe(true);
+        expect(resolveImagePreview).toHaveBeenCalledWith('img.jpg', 'folder-123');
     });
 
-    it('should handle findFileByName error silently', async () => {
+    it('should render editor without crash when resolveImagePreview returns empty', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -855,14 +851,13 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
                 active: true, order: 1, scale: 1, positionX: 50, positionY: 50, type: 'galleri'
             }
         ]);
-        findFileByName.mockRejectedValue(new Error('fail'));
         await editFn(2);
 
         // Should not crash
         expect(document.getElementById('galleri-edit-title').value).toBe('T');
     });
 
-    it('should set preview image styles when itemPreviewSrc exists', async () => {
+    it('should set preview image styles when resolveImagePreview returns src', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -874,8 +869,7 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
                 active: true, order: 1, scale: 1.5, positionX: 30, positionY: 70, type: 'galleri'
             }
         ]);
-        findFileByName.mockResolvedValue({ id: 'img-id' });
-        getDriveImageBlob.mockResolvedValue('blob:preview');
+        resolveImagePreview.mockResolvedValue({ src: 'blob:preview', imageId: 'img-id' });
         await editFn(2);
 
         const previewImg = document.getElementById('galleri-preview-img');
@@ -936,8 +930,7 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
                 active: true, order: 1, scale: 1, positionX: 50, positionY: 50, type: 'galleri'
             }
         ]);
-        findFileByName.mockResolvedValue({ id: 'img-id' });
-        getDriveImageBlob.mockResolvedValue('blob:test');
+        resolveImagePreview.mockResolvedValue({ src: 'blob:test', imageId: 'img-id' });
         await editFn(2);
 
         const previewImg = document.getElementById('galleri-preview-img');
@@ -1104,14 +1097,15 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
 
         const dialog = document.getElementById('image-picker-modal');
         dialog.close = vi.fn();
-        getDriveImageBlob.mockResolvedValue('blob:uploaded');
 
         // Get the upload handler for the editor (second call to setupUploadHandler)
         const uploadCalls = setupUploadHandler.mock.calls;
         const editorUpload = uploadCalls[uploadCalls.length - 1][1];
         await editorUpload({ id: 'new-id', name: 'uploaded.jpg' });
 
-        expect(document.getElementById('galleri-edit-image').value).toBe('uploaded.jpg');
+        expect(handleImageSelected).toHaveBeenCalledWith(expect.objectContaining({
+            fileId: 'new-id', fileName: 'uploaded.jpg'
+        }));
         expect(dialog.close).toHaveBeenCalled();
     });
 
@@ -1137,7 +1131,7 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         expect(document.getElementById('galleri-edit-image').value).toBe('');
     });
 
-    it('should handle editor upload with null blob URL', async () => {
+    it('should call handleImageSelected from upload handler', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -1153,19 +1147,18 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
 
         const dialog = document.getElementById('image-picker-modal');
         dialog.close = vi.fn();
-        getDriveImageBlob.mockResolvedValue(null);
 
         const uploadCalls = setupUploadHandler.mock.calls;
         const editorUpload = uploadCalls[uploadCalls.length - 1][1];
         await editorUpload({ id: 'id', name: 'file.jpg' });
 
-        expect(document.getElementById('galleri-edit-image').value).toBe('file.jpg');
-        // Preview should remain hidden
-        const previewImg = document.getElementById('galleri-preview-img');
-        expect(previewImg.classList.contains('hidden')).toBe(true);
+        expect(handleImageSelected).toHaveBeenCalledWith(expect.objectContaining({
+            fileId: 'id', fileName: 'file.jpg'
+        }));
+        expect(dialog.close).toHaveBeenCalled();
     });
 
-    it('should handle image picker select with null blob URL', async () => {
+    it('should call handleImageSelected from image picker select', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -1182,16 +1175,15 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         const dialog = document.getElementById('image-picker-modal');
         dialog.showModal = vi.fn();
         dialog.close = vi.fn();
-        getDriveImageBlob.mockResolvedValue(null);
 
         document.getElementById('btn-galleri-pick-image').click();
         const onSelect = loadGallery.mock.calls[loadGallery.mock.calls.length - 1][1];
         await onSelect('img-id', 'file.jpg');
 
-        expect(document.getElementById('galleri-edit-image').value).toBe('file.jpg');
-        // Preview should remain hidden since blob is null
-        const previewImg = document.getElementById('galleri-preview-img');
-        expect(previewImg.classList.contains('hidden')).toBe(true);
+        expect(handleImageSelected).toHaveBeenCalledWith(expect.objectContaining({
+            fileId: 'img-id', fileName: 'file.jpg'
+        }));
+        expect(dialog.close).toHaveBeenCalled();
     });
 
     it('should handle "add new" button with newest not found in results', async () => {
@@ -1320,28 +1312,24 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         ]);
         await editFn(2);
 
+        const autoSaver = createAutoSaver.mock.results[0].value;
+
         // Test 'input' event on title (text input — has both 'change' and 'input' listeners)
         const titleInput = document.getElementById('galleri-edit-title');
         titleInput.value = 'NewTitle';
         titleInput.dispatchEvent(new Event('input'));
 
-        expect(showSaveBar).toHaveBeenCalledWith('changed', expect.stringContaining('Endringer oppdaget'));
+        expect(autoSaver.trigger).toHaveBeenCalled();
 
         // Test 'input' event on alt (text input)
-        showSaveBar.mockClear();
+        autoSaver.trigger.mockClear();
         const altInput = document.getElementById('galleri-edit-alt');
         altInput.value = 'NewAlt';
         altInput.dispatchEvent(new Event('input'));
-        expect(showSaveBar).toHaveBeenCalledWith('changed', expect.stringContaining('Endringer oppdaget'));
+        expect(autoSaver.trigger).toHaveBeenCalled();
     });
 
-    it('should update last-fetched time during verification', async () => {
-        vi.useFakeTimers();
-        // Add last-fetched element to DOM before loading module
-        const fetchedSpan = document.createElement('span');
-        fetchedSpan.id = 'galleri-last-fetched';
-        document.body.appendChild(fetchedSpan);
-
+    it('should pass correct timestampElId to verifySave', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -1356,15 +1344,13 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         await editFn(2);
 
         updateGalleriRow.mockResolvedValue();
-        getGalleriRaw.mockResolvedValue([{ rowIndex: 2, title: 'T' }]);
+        document.getElementById('galleri-edit-title').value = 'T';
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await saveFn();
 
-        const titleInput = document.getElementById('galleri-edit-title');
-        titleInput.value = 'T';
-        titleInput.dispatchEvent(new Event('change'));
-        await vi.advanceTimersByTimeAsync(1500);
-
-        expect(document.getElementById('galleri-last-fetched').textContent).toContain('24. feb');
-        vi.useRealTimers();
+        expect(verifySave).toHaveBeenCalledWith(expect.objectContaining({
+            timestampElId: 'galleri-last-fetched'
+        }));
     });
 
     it('should use default values for item with null scale/positionX/positionY', async () => {
@@ -1406,8 +1392,7 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
                 type: 'galleri'
             }
         ]);
-        findFileByName.mockResolvedValue({ id: 'file-id' });
-        getDriveImageBlob.mockResolvedValue('blob:test');
+        resolveImagePreview.mockResolvedValue({ src: 'blob:test', imageId: 'file-id' });
         await editFn(2);
 
         const previewImg = document.getElementById('galleri-preview-img');
@@ -1451,8 +1436,7 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         });
     });
 
-    it('should show saved bar and schedule hide after successful auto-save', async () => {
-        vi.useFakeTimers();
+    it('should pass saveFn that saves and resolves on success', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -1469,19 +1453,14 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         updateGalleriRow.mockResolvedValue();
         getGalleriRaw.mockResolvedValue([{ rowIndex: 2, title: 'Changed' }]);
 
-        const titleInput = document.getElementById('galleri-edit-title');
-        titleInput.value = 'Changed';
-        titleInput.dispatchEvent(new Event('change'));
-
-        await vi.advanceTimersByTimeAsync(1500);
+        document.getElementById('galleri-edit-title').value = 'Changed';
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await saveFn();
 
         expect(updateGalleriRow).toHaveBeenCalled();
-        expect(showSaveBar).toHaveBeenCalledWith('saved', expect.stringContaining('Lagret'));
-        vi.useRealTimers();
     });
 
-    it('should show error bar on auto-save failure', async () => {
-        vi.useFakeTimers();
+    it('should handle saveFn rejection on failure', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -1497,13 +1476,8 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
 
         updateGalleriRow.mockRejectedValue(new Error('fail'));
 
-        const titleInput = document.getElementById('galleri-edit-title');
-        titleInput.value = 'Changed';
-        titleInput.dispatchEvent(new Event('change'));
-
-        await vi.advanceTimersByTimeAsync(1500);
-        expect(showSaveBar).toHaveBeenCalledWith('error', expect.stringContaining('Feil ved lagring'));
-        vi.useRealTimers();
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await expect(saveFn()).rejects.toThrow('fail');
     });
 
     it('should handle module-inner becoming null during edit', async () => {
@@ -1527,7 +1501,6 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
     });
 
     it('should include type in auto-save data based on forsidebilde checkbox', async () => {
-        vi.useFakeTimers();
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -1548,14 +1521,11 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
         const checkbox = document.getElementById('galleri-edit-forsidebilde');
         expect(checkbox.checked).toBe(true);
 
-        // Trigger auto-save
-        const scaleInput = document.getElementById('galleri-edit-scale');
-        scaleInput.value = '1.5';
-        scaleInput.dispatchEvent(new Event('input'));
-        await vi.advanceTimersByTimeAsync(1500);
+        // Call saveFn directly to verify type is included
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await saveFn();
 
         expect(updateGalleriRow).toHaveBeenCalledWith('test-sheet', 3, expect.objectContaining({ type: 'forsidebilde' }));
-        vi.useRealTimers();
     });
 });
 
