@@ -14,11 +14,6 @@
 
 ## Backlog
 
-- [ ] **Tilbake-navigasjon fra editor til liste i admin**
-  - Når man redigerer et element (melding, bilde, tjeneste, tannlege) mangler det en enkel måte å navigere tilbake til listen man kom fra
-  - Legg til en tydelig «Tilbake til [liste]»-knapp/lenke øverst i editor-visningen
-  - Skal fungere for alle moduler: meldinger, galleri, tjenester, tannleger
-
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
   - Samme oppsett som test-siden, tilpasset produksjonsdomenet
   - SSL-sertifikat (ACM us-east-1), CloudFront-distribusjon med OAC, cache-policy, DNS-pekere
@@ -27,11 +22,12 @@
   - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
 
-- [ ] **Dobbelt linjeskift i markdown rendres ikke som mellomrom**
-  - Dobbelt linjeskift i `.md`-filer (f.eks. tjenestebeskrivelser) gir ikke visuelt mellomrom i preview eller på nettsiden
-  - Undersøk hvordan markdown parses og rendres (remark/rehype-pipeline i Astro)
-  - Finn ut om problemet er i parsingen, CSS (`p`-margins) eller noe annet
-  - Fiks slik at avsnittsskift gir tydelig visuelt mellomrom
+- [ ] **Dobbelt linjeskift i markdown rendres ikke som mellomrom** ([plan](docs/plan-markdown-linjeskift.md))
+  - Snarkdown lager `<br />` i stedet for `<p>`-tagger — CSS-margins treffer aldri
+  - Berører: meldinger på forsiden (`messageClient.js`) og admin-preview (`admin-editor-helpers.js`)
+  - Tjeneste-sider OK (bruker Astro's innebygde remark/rehype via `render()`)
+  - Løsning: Erstatt `snarkdown` med `marked` (standard CommonMark-parser)
+  - 5 steg: bytt dep, oppdater messageClient, oppdater admin-editor-helpers, oppdater tester, verifiser
 
 - [ ] **Sjekk at alle filer som kan testes er testet**
   - Gå gjennom alle kildefiler i `src/scripts/` og `src/pages/api/` og verifiser at de har tilhørende testfiler
@@ -67,6 +63,14 @@
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
 ## Fullført
+
+- [x] **Tilbake-navigasjon fra editor til liste i admin**
+  - Utvidet brødsmulen til tre nivåer: `← Dashboard / Meldinger / Redigerer melding`
+  - Modulnavnet blir klikkbart i editorvisning og fører tilbake til listen
+  - `setBreadcrumbEditor()` / `clearBreadcrumbEditor()` i admin-init.js
+  - Fjernet inkonsistente «Tilbake til listen»-knapper fra meldinger, tjenester, tannleger og bilder
+  - Beholdt «Avbryt»-knapp for nye elementer og «Lagre og gå tilbake» i bilder
+  - 816 enhetstester bestått, ≥80% branch coverage, 84 E2E bestått
 
 - [x] **Auto-lagring i admin (Meldinger og Tjenester)** ([plan](docs/plan-auto-lagring-admin.md))
   - Debounced auto-save (1500ms) med save bar for eksisterende meldinger og tjenester
