@@ -12,6 +12,12 @@
 
 ## Pågående
 
+- [ ] **Sjekk at alle filer som kan testes er testet** ([plan](docs/plan-sjekk-testdekning.md))
+  - Alle 26 testbare kildefiler har allerede testfiler — ingen hull funnet
+  - Hovedoppgave: heve branch coverage-marginen på 7 filer som ligger mellom 81–87%
+  - Prioritet A (3 filer nærmest 80%): content.config, admin-module-bilder, admin-module-tannleger
+  - Prioritet B (4 filer, 84–87%): admin-init, admin-module-tjenester, admin-dialog, admin-editor-helpers
+
 ## Backlog
 
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
@@ -21,18 +27,17 @@
   - Oppdater deploy-workflow for prod-bucket
   - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
-- [ ] **Sjekk at alle filer som kan testes er testet** ([plan](docs/plan-sjekk-testdekning.md))
-  - Alle 26 testbare kildefiler har allerede testfiler — ingen hull funnet
-  - Hovedoppgave: heve branch coverage-marginen på 7 filer som ligger mellom 81–87%
-  - Prioritet A (3 filer nærmest 80%): content.config, admin-module-bilder, admin-module-tannleger
-  - Prioritet B (4 filer, 84–87%): admin-init, admin-module-tjenester, admin-dialog, admin-editor-helpers
-
 - [ ] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/plan-sikkerhetssjekk.md))
   - Det er gjort en sikkerhetsgjennomgang tidligere, men mye kode er endret siden da
   - CloudFront-headere allerede håndtert (CloudFront test ferdig, prod følger oppgave 1)
   - Nye funn: HTML-attributt-escaping mangler i admin-template literals
   - 6 steg: HTML-escaping (M1), filopplasting (M2), input-validering (M3), API-nøkkel (L1), tester, dokumentasjon
   - Steg 1–4 uavhengige, steg 5 avhenger av 1+2+3, steg 6 sist
+
+- [ ] **Bekreft tilgangskontroll på adminsiden**
+  - Verifiser at brukere kun får tilgang til moduler de har tilgang til på Google Disk
+  - Test kombinasjoner: kun meldinger, kun tjenester, kun «innstillinger + tannleger + galleri», osv.
+  - Bekreft at bruker logges ut hvis det ikke er tilgang til noe i det hele tatt
 
 - [ ] **Kodelesbarhet — ny gjennomgang og forenkling**
   - Analyser dagens tilstand av kodebasen etter tidligere refaktoreringer
