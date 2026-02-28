@@ -13,7 +13,11 @@
 
 ## Pågående
 
-*(Ingen oppgaver pågår)*
+- [ ] **Slettede galleri-bilder og tannleger fjernes ikke fra Google Drive** ([plan](docs/plan-drive-sletting-galleri.md))
+  - Galleri: `deleteGalleriBilde()` sletter kun Sheet-rad — Drive-filen blir liggende
+  - Tannleger: `deleteTannlege()` har identisk bug — profilbilde slettes ikke fra Drive
+  - Orphan-deteksjon: vis advarsel om filer i Drive som ikke finnes i Sheet
+  - **Fix:** Hent bilde-filnavn *før* sletting, finn Drive-fil-ID, kall `deleteFile()`, deretter slett Sheet-rad
 
 ## Backlog
 
@@ -24,16 +28,10 @@
   - Fase 4: Verifisering av alt
   - **Status:** Nytt ACM-sertifikat bestilt, venter på godkjenning. Alt kjøres gjennom CloudFront i prod.
 
-- [ ] **GitHub Copilot som PR-reviewer** ([plan](docs/plan-copilot-pr-reviewer.md))
-  - Sett opp Copilot code review på pull requests
-  - Copilot må godkjenne (eller komme med forbedringer) før PR kan merges
-  - Legg til som required status check / required reviewer i branch protection rules
-
-- [ ] **Slettede galleri-bilder og tannleger fjernes ikke fra Google Drive** ([plan](docs/plan-drive-sletting-galleri.md))
-  - Galleri: `deleteGalleriBilde()` sletter kun Sheet-rad — Drive-filen blir liggende
-  - Tannleger: `deleteTannlege()` har identisk bug — profilbilde slettes ikke fra Drive
-  - Orphan-deteksjon: vis advarsel om filer i Drive som ikke finnes i Sheet
-  - **Fix:** Hent bilde-filnavn *før* sletting, finn Drive-fil-ID, kall `deleteFile()`, deretter slett Sheet-rad
+- [ ] **AI-drevet PR-review med Gemini Code Assist** ([plan](docs/plan-copilot-pr-reviewer.md))
+  - Installer Gemini Code Assist (gratis GitHub App) fra Marketplace
+  - Fjern auto-approve i `auto-pr.yml`, behold auto-merge
+  - Valgfritt: branch protection med required approval
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plan-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
