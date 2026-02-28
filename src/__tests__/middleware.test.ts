@@ -35,13 +35,13 @@ describe('src/middleware.ts – HTTP security headers', () => {
         expect(csp).toContain("default-src 'self'");
     });
 
-    it('CSP inneholder nødvendige Google-domener for kart og auth', async () => {
+    it('CSP inneholder nødvendige domener for kart og auth', async () => {
         const handler = await importMiddleware();
         const response = await handler({}, makeNext());
         const csp = response.headers.get('Content-Security-Policy')!;
 
-        // Google Maps embed (iframe)
-        expect(csp).toContain('https://www.google.com');
+        // Leaflet/OSM kart-tiles (CartoDB Voyager)
+        expect(csp).toContain('https://basemaps.cartocdn.com');
         // Google OAuth og GIS
         expect(csp).toContain('https://accounts.google.com');
         // GAPI scripts
