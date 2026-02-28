@@ -27,12 +27,6 @@
   - Oppdater deploy-workflow for prod-bucket
   - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
 
-- [ ] **Sjekk hvordan sidene fungerer på iPhone** ([plan](docs/plan-sjekk-iphone.md))
-  - Legg til Mobile Safari (iPhone 14) i Playwright-config
-  - Kjør testsuite, fiks Safari-spesifikke feil
-  - Viewport/safe-area forbedringer, dialog-fallback, sticky-verifisering
-  - 6 steg: Playwright-config, testfeil-fiks, viewport, dialog, sticky, kvalitetssjekk
-
 - [ ] **Flere domener på samme CloudFront (hybrid)** ([plan](docs/plan-multi-domene-cloudfront.md))
   - 3 www-domener direkte på CloudFront (ingen redirect), 3 apex redirecter til sin egen www-variant
   - Ett ACM-sertifikat med alle 6 domener, DNS hos eksisterende registrar

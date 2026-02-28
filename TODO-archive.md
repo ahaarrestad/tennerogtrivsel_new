@@ -2,6 +2,13 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Sjekk hvordan sidene fungerer på iPhone** ([plan](docs/archive/plan-sjekk-iphone.md))
+  - Mobile Safari (iPhone 14) lagt til som 4. Playwright-prosjekt
+  - Alle 9 relevante E2E-tester bestod uten feil — ingen Safari-spesifikke bugs
+  - Viewport meta oppdatert med `initial-scale=1` i Layout.astro og admin/index.astro
+  - `<dialog>` og sticky-posisjonering fungerer i WebKit (Safari 16+)
+  - 63 E2E bestått (4 prosjekter), 907 enhetstester bestått
+
 - [x] **Estimer kostnader for nettsiden (månedlig / årlig)**
   - AWS S3: ~1 kr/mnd (7 MB lagring, ~2 000 requests — neglisjerbart)
   - AWS CloudFront: 0 kr (permanent gratis-kvote: 1 TB/mnd, 10M requests)
