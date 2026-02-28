@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Slettede galleri-bilder og tannleger fjernes ikke fra Google Drive** ([plan](docs/archive/plan-drive-sletting-galleri.md))
+  - `deleteGalleriBilde()` og `deleteTannlege()` sletter nå Drive-fil etter Sheet-rad (best-effort)
+  - Asynkron toveis konsistenssjekk i admin-panelet viser advarsel ved orphan-filer
+  - `sync-data.js`: nullstiller image-felt i JSON når fil mangler i Drive, samlet konsistensrapport i loggen
+  - Omfattende tester for alle nye kodestier (delete + konsistenssjekk)
+
 - [x] **Galleri krever tilgang til både Google Sheet og Bilder-mappen** ([plan](docs/archive/plan-galleri-tilgangskontroll.md))
   - Ny dedikert `BILDER_FOLDER` miljøvariabel (`PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID`)
   - `enforceAccessControl()` oppdatert med multi-ressurs-sjekk: krever tilgang til både `SHEET_ID` og `BILDER_FOLDER`
