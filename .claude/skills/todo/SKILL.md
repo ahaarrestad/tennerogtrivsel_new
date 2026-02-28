@@ -3,7 +3,7 @@ name: todo
 model: sonnet
 description: "Vis og administrer prosjektets TODO-liste (TODO.md). Bruk når brukeren sier 'todo', 'TODO', 'oppgaveliste', 'vis oppgaver', 'backlog', 'hva gjenstår', 'neste oppgave', 'legg til oppgave', 'ny oppgave', 'flytt oppgave', 'marker ferdig', eller spør om status på oppgaver."
 disable-model-invocation: false
-allowed-tools: ["Read(TODO.md)", "Edit(TODO.md)", "Glob(docs/**)", "Read(docs/**)"]
+allowed-tools: ["Read(TODO.md)", "Read(TODO-archive.md)", "Edit(TODO.md)", "Edit(TODO-archive.md)", "Glob(docs/**)", "Read(docs/**)"]
 ---
 
 # TODO-liste Skill
@@ -34,8 +34,7 @@ Hvis brukeren bare sier "todo", "oppgaveliste" eller lignende uten spesifikk han
 2. Kort tittel for andre oppgave
 3. ...
 
-### Fullført (Y oppgaver)
-- Vis kun antall, ikke hele listen
+Fullført historikk: se TODO-archive.md
 ```
 
 Hold det kort og oversiktlig. Ikke gjenta hele filen.
@@ -50,9 +49,10 @@ Hvis brukeren vil legge til en ny oppgave:
 2. Spør om oppgaven skal i **Backlog** eller **Pågående** (om ikke spesifisert)
 3. Legg til oppgaven i riktig seksjon med format:
    ```markdown
-   - [ ] **Kort tittel**
+   - [ ] **Kort tittel** ([plan](docs/plan-navn.md))
      - Beskrivelse/detaljer som underpunkter
    ```
+   Plan-lenken legges til når planen er opprettet. Oppgaver uten plan ennå utelater lenken.
 4. Bekreft at oppgaven er lagt til
 
 ---
@@ -76,9 +76,10 @@ Når en oppgave er ferdig:
 
 1. Les `TODO.md`
 2. Endre `- [ ]` til `- [x]` på oppgaven
-3. Flytt oppgaven fra **Pågående** til **Fullført**
-4. Legg til et kort sammendrag av hva som ble gjort (som underpunkter), basert på kontekst fra samtalen
-5. Bekreft oppdateringen
+3. Legg til et kort sammendrag av hva som ble gjort (som underpunkter), basert på kontekst fra samtalen
+4. Flytt den ferdige oppgaven fra `TODO.md` til `TODO-archive.md`
+5. Hvis oppgaven har en planfil i `docs/`, flytt den til `docs/archive/` og oppdater lenken
+6. Bekreft oppdateringen
 
 ---
 
@@ -95,7 +96,6 @@ Hvis brukeren vil legge til notater, deloppgaver eller endre beskrivelse:
 ## Regler
 
 - **Bevar formatering**: TODO.md bruker et spesifikt format med `- [ ]`/`- [x]`, bold titler og innrykk. Bevar dette.
-- **Ikke slett fullførte oppgaver**: De er historikk og skal forbli i Fullført-seksjonen.
 - **Arbeidsflyt-seksjonen øverst skal ikke endres**: Den beskriver prosessen og er fast.
-- **Planer under `/docs`**: Hvis en oppgave har en plan, link til den (f.eks. `([plan](docs/plan-navn.md))`).
+- **Følg arbeidsflyten i TODO.md** for plan-oppretting, arkivering og øvrige prosedyrer.
 - **Spør ved tvetydighet**: Hvis det er uklart hvilken oppgave brukeren refererer til, list opp alternativene og spør.

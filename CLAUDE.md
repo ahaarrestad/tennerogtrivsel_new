@@ -2,7 +2,7 @@
 
 ## TODO-liste
 
-Prosjektet har en `TODO.md` i roten som sporer oppgaver. Før en oppgave startes, lag alltid en plan og still avklarende spørsmål. Hold listen oppdatert underveis — flytt oppgaver mellom seksjonene og noter fremgang.
+Prosjektets oppgaver spores i `TODO.md`. Følg arbeidsflyten som er beskrevet der.
 
 ## Kvalitetssikring (Quality Gates)
 
