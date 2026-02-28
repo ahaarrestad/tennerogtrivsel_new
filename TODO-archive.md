@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Bekreft at det ikke brukes cookies på siden**
+  - Ingen `document.cookie`, `Set-Cookie`-headere eller Astro cookies API i kodebasen
+  - Autentisering bruker localStorage/sessionStorage, ikke cookies
+  - Tredjepartsscripts (Google OAuth, EasyMDE, Flatpickr) setter ingen cookies
+  - Google Maps embed-iframe kan sette sandboxede tredjepartscookies, men disse påvirker ikke siden
+
 - [x] **Slettede galleri-bilder og tannleger fjernes ikke fra Google Drive** ([plan](docs/archive/plan-drive-sletting-galleri.md))
   - `deleteGalleriBilde()` og `deleteTannlege()` sletter nå Drive-fil etter Sheet-rad (best-effort)
   - Asynkron toveis konsistenssjekk i admin-panelet viser advarsel ved orphan-filer
