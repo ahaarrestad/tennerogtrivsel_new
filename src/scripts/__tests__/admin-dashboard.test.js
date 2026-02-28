@@ -1615,7 +1615,7 @@ describe('admin-dashboard.js', () => {
             expect(window.location.href).toContain('access_denied');
         });
 
-        it('should show bilder card when user has access to sheet', async () => {
+        it('should show bilder card when user has access to sheet (no BILDER_FOLDER configured)', async () => {
             adminClient.checkMultipleAccess.mockResolvedValue({ 's': true });
 
             await enforceAccessControl({ SHEET_ID: 's' });
@@ -1628,6 +1628,24 @@ describe('admin-dashboard.js', () => {
             adminClient.checkMultipleAccess.mockResolvedValue({ 's': false });
 
             await enforceAccessControl({ SHEET_ID: 's' });
+
+            const cardBilder = document.getElementById('card-bilder');
+            expect(cardBilder.style.display).toBe('none');
+        });
+
+        it('should show bilder card when user has access to both SHEET_ID and BILDER_FOLDER', async () => {
+            adminClient.checkMultipleAccess.mockResolvedValue({ 's': true, 'b': true });
+
+            await enforceAccessControl({ SHEET_ID: 's', BILDER_FOLDER: 'b' });
+
+            const cardBilder = document.getElementById('card-bilder');
+            expect(cardBilder.style.display).toBe('flex');
+        });
+
+        it('should hide bilder card when user has SHEET_ID but not BILDER_FOLDER', async () => {
+            adminClient.checkMultipleAccess.mockResolvedValue({ 's': true, 'b': false });
+
+            await enforceAccessControl({ SHEET_ID: 's', BILDER_FOLDER: 'b' });
 
             const cardBilder = document.getElementById('card-bilder');
             expect(cardBilder.style.display).toBe('none');

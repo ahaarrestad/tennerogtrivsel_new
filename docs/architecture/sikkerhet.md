@@ -42,7 +42,7 @@ Admin-panelet bruker Google Drive-deling som tilgangsmodell. Brukeren autentiser
 | Tjenester | `TJENESTER_FOLDER` | Enkel sjekk |
 | Meldinger | `MELDINGER_FOLDER` | Enkel sjekk |
 | Tannleger | `TANNLEGER_FOLDER` + `SHEET_ID` | Begge må være tilgjengelige |
-| Bilder | `SHEET_ID` | Enkel sjekk |
+| Bilder | `SHEET_ID` + `BILDER_FOLDER` | Begge må være tilgjengelige (fallback til kun `SHEET_ID` hvis `BILDER_FOLDER` ikke er konfigurert) |
 
 - Kort vises (`display: flex`) eller skjules (`display: none`) basert på tilgangssjekk
 - Hvis brukeren ikke har tilgang til noen ressurser, logges de ut og sendes til `/?access_denied=true`
