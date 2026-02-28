@@ -19,11 +19,6 @@
   - ~~Steg 5 for TEST: Verifiser fullt TEST-oppsett — cache-headere, S3 eu-north-1, test2.aarrestad.com + test3.aarrestad.com, og SSL-sertifikater~~ ✓
   - Steg 1–4 for PROD: gjenstår (tilsvarende oppsett, inkl. verifisering)
 
-- [ ] **Flaky tests — sporadiske testfeil** ([plan](docs/plan-flaky-tests.md))
-  - ~~Steg 1: Fjern `npm audit` fra CI~~ ✓
-  - ~~Steg 2: Legg til `test:e2e:repeat`-script~~ ✓
-  - Steg 3: Verifiser med `--repeat-each=10`
-
 ## Backlog
 
 - [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))

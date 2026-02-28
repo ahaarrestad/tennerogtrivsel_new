@@ -3,9 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 
 test.describe('Universell utforming (UU)', () => {
   test('forsiden skal ikke ha kritiske UU-feil', async ({ page }) => {
-    await page.goto('/');
-    
-    // Vent på at innholdet er lastet
+    await page.goto('/', { waitUntil: 'networkidle' });
     await page.waitForSelector('main');
 
     const accessibilityScanResults = await new AxeBuilder({ page })
@@ -25,7 +23,7 @@ test.describe('Universell utforming (UU)', () => {
 
   for (const { path, name } of standaloneSider) {
     test(`${name} (${path}) skal ikke ha kritiske UU-feil`, async ({ page }) => {
-      await page.goto(path);
+      await page.goto(path, { waitUntil: 'networkidle' });
       await page.waitForSelector('main');
 
       const results = await new AxeBuilder({ page })
@@ -37,12 +35,12 @@ test.describe('Universell utforming (UU)', () => {
   }
 
   test('tjeneste-sider skal ikke ha kritiske UU-feil', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'networkidle' });
     await page.setViewportSize({ width: 1280, height: 800 });
-    
+
     // Naviger til første tjeneste
     await page.locator('#tjenester .card-base').first().click();
-    await page.waitForSelector('main');
+    await page.waitForLoadState('networkidle');
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
