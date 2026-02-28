@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Lag design guide for admin-grensesnittet** ([plan](docs/archive/plan-admin-design-guide.md))
+  - Opprettet `docs/admin-design-guide.md` — komplett referansedokument for admin-panelets design-system
+  - Dekker: 5 admin-fargetokens (slate-basert), 14 seksjonar inkl. typografi, layout, kort, knapper, skjema, status/varsler, nav, animasjoner, modaler, a11y, modulmønster, login
+  - Dokumenterer ~40 CSS-klasser, 3 keyframe-animasjoner, toast/confirm/banner JS-API
+  - Ren dokumentasjon — ingen kodeendringer
+
 - [x] **Sjekk hvordan sidene fungerer på iPhone** ([plan](docs/archive/plan-sjekk-iphone.md))
   - Mobile Safari (iPhone 14) lagt til som 4. Playwright-prosjekt
   - Alle 9 relevante E2E-tester bestod uten feil — ingen Safari-spesifikke bugs

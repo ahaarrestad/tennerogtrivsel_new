@@ -33,11 +33,6 @@
   - 9 steg: ACM-sertifikat, DNS-validering, CloudFront CNAMEs, www DNS-records, apex-redirect, Google OAuth origins, Maps API referrere, fjern S3-buckets, verifisering
   - Kostnad: $0/mnd ekstra
 
-- [ ] **Lag design guide for admin-grensesnittet** ([plan](docs/plan-admin-design-guide.md))
-  - Dokumenter hvordan admin-panelet ser ut i dag: fargetokens, klasser, mønstre og komponenter
-  - Tilsvarende `docs/design-guide.md` for den offentlige siden, men for admin
-  - Dekk: admin CSS-variabler (`--admin-*`), CSS-klasser (`admin-card`, `admin-icon-btn`, etc.), status-klasser, layout-mønstre, skjemafelter, save bar, toast/dialogs
-
 - [ ] **Flaky tests — sporadiske testfeil** ([plan](docs/plan-flaky-tests.md))
   - Undersøkt: ingen reelle flaky tester funnet — 3 siste CI-feil skyldes npm audit (2×) og en reell bug (1×)
   - Steg 1: Gjør `npm audit` ikke-blokkerende (`continue-on-error: true`)
