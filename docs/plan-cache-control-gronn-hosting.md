@@ -1,6 +1,6 @@
 # Plan: Cache-Control og grønn hosting
 
-> **Status: BACKLOG** — ikke startet
+> **Status: PÅGÅENDE** — TEST ferdig (steg 1–4 verifisert ✓), PROD gjenstår
 
 ## Kontekst
 

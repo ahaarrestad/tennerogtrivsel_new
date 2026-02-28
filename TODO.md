@@ -13,7 +13,10 @@
 
 ## Pågående
 
-(Ingen oppgaver pågår)
+- [ ] **Cache-Control og grønn hosting — gjør siden nesten «karbon-negativ»** ([plan](docs/plan-cache-control-gronn-hosting.md))
+  - ~~Steg 1–3 for TEST: Cache-Control, invalidering, verifisering~~ ✓
+  - ~~Steg 4 for TEST: Regionflytt til eu-north-1~~ ✓ (manuelt)
+  - Steg 1–4 for PROD: gjenstår
 
 ## Backlog
 
@@ -29,14 +32,6 @@
   - Kjør testsuite, fiks Safari-spesifikke feil
   - Viewport/safe-area forbedringer, dialog-fallback, sticky-verifisering
   - 6 steg: Playwright-config, testfeil-fiks, viewport, dialog, sticky, kvalitetssjekk
-
-- [ ] **Cache-Control og grønn hosting — gjør siden nesten «karbon-negativ»** ([plan](docs/plan-cache-control-gronn-hosting.md))
-  - Splitt S3-sync i tre kommandoer med passende Cache-Control-headere
-  - Hashed assets (`/_astro/*`) og fonter: `immutable, max-age=31536000` (1 år)
-  - HTML/API/øvrig: `max-age=3600, stale-while-revalidate=86400` (1t frisk, 24t stale)
-  - Smartere CloudFront-invalidering — kun ikke-hashed innhold (skip `/_astro/*` og `/fonts/*`)
-  - Valgfritt steg 4: flytt S3-bucket til eu-north-1 (Stockholm) — ny bucket, OAC-policy, pek CloudFront, oppdater workflow, slett gammel
-  - 3+1 steg: deploy-workflow, invalidering, verifisering, (valgfritt) regionflytt
 
 - [ ] **Flere domener på samme CloudFront (hybrid)** ([plan](docs/plan-multi-domene-cloudfront.md))
   - 3 www-domener direkte på CloudFront (ingen redirect), 3 apex redirecter til sin egen www-variant
