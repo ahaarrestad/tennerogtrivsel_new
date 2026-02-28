@@ -37,32 +37,6 @@ export async function getSiteSettings() {
         const entries = await getCollection('innstillinger');
         const collectionEntries = Object.fromEntries(entries.map(entry => [entry.id, entry.data.value]));
 
-        const defaultKeys = Object.keys(HARD_DEFAULTS);
-        const sheetKeys = Object.keys(collectionEntries);
-
-        // 1. Sjekk for nøkler i Sheets som ikke finnes i defaults (ukjente innstillinger)
-        sheetKeys.forEach(key => {
-            if (!HARD_DEFAULTS.hasOwnProperty(key)) {
-                const msg = `[Settings] ⚠️ Ukjent nøkkel funnet i Google Sheets: "${key}". Denne blir ignorert av systemet.`;
-                if (process.env.GITHUB_ACTIONS) {
-                    console.log(`::warning title=Google Sheets Error::${msg}`);
-                } else {
-                    console.warn(msg);
-                }
-            }
-        });
-
-        // 2. Sjekk for defaults som IKKE overstyres (bruker fallback)
-        defaultKeys.forEach(key => {
-            if (!collectionEntries.hasOwnProperty(key)) {
-                const msg = `[Settings] ℹ️ Bruker hardkodet standardverdi for "${key}" (mangler i Google Sheets).`;
-                // Vi logger dette som info lokalt, men hopper over det som advarsel på GitHub for å unngå støy
-                if (!process.env.GITHUB_ACTIONS) {
-                    console.info(msg);
-                }
-            }
-        });
-
         // Slå sammen hardkodede defaults med de fra innstillinger-collection
         return {
             ...HARD_DEFAULTS,

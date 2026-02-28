@@ -85,21 +85,13 @@ describe('getSiteSettings', () => {
         expect(HARD_DEFAULTS).toHaveProperty('tannlegerTittel', 'Våre Tannleger');
     });
 
-    it('should log warning in GitHub Actions format when GITHUB_ACTIONS is set', async () => {
-        const originalEnv = process.env.GITHUB_ACTIONS;
-        process.env.GITHUB_ACTIONS = 'true';
-        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-        
-        const collectionData = [
-            { id: 'ukjentNøkkel', data: { value: 'verdi' } },
-        ];
-        (getCollection as vi.Mock).mockResolvedValueOnce(collectionData);
+});
 
-        await getSiteSettings();
-
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('::warning'));
-        
-        consoleLogSpy.mockRestore();
-        process.env.GITHUB_ACTIONS = originalEnv;
+describe('HARD_DEFAULT_KEYS synkronisering', () => {
+    it('HARD_DEFAULT_KEYS i sync-data.js skal matche HARD_DEFAULTS i getSettings.ts', async () => {
+        const { HARD_DEFAULT_KEYS } = await import('../../scripts/sync-data.js');
+        const defaultKeys = Object.keys(HARD_DEFAULTS).sort();
+        const syncKeys = [...HARD_DEFAULT_KEYS].sort();
+        expect(syncKeys).toEqual(defaultKeys);
     });
 });
