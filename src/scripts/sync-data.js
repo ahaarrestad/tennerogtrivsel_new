@@ -79,6 +79,9 @@ function logWarning(title, message) {
     }
 }
 
+// Samler warnings for oppsummering etter sync
+const syncWarnings = { galleri: [], tannleger: [] };
+
 /**
  * Beregner MD5-hash for en lokal fil
  */
@@ -164,10 +167,12 @@ async function syncTannleger() {
             
             const { scale, positionX, positionY } = parseImageConfig(skala, posX, posY);
 
+            let imageFound = false;
             if (bildeFil) {
                 try {
                     const destinationPath = path.join(config.paths.tannlegerAssets, bildeFil);
-                    await downloadImageIfNeeded(bildeFil, config.tannlegerFolderId, destinationPath, 'Bilde');
+                    imageFound = await downloadImageIfNeeded(bildeFil, config.tannlegerFolderId, destinationPath, 'Bilde');
+                    if (!imageFound) syncWarnings.tannleger.push(bildeFil);
                 } catch (imgErr) {
                     logWarning('Download Error', `Feil ved behandling av bilde ${bildeFil}: ${imgErr.message}`);
                 }
@@ -178,7 +183,7 @@ async function syncTannleger() {
                 name: navn,
                 title: tittel,
                 description: beskrivelse,
-                image: bildeFil,
+                image: imageFound ? bildeFil : '',
                 imageConfig: {
                     scale,
                     positionX,
@@ -445,10 +450,12 @@ async function syncGalleri() {
             const order = (!isNaN(parsedOrder)) ? parsedOrder : 99;
 
             // Forsidebilde-filen lastes ned av syncForsideBilde(), ikke her
+            let imageFound = isForsidebilde; // forsidebilde håndteres separat
             if (bildeFil && !isForsidebilde) {
                 try {
                     const destinationPath = path.join(config.paths.galleriAssets, bildeFil);
-                    await downloadImageIfNeeded(bildeFil, folderId, destinationPath, 'Galleribilde');
+                    imageFound = await downloadImageIfNeeded(bildeFil, folderId, destinationPath, 'Galleribilde');
+                    if (!imageFound) syncWarnings.galleri.push(bildeFil);
                 } catch (imgErr) {
                     logWarning('Download Error', `Feil ved behandling av galleribilde ${bildeFil}: ${imgErr.message}`);
                 }
@@ -457,7 +464,7 @@ async function syncGalleri() {
             return {
                 id: (tittel || bildeFil || 'galleri').toLowerCase().replace(/\s+/g, '-'),
                 title: tittel || '',
-                image: bildeFil || '',
+                image: imageFound ? (bildeFil || '') : '',
                 altText: altTekst || '',
                 order,
                 type: rowType,
@@ -536,6 +543,8 @@ async function syncInnstillinger() {
 // --- KJØRER ALT ---
 
 async function runSync() {
+    syncWarnings.galleri = [];
+    syncWarnings.tannleger = [];
     const config = getConfig();
 
     // Sjekk for påkrevde miljøvariabler
@@ -579,6 +588,15 @@ async function runSync() {
         // 5. Synkroniser alle markdown-samlinger fra mapper
         for (const col of config.collections) {
             await syncMarkdownCollection(col);
+        }
+
+        // Samlet konsistensrapport
+        const hasWarnings = syncWarnings.galleri.length > 0 || syncWarnings.tannleger.length > 0;
+        if (hasWarnings) {
+            const lines = ['Konsistenssjekk:'];
+            lines.push(`  Galleri: ${syncWarnings.galleri.length} bilde(r) i Sheet mangler i Drive${syncWarnings.galleri.length > 0 ? ` (${syncWarnings.galleri.join(', ')})` : ''}`);
+            lines.push(`  Tannleger: ${syncWarnings.tannleger.length} manglende bilde(r)${syncWarnings.tannleger.length > 0 ? ` (${syncWarnings.tannleger.join(', ')})` : ''}`);
+            logWarning('Konsistenssjekk', lines.join(' | '));
         }
 
         console.log('✨ Alt er synkronisert!');

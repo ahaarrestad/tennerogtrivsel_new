@@ -1,7 +1,8 @@
 import DOMPurify from 'dompurify';
 import {
     getSheetParentFolder, getGalleriRaw, updateGalleriRow, addGalleriRow,
-    deleteGalleriRowPermanently, setForsideBildeInGalleri, migrateForsideBildeToGalleri
+    deleteGalleriRowPermanently, setForsideBildeInGalleri, migrateForsideBildeToGalleri,
+    findFileByName, deleteFile, listImages
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { loadGallery, setupUploadHandler } from './admin-gallery.js';
@@ -302,8 +303,22 @@ export async function loadBilderModule() {
         const deleteGalleriBilde = async (rowIndex, title) => {
             if (!await showConfirm(`Vil du slette «${title}» permanent? Dette kan ikke angres.`, { destructive: true })) return;
             try {
+                const galleriItems = await getGalleriRaw(SHEET_ID);
+                const item = galleriItems.find(g => g.rowIndex === rowIndex);
+                const imageName = item?.image;
+
                 await deleteGalleriRowPermanently(SHEET_ID, rowIndex);
-                showDeletionToast(title, 'Bildet ble permanent slettet fra regnearket.');
+
+                if (imageName) {
+                    try {
+                        const file = await findFileByName(imageName, parentFolderId);
+                        if (file) await deleteFile(file.id);
+                    } catch (driveErr) {
+                        console.warn('[Admin] Kunne ikke slette Drive-fil:', driveErr);
+                    }
+                }
+
+                showDeletionToast(title, 'Bildet ble slettet fra regnearket og lagt i Drive-papirkurven.');
                 reloadGalleriListe();
             } catch (e) {
                 showToast('Kunne ikke slette bildet: ' + e.message, 'error');
@@ -354,6 +369,35 @@ export async function loadBilderModule() {
         };
 
         reloadGalleriListe();
+
+        // Asynkron konsistenssjekk (best-effort, ikke-blokkerende)
+        (async () => {
+            try {
+                const [sheetItems, driveFiles] = await Promise.all([
+                    getGalleriRaw(SHEET_ID),
+                    listImages(parentFolderId)
+                ]);
+                const driveFileNames = new Set(driveFiles.map(f => f.name));
+                const sheetFileNames = new Set(sheetItems.map(item => item.image).filter(Boolean));
+
+                const orphanedInDrive = driveFiles.filter(f => !sheetFileNames.has(f.name));
+                const missingFromDrive = sheetItems.filter(item => item.image && !driveFileNames.has(item.image));
+
+                const container = document.getElementById('galleri-liste-container');
+                if (!container) return;
+
+                if (missingFromDrive.length > 0) {
+                    const names = missingFromDrive.map(item => `«${item.title || 'Uten tittel'}» → ${item.image}`).join(', ');
+                    showToast(`⚠ ${missingFromDrive.length} rad(er) refererer bilder som ikke finnes i Drive: ${names}`, 'warning');
+                }
+                if (orphanedInDrive.length > 0) {
+                    const names = orphanedInDrive.map(f => f.name).join(', ');
+                    showToast(`ℹ ${orphanedInDrive.length} bilde(r) i Drive-mappen er ikke koblet til noen rad: ${names}`, 'info');
+                }
+            } catch {
+                // Best-effort — feiler den, vises ingen advarsel
+            }
+        })();
 
         // "Legg til bilde" – open image picker directly
         document.getElementById('btn-new-galleribilde')?.addEventListener('click', async () => {

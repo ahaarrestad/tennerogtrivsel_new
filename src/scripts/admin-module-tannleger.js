@@ -1,6 +1,7 @@
 import {
     updateTannlegeRow, addTannlegeRow, deleteTannlegeRowPermanently,
-    backupToSlettetSheet, getTannlegerRaw
+    backupToSlettetSheet, getTannlegerRaw,
+    findFileByName, deleteFile, listImages
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { loadGallery, setupUploadHandler } from './admin-gallery.js';
@@ -13,7 +14,7 @@ import {
 } from './admin-editor-helpers.js';
 
 async function deleteTannlege(rowIndex, name) {
-    const { SHEET_ID } = getAdminConfig();
+    const { SHEET_ID, TANNLEGER_FOLDER } = getAdminConfig();
     if (await showConfirm(`Vil du slette «${name}» permanent? Dette kan ikke angres.`, { destructive: true })) {
         try {
             const allRows = await getTannlegerRaw(SHEET_ID);
@@ -22,10 +23,22 @@ async function deleteTannlege(rowIndex, name) {
                 await backupToSlettetSheet(SHEET_ID, 'tannlege', rowData.name, JSON.stringify(rowData));
             }
             await deleteTannlegeRowPermanently(SHEET_ID, rowIndex);
+
+            // Drive-sletting (best-effort)
+            const imageName = rowData?.image;
+            if (imageName) {
+                try {
+                    const file = await findFileByName(imageName, TANNLEGER_FOLDER);
+                    if (file) await deleteFile(file.id);
+                } catch (driveErr) {
+                    console.warn('[Admin] Kunne ikke slette Drive-fil:', driveErr);
+                }
+            }
+
             reloadTannleger();
             showDeletionToast(name,
-                'Raden er permanent fjernet fra tannleger-arket. En sikkerhetskopi finnes i «Slettet»-fanen i Google Sheets ' +
-                'og kan kopieres tilbake manuelt ved behov.');
+                'Profilen er slettet fra regnearket og bildet lagt i Drive-papirkurven. ' +
+                'En sikkerhetskopi finnes i «Slettet»-fanen.');
         } catch (e) { showToast("Kunne ikke slette profilen.", "error"); }
     }
 }
@@ -276,6 +289,34 @@ function reloadTannleger() {
     window.clearBreadcrumbEditor?.();
     const { SHEET_ID, TANNLEGER_FOLDER } = getAdminConfig();
     loadTannlegerModule(SHEET_ID, editTannlege, deleteTannlege, TANNLEGER_FOLDER, toggleTannlegeActive);
+
+    // Asynkron konsistenssjekk (best-effort, ikke-blokkerende)
+    if (TANNLEGER_FOLDER) {
+        (async () => {
+            try {
+                const [sheetItems, driveFiles] = await Promise.all([
+                    getTannlegerRaw(SHEET_ID),
+                    listImages(TANNLEGER_FOLDER)
+                ]);
+                const driveFileNames = new Set(driveFiles.map(f => f.name));
+                const sheetFileNames = new Set(sheetItems.map(item => item.image).filter(Boolean));
+
+                const orphanedInDrive = driveFiles.filter(f => !sheetFileNames.has(f.name));
+                const missingFromDrive = sheetItems.filter(item => item.image && !driveFileNames.has(item.image));
+
+                if (missingFromDrive.length > 0) {
+                    const names = missingFromDrive.map(item => `«${item.name || 'Uten navn'}» → ${item.image}`).join(', ');
+                    showToast(`⚠ ${missingFromDrive.length} profil(er) refererer bilder som ikke finnes i Drive: ${names}`, 'warning');
+                }
+                if (orphanedInDrive.length > 0) {
+                    const names = orphanedInDrive.map(f => f.name).join(', ');
+                    showToast(`ℹ ${orphanedInDrive.length} bilde(r) i Drive-mappen er ikke koblet til noen profil: ${names}`, 'info');
+                }
+            } catch {
+                // Best-effort — feiler den, vises ingen advarsel
+            }
+        })();
+    }
 }
 
 export function initTannlegerModule() {
