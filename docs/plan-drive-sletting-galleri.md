@@ -1,4 +1,4 @@
-# Plan: Slett Drive-fil ved sletting av galleribilde og tannlege
+# Plan: Drive-sletting og toveis konsistenssjekk for galleri og tannleger
 
 ## Bakgrunn
 
@@ -6,11 +6,14 @@ Når et galleribilde eller en tannlege slettes fra admin-panelet, fjernes kun
 Sheet-raden. Bildefilen i Google Drive forblir. Meldinger og Tjenester bruker
 `deleteFile()` korrekt, men galleri- og tannlege-modulene mangler dette steget.
 
-Over tid samler det seg foreldreløse filer i Drive-mappene. Planen inkluderer
-derfor også en orphan-deteksjon som viser admin-brukeren hvilke filer som finnes
-i Drive men ikke i Sheet.
+I tillegg kan det over tid oppstå inkonsistens begge veier:
+- **Drive → Sheet:** Filer i Drive som ikke refereres av noen Sheet-rad
+- **Sheet → Drive:** Sheet-rader som refererer et filnavn som ikke finnes i Drive
 
-## Del 1: Galleri — Drive-sletting
+Inkonsistens må håndteres på tre nivåer: admin-panelet (sanntid), sync-data
+(byggetid), og frontend (visning).
+
+## Del 1: Galleri — Drive-sletting ved slett
 
 ### Steg 1: Imports
 
@@ -59,7 +62,7 @@ const deleteGalleriBilde = async (rowIndex, title) => {
 };
 ```
 
-## Del 2: Tannleger — Drive-sletting
+## Del 2: Tannleger — Drive-sletting ved slett
 
 **Identisk bug.** `deleteTannlege()` i `admin-module-tannleger.js` kaller kun
 `deleteTannlegeRowPermanently()`. Tannleger har et `image`-felt (kolonne D) med
@@ -112,53 +115,140 @@ async function deleteTannlege(rowIndex, name) {
 **Merk:** Tannleger har allerede `rowData` tilgjengelig (brukes til backup), så
 vi trenger ikke et ekstra `getRaw()`-kall — vi gjenbruker `rowData.image`.
 
-## Del 3: Orphan-deteksjon — filer i Drive uten Sheet-rad
+## Del 3: Toveis konsistenssjekk i admin-panelet
 
 ### Konsept
 
-Når admin laster galleri- eller tannleger-listen, sammenlign Drive-innhold med
-Sheet-innhold og vis en advarsel hvis det finnes foreldreløse filer.
+Når admin laster galleri- eller tannleger-listen, sammenlign Sheet-innhold med
+Drive-innhold **begge veier** og vis advarsler.
 
-### Steg 1: Hjelpefunksjon `findOrphanedFiles`
+### Steg 1: Hjelpefunksjon `checkConsistency`
 
-**Fil:** `src/scripts/admin-module-bilder.js` (og tilsvarende i tannleger)
+Delt funksjon som kan brukes av begge moduler. Plasser i en ny hjelpefil eller
+direkte i hver modul.
 
 ```js
-async function findOrphanedFiles(sheetItems, folderId) {
+async function checkConsistency(sheetItems, folderId) {
     const driveFiles = await listImages(folderId);
+    const driveFileNames = new Set(driveFiles.map(f => f.name));
     const sheetFileNames = new Set(sheetItems.map(item => item.image).filter(Boolean));
-    return driveFiles.filter(f => !sheetFileNames.has(f.name));
+
+    // Filer i Drive som ikke finnes i Sheet
+    const orphanedInDrive = driveFiles.filter(f => !sheetFileNames.has(f.name));
+
+    // Sheet-rader som refererer filer som ikke finnes i Drive
+    const missingFromDrive = sheetItems.filter(item =>
+        item.image && !driveFileNames.has(item.image)
+    );
+
+    return { orphanedInDrive, missingFromDrive };
 }
 ```
 
-### Steg 2: Vis advarsel i galleri-modulen
+### Steg 2: Vis advarsler i admin-panelet
 
-Etter at gallerilisten er lastet, kjør orphan-sjekk og vis en info-boks:
+Kjøres asynkront etter at listen er vist (ikke-blokkerende). Vis en info-boks
+per retning:
+
+**Filer i Drive uten Sheet-rad (info-tone, ikke alarm):**
+
+Disse filene kan være bevisst opplastet i forkant — f.eks. bilder som venter på
+å bli tilknyttet et nytt galleri-element eller en ny tannlege. Tonen skal være
+informerende og løsningsorientert, ikke alarmerende.
 
 ```
-⚠ 3 filer i Drive-mappen finnes ikke i regnearket:
-  - bilde1.jpg
-  - bilde2.png
-  - gammelt-foto.jpg
-Disse kan slettes manuelt fra Google Drive.
+ℹ 3 bilder i Drive-mappen er ikke koblet til noen rad i regnearket:
+  • bilde1.jpg
+  • bilde2.png
+  • gammelt-foto.jpg
+Disse kan brukes når du legger til nye elementer, eller slettes fra
+Google Drive hvis de ikke lenger trengs.
 ```
 
-Implementer som en enkel `showToast()` med type `'warning'` eller en dedikert
-info-seksjon i admin-panelet. Kjøres asynkront etter listen er vist (ikke
-blokkerende).
+**Sheet-rader uten Drive-fil (advarsel-tone):**
+
+Disse er mer kritiske — en rad lover et bilde som ikke eksisterer, og nettsiden
+vil vise "Bilde mangler".
+
+```
+⚠ 2 rader i regnearket refererer bilder som ikke finnes i Drive:
+  • «Venterom» → venterom.jpg
+  • «Behandlingsrom» → behandling.png
+Bildene vil vises som «Bilde mangler» på nettsiden.
+Last opp bildene på nytt, eller fjern filnavnet fra raden.
+```
+
+**Implementering:** Bruk `showToast()` med type `'warning'` for korte meldinger,
+eller en dedikert konsistens-seksjon i admin-panelet dersom listen er lang.
+Konsistenssjekken er best-effort — feiler `listImages()`, vises ingen advarsel.
 
 ### Steg 3: Tilsvarende i tannleger-modulen
 
-Samme mønster — sammenlign `TANNLEGER_FOLDER`-innhold med Sheet-data.
+Samme `checkConsistency()`-kall med `TANNLEGER_FOLDER`.
+
+## Del 4: Konsistenssjekk i sync-data.js (byggetid)
+
+### Nåværende oppførsel — allerede delvis på plass
+
+`logWarning('Missing Asset', ...)` kalles allerede når en fil i Sheet ikke finnes
+i Drive. I CI (GitHub Actions) gir dette `::warning`-annotasjoner som vises i
+workflow-loggen. **Warnings på GitHub fungerer altså allerede per bilde.**
+
+Men det er to svakheter:
+1. JSON-filen skrives med det stale filnavnet (`image: 'manglende.jpg'`), selv om
+   filen ikke ble lastet ned
+2. Ingen samlet oppsummering — man må lete i loggen
+
+### Forbedring 4a: Nullstill stale `image` i output-JSON
+
+Når `downloadImageIfNeeded()` returnerer `false` (bilde mangler i Drive), sett
+`image: ''` i output-JSON. Da viser frontend "Bilde mangler"-placeholder i
+stedet for en krasjet asset-import.
+
+**Galleri** (`syncGalleri`): Returverdien fra `downloadImageIfNeeded` ignoreres
+i dag. Endre til:
+
+```js
+let imageFound = false;
+if (bildeFil && !isForsidebilde) {
+    try {
+        const destinationPath = path.join(config.paths.galleriAssets, bildeFil);
+        imageFound = await downloadImageIfNeeded(bildeFil, folderId, destinationPath, 'Galleribilde');
+    } catch (imgErr) {
+        logWarning('Download Error', `Feil ved behandling av galleribilde ${bildeFil}: ${imgErr.message}`);
+    }
+}
+
+return {
+    ...
+    image: imageFound ? bildeFil : '',  // Tom streng hvis ikke funnet
+    ...
+};
+```
+
+**Tannleger** (`syncTannleger`): Samme endring.
+
+### Forbedring 4b: Samlet oppsummering i loggen
+
+Etter at sync er ferdig, skriv en samlet rapport som gjør det lettere å se
+helheten uten å lete i loggen:
+
+```
+⚠ Konsistenssjekk:
+  Galleri: 1 bilde i Sheet mangler i Drive (venterom.jpg)
+  Tannleger: 0 manglende bilder
+```
+
+Implementer ved å samle warnings underveis og logge dem i `runSync()` etter at
+alle sync-funksjoner er ferdige. Bruk `logWarning()` slik at det også blir
+`::warning`-annotasjoner i GitHub Actions.
 
 ## Teststrategi
 
-### Galleri-tester (`admin-module-bilder.test.js`)
+### Delete-tester: Galleri (`admin-module-bilder.test.js`)
 
-Oppdater eksisterende delete-tester og legg til nye:
-
-| Test | Hva den verifiserer |
-|------|-------------------|
+| Test | Verifiserer |
+|------|-------------|
 | Slett bilde — happy path | `getGalleriRaw` → `deleteRow` → `findFileByName` → `deleteFile` |
 | Bruker avbryter | Ingen API-kall etter `showConfirm(false)` |
 | Tom `image`-felt | Hopper over `findFileByName`/`deleteFile` |
@@ -167,32 +257,39 @@ Oppdater eksisterende delete-tester og legg til nye:
 | Drive-sletting feiler | Best-effort: toast vises, ingen error til bruker |
 | Sheet-sletting feiler | Error-toast, Drive-sletting forsøkes ikke |
 
-### Tannleger-tester (`admin-module-tannleger.test.js`)
+### Delete-tester: Tannleger (`admin-module-tannleger.test.js`)
 
-Tilsvarende tester som for galleri, tilpasset tannleger-flyten (backup-steg osv).
+Tilsvarende tester, tilpasset tannleger-flyten (backup-steg osv).
 
-### Orphan-deteksjon tester
+### Konsistenssjekk-tester (admin)
 
-| Test | Hva den verifiserer |
-|------|-------------------|
-| Ingen orphans | Ingen advarsel vises |
-| 2 orphans funnet | Advarsel med filnavn vises |
+| Test | Verifiserer |
+|------|-------------|
+| Alt konsistent | Ingen advarsel vises |
+| Orphans i Drive | Advarsel med filnavn for Drive-orphans |
+| Manglende i Drive | Advarsel med radinfo for Sheet-orphans |
+| Begge retninger | Begge advarsler vises |
 | `listImages` feiler | Ingen advarsel, ingen crash (best-effort) |
 
-### Coverage-branches som dekkes
+### Konsistenssjekk-tester (sync-data)
 
-Galleri: `imageName` truthy/falsy, `file` found/null, Drive-error, Sheet-error
-Tannleger: `rowData?.image` truthy/falsy, `file` found/null, Drive-error
-Orphan: orphans.length > 0 / === 0, listImages-feil
+| Test | Verifiserer |
+|------|-------------|
+| Manglende Drive-fil | `image` settes til `''` i JSON, `logWarning` kalles |
+| Foreldreløs Drive-fil | `logWarning('Orphaned File', ...)` kalles |
+| Alt konsistent | Ingen advarsler |
 
 ## Filer som endres
 
 | Fil | Endring |
 |-----|---------|
-| `src/scripts/admin-module-bilder.js` | Import `findFileByName`, `deleteFile`, `listImages`. Oppdater `deleteGalleriBilde()`. Legg til orphan-deteksjon. |
-| `src/scripts/admin-module-tannleger.js` | Import `findFileByName`, `deleteFile`, `listImages`. Oppdater `deleteTannlege()`. Legg til orphan-deteksjon. |
-| `src/scripts/__tests__/admin-module-bilder.test.js` | Oppdater mocks/imports. Nye delete- og orphan-tester. |
-| `src/scripts/__tests__/admin-module-tannleger.test.js` | Oppdater mocks/imports. Nye delete- og orphan-tester. |
+| `src/scripts/admin-module-bilder.js` | Import `findFileByName`, `deleteFile`, `listImages`. Oppdater `deleteGalleriBilde()`. Legg til konsistenssjekk. |
+| `src/scripts/admin-module-tannleger.js` | Import `findFileByName`, `deleteFile`, `listImages`. Oppdater `deleteTannlege()`. Legg til konsistenssjekk. |
+| `scripts/sync-data.js` | Legg til `listFilesInFolder()`, samlet rapport, nullstill stale `image`-felt i JSON. |
+| `src/scripts/__tests__/admin-module-bilder.test.js` | Oppdater mocks/imports. Nye delete- og konsistens-tester. |
+| `src/scripts/__tests__/admin-module-tannleger.test.js` | Oppdater mocks/imports. Nye delete- og konsistens-tester. |
+| `scripts/__tests__/sync-data.test.js` | Nye tester for konsistenssjekk ved byggetid. |
 
-**Ingen andre filer endres.** `deleteFile`, `findFileByName` og `listImages`
-finnes allerede i `admin-drive.js` og re-eksporteres via `admin-client.js`.
+**Ingen nye npm-pakker.** `deleteFile`, `findFileByName` og `listImages` finnes
+allerede i `admin-drive.js`. sync-data bruker allerede googleapis med
+service-konto.
