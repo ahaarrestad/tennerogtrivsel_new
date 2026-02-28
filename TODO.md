@@ -13,11 +13,7 @@
 
 ## Pågående
 
-- [ ] **Slettede galleri-bilder og tannleger fjernes ikke fra Google Drive** ([plan](docs/plan-drive-sletting-galleri.md))
-  - Galleri: `deleteGalleriBilde()` sletter kun Sheet-rad — Drive-filen blir liggende
-  - Tannleger: `deleteTannlege()` har identisk bug — profilbilde slettes ikke fra Drive
-  - Orphan-deteksjon: vis advarsel om filer i Drive som ikke finnes i Sheet
-  - **Fix:** Hent bilde-filnavn *før* sletting, finn Drive-fil-ID, kall `deleteFile()`, deretter slett Sheet-rad
+*(Ingen oppgaver pågår)*
 
 ## Backlog
 
