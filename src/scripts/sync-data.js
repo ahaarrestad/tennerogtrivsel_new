@@ -9,6 +9,16 @@ import crypto from 'crypto';
 import sharp from 'sharp';
 import { parseImageConfig } from './image-config.js';
 
+// Nøkler som har hardkodede defaults i getSettings.ts — brukes for å logge oversikt ved sync
+const HARD_DEFAULT_KEYS = [
+    'phone1', 'phone2', 'email', 'showEmail', 'adresse1', 'adresse2',
+    'velkomstTittel1', 'velkomstTittel2', 'sentralbordTekst', 'latitude', 'longitude',
+    'siteTitle', 'siteDescription', 'velkomstTekst', 'kontaktTekst',
+    'tannlegerTekst', 'tjenesteTekst', 'businessHours1', 'businessHours2', 'galleriTekst',
+    'kontaktTittel', 'galleriTittel', 'tjenesterTittel', 'tannlegerTittel',
+    'kontaktBeskrivelse', 'galleriBeskrivelse', 'tjenesterBeskrivelse', 'tannlegerBeskrivelse',
+];
+
 // --- KONFIGURASJON ---
 function getConfig() {
     return {
@@ -20,6 +30,7 @@ function getConfig() {
             tannlegerData: path.join(process.cwd(), 'src/content/tannleger.json'),
             galleriAssets: path.join(process.cwd(), 'src/assets/galleri'),
             galleriData: path.join(process.cwd(), 'src/content/galleri.json'),
+            innstillingerData: path.join(process.cwd(), 'src/content/innstillinger.json'),
         },
         collections: [
             {
@@ -478,6 +489,50 @@ async function syncGalleri() {
     }
 }
 
+// Synkroniserer innstillinger fra Google Sheets til lokal JSON
+async function syncInnstillinger() {
+    const config = getConfig();
+    const sheets = getSheets();
+
+    console.log('🚀 Synkroniserer innstillinger...');
+
+    try {
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: config.spreadsheetId,
+            range: 'Innstillinger!A:B',
+            valueRenderOption: 'UNFORMATTED_VALUE',
+        });
+
+        const rows = res.data.values || [];
+        // Hopp over header-rad, mapper til {id, value}
+        const innstillingerData = rows.slice(1)
+            .filter(row => row[0])
+            .map(row => ({
+                id: String(row[0]).trim(),
+                value: row[1] != null ? String(row[1]).trim() : ''
+            }));
+
+        fs.writeFileSync(config.paths.innstillingerData, JSON.stringify(innstillingerData, null, 2));
+
+        // Logg oversikt: hva kommer fra Sheets vs. hva bruker hardkodet default
+        const sheetKeys = new Set(innstillingerData.map(d => d.id));
+        const fromSheet = HARD_DEFAULT_KEYS.filter(k => sheetKeys.has(k));
+        const fromDefault = HARD_DEFAULT_KEYS.filter(k => !sheetKeys.has(k));
+        const unknown = innstillingerData.filter(d => !HARD_DEFAULT_KEYS.includes(d.id)).map(d => d.id);
+
+        console.log(`  ✅ Synkroniserte ${innstillingerData.length} innstillinger (${fromSheet.length} fra Sheets, ${fromDefault.length} bruker default${unknown.length ? `, ${unknown.length} ukjente` : ''}).`);
+        if (fromDefault.length > 0) {
+            console.log(`  ℹ️  Default: ${fromDefault.join(', ')}`);
+        }
+        if (unknown.length > 0) {
+            unknown.forEach(key => logWarning('Ukjent innstilling', `Nøkkel "${key}" i Sheets finnes ikke i HARD_DEFAULTS (ignorert)`));
+        }
+    } catch (err) {
+        console.error('❌ Feil under synkronisering av innstillinger:', err.message);
+        throw err;
+    }
+}
+
 // --- KJØRER ALT ---
 
 async function runSync() {
@@ -509,16 +564,19 @@ async function runSync() {
     }
 
     try {
-        // 1. Synkroniser tannleger fra ark
+        // 1. Synkroniser innstillinger fra Sheets
+        await syncInnstillinger();
+
+        // 2. Synkroniser tannleger fra ark
         await syncTannleger();
 
-        // 2. Synkroniser forsidebilde (valgfritt – hopper over hvis mappe-ID mangler)
+        // 3. Synkroniser forsidebilde (valgfritt – hopper over hvis mappe-ID mangler)
         await syncForsideBilde();
 
-        // 3. Synkroniser galleribilder
+        // 4. Synkroniser galleribilder
         await syncGalleri();
 
-        // 4. Synkroniser alle markdown-samlinger fra mapper
+        // 5. Synkroniser alle markdown-samlinger fra mapper
         for (const col of config.collections) {
             await syncMarkdownCollection(col);
         }
@@ -541,4 +599,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 /* v8 ignore stop */
 
-export { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, runSync, getConfig, getLocalHash, shouldDownload, downloadImageIfNeeded };
+export { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, syncInnstillinger, runSync, getConfig, getLocalHash, shouldDownload, downloadImageIfNeeded, HARD_DEFAULT_KEYS };

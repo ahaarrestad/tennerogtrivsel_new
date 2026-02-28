@@ -29,6 +29,7 @@ pnpm-debug.log*
 /public/hovedbilde.png
 src/content/tannleger.json
 src/content/galleri.json
+src/content/innstillinger.json
 /src/content/tjenester/
 !/src/content/tjenester/.gitkeep
 /src/content/meldinger/
