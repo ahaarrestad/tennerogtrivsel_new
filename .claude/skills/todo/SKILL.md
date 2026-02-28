@@ -30,14 +30,14 @@ Hvis brukeren bare sier "todo", "oppgaveliste" eller lignende uten spesifikk han
 - (liste eller "Ingen oppgaver pågår")
 
 ### Backlog (X oppgaver)
-1. Kort tittel for første oppgave
-2. Kort tittel for andre oppgave
+1. **Kort tittel** ([plan](docs/plan-navn.md)) — kort beskrivelse
+2. **Kort tittel** — *ingen plan ennå*
 3. ...
 
 Fullført historikk: se TODO-archive.md
 ```
 
-Hold det kort og oversiktlig. Ikke gjenta hele filen.
+Hold det kort og oversiktlig. Ikke gjenta hele filen. Inkluder alltid plan-lenken for oppgaver som har en, og merk oppgaver uten plan med «*ingen plan ennå*».
 
 ---
 
@@ -63,10 +63,7 @@ Når en oppgave skal startes:
 
 1. Les `TODO.md`
 2. Flytt oppgaven fra **Backlog** til **Pågående**
-3. Følg arbeidsflyten i TODO.md:
-   - Lag en plan først (eller bekreft at plan finnes)
-   - Still avklarende spørsmål hvis noe er uklart
-4. Bekreft flyttingen
+3. Bekreft flyttingen
 
 ---
 
@@ -77,9 +74,8 @@ Når en oppgave er ferdig:
 1. Les `TODO.md`
 2. Endre `- [ ]` til `- [x]` på oppgaven
 3. Legg til et kort sammendrag av hva som ble gjort (som underpunkter), basert på kontekst fra samtalen
-4. Flytt den ferdige oppgaven fra `TODO.md` til `TODO-archive.md`
-5. Hvis oppgaven har en planfil i `docs/`, flytt den til `docs/archive/` og oppdater lenken
-6. Bekreft oppdateringen
+4. Arkiver oppgaven og eventuell planfil (se arbeidsflyten i TODO.md)
+5. Bekreft oppdateringen
 
 ---
 
