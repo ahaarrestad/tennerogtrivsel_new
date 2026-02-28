@@ -29,6 +29,11 @@
   - Copilot må godkjenne (eller komme med forbedringer) før PR kan merges
   - Legg til som required status check / required reviewer i branch protection rules
 
+- [ ] **Galleri krever tilgang til både Google Sheet og Innstillinger-mappen** ([plan](docs/plan-galleri-tilgangskontroll.md))
+  - Modulen «Bilder» (galleri) vises i dag kun basert på tilgang til `SHEET_ID`
+  - Bildene til galleriet ligger i Innstillinger-mappen i Google Drive — galleri bør kreve tilgang til denne mappen i tillegg til Sheet
+  - Gjennomgå `enforceAccessControl()` i `admin-dashboard.js` og oppdater ressursmappingen for galleri-modulen
+
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plan-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
