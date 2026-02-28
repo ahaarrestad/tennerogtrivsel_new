@@ -29,11 +29,11 @@
   - Copilot må godkjenne (eller komme med forbedringer) før PR kan merges
   - Legg til som required status check / required reviewer i branch protection rules
 
-- [ ] **Slettede galleri-bilder fjernes ikke fra Google Drive**
-  - **Bekreftet problem:** `deleteGalleriBilde()` i `admin-module-bilder.js` kaller kun `deleteGalleriRowPermanently()` som sletter Sheet-raden — Drive-filen blir liggende
-  - `deleteFile()` finnes i `admin-drive.js` (trashes via `drive.files.update({ trashed: true })`) men importeres aldri i bilder-modulen
-  - Meldinger og Tjenester bruker `deleteFile()` korrekt — galleri mangler dette
-  - **Fix:** Hent bilde-filnavn fra raden *før* sletting, finn Drive-fil-ID, kall `deleteFile()`, deretter slett Sheet-raden
+- [ ] **Slettede galleri-bilder og tannleger fjernes ikke fra Google Drive** ([plan](docs/plan-drive-sletting-galleri.md))
+  - Galleri: `deleteGalleriBilde()` sletter kun Sheet-rad — Drive-filen blir liggende
+  - Tannleger: `deleteTannlege()` har identisk bug — profilbilde slettes ikke fra Drive
+  - Orphan-deteksjon: vis advarsel om filer i Drive som ikke finnes i Sheet
+  - **Fix:** Hent bilde-filnavn *før* sletting, finn Drive-fil-ID, kall `deleteFile()`, deretter slett Sheet-rad
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plan-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
