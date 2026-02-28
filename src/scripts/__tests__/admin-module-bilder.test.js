@@ -67,7 +67,7 @@ import {
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadGallery, setupUploadHandler } from '../admin-gallery.js';
 import { loadGalleriListeModule, reorderGalleriItem } from '../admin-dashboard.js';
-import { showDeletionToast, bindSliderStepButtons, bindWheelPrevent, showSaveBar, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave } from '../admin-editor-helpers.js';
+import { getAdminConfig, showDeletionToast, bindSliderStepButtons, bindWheelPrevent, showSaveBar, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave } from '../admin-editor-helpers.js';
 import { loadBilderModule } from '../admin-module-bilder.js';
 
 function setupDOM() {
@@ -166,6 +166,43 @@ describe('loadBilderModule', () => {
     it('should not crash when module-inner is missing', async () => {
         document.body.innerHTML = '';
         await expect(loadBilderModule()).resolves.toBeUndefined();
+    });
+
+    it('should use BILDER_FOLDER directly when configured (skip getSheetParentFolder)', async () => {
+        getAdminConfig.mockReturnValue({ SHEET_ID: 'test-sheet', BILDER_FOLDER: 'bilder-folder-123' });
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        getGalleriRaw.mockResolvedValue([]);
+
+        await loadBilderModule();
+
+        expect(getSheetParentFolder).not.toHaveBeenCalled();
+        expect(loadGalleriListeModule).toHaveBeenCalledWith(
+            'test-sheet',
+            expect.any(Function),
+            expect.any(Function),
+            expect.any(Function),
+            'bilder-folder-123',
+            expect.any(Function)
+        );
+    });
+
+    it('should fall back to getSheetParentFolder when BILDER_FOLDER is not configured', async () => {
+        getAdminConfig.mockReturnValue({ SHEET_ID: 'test-sheet' });
+        getSheetParentFolder.mockResolvedValue('parent-folder-456');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        getGalleriRaw.mockResolvedValue([]);
+
+        await loadBilderModule();
+
+        expect(getSheetParentFolder).toHaveBeenCalledWith('test-sheet');
+        expect(loadGalleriListeModule).toHaveBeenCalledWith(
+            'test-sheet',
+            expect.any(Function),
+            expect.any(Function),
+            expect.any(Function),
+            'parent-folder-456',
+            expect.any(Function)
+        );
     });
 });
 

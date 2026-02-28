@@ -38,12 +38,14 @@ describe('getAdminConfig', () => {
             data-tjenester-folder="tf"
             data-tannleger-folder="taf"
             data-meldinger-folder="mf"
+            data-bilder-folder="bf"
             data-sheet-id="sid"
             data-defaults='{"key":"val"}'></div>`;
         const config = getAdminConfig();
         expect(config.TJENESTER_FOLDER).toBe('tf');
         expect(config.TANNLEGER_FOLDER).toBe('taf');
         expect(config.MELDINGER_FOLDER).toBe('mf');
+        expect(config.BILDER_FOLDER).toBe('bf');
         expect(config.SHEET_ID).toBe('sid');
         expect(config.HARD_DEFAULTS).toEqual({ key: 'val' });
     });

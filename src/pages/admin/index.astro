@@ -8,6 +8,7 @@ import { HARD_DEFAULTS } from '../../scripts/getSettings';
 const TJENESTER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID;
 const TANNLEGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID;
 const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID;
+const BILDER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID;
 ---
 <!doctype html>
 <html lang="no" class="h-full bg-admin-surface">
@@ -231,6 +232,7 @@ const MELDINGER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID
          data-tjenester-folder={TJENESTER_FOLDER}
          data-tannleger-folder={TANNLEGER_FOLDER}
          data-meldinger-folder={MELDINGER_FOLDER}
+         data-bilder-folder={BILDER_FOLDER}
          data-sheet-id={import.meta.env.PUBLIC_GOOGLE_SHEET_ID}
          data-defaults={JSON.stringify(HARD_DEFAULTS)}
          class="hidden"></div>

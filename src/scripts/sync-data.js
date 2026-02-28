@@ -14,6 +14,7 @@ function getConfig() {
     return {
         spreadsheetId: process.env.PUBLIC_GOOGLE_SHEET_ID,
         tannlegerFolderId: process.env.PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID,
+        bilderFolderId: process.env.PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID,
         paths: {
             tannlegerAssets: path.join(process.cwd(), 'src/assets/tannleger'),
             tannlegerData: path.join(process.cwd(), 'src/content/tannleger.json'),
@@ -284,14 +285,17 @@ async function syncForsideBilde() {
     console.log('🚀 Synkroniserer forsidebilde...');
 
     try {
-        // Hent foreldre-mappen til regnearket – bilder lagres der
-        const sheetMeta = await drive.files.get({
-            fileId: config.spreadsheetId,
-            fields: 'parents',
-            supportsAllDrives: true,
-            includeItemsFromAllDrives: true
-        });
-        const forsideFolderId = sheetMeta.data.parents?.[0];
+        // Bruk dedikert bilder-mappe, eller fall tilbake til foreldre-mappen til regnearket
+        let forsideFolderId = config.bilderFolderId;
+        if (!forsideFolderId) {
+            const sheetMeta = await drive.files.get({
+                fileId: config.spreadsheetId,
+                fields: 'parents',
+                supportsAllDrives: true,
+                includeItemsFromAllDrives: true
+            });
+            forsideFolderId = sheetMeta.data.parents?.[0];
+        }
 
         if (!forsideFolderId) {
             logWarning('Missing Parent', 'Kunne ikke bestemme foreldre-mappe for regnearket. Hopper over forsidebilde-synkronisering.');
@@ -378,14 +382,17 @@ async function syncGalleri() {
     if (!fs.existsSync(config.paths.galleriAssets)) fs.mkdirSync(config.paths.galleriAssets, { recursive: true });
 
     try {
-        // Hent foreldre-mappen til regnearket (samme mønster som syncForsideBilde)
-        const sheetMeta = await drive.files.get({
-            fileId: config.spreadsheetId,
-            fields: 'parents',
-            supportsAllDrives: true,
-            includeItemsFromAllDrives: true
-        });
-        const folderId = sheetMeta.data.parents?.[0];
+        // Bruk dedikert bilder-mappe, eller fall tilbake til foreldre-mappen til regnearket
+        let folderId = config.bilderFolderId;
+        if (!folderId) {
+            const sheetMeta = await drive.files.get({
+                fileId: config.spreadsheetId,
+                fields: 'parents',
+                supportsAllDrives: true,
+                includeItemsFromAllDrives: true
+            });
+            folderId = sheetMeta.data.parents?.[0];
+        }
 
         if (!folderId) {
             logWarning('Missing Parent', 'Kunne ikke bestemme foreldre-mappe for regnearket. Hopper over galleri-synkronisering.');

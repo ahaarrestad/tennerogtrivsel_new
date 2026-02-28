@@ -28,6 +28,8 @@ Google Sheets (galleri-ark)
                            → public/hovedbilde.png     (beskjært OG-bilde 1200×630)
 ```
 
+**Bildemappe:** Bildene hentes fra en dedikert `BILDER_FOLDER` (`PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID`). Hvis denne ikke er konfigurert, faller koden tilbake til å utlede mappen dynamisk som foreldemappen til regnearket (`drive.files.get` → `parents[0]`). Denne fallback-mekanismen sikrer bakoverkompatibilitet under migrering.
+
 - `Forside.astro` leser utsnitt (scale, posX, posY) fra **galleri-collectionen** (forsidebilde-raden), ikke fra Innstillinger.
 - `Galleri.astro` filtrerer ut forsidebilde-rader ved rendering.
 

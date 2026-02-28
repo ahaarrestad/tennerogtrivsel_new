@@ -40,6 +40,7 @@ export function getAdminConfig() {
         TJENESTER_FOLDER: configEl?.dataset.tjenesterFolder,
         TANNLEGER_FOLDER: configEl?.dataset.tannlegerFolder,
         MELDINGER_FOLDER: configEl?.dataset.meldingerFolder,
+        BILDER_FOLDER: configEl?.dataset.bilderFolder,
         SHEET_ID: configEl?.dataset.sheetId,
         HARD_DEFAULTS: JSON.parse(configEl?.dataset.defaults || '{}'),
     };

@@ -91,6 +91,7 @@ describe('sync-data.js', () => {
         process.env.GOOGLE_PRIVATE_KEY = 'test-key';
         process.env.NODE_ENV = 'test';
         delete process.env.GITHUB_ACTIONS;
+        delete process.env.PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID;
         
         // Default mock behaviors
         fs.existsSync.mockReturnValue(true);
@@ -625,6 +626,62 @@ describe('sync-data.js', () => {
             const logs = logSpy.mock.calls.map(c => c[0]);
             expect(logs.some(l => l.includes('Ingen forsidebilde konfigurert'))).toBe(true);
         });
+
+        it('bør bruke bilderFolderId direkte når den er satt (skip drive.files.get)', async () => {
+            process.env.PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID = 'bilder-folder-id';
+            // Galleri-ark med forsidebilde
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: {
+                    values: [
+                        ['Forside', 'hero.jpg', 'Hero', 'ja', '0', '1', '50', '50', 'forsidebilde']
+                    ]
+                }
+            });
+            mockDrive.files.list.mockResolvedValueOnce({
+                data: { files: [{ id: 'f1', name: 'hero.jpg', md5Checksum: 'different-hash' }] }
+            });
+            mockDrive.files.get.mockResolvedValueOnce({ data: { on: vi.fn() } }); // download stream
+            fs.existsSync.mockReturnValue(false);
+
+            await syncForsideBilde();
+
+            // drive.files.get for parent-folder lookup should NOT have been called
+            // Only the download stream call should exist
+            const parentLookupCalls = mockDrive.files.get.mock.calls.filter(
+                c => c[0]?.fields === 'parents'
+            );
+            expect(parentLookupCalls).toHaveLength(0);
+            // Bilder-mappe-ID-en skal brukes i files.list
+            expect(mockDrive.files.list).toHaveBeenCalledWith(
+                expect.objectContaining({ q: expect.stringContaining('bilder-folder-id') })
+            );
+        });
+
+        it('bør falle tilbake til drive.files.get for foreldre-mappe når bilderFolderId ikke er satt', async () => {
+            delete process.env.PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID;
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } });
+            // Galleri-ark med forsidebilde
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: {
+                    values: [
+                        ['Forside', 'hero.jpg', 'Hero', 'ja', '0', '1', '50', '50', 'forsidebilde']
+                    ]
+                }
+            });
+            mockDrive.files.list.mockResolvedValueOnce({
+                data: { files: [{ id: 'f1', name: 'hero.jpg', md5Checksum: 'different-hash' }] }
+            });
+            mockDrive.files.get.mockResolvedValueOnce({ data: { on: vi.fn() } }); // download stream
+            fs.existsSync.mockReturnValue(false);
+
+            await syncForsideBilde();
+
+            // drive.files.get should have been called for parent-folder lookup
+            const parentLookupCalls = mockDrive.files.get.mock.calls.filter(
+                c => c[0]?.fields === 'parents'
+            );
+            expect(parentLookupCalls).toHaveLength(1);
+        });
     });
 
     describe('cropToOG', () => {
@@ -950,6 +1007,42 @@ describe('sync-data.js', () => {
 
             const writtenData = JSON.parse(fs.writeFileSync.mock.calls[0][1]);
             expect(writtenData).toHaveLength(2);
+        });
+
+        it('bør bruke bilderFolderId direkte når den er satt (skip drive.files.get)', async () => {
+            process.env.PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID = 'bilder-folder-id';
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: {
+                    values: [
+                        ['Bilde1', 'b1.jpg', 'Alt1', 'ja', '1', '1', '50', '50', 'galleri']
+                    ]
+                }
+            });
+            mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
+
+            await syncGalleri();
+
+            // drive.files.get for parent-folder lookup should NOT have been called
+            const parentLookupCalls = mockDrive.files.get.mock.calls.filter(
+                c => c[0]?.fields === 'parents'
+            );
+            expect(parentLookupCalls).toHaveLength(0);
+        });
+
+        it('bør falle tilbake til drive.files.get for foreldre-mappe når bilderFolderId ikke er satt', async () => {
+            delete process.env.PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID;
+            mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
+            mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+                data: { values: [['Bilde1', 'b1.jpg', 'Alt1', 'ja', '1', '1', '50', '50', 'galleri']] }
+            });
+            mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
+
+            await syncGalleri();
+
+            const parentLookupCalls = mockDrive.files.get.mock.calls.filter(
+                c => c[0]?.fields === 'parents'
+            );
+            expect(parentLookupCalls).toHaveLength(1);
         });
     });
 

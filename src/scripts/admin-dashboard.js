@@ -109,7 +109,8 @@ export async function enforceAccessControl(config) {
         config.SHEET_ID,
         config.TJENESTER_FOLDER,
         config.MELDINGER_FOLDER,
-        config.TANNLEGER_FOLDER
+        config.TANNLEGER_FOLDER,
+        config.BILDER_FOLDER
     ].filter(Boolean);
 
     const accessMap = await checkMultipleAccess(ids);
@@ -119,14 +120,14 @@ export async function enforceAccessControl(config) {
         { id: 'tjenester', resource: config.TJENESTER_FOLDER, card: 'card-tjenester' },
         { id: 'meldinger', resource: config.MELDINGER_FOLDER, card: 'card-meldinger' },
         { id: 'tannleger', resources: [config.TANNLEGER_FOLDER, config.SHEET_ID], card: 'card-tannleger' },
-        { id: 'bilder', resource: config.SHEET_ID, card: 'card-bilder' }
+        { id: 'bilder', resources: [config.SHEET_ID, config.BILDER_FOLDER].filter(Boolean), card: 'card-bilder' }
     ];
 
     let hasAnyAccess = false;
 
     modules.forEach(mod => {
         const hasAccess = mod.resources
-            ? mod.resources.every(res => accessMap[res])
+            ? mod.resources.length > 0 && mod.resources.every(res => accessMap[res])
             : accessMap[mod.resource];
 
         const card = document.getElementById(mod.card);

@@ -15,7 +15,7 @@ import {
 
 export async function loadBilderModule() {
     window.clearBreadcrumbEditor?.();
-    const { SHEET_ID } = getAdminConfig();
+    const { SHEET_ID, BILDER_FOLDER } = getAdminConfig();
     const inner = document.getElementById('module-inner');
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
@@ -24,7 +24,7 @@ export async function loadBilderModule() {
     inner.innerHTML = '<div class="text-admin-muted italic text-sm animate-pulse">Henter bildeinnstillinger...</div>';
 
     try {
-        const parentFolderId = await getSheetParentFolder(SHEET_ID);
+        const parentFolderId = BILDER_FOLDER || await getSheetParentFolder(SHEET_ID);
 
         if (!parentFolderId) {
             inner.innerHTML = `<div class="admin-alert-error">❌ Kunne ikke bestemme Drive-mappen for regnearket.</div>`;
