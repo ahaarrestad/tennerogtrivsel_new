@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Flaky tests — sporadiske testfeil** ([plan](docs/archive/plan-flaky-tests.md))
+  - Fjernet `npm audit` fra CI — redundant med Dependabot + CodeQL
+  - Lagt til `test:e2e:repeat`-script for lokal flaky-verifisering (`--repeat-each=10`)
+  - Avdekket og fikset flaky accessibility-tester: `networkidle` i AxeBuilder-tester forhindrer «Execution context destroyed»
+  - Verifisert: 280/280 accessibility-tester bestått med 10 repetisjoner, 628/628 totalt
+
 - [x] **Lag design guide for admin-grensesnittet** ([plan](docs/archive/plan-admin-design-guide.md))
   - Opprettet `docs/admin-design-guide.md` — komplett referansedokument for admin-panelets design-system
   - Dekker: 5 admin-fargetokens (slate-basert), 14 seksjonar inkl. typografi, layout, kort, knapper, skjema, status/varsler, nav, animasjoner, modaler, a11y, modulmønster, login

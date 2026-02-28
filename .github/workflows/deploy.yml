@@ -37,8 +37,6 @@ jobs:
       - run: npm ci
       - name: Run unit tests
         run: npm test
-      - name: Security audit
-        run: npm audit --audit-level=high
 
   e2e-tests:
     if: github.event_name != 'repository_dispatch'
