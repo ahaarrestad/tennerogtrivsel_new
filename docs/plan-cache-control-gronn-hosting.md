@@ -1,6 +1,6 @@
 # Plan: Cache-Control og grønn hosting
 
-> **Status: PÅGÅENDE** — TEST ferdig (steg 1–4 verifisert ✓), PROD gjenstår
+> **Status: PÅGÅENDE** — TEST steg 1–4 utført (manuelt), steg 5 (full verifisering) gjenstår. PROD gjenstår.
 
 ## Kontekst
 
@@ -138,6 +138,57 @@ Bytt bucket-navn i `aws s3 sync`-kommandoene (steg 1) til det nye bucket-navnet.
 1. Gå til **S3** → velg den gamle bucketen
 2. Klikk **Empty** → bekreft tømming
 3. Klikk **Delete** → bekreft sletting
+
+## Steg 5: Full verifisering av TEST-oppsett
+
+Etter at steg 4 (regionflytt) er gjort manuelt, verifiser at hele TEST-infrastrukturen fungerer korrekt.
+
+### 5a. Cache-headere
+
+```bash
+# Hashed asset — skal ha immutable
+curl -sI https://test2.aarrestad.com/_astro/[en-fil].js | grep -i cache-control
+
+# HTML — skal ha max-age=3600
+curl -sI https://test2.aarrestad.com/ | grep -i cache-control
+
+# Font — skal ha immutable
+curl -sI https://test2.aarrestad.com/fonts/inter-v18-latin-regular.woff2 | grep -i cache-control
+```
+
+### 5b. S3-bucket i eu-north-1 (Stockholm)
+
+- Bekreft i AWS Console at bucket er opprettet i **eu-north-1**
+- Verifiser at deploy-workflow syncer til riktig bucket-navn
+- Sjekk at CloudFront-origin peker til `BUCKET-NAVN.s3.eu-north-1.amazonaws.com`
+
+### 5c. Domener og SSL-sertifikater
+
+```bash
+# test2.aarrestad.com
+curl -sI https://test2.aarrestad.com/ | grep -E "HTTP|x-cache|x-amz"
+
+# test3.aarrestad.com
+curl -sI https://test3.aarrestad.com/ | grep -E "HTTP|x-cache|x-amz"
+```
+
+- Begge domener skal svare med **HTTP/2 200**
+- `x-cache: Hit from cloudfront` ved andre besøk (etter første request)
+- SSL-sertifikat: sjekk gyldighetsdato og at det dekker begge domener
+
+```bash
+# Sertifikatstatus
+echo | openssl s_client -connect test2.aarrestad.com:443 -servername test2.aarrestad.com 2>/dev/null | openssl x509 -noout -dates -subject
+echo | openssl s_client -connect test3.aarrestad.com:443 -servername test3.aarrestad.com 2>/dev/null | openssl x509 -noout -dates -subject
+```
+
+### 5d. PROD — planlegging
+
+Dokumenter eventuelle avvik og tilpass PROD-planen tilsvarende:
+- Oppdater [`docs/plan-cloudfront-prod.md`](plan-cloudfront-prod.md) med eventuelle justeringer fra TEST-erfaringene
+- Sørg for at PROD-planen inkluderer tilsvarende verifiseringssteg
+
+---
 
 ## Ikke i scope
 
