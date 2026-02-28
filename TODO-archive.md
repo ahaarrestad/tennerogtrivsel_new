@@ -2,6 +2,13 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Galleri krever tilgang til både Google Sheet og Bilder-mappen** ([plan](docs/archive/plan-galleri-tilgangskontroll.md))
+  - Ny dedikert `BILDER_FOLDER` miljøvariabel (`PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID`)
+  - `enforceAccessControl()` oppdatert med multi-ressurs-sjekk: krever tilgang til både `SHEET_ID` og `BILDER_FOLDER`
+  - `admin-module-bilder.js` og `sync-data.js` bruker `BILDER_FOLDER` med fallback til dynamisk utledning
+  - Admin-config, workflows og dokumentasjon oppdatert
+  - Omfattende tester for alle nye kodestier
+
 - [x] **Flaky tests — sporadiske testfeil** ([plan](docs/archive/plan-flaky-tests.md))
   - Fjernet `npm audit` fra CI — redundant med Dependabot + CodeQL
   - Lagt til `test:e2e:repeat`-script for lokal flaky-verifisering (`--repeat-each=10`)
