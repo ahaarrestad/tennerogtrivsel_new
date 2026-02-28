@@ -16,7 +16,13 @@
 - [ ] **Cache-Control og grønn hosting — gjør siden nesten «karbon-negativ»** ([plan](docs/plan-cache-control-gronn-hosting.md))
   - ~~Steg 1–3 for TEST: Cache-Control, invalidering, verifisering~~ ✓
   - ~~Steg 4 for TEST: Regionflytt til eu-north-1~~ ✓ (manuelt)
-  - Steg 1–4 for PROD: gjenstår
+  - Steg 5 for TEST: Verifiser fullt TEST-oppsett — cache-headere, S3 eu-north-1, test2.aarrestad.com + test3.aarrestad.com, og SSL-sertifikater
+  - Steg 1–4 for PROD: gjenstår (tilsvarende oppsett, inkl. verifisering)
+
+- [ ] **Flaky tests — sporadiske testfeil** ([plan](docs/plan-flaky-tests.md))
+  - ~~Steg 1: Fjern `npm audit` fra CI~~ ✓
+  - ~~Steg 2: Legg til `test:e2e:repeat`-script~~ ✓
+  - Steg 3: Verifiser med `--repeat-each=10`
 
 ## Backlog
 
@@ -32,12 +38,6 @@
   - Ett ACM-sertifikat med alle 6 domener, DNS hos eksisterende registrar
   - 9 steg: ACM-sertifikat, DNS-validering, CloudFront CNAMEs, www DNS-records, apex-redirect, Google OAuth origins, Maps API referrere, fjern S3-buckets, verifisering
   - Kostnad: $0/mnd ekstra
-
-- [ ] **Flaky tests — sporadiske testfeil** ([plan](docs/plan-flaky-tests.md))
-  - Undersøkt: ingen reelle flaky tester funnet — 3 siste CI-feil skyldes npm audit (2×) og en reell bug (1×)
-  - Steg 1: Gjør `npm audit` ikke-blokkerende (`continue-on-error: true`)
-  - Steg 2: Legg til `test:e2e:repeat`-script for lokal flaky-verifisering
-  - Steg 3: Verifiser med `--repeat-each=10` og dokumenter
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plan-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
