@@ -12,6 +12,8 @@ vi.mock('../admin-client.js', () => ({
     deleteTannlegeRowPermanently: vi.fn(),
     getDriveImageBlob: vi.fn(),
     findFileByName: vi.fn(),
+    deleteFile: vi.fn(),
+    listImages: vi.fn(),
     backupToSlettetSheet: vi.fn(),
     getTannlegerRaw: vi.fn(),
     silentLogin: vi.fn(),
@@ -61,7 +63,7 @@ vi.mock('../admin-api-retry.js', () => ({
 
 import {
     updateTannlegeRow, addTannlegeRow, deleteTannlegeRowPermanently, getTannlegerRaw,
-    backupToSlettetSheet, getDriveImageBlob
+    backupToSlettetSheet, getDriveImageBlob, findFileByName, deleteFile
 } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadTannlegerModule } from '../admin-dashboard.js';
@@ -111,6 +113,68 @@ describe('reloadTannleger', () => {
     });
 });
 
+describe('consistency check (tannleger)', () => {
+    it('should show warning when Sheet references missing Drive files', async () => {
+        getTannlegerRaw.mockResolvedValue([
+            { rowIndex: 2, name: 'Dr. A', image: 'a.jpg' },
+            { rowIndex: 3, name: 'Dr. B', image: 'mangler.jpg' }
+        ]);
+        const { listImages } = await import('../admin-client.js');
+        listImages.mockResolvedValue([{ name: 'a.jpg' }]);
+
+        reloadTannleger();
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(showToast).toHaveBeenCalledWith(
+            expect.stringContaining('1 profil(er) refererer bilder som ikke finnes i Drive'),
+            'warning'
+        );
+    });
+
+    it('should show info when Drive has orphaned files', async () => {
+        getTannlegerRaw.mockResolvedValue([
+            { rowIndex: 2, name: 'Dr. A', image: 'a.jpg' }
+        ]);
+        const { listImages } = await import('../admin-client.js');
+        listImages.mockResolvedValue([
+            { name: 'a.jpg' },
+            { name: 'orphan.jpg' }
+        ]);
+
+        reloadTannleger();
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(showToast).toHaveBeenCalledWith(
+            expect.stringContaining('1 bilde(r) i Drive-mappen er ikke koblet'),
+            'info'
+        );
+    });
+
+    it('should show no warnings when everything is consistent', async () => {
+        getTannlegerRaw.mockResolvedValue([
+            { rowIndex: 2, name: 'Dr. A', image: 'a.jpg' }
+        ]);
+        const { listImages } = await import('../admin-client.js');
+        listImages.mockResolvedValue([{ name: 'a.jpg' }]);
+
+        reloadTannleger();
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(showToast).not.toHaveBeenCalled();
+    });
+
+    it('should not crash when listImages fails (best-effort)', async () => {
+        const { listImages } = await import('../admin-client.js');
+        listImages.mockRejectedValue(new Error('Drive API error'));
+        getTannlegerRaw.mockResolvedValue([]);
+
+        reloadTannleger();
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(showToast).not.toHaveBeenCalled();
+    });
+});
+
 describe('deleteTannlege', () => {
     beforeEach(() => {
         initTannlegerModule();
@@ -122,20 +186,69 @@ describe('deleteTannlege', () => {
         expect(deleteTannlegeRowPermanently).not.toHaveBeenCalled();
     });
 
-    it('should backup, delete, and show toast when confirmed', async () => {
+    it('should backup, delete Sheet row and Drive file when confirmed (happy path)', async () => {
         showConfirm.mockResolvedValue(true);
         getTannlegerRaw.mockResolvedValue([
-            { rowIndex: 2, name: 'Dr. Tansen', title: 'Tannlege' }
+            { rowIndex: 2, name: 'Dr. Tansen', title: 'Tannlege', image: 'tansen.jpg' }
+        ]);
+        backupToSlettetSheet.mockResolvedValue();
+        deleteTannlegeRowPermanently.mockResolvedValue();
+        findFileByName.mockResolvedValue({ id: 'drive-file-id' });
+        deleteFile.mockResolvedValue();
+
+        await window.deleteTannlege(2, 'Dr. Tansen');
+
+        expect(backupToSlettetSheet).toHaveBeenCalledWith('test-sheet', 'tannlege', 'Dr. Tansen', expect.any(String));
+        expect(deleteTannlegeRowPermanently).toHaveBeenCalledWith('test-sheet', 2);
+        expect(findFileByName).toHaveBeenCalledWith('tansen.jpg', 'test-tannleger-folder');
+        expect(deleteFile).toHaveBeenCalledWith('drive-file-id');
+        expect(showDeletionToast).toHaveBeenCalledWith('Dr. Tansen', expect.stringContaining('Drive-papirkurven'));
+        expect(loadTannlegerModule).toHaveBeenCalled();
+    });
+
+    it('should skip Drive deletion when image field is empty', async () => {
+        showConfirm.mockResolvedValue(true);
+        getTannlegerRaw.mockResolvedValue([
+            { rowIndex: 2, name: 'Dr. Tansen', title: 'Tannlege', image: '' }
         ]);
         backupToSlettetSheet.mockResolvedValue();
         deleteTannlegeRowPermanently.mockResolvedValue();
 
         await window.deleteTannlege(2, 'Dr. Tansen');
 
-        expect(backupToSlettetSheet).toHaveBeenCalledWith('test-sheet', 'tannlege', 'Dr. Tansen', expect.any(String));
-        expect(deleteTannlegeRowPermanently).toHaveBeenCalledWith('test-sheet', 2);
-        expect(showDeletionToast).toHaveBeenCalledWith('Dr. Tansen', expect.stringContaining('sikkerhetskopi'));
-        expect(loadTannlegerModule).toHaveBeenCalled();
+        expect(findFileByName).not.toHaveBeenCalled();
+        expect(deleteFile).not.toHaveBeenCalled();
+    });
+
+    it('should not call deleteFile when file not found in Drive', async () => {
+        showConfirm.mockResolvedValue(true);
+        getTannlegerRaw.mockResolvedValue([
+            { rowIndex: 2, name: 'Dr. Tansen', image: 'mangler.jpg' }
+        ]);
+        backupToSlettetSheet.mockResolvedValue();
+        deleteTannlegeRowPermanently.mockResolvedValue();
+        findFileByName.mockResolvedValue(null);
+
+        await window.deleteTannlege(2, 'Dr. Tansen');
+
+        expect(findFileByName).toHaveBeenCalledWith('mangler.jpg', 'test-tannleger-folder');
+        expect(deleteFile).not.toHaveBeenCalled();
+        expect(showDeletionToast).toHaveBeenCalled();
+    });
+
+    it('should show toast even when Drive deletion fails (best-effort)', async () => {
+        showConfirm.mockResolvedValue(true);
+        getTannlegerRaw.mockResolvedValue([
+            { rowIndex: 2, name: 'Dr. Tansen', image: 'bilde.jpg' }
+        ]);
+        backupToSlettetSheet.mockResolvedValue();
+        deleteTannlegeRowPermanently.mockResolvedValue();
+        findFileByName.mockRejectedValue(new Error('Drive API error'));
+
+        await window.deleteTannlege(2, 'Dr. Tansen');
+
+        expect(showDeletionToast).toHaveBeenCalled();
+        expect(showToast).not.toHaveBeenCalled();
     });
 
     it('should show error on failure', async () => {
@@ -154,6 +267,7 @@ describe('deleteTannlege', () => {
 
         expect(backupToSlettetSheet).not.toHaveBeenCalled();
         expect(deleteTannlegeRowPermanently).toHaveBeenCalledWith('test-sheet', 999);
+        expect(findFileByName).not.toHaveBeenCalled();
     });
 });
 

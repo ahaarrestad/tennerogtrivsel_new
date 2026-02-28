@@ -16,6 +16,8 @@ vi.mock('../admin-client.js', () => ({
     migrateForsideBildeToGalleri: vi.fn(),
     getDriveImageBlob: vi.fn(),
     findFileByName: vi.fn(),
+    deleteFile: vi.fn(),
+    listImages: vi.fn(),
     silentLogin: vi.fn(),
 }));
 
@@ -62,7 +64,7 @@ vi.mock('../admin-api-retry.js', () => ({
 import {
     getSheetParentFolder, getGalleriRaw, updateGalleriRow, addGalleriRow,
     deleteGalleriRowPermanently, setForsideBildeInGalleri, migrateForsideBildeToGalleri,
-    getDriveImageBlob, findFileByName
+    getDriveImageBlob, findFileByName, deleteFile, listImages
 } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadGallery, setupUploadHandler } from '../admin-gallery.js';
@@ -216,33 +218,190 @@ describe('deleteGalleriBilde (via loadBilderModule callback)', () => {
         await loadBilderModule();
         showConfirm.mockResolvedValue(false);
 
+        const callsBefore = getGalleriRaw.mock.calls.length;
         const deleteFn = loadGalleriListeModule.mock.calls[0][2];
         await deleteFn(2, 'Venterom');
 
         expect(deleteGalleriRowPermanently).not.toHaveBeenCalled();
+        expect(getGalleriRaw.mock.calls.length).toBe(callsBefore);
     });
 
-    it('should delete and show toast when confirmed', async () => {
+    it('should delete Sheet row and Drive file when confirmed (happy path)', async () => {
         await loadBilderModule();
         showConfirm.mockResolvedValue(true);
+        getGalleriRaw.mockResolvedValue([
+            { rowIndex: 2, image: 'venterom.jpg', title: 'Venterom' }
+        ]);
+        deleteGalleriRowPermanently.mockResolvedValue();
+        findFileByName.mockResolvedValue({ id: 'drive-file-id' });
+        deleteFile.mockResolvedValue();
+
+        const deleteFn = loadGalleriListeModule.mock.calls[0][2];
+        await deleteFn(2, 'Venterom');
+
+        expect(getGalleriRaw).toHaveBeenCalledWith('test-sheet');
+        expect(deleteGalleriRowPermanently).toHaveBeenCalledWith('test-sheet', 2);
+        expect(findFileByName).toHaveBeenCalledWith('venterom.jpg', 'folder-123');
+        expect(deleteFile).toHaveBeenCalledWith('drive-file-id');
+        expect(showDeletionToast).toHaveBeenCalledWith('Venterom', expect.stringContaining('Drive-papirkurven'));
+    });
+
+    it('should skip Drive deletion when image field is empty', async () => {
+        await loadBilderModule();
+        showConfirm.mockResolvedValue(true);
+        getGalleriRaw.mockResolvedValue([
+            { rowIndex: 2, image: '', title: 'Venterom' }
+        ]);
         deleteGalleriRowPermanently.mockResolvedValue();
 
         const deleteFn = loadGalleriListeModule.mock.calls[0][2];
         await deleteFn(2, 'Venterom');
 
-        expect(deleteGalleriRowPermanently).toHaveBeenCalledWith('test-sheet', 2);
-        expect(showDeletionToast).toHaveBeenCalledWith('Venterom', expect.any(String));
+        expect(findFileByName).not.toHaveBeenCalled();
+        expect(deleteFile).not.toHaveBeenCalled();
     });
 
-    it('should show error when deletion fails', async () => {
+    it('should skip Drive deletion when row not found in Sheet', async () => {
         await loadBilderModule();
         showConfirm.mockResolvedValue(true);
+        getGalleriRaw.mockResolvedValue([]);
+        deleteGalleriRowPermanently.mockResolvedValue();
+
+        const deleteFn = loadGalleriListeModule.mock.calls[0][2];
+        await deleteFn(999, 'Ukjent');
+
+        expect(findFileByName).not.toHaveBeenCalled();
+        expect(deleteFile).not.toHaveBeenCalled();
+    });
+
+    it('should not call deleteFile when file not found in Drive', async () => {
+        await loadBilderModule();
+        showConfirm.mockResolvedValue(true);
+        getGalleriRaw.mockResolvedValue([
+            { rowIndex: 2, image: 'mangler.jpg', title: 'Venterom' }
+        ]);
+        deleteGalleriRowPermanently.mockResolvedValue();
+        findFileByName.mockResolvedValue(null);
+
+        const deleteFn = loadGalleriListeModule.mock.calls[0][2];
+        await deleteFn(2, 'Venterom');
+
+        expect(findFileByName).toHaveBeenCalledWith('mangler.jpg', 'folder-123');
+        expect(deleteFile).not.toHaveBeenCalled();
+        expect(showDeletionToast).toHaveBeenCalled();
+    });
+
+    it('should show toast even when Drive deletion fails (best-effort)', async () => {
+        await loadBilderModule();
+        showConfirm.mockResolvedValue(true);
+        getGalleriRaw.mockResolvedValue([
+            { rowIndex: 2, image: 'bilde.jpg', title: 'Venterom' }
+        ]);
+        deleteGalleriRowPermanently.mockResolvedValue();
+        findFileByName.mockRejectedValue(new Error('Drive API error'));
+
+        const deleteFn = loadGalleriListeModule.mock.calls[0][2];
+        await deleteFn(2, 'Venterom');
+
+        expect(showDeletionToast).toHaveBeenCalled();
+        expect(showToast).not.toHaveBeenCalled();
+    });
+
+    it('should show error when Sheet deletion fails', async () => {
+        await loadBilderModule();
+        showConfirm.mockResolvedValue(true);
+        getGalleriRaw.mockResolvedValue([
+            { rowIndex: 2, image: 'bilde.jpg', title: 'Venterom' }
+        ]);
         deleteGalleriRowPermanently.mockRejectedValue(new Error('fail'));
 
         const deleteFn = loadGalleriListeModule.mock.calls[0][2];
         await deleteFn(2, 'Venterom');
 
         expect(showToast).toHaveBeenCalledWith(expect.stringContaining('Kunne ikke slette'), 'error');
+        expect(findFileByName).not.toHaveBeenCalled();
+    });
+});
+
+describe('consistency check (galleri)', () => {
+    beforeEach(async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+    });
+
+    it('should show warning when Sheet references missing Drive files', async () => {
+        getGalleriRaw.mockResolvedValue([
+            { rowIndex: 2, image: 'venterom.jpg', title: 'Venterom' },
+            { rowIndex: 3, image: 'mangler.jpg', title: 'Mangler' }
+        ]);
+        listImages.mockResolvedValue([
+            { name: 'venterom.jpg' }
+        ]);
+
+        await loadBilderModule();
+        await new Promise(r => setTimeout(r, 0)); // let async IIFE run
+
+        expect(showToast).toHaveBeenCalledWith(
+            expect.stringContaining('1 rad(er) refererer bilder som ikke finnes i Drive'),
+            'warning'
+        );
+    });
+
+    it('should show info when Drive has orphaned files', async () => {
+        getGalleriRaw.mockResolvedValue([
+            { rowIndex: 2, image: 'venterom.jpg', title: 'Venterom' }
+        ]);
+        listImages.mockResolvedValue([
+            { name: 'venterom.jpg' },
+            { name: 'orphan.jpg' }
+        ]);
+
+        await loadBilderModule();
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(showToast).toHaveBeenCalledWith(
+            expect.stringContaining('1 bilde(r) i Drive-mappen er ikke koblet'),
+            'info'
+        );
+    });
+
+    it('should show no warnings when everything is consistent', async () => {
+        getGalleriRaw.mockResolvedValue([
+            { rowIndex: 2, image: 'venterom.jpg', title: 'Venterom' }
+        ]);
+        listImages.mockResolvedValue([
+            { name: 'venterom.jpg' }
+        ]);
+
+        await loadBilderModule();
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(showToast).not.toHaveBeenCalled();
+    });
+
+    it('should show both warnings when both issues exist', async () => {
+        getGalleriRaw.mockResolvedValue([
+            { rowIndex: 2, image: 'mangler.jpg', title: 'Mangler' }
+        ]);
+        listImages.mockResolvedValue([
+            { name: 'orphan.jpg' }
+        ]);
+
+        await loadBilderModule();
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(showToast).toHaveBeenCalledWith(expect.stringContaining('refererer bilder'), 'warning');
+        expect(showToast).toHaveBeenCalledWith(expect.stringContaining('ikke koblet'), 'info');
+    });
+
+    it('should not crash when listImages fails (best-effort)', async () => {
+        getGalleriRaw.mockResolvedValue([]);
+        listImages.mockRejectedValue(new Error('Drive API error'));
+
+        await loadBilderModule();
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(showToast).not.toHaveBeenCalled();
     });
 });
 

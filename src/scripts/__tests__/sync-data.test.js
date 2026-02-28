@@ -140,7 +140,7 @@ describe('sync-data.js', () => {
             expect(writtenData).toHaveLength(2);
         });
 
-        it('bør håndtere at bilde mangler i Drive', async () => {
+        it('bør håndtere at bilde mangler i Drive og nullstille image-felt', async () => {
             const mockData = {
                 data: {
                     values: [['Ola', 'T', 'B', 'mangler.jpg', 'ja']],
@@ -152,6 +152,8 @@ describe('sync-data.js', () => {
             await syncTannleger();
 
             expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Bilde ikke funnet'));
+            const writtenData = JSON.parse(fs.writeFileSync.mock.calls[0][1]);
+            expect(writtenData[0].image).toBe('');
         });
 
         it('bør håndtere feil ved nedlasting av bilde', async () => {
@@ -798,7 +800,9 @@ describe('sync-data.js', () => {
                     values: [['Venterom', 'brukt.jpg', 'Alt', 'ja', '1', '', '', '']]
                 }
             });
-            mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
+            // brukt.jpg finnes i Drive, ubrukt.jpg gjør det ikke
+            mockDrive.files.list.mockResolvedValue({ data: { files: [{ id: 'f1', name: 'brukt.jpg', md5Checksum: 'abc' }] } });
+            fs.existsSync.mockReturnValue(true);
             fs.readdirSync.mockReturnValue(['brukt.jpg', 'ubrukt.jpg', '.gitkeep']);
 
             await syncGalleri();
@@ -838,7 +842,7 @@ describe('sync-data.js', () => {
             expect(logs.some(l => l.includes('Laster ned galleribilde: ny.jpg'))).toBe(true);
         });
 
-        it('bør advare hvis galleribilde ikke finnes i Drive', async () => {
+        it('bør advare og nullstille image-felt hvis galleribilde ikke finnes i Drive', async () => {
             mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-id'] } });
             mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
                 data: {
@@ -850,6 +854,8 @@ describe('sync-data.js', () => {
             await syncGalleri();
 
             expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Galleribilde ikke funnet'));
+            const writtenData = JSON.parse(fs.writeFileSync.mock.calls[0][1]);
+            expect(writtenData[0].image).toBe('');
         });
 
         it('bør inkludere forsidebilde-rad i galleri-output med type-felt', async () => {
