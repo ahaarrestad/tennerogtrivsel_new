@@ -40,8 +40,8 @@ describe('src/middleware.ts – HTTP security headers', () => {
         const response = await handler({}, makeNext());
         const csp = response.headers.get('Content-Security-Policy')!;
 
-        // Leaflet/OSM kart-tiles (CartoDB Voyager)
-        expect(csp).toContain('https://basemaps.cartocdn.com');
+        // Leaflet/OSM kart-tiles
+        expect(csp).toContain('https://tile.openstreetmap.org');
         // Google OAuth og GIS
         expect(csp).toContain('https://accounts.google.com');
         // GAPI scripts

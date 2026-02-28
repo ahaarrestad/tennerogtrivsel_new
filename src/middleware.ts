@@ -8,12 +8,12 @@ const CSP = [
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com",
     // Fonter: eget domene + Google Fonts + Font Awesome (cdnjs)
     "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
-    // Bilder: eget domene + Google Drive-preview + CartoDB kart-tiles + data: URI + blob: (preview-bilder i admin)
-    "img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com https://basemaps.cartocdn.com",
+    // Bilder: eget domene + Google Drive-preview + OSM kart-tiles + data: URI + blob: (preview-bilder i admin)
+    "img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com https://tile.openstreetmap.org",
     // Iframes: Google Drive + Google OAuth + GAPI iframe-kanaler (content-*.googleapis.com)
     "frame-src https://drive.google.com https://accounts.google.com https://www.google.com https://*.googleapis.com",
     // API-kall: Google APIs + OAuth + telemetri fra Google-skript (gen_204)
-    "connect-src 'self' blob: https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://www.google.com https://basemaps.cartocdn.com",
+    "connect-src 'self' blob: https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://www.google.com https://tile.openstreetmap.org",
 ].join('; ');
 
 export const onRequest = defineMiddleware((_context, next) => {
