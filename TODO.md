@@ -30,11 +30,6 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
-- [ ] **Google Maps lazy-load bak klikk (cookiefri)**
-    - Vis placeholder (statisk kartbilde) med "Vis kart"-knapp
-    - Last Google Maps-iframe først når brukeren klikker — teller som samtykke
-    - Fjerner behovet for cookie-banner
-
 ## Fullført
 
 Se [TODO-archive.md](TODO-archive.md) for alle fullførte oppgaver.

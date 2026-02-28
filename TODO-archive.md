@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Erstatt Google Maps med Leaflet + OpenStreetMap (cookiefri)** ([design](docs/archive/2026-03-01-leaflet-osm-kart-design.md)) ([plan](docs/archive/2026-03-01-leaflet-osm-kart.md))
+    - Google Maps Embed iframe erstattet med Leaflet.js + CartoDB Voyager tiles
+    - Markør med permanent tooltip ("Tenner og Trivsel"), "Få veibeskrivelse"-knapp under kartet
+    - CSP oppdatert: `basemaps.cartocdn.com` i img-src og connect-src, fjernet `maps.gstatic.com`
+    - Full GDPR-compliance: ingen cookies, ingen IP-overføring til Google, ingen API-nøkkel for kart
+
 - [x] **Bekreft at det ikke brukes cookies på siden**
   - Ingen `document.cookie`, `Set-Cookie`-headere eller Astro cookies API i kodebasen
   - Autentisering bruker localStorage/sessionStorage, ikke cookies
