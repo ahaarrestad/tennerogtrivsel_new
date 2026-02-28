@@ -24,6 +24,11 @@
   - Fase 4: Verifisering av alt
   - **Status:** Nytt ACM-sertifikat bestilt, venter på godkjenning. Alt kjøres gjennom CloudFront i prod.
 
+- [ ] **GitHub Copilot som PR-reviewer** ([plan](docs/plan-copilot-pr-reviewer.md))
+  - Sett opp Copilot code review på pull requests
+  - Copilot må godkjenne (eller komme med forbedringer) før PR kan merges
+  - Legg til som required status check / required reviewer i branch protection rules
+
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plan-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
