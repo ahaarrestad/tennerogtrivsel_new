@@ -16,7 +16,7 @@
 - [ ] **Cache-Control og grønn hosting — gjør siden nesten «karbon-negativ»** ([plan](docs/plan-cache-control-gronn-hosting.md))
   - ~~Steg 1–3 for TEST: Cache-Control, invalidering, verifisering~~ ✓
   - ~~Steg 4 for TEST: Regionflytt til eu-north-1~~ ✓ (manuelt)
-  - Steg 5 for TEST: Verifiser fullt TEST-oppsett — cache-headere, S3 eu-north-1, test2.aarrestad.com + test3.aarrestad.com, og SSL-sertifikater
+  - ~~Steg 5 for TEST: Verifiser fullt TEST-oppsett — cache-headere, S3 eu-north-1, test2.aarrestad.com + test3.aarrestad.com, og SSL-sertifikater~~ ✓
   - Steg 1–4 for PROD: gjenstår (tilsvarende oppsett, inkl. verifisering)
 
 - [ ] **Flaky tests — sporadiske testfeil** ([plan](docs/plan-flaky-tests.md))
