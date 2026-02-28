@@ -12,11 +12,12 @@ Automate the commit workflow for this project. The project uses a review-based f
 
 ## Step 1: Understand the Changes
 
-Run this single command to get a full picture:
+Run these four commands **in parallel** (all in a single response, as separate Bash tool calls):
 
-```bash
-git status && echo "---STAGED---" && git diff --staged && echo "---UNSTAGED---" && git diff && echo "---LOG---" && git log --oneline -5
-```
+1. `git status`
+2. `git diff --staged`
+3. `git diff`
+4. `git log --oneline -5`
 
 Review the output carefully. Identify:
 - Which files have meaningful changes
