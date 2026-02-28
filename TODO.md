@@ -13,22 +13,15 @@
 
 ## Pågående
 
-*(Ingen oppgaver pågår)*
-
-## Backlog
-
-- [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plan-cloudfront-prod-komplett.md))
-  - Fase 1: CloudFront for www.tennerogtrivsel.no — ~~distribusjon, OAC, DNS~~ ✓, sikkerhetsheadere gjenstår
-  - Fase 2: Cache-Control headere, smart invalidering, deploy-workflow
-  - Fase 3: Multi-domene (.no/.com/.net) — ACM-sertifikat bestilt, venter på issued
-  - Fase 4: Verifisering av alt
-  - **Status:** Nytt ACM-sertifikat bestilt, venter på godkjenning. Alt kjøres gjennom CloudFront i prod.
-
-- [ ] **AI-drevet PR-review med Gemini Code Assist** ([plan](docs/plan-copilot-pr-reviewer.md))
+- [ ] **AI-drevet PR-review med Gemini Code Assist** ([plan](docs/plan-gemini-pr-reviewer.md))
   - Installer Gemini Code Assist (gratis GitHub App) fra Marketplace
   - Fjern auto-approve i `auto-pr.yml`, behold auto-merge
   - Valgfritt: branch protection med required approval
 
+## Backlog
+...
+- [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plan-cloudfront-prod-komplett.md))
+...
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plan-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
