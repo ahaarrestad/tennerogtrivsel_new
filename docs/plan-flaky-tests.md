@@ -1,47 +1,55 @@
 # Plan: Flaky tests — sporadiske testfeil
 
-> **Status:** Planlagt · **Oppgave:** Backlog #5
+> **Status:** Planlagt · **Oppgave:** Backlog #3
 
 ## Bakgrunn
 
-Noen CI-kjøringer feiler sporadisk. Undersøkelse av de 3 siste feilene (siste 200 kjøringer) avdekker **to ulike kategorier**:
+Noen CI-kjøringer feiler sporadisk. Undersøkelse av de siste 50 kjøringene (per 28. feb 2026) viser **48 suksess, 2 feil**:
 
-### Kategori A: `npm audit` blokkerer CI (2 av 3 feil)
-- **Rollup 4** ReDoS-sårbarhet (26. feb) → `npm audit --audit-level=high` feiler
-- **minimatch** ReDoS-sårbarhet (27. feb) → samme steg feiler
+### Kategori A: `npm audit` blokkerer CI (1 av 2 feil)
+
+- **minimatch** ReDoS-sårbarhet (27. feb) → `npm audit --audit-level=high` feiler
 - Ingen faktiske testfeil — security audit-steget har `exit code 1`
-- Disse er transiente (Dependabot/forfatteren fikser dep, audit passerer igjen)
+- Transient: Dependabot fikser dep, audit passerer igjen
 
-### Kategori B: E2E-testfeil (1 av 3 feil)
+### Kategori B: E2E-testfeil (1 av 2 feil)
+
 - **SEO-test feilet** (26. feb): `/galleri/` canonical-tag pekte til `/` i stedet for `/galleri/`
-- Dette var en reell bug som ble fikset i etterkant (commit for galleri E2E-feil)
-- Ikke en flaky test — det var en korrekt fangst av en faktisk feil
+- Reell bug som ble fikset — ikke en flaky test
 
 ### Tidligere fikset (ikke lenger relevant)
+
 - Mobilmeny-synlighet: fikset med `data-open`-attributt
 - Tjeneste-underside timeout: fikset med `waitUntil: 'domcontentloaded'` + 60s timeout
 - Admin dashboard timeout: observert én gang, aldri gjentatt
 
 ## Konklusjon fra undersøkelsen
 
-**Det finnes ingen sporadisk flaky tester i dag.** De 3 siste CI-feilene skyldes:
-1. Transiente `npm audit`-funn i avhengigheter (2×)
+**Det finnes ingen sporadisk flaky tester i dag.** De 2 siste CI-feilene skyldes:
+1. Transitiv `npm audit`-sårbarhet (1×)
 2. En reell bug fanget av tester (1×)
 
 ## Tiltak
 
-### Steg 1: Gjør `npm audit` ikke-blokkerende (continue-on-error)
+### Steg 1: Fjern `npm audit` fra CI
 
-**Problem:** `npm audit --audit-level=high` feiler CI når en transitiv avhengighet får en sårbarhet, selv om alle tester passerer. Dependabot-auto-merge fikser dette innen timer/dager, men i mellomtiden blokkeres all CI.
+**Problem:** `npm audit --audit-level=high` feiler CI når en transitiv avhengighet får en sårbarhet, selv om alle tester passerer. Dette blokkerer deploy til sårbarheten er fikset upstream.
 
-**Løsning:** Merk security audit-steget med `continue-on-error: true` slik at CI ikke feiler, men sårbarheten fortsatt er synlig i loggen.
+**Begrunnelse for fjerning:** Prosjektet har allerede tre lag med sikkerhetsovervåking:
+- **Dependabot** — oppretter PRs automatisk for sårbare avhengigheter
+- **Dependabot Auto-Merge** — merger patchoppdateringer automatisk
+- **CodeQL** — statisk analyse kjører på hver push
+
+`npm audit` i CI er dermed redundant og skaper kun falske positiver.
 
 **Fil:** `.github/workflows/deploy.yml`
 
+**Endring:** Fjern hele "Security audit"-steget (linje 40–41):
+
 ```yaml
+# Fjern disse linjene:
 - name: Security audit
   run: npm audit --audit-level=high
-  continue-on-error: true
 ```
 
 ### Steg 2: Legg til Playwright `--repeat-each` som lokal flaky-test-kommando
@@ -56,20 +64,20 @@ Noen CI-kjøringer feiler sporadisk. Undersøkelse av de 3 siste feilene (siste 
 "test:e2e:repeat": "npx playwright test --repeat-each=10"
 ```
 
-### Steg 3: Dokumenter flaky-test-status i denne planen
+### Steg 3: Verifiser og marker ferdig
 
-Oppdater denne filen med resultatene:
-- Bekreft at alle 108 E2E-tester passerer lokalt med `--repeat-each=10`
+- Bekreft at alle E2E-tester passerer lokalt med `--repeat-each=10`
 - Bekreft at alle enhetstester passerer
 - Marker oppgaven som fullført i TODO.md
 
 ## Risikovurdering
 
-- **Steg 1:** Lav risiko. Audit-feil er fortsatt synlige i CI-loggen, og Dependabot håndterer oppdateringer. Fjerner falske positiver fra CI-historikken.
+- **Steg 1:** Lav risiko. Dependabot + CodeQL dekker sikkerhetsskanning. Fjerner falske CI-feil uten å miste sikkerhetsovervåking.
 - **Steg 2:** Ingen risiko. Kun et nytt npm-script for lokal bruk.
-- **Steg 3:** Ingen risiko. Dokumentasjon.
+- **Steg 3:** Ingen risiko. Verifisering.
 
 ## Forventet resultat
 
 - CI feiler kun ved reelle test-feil, ikke transiente npm-audit-funn
+- Sikkerhetsovervåking ivaretas av Dependabot + CodeQL (allerede aktive)
 - Utviklere har et enkelt verktøy (`npm run test:e2e:repeat`) for å verifisere at en test ikke er flaky
