@@ -13,26 +13,16 @@
 
 ## Pågående
 
-- [ ] **Cache-Control og grønn hosting — gjør siden nesten «karbon-negativ»** ([plan](docs/plan-cache-control-gronn-hosting.md))
-  - ~~Steg 1–3 for TEST: Cache-Control, invalidering, verifisering~~ ✓
-  - ~~Steg 4 for TEST: Regionflytt til eu-north-1~~ ✓ (manuelt)
-  - ~~Steg 5 for TEST: Verifiser fullt TEST-oppsett — cache-headere, S3 eu-north-1, test2.aarrestad.com + test3.aarrestad.com, og SSL-sertifikater~~ ✓
-  - Steg 1–4 for PROD: gjenstår (tilsvarende oppsett, inkl. verifisering)
+(ingen oppgaver pågår)
 
 ## Backlog
 
-- [ ] **Sett opp CloudFront på produksjon (www.tennerogtrivsel.no)** ([plan](docs/plan-cloudfront-prod.md))
-  - Samme oppsett som test-siden, tilpasset produksjonsdomenet
-  - SSL-sertifikat (ACM us-east-1), CloudFront-distribusjon med OAC, cache-policy, DNS-pekere
-  - Gjenbruk Response Headers Policy og CloudFront Function fra test
-  - Oppdater deploy-workflow for prod-bucket
-  - 7 steg: ACM-sertifikat, CF-distribusjon, headere, S3-policy, DNS, deploy-workflow, verifisering
-
-- [ ] **Flere domener på samme CloudFront (hybrid)** ([plan](docs/plan-multi-domene-cloudfront.md))
-  - 3 www-domener direkte på CloudFront (ingen redirect), 3 apex redirecter til sin egen www-variant
-  - Ett ACM-sertifikat med alle 6 domener, DNS hos eksisterende registrar
-  - 9 steg: ACM-sertifikat, DNS-validering, CloudFront CNAMEs, www DNS-records, apex-redirect, Google OAuth origins, Maps API referrere, fjern S3-buckets, verifisering
-  - Kostnad: $0/mnd ekstra
+- [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plan-cloudfront-prod-komplett.md))
+  - Fase 1: CloudFront for www.tennerogtrivsel.no — ~~distribusjon, OAC, DNS~~ ✓, sikkerhetsheadere gjenstår
+  - Fase 2: Cache-Control headere, smart invalidering, deploy-workflow
+  - Fase 3: Multi-domene (.no/.com/.net) — ACM-sertifikat bestilt, venter på issued
+  - Fase 4: Verifisering av alt
+  - **Status:** Nytt ACM-sertifikat bestilt, venter på godkjenning. Alt kjøres gjennom CloudFront i prod.
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plan-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
