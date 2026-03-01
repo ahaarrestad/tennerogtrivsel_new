@@ -7,9 +7,9 @@
 - Planen skrives som notater under oppgaven før implementering begynner.
 - Flytt oppgaven til «Pågående» når planen er godkjent og arbeidet starter.
 - **Lever i små, iterative forbedringer** — minst én commit per oppgave. Store oppgaver brytes ned i deloppgaver som hver committes for seg.
-- **Planer lagres under `/docs`** som `docs/YYYY-MM-DD-<topic>.md`. Oppgaven skal alltid ha en lenke til planen.
+- **Planer** lagres i `docs/plans/YYYY-MM-DD-<topic>.md`. **Design-docs** lagres i `docs/designs/YYYY-MM-DD-<topic>.md`. Oppgaven skal alltid ha lenke til plan (og design om relevant).
 - Flytt oppgaven til «Fullført» når den er ferdig.
-- **Arkivering:** Når en oppgave er fullført, flytt oppgaven fra TODO.md til [TODO-archive.md](TODO-archive.md) og planfilen til `docs/archive/`.
+- **Arkivering:** Når en oppgave er fullført, flytt oppgaven fra TODO.md til [TODO-archive.md](TODO-archive.md), planfilen til `docs/plans/archive/` og eventuelle design-docs til `docs/designs/archive/`.
 
 ## Pågående
 
@@ -17,14 +17,14 @@
 
 ## Backlog
 
-- [ ] **AI-drevet PR-review med Gemini Code Assist** ([plan](docs/2026-02-28-gemini-pr-reviewer.md))
+- [ ] **AI-drevet PR-review med Gemini Code Assist** ([plan](docs/plans/2026-02-28-gemini-pr-reviewer.md))
   - Installer Gemini Code Assist (gratis GitHub App) fra Marketplace
   - Fjern auto-approve i `auto-pr.yml`, behold auto-merge
   - Valgfritt: branch protection med required approval
 
-- [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/2026-02-28-cloudfront-prod-komplett.md))
+- [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
 ...
-- [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/2026-02-27-dev-test-prod.md))
+- [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
     - `repository_dispatch` alltid til prod, push til main alltid til test

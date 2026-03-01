@@ -15,7 +15,7 @@ Fullstendig prosedyre finnes i `/quality-gate`-skill. Kjernekrav:
 
 ## Design-system
 
-Token-drevet design-guide i [`docs/design-guide.md`](docs/design-guide.md). Alle visuelle endringer skal følge denne.
+Token-drevet design-guide i [`docs/designs/design-guide.md`](docs/designs/design-guide.md). Alle visuelle endringer skal følge denne.
 
 - **Farger:** Kun CSS-variabler fra `src/styles/global.css` (`@theme`-blokken). Token-klasser (`text-brand`, `bg-accent`) — aldri hardkodede hex eller Tailwind-fargeklasser.
 - **Fonter:** Montserrat (headings) og Inter (body), begge self-hosted woff2. `--font-heading` / `--font-body`.
