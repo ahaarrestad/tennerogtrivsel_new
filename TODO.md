@@ -17,11 +17,6 @@
 
 ## Backlog
 
-- [ ] **AI-drevet PR-review med Gemini Code Assist** ([plan](docs/plans/2026-02-28-gemini-pr-reviewer.md))
-  - Installer Gemini Code Assist (gratis GitHub App) fra Marketplace
-  - Fjern auto-approve i `auto-pr.yml`, behold auto-merge
-  - Valgfritt: branch protection med required approval
-
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
 ...
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
