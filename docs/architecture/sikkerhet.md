@@ -26,6 +26,21 @@ vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
 
 CSP inkluderer `blob:` i `connect-src` for å støtte thumbnail-forhåndsvisning (blob-URLer fra `getDriveImageBlob()`) i admin-panelet.
 
+## CloudFront tile-proxy (GDPR)
+
+OSM-karttiles serveres via CloudFront-proxy (`/tiles/*`) for å eliminere IP-lekkasje til tredjepart. Besøkende kontakter kun eget domene.
+
+**Arkitektur:**
+- **Prod:** CloudFront behavior `/tiles/*` → origin `tile.openstreetmap.org` med CloudFront Function (`strip-tiles-prefix`) som fjerner `/tiles`-prefix før videresending
+- **Dev:** Vite dev server proxy i `astro.config.mjs` gjør det samme lokalt
+- **Leaflet:** Tile URL er `/tiles/{z}/{x}/{y}.png` (relativ path, fungerer i begge miljøer)
+
+**CloudFront-gotchas:**
+- `Host` er reservert header — kan ikke settes som custom origin header. CloudFront sender automatisk origin-domenet som Host så lenge Origin Request Policy ikke videresender Host fra viewer.
+- CloudFront videresender hele URL-pathen til origin. En CloudFront Function må strippe `/tiles`-prefix.
+
+**CSP:** `tile.openstreetmap.org` er fjernet fra `img-src` og `connect-src` — tiles lastes nå fra `'self'`. Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) er også fjernet — fontene er self-hosted.
+
 ## CSP-verifisering
 
 `tests/csp-check.spec.ts` verifiserer CSP-brudd på tvers av nøkkelsider. Kjør ved endringer i `src/middleware.ts` (se `/security-audit`-skill).
