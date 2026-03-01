@@ -8,7 +8,7 @@
 
 **Tech Stack:** AWS CloudFront (eksisterende distribusjon), Astro (statisk side), Leaflet.js, Vitest, Playwright
 
-**Design:** [docs/plans/2026-03-01-gdpr-vurdering-design.md](2026-03-01-gdpr-vurdering-design.md)
+**Design:** [plan-gdpr-vurdering-design.md](plan-gdpr-vurdering-design.md)
 
 ---
 
