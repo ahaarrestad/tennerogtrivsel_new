@@ -13,9 +13,7 @@
 
 ## Pågående
 
-- [ ] **Lokal pre-push code review** ([plan](docs/plans/2026-03-01-lokal-pre-push-review.md), [design](docs/designs/2026-03-01-lokal-pre-push-review-design.md))
-    - Nytt Step 4.5 i `/commit`-skillen: subagent-review av diff før push
-    - Blokkerende for sikkerhet/regelbrudd, rådgivende for kodekvalitet
+*(Ingen oppgaver pågår)*
 
 ## Backlog
 
