@@ -8,7 +8,7 @@
 
 **Tech Stack:** Leaflet.js (npm), CartoDB Voyager tiles, Astro client-side script
 
-**Design doc:** [docs/plans/2026-03-01-leaflet-osm-kart-design.md](2026-03-01-leaflet-osm-kart-design.md)
+**Design doc:** [2026-03-01-leaflet-osm-kart-design.md](../../designs/archive/2026-03-01-leaflet-osm-kart-design.md)
 
 ---
 
