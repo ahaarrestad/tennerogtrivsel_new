@@ -8,9 +8,9 @@ export default defineConfig({
         server: {
             proxy: {
                 '/tiles': {
-                    target: 'https://tile.openstreetmap.org',
+                    target: 'https://basemaps.cartocdn.com',
                     changeOrigin: true,
-                    rewrite: (path) => path.replace(/^\/tiles/, ''),
+                    rewrite: (path) => path.replace(/^\/tiles/, '/rastertiles/voyager'),
                 },
             },
         },
