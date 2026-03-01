@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Lokal pre-push code review** ([plan](docs/plans/archive/2026-03-01-lokal-pre-push-review.md), [design](docs/designs/archive/2026-03-01-lokal-pre-push-review-design.md))
+    - Nytt Step 4.5 i `/commit`-skillen: `superpowers:code-reviewer`-subagent reviewer diff før push
+    - Differensiert strenghet: Critical blokkerer, Important lar bruker velge, Minor er rådgivende
+    - Agent lagt til i allowed-tools, prosjektregler innebygd i subagent-prompt
+
 - [x] **AI-drevet PR-review med Gemini Code Assist** ([plan](docs/plans/archive/2026-02-28-gemini-pr-reviewer.md))
   - Gemini Code Assist installert fra GitHub Marketplace (automatisk review på alle PR-er)
   - Fjernet auto-approve-steget fra `auto-pr.yml`, beholdt auto-merge
