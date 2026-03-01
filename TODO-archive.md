@@ -2,7 +2,7 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
-- [x] **Leaflet-kart fanger scroll på mobil** ([plan](docs/archive/plan-leaflet-mobilscroll.md))
+- [x] **Leaflet-kart fanger scroll på mobil** ([plan](docs/archive/2026-03-01-leaflet-mobilscroll.md))
   - Deaktivert én-finger drag på touch-enheter, krever to fingre for panorering
   - Overlay-melding «Bruk to fingre for å flytte kartet» ved én-finger touch, fader ut etter 1.5s
   - Ekstrahert kartlogikk til `src/scripts/mapInit.ts` med 100% testdekning
@@ -37,32 +37,32 @@
   - Tredjepartsscripts (Google OAuth, EasyMDE, Flatpickr) setter ingen cookies
   - Google Maps embed-iframe kan sette sandboxede tredjepartscookies, men disse påvirker ikke siden
 
-- [x] **Slettede galleri-bilder og tannleger fjernes ikke fra Google Drive** ([plan](docs/archive/plan-drive-sletting-galleri.md))
+- [x] **Slettede galleri-bilder og tannleger fjernes ikke fra Google Drive** ([plan](docs/archive/2026-02-28-drive-sletting-galleri.md))
   - `deleteGalleriBilde()` og `deleteTannlege()` sletter nå Drive-fil etter Sheet-rad (best-effort)
   - Asynkron toveis konsistenssjekk i admin-panelet viser advarsel ved orphan-filer
   - `sync-data.js`: nullstiller image-felt i JSON når fil mangler i Drive, samlet konsistensrapport i loggen
   - Omfattende tester for alle nye kodestier (delete + konsistenssjekk)
 
-- [x] **Galleri krever tilgang til både Google Sheet og Bilder-mappen** ([plan](docs/archive/plan-galleri-tilgangskontroll.md))
+- [x] **Galleri krever tilgang til både Google Sheet og Bilder-mappen** ([plan](docs/archive/2026-02-28-galleri-tilgangskontroll.md))
   - Ny dedikert `BILDER_FOLDER` miljøvariabel (`PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID`)
   - `enforceAccessControl()` oppdatert med multi-ressurs-sjekk: krever tilgang til både `SHEET_ID` og `BILDER_FOLDER`
   - `admin-module-bilder.js` og `sync-data.js` bruker `BILDER_FOLDER` med fallback til dynamisk utledning
   - Admin-config, workflows og dokumentasjon oppdatert
   - Omfattende tester for alle nye kodestier
 
-- [x] **Flaky tests — sporadiske testfeil** ([plan](docs/archive/plan-flaky-tests.md))
+- [x] **Flaky tests — sporadiske testfeil** ([plan](docs/archive/2026-02-28-flaky-tests.md))
   - Fjernet `npm audit` fra CI — redundant med Dependabot + CodeQL
   - Lagt til `test:e2e:repeat`-script for lokal flaky-verifisering (`--repeat-each=10`)
   - Avdekket og fikset flaky accessibility-tester: `networkidle` i AxeBuilder-tester forhindrer «Execution context destroyed»
   - Verifisert: 280/280 accessibility-tester bestått med 10 repetisjoner, 628/628 totalt
 
-- [x] **Lag design guide for admin-grensesnittet** ([plan](docs/archive/plan-admin-design-guide.md))
+- [x] **Lag design guide for admin-grensesnittet** ([plan](docs/archive/2026-02-28-admin-design-guide.md))
   - Opprettet `docs/admin-design-guide.md` — komplett referansedokument for admin-panelets design-system
   - Dekker: 5 admin-fargetokens (slate-basert), 14 seksjonar inkl. typografi, layout, kort, knapper, skjema, status/varsler, nav, animasjoner, modaler, a11y, modulmønster, login
   - Dokumenterer ~40 CSS-klasser, 3 keyframe-animasjoner, toast/confirm/banner JS-API
   - Ren dokumentasjon — ingen kodeendringer
 
-- [x] **Sjekk hvordan sidene fungerer på iPhone** ([plan](docs/archive/plan-sjekk-iphone.md))
+- [x] **Sjekk hvordan sidene fungerer på iPhone** ([plan](docs/archive/2026-02-28-sjekk-iphone.md))
   - Mobile Safari (iPhone 14) lagt til som 4. Playwright-prosjekt
   - Alle 9 relevante E2E-tester bestod uten feil — ingen Safari-spesifikke bugs
   - Viewport meta oppdatert med `initial-scale=1` i Layout.astro og admin/index.astro
@@ -78,7 +78,7 @@
   - **Totalt uten Workspace: ~1 kr/mnd + 100–500 kr/år domener**
   - **Totalt med Workspace: ~91 kr/mnd (~1 100–1 600 kr/år)**
 
-- [x] **Kodelesbarhet — ny gjennomgang og forenkling** ([plan](docs/archive/plan-kodelesbarhet-2.md))
+- [x] **Kodelesbarhet — ny gjennomgang og forenkling** ([plan](docs/archive/2026-02-27-kodelesbarhet-2.md))
   - 6 steg fullført: slider-template, auto-save, bilde-preview, bildevelger, lagreverifisering, admin-client-splitt
   - Steg 1: `renderImageCropSliders()` — felles slider-template for bilder og tannleger
   - Steg 2: `createAutoSaver()` — felles debounce-mønster for alle 4 editor-moduler
@@ -88,7 +88,7 @@
   - Steg 6: `admin-client.js` (997 linjer) → `admin-auth.js` + `admin-drive.js` + `admin-sheets.js` + re-export fasade
   - 907 tester, alle ≥80% branch coverage
 
-- [x] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/archive/plan-sikkerhetssjekk.md))
+- [x] **Grundig sikkerhetssjekk av hele prosjektet** ([plan](docs/archive/2026-02-23-sikkerhetssjekk.md))
   - M1: HTML-escaping (`escapeHtml()`) + programmatisk verdi-setting i 5 admin-moduler (15+ injeksjonspunkter)
   - M2: Filopplastings-validering (MIME-type + filstørrelse) i `uploadImage()`
   - M3: Input-validering (`validateSheetInput()`) for Sheets-mutasjoner
@@ -96,26 +96,26 @@
   - 15 nye sikkerhetstester (escapeHtml, validateSheetInput, uploadImage-validering)
   - Dokumentert i `docs/architecture/sikkerhet.md`
 
-- [x] **Bekreft tilgangskontroll på adminsiden** ([plan](docs/archive/plan-tilgangskontroll.md))
+- [x] **Bekreft tilgangskontroll på adminsiden** ([plan](docs/archive/2026-02-27-tilgangskontroll.md))
   - 10 nye enhetstester: 5 tilgangskombinasjoner, 1 checkMultipleAccess blandet, 3 edge cases, 1 returverdi
   - Scenarioer: kun meldinger, kun tjenester, sheet+tannleger, kun sheet, alt unntatt sheet
   - Edge cases: tom config, manglende DOM-elementer, korrekt accessMap-retur
   - Dokumentert tilgangskontrollmodell i `docs/architecture/sikkerhet.md`
   - Branch coverage: admin-dashboard 88.8%, admin-client 94.76%
 
-- [x] **Sjekk at alle filer som kan testes er testet** ([plan](docs/archive/plan-sjekk-testdekning.md))
+- [x] **Sjekk at alle filer som kan testes er testet** ([plan](docs/archive/2026-02-27-sjekk-testdekning.md))
   - Alle 26 testbare kildefiler har testfiler — ingen hull funnet
   - 37 nye tester (816 → 853), totalt branch coverage 88.87% → 90.87%
   - 6 filer forbedret: content.config (100%), admin-module-tjenester (98%), admin-dialog (96%), admin-editor-helpers (95%), admin-module-tannleger (89%), admin-module-bilder (82%)
   - Resterende udekte grener er defensive null-guards og jsdom-begrensninger
 
-- [x] **Optimaliser testsuiten — fjern redundante tester** ([plan](docs/archive/plan-optimaliser-testsuite.md))
+- [x] **Optimaliser testsuiten — fjern redundante tester** ([plan](docs/archive/2026-02-25-optimaliser-testsuite.md))
   - `admin.spec.ts`: alle 7 tester → chromium-only (14 instanser spart)
   - `sitemap-pages.spec.ts`: 5 DOM-tester → chromium-only, 2 responsive tester beholdt for alle (10 instanser spart)
   - Totalt: 54 E2E-instanser kjørt (ned fra 108), −50% redundante nettleser-instanser
   - 816 enhetstester bestått, ≥80% branch coverage, bygg OK
 
-- [x] **Dobbelt linjeskift i markdown rendres ikke som mellomrom** ([plan](docs/archive/plan-markdown-linjeskift.md))
+- [x] **Dobbelt linjeskift i markdown rendres ikke som mellomrom** ([plan](docs/archive/2026-02-27-markdown-linjeskift.md))
   - Erstattet `snarkdown` med `marked` — avsnitt wrapes nå korrekt i `<p>`-tagger
   - Oppdatert `messageClient.js` og `admin-editor-helpers.js` (2 previewRender-funksjoner)
   - Oppdatert 7 testfiler med ny mock (`vi.mock('marked', ...)`)
@@ -129,19 +129,19 @@
   - Beholdt «Avbryt»-knapp for nye elementer og «Lagre og gå tilbake» i bilder
   - 816 enhetstester bestått, ≥80% branch coverage, 84 E2E bestått
 
-- [x] **Auto-lagring i admin (Meldinger og Tjenester)** ([plan](docs/archive/plan-auto-lagring-admin.md))
+- [x] **Auto-lagring i admin (Meldinger og Tjenester)** ([plan](docs/archive/2026-02-26-auto-lagring-admin.md))
   - Debounced auto-save (1500ms) med save bar for eksisterende meldinger og tjenester
   - Nye oppføringer: «Opprett»-knapp, deretter auto-save etter opprettelse
   - Refaktorert `initMarkdownEditor()` og `initEditors()` — fjernet knapp-binding, returnerer instanser
   - Dato-validering forhindrer auto-save i meldinger (endDate < startDate)
   - 99 tester bestått, ≥85% branch coverage for alle berørte filer
 
-- [x] **Flaky tests i E2E-tester** ([plan](docs/archive/plan-flaky-e2e.md))
+- [x] **Flaky tests i E2E-tester** ([plan](docs/archive/2026-02-26-flaky-e2e.md))
   - Mobilmeny-test: bekreftet fikset med `data-open`-attributt (0 feil av 550 kjøringer)
   - Tjeneste-undersider-test: timeout under parallell last — fikset med `test.setTimeout(60_000)` + `waitUntil: 'domcontentloaded'`
   - Verifisert: 0 feil av 1100 kjøringer etter fiks, full testsuite bestått (84 E2E + 787 unit)
 
-- [x] **Fiks galleri-relaterte E2E-feil og vis tom-melding på gallerisiden** ([plan](docs/archive/plan-galleri-e2e.md))
+- [x] **Fiks galleri-relaterte E2E-feil og vis tom-melding på gallerisiden** ([plan](docs/archive/2026-02-26-galleri-e2e.md))
   - `galleri.astro`: erstatt `Astro.redirect('/')` med tom-tilstand-melding (overskrift + "Galleriet er tomt for øyeblikket")
   - Galleri-siden beholder nå egen `<title>`, canonical URL og SEO-metadata ved tomt galleri
   - E2E-test for galleri-nav håndterer tomt galleri gracefully (early return hvis lenke mangler)
@@ -154,7 +154,7 @@
   - Oppdatert `[id].astro` (params + sidebar) og `Tjenester.astro` (kortlenker)
   - 7 enhetstester, 100% coverage
 
-- [x] **Forbedre visuell synlighet på aktiv melding i info-banner** ([plan](docs/archive/plan-info-banner-synlighet.md))
+- [x] **Forbedre visuell synlighet på aktiv melding i info-banner** ([plan](docs/archive/2026-02-26-info-banner-synlighet.md))
   - Fjernet pulserende prikk, erstattet med SVG info-ikon (`w-4 h-4`, sirkel med "i")
   - Økt tekststørrelse fra `text-xs md:text-sm` til `text-sm md:text-base`
   - Økt font-weight fra `font-medium` til `font-semibold`
@@ -164,11 +164,11 @@
   - Navbar.astro filtrerer bort galleri-lenken i desktop- og mobilmeny når `showGalleri` er `false`
   - galleri.astro redirecter til forsiden ved direkte tilgang til tom galleri-side
 
-- [x] **Galleri-navigasjon: scroll vs. standalone-side — er det konsistent?** ([plan](docs/archive/plan-galleri-navigasjon.md))
+- [x] **Galleri-navigasjon: scroll vs. standalone-side — er det konsistent?** ([plan](docs/archive/2026-02-25-galleri-navigasjon.md))
   - Forsiden begrenset til 4 bilder + «Se alle bilder»-lenke på alle skjermstørrelser
   - Navbar-lenke følger samme mønster som Tjenester/Tannleger (scroll på desktop, standalone på mobil) — konsistent
 
-- [x] **UX- og brukervennlighetsgjennomgang av admin-panelet** ([plan](docs/archive/plan-ux-brukervennlighet-admin.md))
+- [x] **UX- og brukervennlighetsgjennomgang av admin-panelet** ([plan](docs/archive/2026-02-25-ux-brukervennlighet-admin.md))
   - 7 steg fullført: brødsmuler, skeleton-loadere, kontekstuelle feilmeldinger, lagrestatus, berøringsmål, dashboard-tall, overganger
   - Steg 1: brødsmule-nav `Dashboard / Modulnavn (N elementer)` med elementtelling per modul
   - Steg 2: skeleton-kort (thumbnail + tekstlinjer + knapper) erstatter «Henter...»-tekst
@@ -178,7 +178,7 @@
   - Steg 6: aktiv-telling på dashboard-kort — tjenester (frontmatter), meldinger (datofiltrering), tannleger og galleri (Sheets)
   - Steg 7: `admin-view-enter` fade+slide-animasjon ved åpning/lukking av moduler og etter innlasting av lister
 
-- [x] **Sett opp CloudFront på test-siden** ([plan](docs/archive/plan-cloudfront-test.md))
+- [x] **Sett opp CloudFront på test-siden** ([plan](docs/archive/2026-02-24-cloudfront-test.md))
   - ACM-sertifikat (us-east-1) med DNS-validering
   - CloudFront-distribusjon med OAC, CachingOptimized + CachingDisabled for `/api/*`
   - Response Headers Policy: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
@@ -191,7 +191,7 @@
   - CloudFront cache-invalidering allerede implementert i `deploy.yml` (commit `109c339`) — invaliderer hele distribusjonen etter S3-sync
   - Gjennomgått alle 5 workflows: ingen ubrukte eller redundante (deploy, auto-pr, codeql, dependabot-auto-merge, dependabot-rebase)
 
-- [x] **Gjennomgang av flaky tester** ([plan](docs/archive/plan-flaky-tester.md))
+- [x] **Gjennomgang av flaky tester** ([plan](docs/archive/2026-02-24-flaky-tester.md))
   - Rotårsak: `toBeHidden()`/`toBeVisible()` avhenger av Tailwinds `invisible`-klasse som Playwright ikke konsistent gjenkjenner
   - Fiks: `data-open`-attributt på `#mobile-menu`, tester sjekker attributt i stedet for CSS-synlighet
   - Fjernet `retries: 1` i CI — alle tester kjøres nå uten retries
@@ -206,7 +206,7 @@
 - [x] **Endre tekst på admin-siden**
   - Byttet «i Google Sheets» til «på Google Disk» i dashboard-headeren
 
-- [x] **Kodelesbarhet — gå gjennom og forenkle koden** ([plan](docs/archive/plan-kodelesbarhet.md))
+- [x] **Kodelesbarhet — gå gjennom og forenkle koden** ([plan](docs/archive/2026-02-23-kodelesbarhet.md))
   - 6 steg fullført: bildeparsing, CRUD-konsolidering, event-binding, HTML-templates, sync-data-rydding, inline-script-ekstraksjon
   - Steg 1: `parseImageConfig()` erstatter 5× duplisert parsing
   - Steg 2: `deleteSheetRow()` + `updateSheetRow()` konsoliderer CRUD
@@ -223,47 +223,47 @@
 - [x] **Dynamisk årstall for copyright i footer**
   - Allerede implementert: `new Date().getFullYear()` i Footer.astro gir riktig årstall ved hvert bygg
 
-- [x] **Gjøre det enklere å forstå hvor innstillinger brukes på nettsiden** ([plan](docs/archive/plan-innstillinger-hint.md))
+- [x] **Gjøre det enklere å forstå hvor innstillinger brukes på nettsiden** ([plan](docs/archive/2026-02-24-innstillinger-hint.md))
   - Lagt til «Vises på:»-hint under hver innstilling i admin-panelet
   - SETTING_HINTS-objekt med 28 nøkler som mapper til plassering på nettsiden
   - Hint vises som dempet tekst (10px) under label, før input-feltet
 
-- [x] **Design- og UX-gjennomgang av admin-panelet** ([plan](docs/archive/plan-admin-ux.md))
+- [x] **Design- og UX-gjennomgang av admin-panelet** ([plan](docs/archive/2026-02-23-admin-ux.md))
   - 10 steg fullført: CLS-fiks, 5 admin-fargetokens, ~65 slate→token-erstatninger, toggle CSS refaktor, semantiske status-klasser, ikon-knapper, fokus/spacing, EasyMDE/PWA-opprydding, a11y (role=switch, aria-checked, role=status)
   - Token-drevet admin-design: alle farger via CSS-variabler (admin-surface, admin-hover, admin-border, admin-muted, admin-muted-light)
   - Ny CSS-klasser: admin-icon-btn, admin-icon-btn-danger, admin-icon-btn-reorder, admin-btn-cancel, admin-status-active/planned/expired
 
-- [x] **UX/design-gjennomgang av den offentlige nettsiden** ([design-guide](docs/design-guide.md)) ([plan](docs/archive/plan-ux-redesign.md))
+- [x] **UX/design-gjennomgang av den offentlige nettsiden** ([design-guide](docs/design-guide.md)) ([plan](docs/archive/2026-02-22-ux-redesign.md))
   - 13 steg fullført: typografi, fargepalett (stone), spacing, knapper, kort, navbar, footer, galleri, accent bar, 404-side, tjenester-detaljside, tilgjengelighet, CLAUDE.md
   - Token-drevet design: alle farger via CSS-variabler, self-hosted Montserrat/Inter fonter
   - Skip-link, globale fokus-stiler, fjernet nestet main, fjernet !important-overstyrringer
 
-- [x] **Konsistent aktiv/inaktiv-visning i admin på tvers av moduler** ([plan](docs/archive/plan-konsistent-toggle.md))
+- [x] **Konsistent aktiv/inaktiv-visning i admin på tvers av moduler** ([plan](docs/archive/2026-02-23-konsistent-toggle.md))
   - Tannlege-editor: checkbox → toggle-switch med `data-active`
   - Galleri-editor: select/dropdown → toggle-switch med `data-active`
   - Felles `setToggleState()` og `renderToggleHtml()` hjelpefunksjoner
   - Tjeneste-editor refaktorert til å bruke samme hjelpefunksjoner
   - Alle tre editorer har identisk "Synlighet"-toggle
 
-- [x] **Fiks wrapping av tekst i tjeneste-listen i admin på mobil** ([plan](docs/archive/plan-tjeneste-tekst-wrapping.md))
+- [x] **Fiks wrapping av tekst i tjeneste-listen i admin på mobil** ([plan](docs/archive/2026-02-23-tjeneste-tekst-wrapping.md))
   - `line-clamp-2 sm:line-clamp-none` på h3-titler i meldinger, tjenester og tannleger
   - `self-end sm:self-auto` på knapp-containere for konsistent plassering på mobil
   - Galleri allerede OK (hadde `truncate` og `self-end`)
 
-- [x] **Legal vurdering av dependencies** ([rapport](docs/archive/plan-legal-dependencies.md))
+- [x] **Legal vurdering av dependencies** ([rapport](docs/archive/2026-02-23-legal-dependencies.md))
     - npm audit: 0 sårbarheter, alle deps aktivt vedlikeholdt
     - 97%+ permissive lisenser (MIT/Apache/BSD/ISC), 2 LGPL + 5 MPL — ingen risiko
     - MIT-lisens lagt til prosjektet (`LICENSE`)
     - Dependabot + CI-audit dekker løpende vedlikehold
 
-- [x] **"Legg til snarvei"-lenke i admin på mobil (PWA / Add to Home Screen)** ([plan](docs/archive/plan-pwa-snarvei.md))
+- [x] **"Legg til snarvei"-lenke i admin på mobil (PWA / Add to Home Screen)** ([plan](docs/archive/2026-02-23-pwa-snarvei.md))
   - Web App Manifest (`admin-manifest.json`) med eksisterende favicon-ikoner
   - Install-prompt (`pwa-prompt.js`) med Android- og iOS-støtte
   - Toast etter innlogging, husker avvisning via localStorage
   - Meta-tagger for theme-color og apple-web-app i admin `<head>`
   - 15 enhetstester, 87.5% branch coverage
 
-- [x] **Legg til toggling for tjenester** ([plan](docs/archive/plan-toggling-tjenester.md))
+- [x] **Legg til toggling for tjenester** ([plan](docs/archive/2026-02-23-toggling-tjenester.md))
   - Toggle-switch i liste og editor, frontmatter-basert lagring (active: true/false)
   - Inaktive tjenester filtreres ut fra forsiden og standalone-sider
   - 8 nye enhetstester for toggle-funksjonaliteten
@@ -273,7 +273,7 @@
   - Optimistisk UI-oppdatering med revert ved feil
   - 7 nye enhetstester for toggle-funksjonaliteten
 
-- [x] **Konsolidere og rydde i E2E-tester** ([plan](docs/archive/plan-konsolidere-e2e.md))
+- [x] **Konsolidere og rydde i E2E-tester** ([plan](docs/archive/2026-02-22-konsolidere-e2e.md))
   - Slettet `homepage.spec.ts` — mobilmeny-test flyttet til `sitemap-pages.spec.ts`
   - Slettet `services.spec.ts` — tjeneste-navigasjon og sidebar-test flyttet til `sitemap-pages.spec.ts`
   - `seo.spec.ts` og `links.spec.ts` begrenset til kun chromium-prosjektet (24 nettleser-instanser skippet)
@@ -285,14 +285,14 @@
   - Kompaktere dashboard-grid (`gap-8` → `gap-5`) og container-spacing
   - Mindre knapper i lister (p-3 → p-2.5, ikoner 18px → 16px) og redusert module-content min-height
 
-- [x] **Vurdere byggetid og test-tid på nytt** ([plan](docs/archive/plan-byggetid-test-tid.md))
+- [x] **Vurdere byggetid og test-tid på nytt** ([plan](docs/archive/2026-02-22-byggetid-test-tid.md))
   - Playwright Docker-container (`mcr.microsoft.com/playwright:v1.58.2-noble`) — eliminerer browser-install/cache-steg
   - Build slått sammen inn i e2e-jobben — eliminerer separat runner-oppstart + npm ci
   - Workers 2→4, retries 2→1 i Playwright-config
   - `build`-jobb beholdt som tynn gate (required status check) + full build for repository_dispatch
   - Forventet besparelse: ~25-35% (fra ~4 min til ~2:30-3:00 min)
 
-- [x] **Raskere bygg ved Google Drive-oppdatering (repository_dispatch)** ([plan](docs/archive/plan-raskere-drive-bygg.md))
+- [x] **Raskere bygg ved Google Drive-oppdatering (repository_dispatch)** ([plan](docs/archive/2026-02-22-raskere-drive-bygg.md))
   - Testjobber (`unit-tests`, `e2e-tests`) hoppes over ved `repository_dispatch`-trigger
   - `build`-jobb bruker `always()` med eksplisitt sjekk for `success` eller `skipped`
   - Forventet byggetid for innholdsoppdateringer: ~1 min (ned fra ~4 min)
@@ -319,7 +319,7 @@
   - Komplett OpenGraph (`og:locale`, `og:site_name`, `og:image:width/height`) og Twitter Card
   - 10 nye E2E-tester for SEO-metadata
 
-- [x] **Kodekvalitet / småfiks** ([plan](docs/archive/plan-kodekvalitet-smafiks.md))
+- [x] **Kodekvalitet / småfiks** ([plan](docs/archive/2026-02-22-kodekvalitet-smafiks.md))
   - Skrivefeil `troke-linecap` → `stroke-linecap` i Kontakt.astro
   - Fjernet debug-kommentar i `tjenester/[id].astro`
   - Begrenset `MutationObserver` i `layout-helper.js` til `banner-root` og `main` (var `document.body` med `subtree: true`)
