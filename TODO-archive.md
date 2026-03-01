@@ -2,6 +2,10 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Besøksadresse-kortet: tydeliggjør at det er en lenke**
+    - Erstattet tomt link-slot med "Vis veibeskrivelse →" i `Kontakt.astro`
+    - Gjenbruker eksisterende `card-link`-klasse og hover-animasjon
+
 - [x] **Full GDPR-vurdering av prosjektet** ([design](docs/archive/2026-03-01-gdpr-vurdering-design.md)) ([plan](docs/archive/2026-03-01-gdpr-vurdering.md))
     - CloudFront tile-proxy: `/tiles/*` → OSM via CloudFront (eliminerer IP-lekkasje til tredjepart)
     - Vite dev proxy for lokal utvikling av tiles

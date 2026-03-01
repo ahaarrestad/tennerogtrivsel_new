@@ -24,9 +24,6 @@
 
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plan-cloudfront-prod-komplett.md))
 ...
-- [ ] **Besøksadresse-kortet: tydeliggjør at det er en lenke**
-  - Vurder visuell forbedring (ikon, understreking, hover-effekt e.l.) slik at brukere skjønner at kortet er klikkbart
-
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plan-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
