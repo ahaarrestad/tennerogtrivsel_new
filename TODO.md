@@ -13,7 +13,11 @@
 
 ## Pågående
 
-*(Ingen oppgaver pågår)*
+- [ ] **Full GDPR-vurdering av prosjektet** ([design](docs/plans/2026-03-01-gdpr-vurdering-design.md)) ([plan](docs/plans/2026-03-01-gdpr-vurdering.md))
+    - CloudFront tile-proxy for OSM (eliminerer IP-lekkasje)
+    - Personvernerklæring-side (`/personvern`) + footer-lenke
+    - Admin info-banner om localStorage-bruk
+    - CSP-opprydding (fjern ubrukte Google Fonts-referanser)
 
 ## Backlog
 
@@ -24,12 +28,6 @@
 
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plan-cloudfront-prod-komplett.md))
 ...
-- [ ] **Full GDPR-vurdering av prosjektet** ([design](docs/plans/2026-03-01-gdpr-vurdering-design.md)) ([plan](docs/plans/2026-03-01-gdpr-vurdering.md))
-    - CloudFront tile-proxy for OSM (eliminerer IP-lekkasje)
-    - Personvernerklæring-side (`/personvern`) + footer-lenke
-    - Admin info-banner om localStorage-bruk
-    - CSP-opprydding (fjern ubrukte Google Fonts-referanser)
-
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plan-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)

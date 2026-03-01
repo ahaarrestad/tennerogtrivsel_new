@@ -14,20 +14,47 @@
 
 ### Task 1: CloudFront tile-proxy (manuelt AWS-oppsett)
 
-Disse stegene gjøres manuelt i AWS Console. Agenten assisterer med verdier.
+Disse stegene gjøres manuelt i AWS Console for hver CloudFront-distribusjon (test og prod).
 
-**Step 1: Legg til ny origin i eksisterende CloudFront-distribusjon**
+> **Lærdom fra test2-oppsett (mars 2026):**
+> - `Host` er en reservert header i CloudFront — kan **ikke** settes som custom origin header.
+>   CloudFront sender automatisk `Host: tile.openstreetmap.org` til origin så lenge Origin Request Policy ikke videresender Host fra viewer.
+> - CloudFront videresender hele URL-pathen til origin. `/tiles/17/...` sendes som `/tiles/17/...`,
+>   men OSM forventer `/17/...`. Løsning: en CloudFront Function som stripper `/tiles`-prefix.
 
-AWS Console → CloudFront → prod-distribusjon → Origins → Create origin:
+**Step 1: Legg til ny origin**
+
+AWS Console → CloudFront → distribusjon → Origins → Create origin:
 
 | Felt | Verdi |
 |------|-------|
 | Origin domain | `tile.openstreetmap.org` |
 | Protocol | HTTPS only |
 | Name | `osm-tiles` |
-| Custom headers | `Host: tile.openstreetmap.org` (påkrevd — OSM krever korrekt Host-header) |
+| Custom headers | *(ingen — la stå tomt)* |
 
-**Step 2: Legg til ny behavior**
+**Step 2: Opprett CloudFront Function**
+
+CloudFront → Functions (sidemenyen) → Create function:
+
+| Felt | Verdi |
+|------|-------|
+| Name | `strip-tiles-prefix` |
+| Runtime | cloudfront-js 2.0 |
+
+Kode:
+
+```javascript
+function handler(event) {
+    var request = event.request;
+    request.uri = request.uri.replace(/^\/tiles/, '');
+    return request;
+}
+```
+
+Klikk **Save changes**, deretter **Publish**.
+
+**Step 3: Legg til ny behavior**
 
 CloudFront → Behaviors → Create behavior:
 
@@ -35,19 +62,29 @@ CloudFront → Behaviors → Create behavior:
 |------|-------|
 | Path pattern | `/tiles/*` |
 | Origin | `osm-tiles` (fra steg 1) |
-| Cache policy | CachingOptimized |
 | Viewer protocol policy | Redirect HTTP to HTTPS |
 | Allowed HTTP Methods | GET, HEAD |
-| Compress objects | Yes |
+| Restrict viewer access | No |
+| Cache key and origin requests | Cache policy and origin request policy |
+| Cache policy | CachingOptimized |
+| Origin request policy | None |
+| Compress objects automatically | Yes |
+| **Function associations → Viewer request** | **CloudFront Functions** → `strip-tiles-prefix` |
 
-**Step 3: Verifiser at tiles fungerer**
+**Step 4: Vent på deploy og verifiser**
+
+Vent til distribusjonens status endres fra "Deploying" til "Enabled", deretter:
 
 ```bash
+# Test (bytt domene til den aktuelle distribusjonen):
 curl -sI "https://www.tennerogtrivsel.no/tiles/17/67686/37891.png" | head -5
 # Forventet: HTTP/2 200, content-type: image/png
 ```
 
-**Step 4: Commit (ingen kodeendringer ennå — CloudFront-oppsettet er manuelt)**
+> **Merk:** OSM kan sende `x-blocked`-header i responsen — dette er en advarsel om bulk-tilgang,
+> ikke en faktisk blokkering. For en liten nettside er dette uproblematisk.
+
+**Step 5: Commit (ingen kodeendringer ennå — CloudFront-oppsettet er manuelt)**
 
 ---
 
