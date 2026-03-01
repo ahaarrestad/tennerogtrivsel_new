@@ -140,15 +140,15 @@ jobs:
 #      - name: Deploy to S3 PROD-SE
 #        run: |
 #          # 1. Hashed assets — immutable (1 år)
-#          aws s3 sync dist/_astro/ s3://www.tennerogtrivsel.no-se/_astro/ --delete \
+#          aws s3 sync dist/_astro/ s3://tennerogtrivsel-se/_astro/ --delete \
 #            --cache-control "public, max-age=31536000, immutable"
 #
 #          # 2. Fonter — immutable (1 år, versjonert i filnavn)
-#          aws s3 sync dist/fonts/ s3://www.tennerogtrivsel.no-se/fonts/ \
+#          aws s3 sync dist/fonts/ s3://tennerogtrivsel-se/fonts/ \
 #            --cache-control "public, max-age=31536000, immutable"
 #
 #          # 3. Alt annet (HTML, favicons, SW) — kort cache med revalidering
-#          aws s3 sync dist/ s3://www.tennerogtrivsel.no-se --delete \
+#          aws s3 sync dist/ s3://tennerogtrivsel-se --delete \
 #            --exclude "_astro/*" --exclude "fonts/*" \
 #            --cache-control "public, max-age=3600, stale-while-revalidate=86400"
 
