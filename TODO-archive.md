@@ -2,7 +2,7 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
-- [x] **Leaflet-kart fanger scroll på mobil** ([plan](docs/plans/2026-03-01-leaflet-mobile-scroll.md))
+- [x] **Leaflet-kart fanger scroll på mobil** ([plan](docs/archive/plan-leaflet-mobilscroll.md))
   - Deaktivert én-finger drag på touch-enheter, krever to fingre for panorering
   - Overlay-melding «Bruk to fingre for å flytte kartet» ved én-finger touch, fader ut etter 1.5s
   - Ekstrahert kartlogikk til `src/scripts/mapInit.ts` med 100% testdekning
