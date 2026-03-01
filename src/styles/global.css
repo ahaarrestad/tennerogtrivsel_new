@@ -724,4 +724,37 @@
         background-color: white !important;
         z-index: 10 !important;
     }
+
+    /* Map touch overlay — "use two fingers" message */
+    .map-touch-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.4);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        border-radius: inherit;
+    }
+
+    .map-touch-overlay.visible {
+        opacity: 1;
+    }
+
+    .map-touch-overlay-message {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        background: white;
+        color: var(--color-brand);
+        border-radius: 2rem;
+        font-family: var(--font-body);
+        font-size: 0.875rem;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
 }
