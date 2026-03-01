@@ -1,0 +1,82 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getSiteSettings } from '../scripts/getSettings';
+import { getSectionClasses } from '../scripts/sectionVariant';
+
+const settings = await getSiteSettings();
+const { sectionBg } = getSectionClasses('brand');
+---
+<Layout title="Personvernerklæring – Tenner og Trivsel" description="Personvernerklæring for tennerogtrivsel.no">
+    <section class={`section-container ${sectionBg}`}>
+        <div class="section-content prose prose-brand max-w-3xl mx-auto">
+            <h1 class="section-heading">Personvernerklæring</h1>
+            <p class="text-sm text-brand-muted">Sist oppdatert: mars 2026</p>
+
+            <h2>Behandlingsansvarlig</h2>
+            <p>
+                Tenner og Trivsel<br>
+                {settings.adresse1}, {settings.adresse2}<br>
+                Telefon: {settings.phone1}
+            </p>
+
+            <h2>Hvilke data samler vi inn?</h2>
+            <p>
+                Nettsiden vår samler <strong>ikke</strong> inn personopplysninger fra besøkende.
+                Vi bruker ingen analyseverktøy, sporingsteknologi eller informasjonskapsler (cookies).
+            </p>
+
+            <h2>Karttjeneste</h2>
+            <p>
+                Kontaktsiden viser et kart fra OpenStreetMap. Kartbildene (tiles) lastes via vår
+                egen server (CloudFront-proxy), slik at din IP-adresse <strong>ikke</strong> sendes
+                til OpenStreetMap eller andre tredjeparter.
+            </p>
+
+            <h2>Eksterne lenker</h2>
+            <p>
+                Knappen «Få veibeskrivelse» åpner Google Maps i en ny fane. Dette skjer
+                kun når du selv klikker på lenken. Ved å følge lenken forlater du vår
+                nettside og blir underlagt
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Googles personvernerklæring</a>.
+            </p>
+
+            <h2>Ansattprofiler</h2>
+            <p>
+                Nettsiden viser navn, tittel, beskrivelse og bilde av ansatte ved klinikken.
+                Dette gjøres med samtykke fra de ansatte, og er basert på
+                behandlingsgrunnlaget «samtykke» (GDPR art. 6 nr. 1 bokstav a).
+            </p>
+
+            <h2>Administrasjonspanel</h2>
+            <p>
+                Klinikkens ansatte kan logge inn i et administrasjonspanel via Google OAuth.
+                Ved innlogging lagres følgende i nettleserens lagringsområde (localStorage eller sessionStorage):
+            </p>
+            <ul>
+                <li>Autentiseringstoken fra Google</li>
+                <li>Navn, e-postadresse og profilbilde (fra Google-kontoen)</li>
+            </ul>
+            <p>
+                Denne informasjonen lagres kun lokalt i nettleseren og slettes ved utlogging
+                eller når nettleserøkten avsluttes (avhengig av «Husk meg»-valget).
+            </p>
+            <p>
+                Admin-panelet laster ressurser fra følgende CDN-tjenester, som mottar
+                administratorens IP-adresse:
+            </p>
+            <ul>
+                <li><a href="https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net" target="_blank" rel="noopener noreferrer">jsDelivr</a></li>
+                <li><a href="https://www.unpkg.com" target="_blank" rel="noopener noreferrer">unpkg</a></li>
+                <li><a href="https://cdnjs.cloudflare.com/" target="_blank" rel="noopener noreferrer">cdnjs (Cloudflare)</a></li>
+            </ul>
+
+            <h2>Kontakt</h2>
+            <p>
+                Har du spørsmål om personvern? Ta kontakt med oss på telefon {settings.phone1}
+                {settings.showEmail === "ja" && settings.email && (
+                    <span> eller e-post <a href={`mailto:${settings.email}`}>{settings.email}</a></span>
+                )}.
+            </p>
+        </div>
+    </section>
+</Layout>
