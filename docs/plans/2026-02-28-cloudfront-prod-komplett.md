@@ -1,6 +1,6 @@
 # Plan: CloudFront produksjon — komplett oppsett med alle domener
 
-> **Status: BACKLOG** — Verifisert 2026-03-01. Fase 1 nesten ferdig (mangler Response Headers Policy). Fase 2 klar i kode (utkommentert). Fase 3 SAN-sertifikat issued, men .com/.net går via S3-redirect-buckets som skal fjernes. Apex-domener uten DNS.
+> **Status: PÅGÅENDE** — Verifisert 2026-03-01. Fase 1 nesten ferdig (mangler Response Headers Policy). Fase 2 nesten ferdig — bucket `tennerogtrivsel-se` i Stockholm, deploy-kode klar men utkommentert. Fase 3 ferdig — alle 6 domener på samme CloudFront-distribusjon med SAN-sertifikat.
 
 ## Bakgrunn
 
@@ -11,7 +11,7 @@ Sammenslått plan fra tre tidligere oppgaver som alle handler om det samme:
 
 Test-oppsettet (test2.aarrestad.com) er ferdig verifisert og fungerer. Denne planen gjør tilsvarende for produksjon, med alle domener på én distribusjon.
 
-> **Nåværende situasjon (2026-03-01):** Prod-distribusjonen (`d19b7g2frcrx6i.cloudfront.net`) serverer fortsatt den gamle nettsiden. Den nye Astro-siden er kun live på test (`dnpjnvcuk7ym7.cloudfront.net`). Alle tre www-domener resolver til prod-distribusjonen, men `.com` og `.net` rutes via S3-redirect-buckets — disse skal fjernes til fordel for ekte CloudFront CNAMEs.
+> **Nåværende situasjon (2026-03-01):** Prod-distribusjonen (`d19b7g2frcrx6i.cloudfront.net`) serverer fortsatt den gamle nettsiden. Den nye Astro-siden er kun live på test (`dnpjnvcuk7ym7.cloudfront.net`). Alle 6 domener (3 www + 3 apex) peker nå direkte til samme CloudFront-distribusjon og S3-bucket. SAN-sertifikatet dekker alle 6 domener. Apex-domener serverer innhold direkte (ingen redirect til www).
 
 ### Erfaringer fra test-oppsettet
 
@@ -27,9 +27,9 @@ Test-oppsettet (test2.aarrestad.com) er ferdig verifisert og fungerer. Denne pla
 | `www.tennerogtrivsel.no` | `www.tennerogtrivsel.no` | Nei |
 | `www.tennerogtrivsel.com` | `www.tennerogtrivsel.com` | Nei |
 | `www.tennerogtrivsel.net` | `www.tennerogtrivsel.net` | Nei |
-| `tennerogtrivsel.no` | `www.tennerogtrivsel.no` | Ja (301) |
-| `tennerogtrivsel.com` | `www.tennerogtrivsel.com` | Ja (301) |
-| `tennerogtrivsel.net` | `www.tennerogtrivsel.net` | Ja (301) |
+| `tennerogtrivsel.no` | `tennerogtrivsel.no` | Nei (direkte innhold) |
+| `tennerogtrivsel.com` | `tennerogtrivsel.com` | Nei (direkte innhold) |
+| `tennerogtrivsel.net` | `tennerogtrivsel.net` | Nei (direkte innhold) |
 
 ---
 
@@ -87,15 +87,15 @@ Tre separate syncer er skrevet i `deploy.yml` (linje 140–153), men utkommenter
 
 ```yaml
 # 1. Hashed assets — immutable (1 år)
-aws s3 sync dist/_astro/ s3://www.tennerogtrivsel.no-se/_astro/ --delete \
+aws s3 sync dist/_astro/ s3://tennerogtrivsel-se/_astro/ --delete \
   --cache-control "public, max-age=31536000, immutable"
 
 # 2. Fonter — immutable (1 år, versjonert i filnavn)
-aws s3 sync dist/fonts/ s3://www.tennerogtrivsel.no-se/fonts/ \
+aws s3 sync dist/fonts/ s3://tennerogtrivsel-se/fonts/ \
   --cache-control "public, max-age=31536000, immutable"
 
 # 3. Alt annet (HTML, favicons, SW) — kort cache med revalidering
-aws s3 sync dist/ s3://www.tennerogtrivsel.no-se --delete \
+aws s3 sync dist/ s3://tennerogtrivsel-se --delete \
   --exclude "_astro/*" --exclude "fonts/*" \
   --cache-control "public, max-age=3600, stale-while-revalidate=86400"
 ```
@@ -116,51 +116,39 @@ aws cloudfront create-invalidation \
 
 > **Verifisert 2026-03-01:** `CLOUDFRONT_DISTRIBUTION_ID_PROD` finnes som GitHub secret (opprettet 2026-02-26). Også `CLOUDFRONT_DISTRIBUTION_ID_TEST` finnes.
 
-### Steg 2.4: Vurder eu-north-1 for prod-bucket
+### ~~Steg 2.4: S3-bucket i eu-north-1 (Stockholm)~~ ✅
 
-Kortere nettverksvei for norske brukere. Samme prosess som test: ny bucket i Stockholm, pek CloudFront-origin dit, oppdater deploy-workflow, slett gammel bucket.
+> **Verifisert 2026-03-01:** Ny bucket `tennerogtrivsel-se` opprettet i eu-north-1 (Stockholm). CloudFront-origin peker til denne bucketen. OAC og bucket policy er konfigurert — direkte S3-tilgang returnerer 403 Forbidden. `deploy.yml` har korrekt bucket-navn (linje 143, 147, 151 — utkommentert, klar for go-live).
 
 ---
 
 ## Fase 3: Alle domener på samme CloudFront
 
-### ~~Steg 3.1: ACM-sertifikat med www-domener~~ ✅
+### ~~Steg 3.1: ACM-sertifikat med alle 6 domener~~ ✅
 
-> **Verifisert 2026-03-01:** SAN-sertifikatet er **issued** og i bruk på prod-distribusjonen. Dekker 3 www-domener:
-> - `www.tennerogtrivsel.no` (CN)
-> - `www.tennerogtrivsel.com` (SAN)
+> **Verifisert 2026-03-01:** SAN-sertifikatet er **issued** og i bruk på prod-distribusjonen. Dekker alle 6 domener:
+> - `tennerogtrivsel.no` (CN)
+> - `www.tennerogtrivsel.no` (SAN)
 > - `www.tennerogtrivsel.net` (SAN)
+> - `tennerogtrivsel.net` (SAN)
+> - `www.tennerogtrivsel.com` (SAN)
+> - `tennerogtrivsel.com` (SAN)
 >
-> Issuer: Amazon RSA 2048 M04. Apex-domener trenger ikke være på sertifikatet — de redirectes hos registrar før de når CloudFront.
+> Issuer: Amazon RSA 2048 M04.
 
-### Steg 3.2: Legg til www-domener som ekte CloudFront CNAMEs — ❌ ikke gjort
+### ~~Steg 3.2: Alle 6 domener som CloudFront CNAMEs~~ ✅
 
-Per nå rutes `www.tennerogtrivsel.com` og `.net` via **S3-redirect-buckets**. Disse skal fjernes og erstattes med ekte CloudFront alternate domain names.
+> **Verifisert 2026-03-01:** Alle 6 domener er lagt til som alternate domain names på prod-distribusjonen (`d19b7g2frcrx6i`). Alle serverer identisk innhold (samme etag `024c00c1...`, Server: AmazonS3, x-cache: Hit from cloudfront, POP: OSL50-P2).
 
-CloudFront → prod-distribusjonen (`d19b7g2frcrx6i`) → General → Edit:
-1. Legg til `www.tennerogtrivsel.com` og `www.tennerogtrivsel.net` som CNAMEs
-2. Bytt til SAN-sertifikatet (allerede issued)
+### ~~Steg 3.3: DNS — alle domener peker til CloudFront~~ ✅
 
-> Verifisert 2026-03-01: DNS for alle tre www-domener resolver til `d19b7g2frcrx6i.cloudfront.net`, men dette går via S3-redirect-buckets — ikke ekte CloudFront CNAMEs.
+> **Verifisert 2026-03-01:** Alle 6 domener resolver til `d19b7g2frcrx6i.cloudfront.net`. Apex-domener serverer innhold direkte (ingen redirect til www).
 
-### Steg 3.3: DNS — pek www-domener direkte til CloudFront
+### ~~Steg 3.4: Apex-domener~~ ✅ (endret design)
 
-Etter at steg 3.2 er gjort, oppdater DNS slik at .com og .net peker direkte til CloudFront uten S3-redirect:
+Opprinnelig plan var 301-redirect fra apex til www. I stedet serverer apex-domenene innhold direkte via CloudFront — alle 6 domener er likeverdige CNAMEs på samme distribusjon.
 
-| Record | Type | Verdi |
-|--------|------|-------|
-| `www.tennerogtrivsel.com` | CNAME | `d19b7g2frcrx6i.cloudfront.net` |
-| `www.tennerogtrivsel.net` | CNAME | `d19b7g2frcrx6i.cloudfront.net` |
-
-### Steg 3.4: Apex-redirect via registrar — ❌ ikke gjort
-
-> **Verifisert 2026-03-01:** Ingen av apex-domenene har DNS-oppføringer — de resolver ikke og returnerer ingenting på http/https.
-
-| Apex-domene | Redirecter til | Type |
-|-------------|---------------|------|
-| `tennerogtrivsel.no` | `https://www.tennerogtrivsel.no` | 301 |
-| `tennerogtrivsel.com` | `https://www.tennerogtrivsel.com` | 301 |
-| `tennerogtrivsel.net` | `https://www.tennerogtrivsel.net` | 301 |
+> **Verifisert 2026-03-01:** `http://apex` → 301 → `https://apex` (http→https redirect fungerer). `https://apex` → 200 med innhold direkte fra S3 via CloudFront.
 
 ### Steg 3.5: Google OAuth — legg til nye domener
 
@@ -191,8 +179,8 @@ Etter verifisering: tøm og slett redirect-buckets som ikke lenger trengs.
 ### 4.1 HTTPS og sikkerhetsheadere
 
 ```bash
-# Alle tre www-domener
-for domain in www.tennerogtrivsel.no www.tennerogtrivsel.com www.tennerogtrivsel.net; do
+# Alle 6 domener
+for domain in www.tennerogtrivsel.no www.tennerogtrivsel.com www.tennerogtrivsel.net tennerogtrivsel.no tennerogtrivsel.com tennerogtrivsel.net; do
   echo "=== $domain ==="
   curl -sI "https://$domain" | grep -iE '(HTTP|cache-control|content-security|x-frame|strict-transport|x-cache)'
 done
@@ -218,13 +206,14 @@ curl -sI https://www.tennerogtrivsel.no/api/active-messages.json | grep -i x-cac
 # Forventet: Miss from cloudfront
 ```
 
-### 4.4 Apex-redirects
+### 4.4 Apex http→https redirect
 
 ```bash
 for domain in tennerogtrivsel.no tennerogtrivsel.com tennerogtrivsel.net; do
-  curl -sI "http://$domain" | grep -i location
+  echo "=== $domain ==="
+  curl -sI "http://$domain" | grep -iE '(HTTP|location)'
 done
-# Forventet: 301 til https://www.<eget domene>
+# Forventet: 301 til https://<eget domene> (apex serverer innhold direkte, ingen redirect til www)
 ```
 
 ### 4.5 Undersider og 404
@@ -245,7 +234,7 @@ curl -sI https://www.tennerogtrivsel.net/denne-finnes-ikke | head -1
 ### 4.7 Direkte S3-tilgang blokkert
 
 ```bash
-curl -I http://PROD_BUCKET.s3.eu-west-1.amazonaws.com/index.html
+curl -ksI https://s3.eu-north-1.amazonaws.com/tennerogtrivsel-se/index.html | head -1
 # Forventet: 403 Forbidden
 ```
 
