@@ -74,8 +74,11 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                 <p>{settings.adresse1}</p>
                 <p>{settings.adresse2}</p>
 
-                {/* Dette fjerner "Les mer" ved å sende inn et tomt slot */}
-                <div slot="link"></div>
+                <div slot="link">
+                    <div class="card-link">
+                        Få veibeskrivelse <span class="ml-2 transition-transform group-hover:translate-x-1 inline-block">→</span>
+                    </div>
+                </div>
             </Card>
 
             <Card index="4"
