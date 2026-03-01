@@ -28,16 +28,18 @@ CSP inkluderer `blob:` i `connect-src` for å støtte thumbnail-forhåndsvisning
 
 ## CloudFront tile-proxy (GDPR)
 
-OSM-karttiles serveres via CloudFront-proxy (`/tiles/*`) for å eliminere IP-lekkasje til tredjepart. Besøkende kontakter kun eget domene.
+Karttiles serveres via CloudFront-proxy (`/tiles/*`) for å eliminere IP-lekkasje til tredjepart. Besøkende kontakter kun eget domene.
+
+**Tile-kilde:** CartoDB Voyager (`basemaps.cartocdn.com/rastertiles/voyager/`). Tidligere ble `tile.openstreetmap.org` brukt, men OSM blokkerer CDN-proxying (krever unik User-Agent og Referer-header, se [OSM Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/)).
 
 **Arkitektur:**
-- **Prod:** CloudFront behavior `/tiles/*` → origin `tile.openstreetmap.org` med CloudFront Function (`strip-tiles-prefix`) som fjerner `/tiles`-prefix før videresending
+- **Prod:** CloudFront behavior `/tiles/*` → origin `basemaps.cartocdn.com` med CloudFront Function som omskriver `/tiles/{z}/{x}/{y}.png` til `/rastertiles/voyager/{z}/{x}/{y}.png`
 - **Dev:** Vite dev server proxy i `astro.config.mjs` gjør det samme lokalt
 - **Leaflet:** Tile URL er `/tiles/{z}/{x}/{y}.png` (relativ path, fungerer i begge miljøer)
 
 **CloudFront-gotchas:**
 - `Host` er reservert header — kan ikke settes som custom origin header. CloudFront sender automatisk origin-domenet som Host så lenge Origin Request Policy ikke videresender Host fra viewer.
-- CloudFront videresender hele URL-pathen til origin. En CloudFront Function må strippe `/tiles`-prefix.
+- CloudFront videresender hele URL-pathen til origin. CloudFront Function må omskrive `/tiles`-prefix til `/rastertiles/voyager`.
 
 **CSP:** `tile.openstreetmap.org` er fjernet fra `img-src` og `connect-src` — tiles lastes nå fra `'self'`. Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) er også fjernet — fontene er self-hosted.
 
