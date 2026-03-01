@@ -16,7 +16,7 @@
     - Erstattet tomt link-slot med "Vis veibeskrivelse →" i `Kontakt.astro`
     - Gjenbruker eksisterende `card-link`-klasse og hover-animasjon
 
-- [x] **Full GDPR-vurdering av prosjektet** ([design](docs/archive/plan-gdpr-vurdering-design.md)) ([plan](docs/archive/plan-gdpr-vurdering.md))
+- [x] **Full GDPR-vurdering av prosjektet** ([design](docs/archive/2026-03-01-gdpr-vurdering-design.md)) ([plan](docs/archive/2026-03-01-gdpr-vurdering.md))
     - CloudFront tile-proxy: `/tiles/*` → OSM via CloudFront (eliminerer IP-lekkasje til tredjepart)
     - Vite dev proxy for lokal utvikling av tiles
     - CSP-opprydding: fjernet `tile.openstreetmap.org`, `fonts.googleapis.com`, `fonts.gstatic.com`
@@ -25,7 +25,7 @@
     - Admin info-banner om localStorage under innlogging
     - Middleware-test: negativ test for fjernede tredjepartsdomener
 
-- [x] **Erstatt Google Maps med Leaflet + OpenStreetMap (cookiefri)** ([design](docs/archive/plan-leaflet-osm-kart-design.md)) ([plan](docs/archive/plan-leaflet-osm-kart.md))
+- [x] **Erstatt Google Maps med Leaflet + OpenStreetMap (cookiefri)** ([design](docs/archive/2026-03-01-leaflet-osm-kart-design.md)) ([plan](docs/archive/2026-03-01-leaflet-osm-kart.md))
     - Google Maps Embed iframe erstattet med Leaflet.js + CartoDB Voyager tiles
     - Markør med permanent tooltip ("Tenner og Trivsel"), "Få veibeskrivelse"-knapp under kartet
     - CSP oppdatert: `basemaps.cartocdn.com` i img-src og connect-src, fjernet `maps.gstatic.com`
