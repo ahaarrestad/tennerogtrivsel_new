@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 // Midlertidig test – kjøres manuelt med: npx playwright test csp-check --project=chromium
 // Fanger alle CSP-feil på tvers av nøkkelsider.
 
-const PAGES = ['/', '/admin', '/kontakt'];
+const PAGES = ['/', '/admin', '/kontakt', '/personvern'];
 
 for (const path of PAGES) {
     test(`CSP-sjekk: ${path}`, async ({ page }) => {
