@@ -7,9 +7,9 @@
 - Planen skrives som notater under oppgaven før implementering begynner.
 - Flytt oppgaven til «Pågående» når planen er godkjent og arbeidet starter.
 - **Lever i små, iterative forbedringer** — minst én commit per oppgave. Store oppgaver brytes ned i deloppgaver som hver committes for seg.
-- **Planer lagres under `/docs`** og oppgaven skal alltid ha en lenke til planen: `([plan](docs/plan-navn.md))`.
+- **Planer lagres under `/docs`** (`docs/plan-<navn>.md`) eller `/docs/plans/` (`docs/plans/YYYY-MM-DD-<topic>.md`). Oppgaven skal alltid ha en lenke til planen.
 - Flytt oppgaven til «Fullført» når den er ferdig.
-- **Arkivering:** Når en oppgave er fullført, flytt oppgaven fra TODO.md til [TODO-archive.md](TODO-archive.md) og planfilen fra `docs/` til `docs/archive/`.
+- **Arkivering:** Når en oppgave er fullført, flytt oppgaven fra TODO.md til [TODO-archive.md](TODO-archive.md) og planfilen til `docs/archive/` (uansett om den lå i `docs/` eller `docs/plans/`).
 
 ## Pågående
 
