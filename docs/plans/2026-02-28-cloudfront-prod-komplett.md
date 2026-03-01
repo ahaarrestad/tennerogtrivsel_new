@@ -1,6 +1,6 @@
 # Plan: CloudFront produksjon — komplett oppsett med alle domener
 
-> **Status: PÅGÅENDE** — Verifisert 2026-03-01. Fase 1 nesten ferdig (mangler Response Headers Policy). Fase 2 nesten ferdig — bucket `tennerogtrivsel-se` i Stockholm, deploy-kode klar men utkommentert. Fase 3 ferdig — alle 6 domener på samme CloudFront-distribusjon med SAN-sertifikat.
+> **Status: PÅGÅENDE** — Verifisert 2026-03-01. Fase 1 mangler kun Response Headers Policy. Fase 2 klar i kode (utkommentert, bucket i Stockholm). Fase 3 ✅ ferdig — alle 6 domener, OAuth, redirect-buckets slettet. **Go-live krever:** (1) Response Headers Policy, (2) avkommenter prod-deploy i deploy.yml + region→eu-north-1, (3) deploy.
 
 ## Bakgrunn
 
@@ -150,27 +150,17 @@ Opprinnelig plan var 301-redirect fra apex til www. I stedet serverer apex-domen
 
 > **Verifisert 2026-03-01:** `http://apex` → 301 → `https://apex` (http→https redirect fungerer). `https://apex` → 200 med innhold direkte fra S3 via CloudFront.
 
-### Steg 3.5: Google OAuth — legg til nye domener
+### ~~Steg 3.5: Google OAuth — legg til nye domener~~ ✅
 
-Google Cloud Console → Credentials → OAuth 2.0 Client ID → Authorized JavaScript origins:
+> **Fullført 2026-03-01:** `https://www.tennerogtrivsel.com` og `https://www.tennerogtrivsel.net` lagt til i Google Cloud Console → Authorized JavaScript origins.
 
-```
-https://www.tennerogtrivsel.com
-https://www.tennerogtrivsel.net
-```
+### ~~Steg 3.6: Google Maps API~~ — utgår
 
-### Steg 3.6: Google Maps API — legg til nye referrere
+> Ikke aktuelt. Kartfliser lastes via CloudFront tile-proxy (`/tiles/*` → OpenStreetMap), ingen ekstern Maps API-nøkkel brukes.
 
-API key → HTTP referrers:
+### ~~Steg 3.7: Fjern gamle S3-redirect-buckets~~ ✅
 
-```
-www.tennerogtrivsel.com/*
-www.tennerogtrivsel.net/*
-```
-
-### Steg 3.7: Fjern gamle S3-redirect-buckets
-
-Etter verifisering: tøm og slett redirect-buckets som ikke lenger trengs.
+> **Fullført 2026-03-01:** Gamle redirect-buckets tømt og slettet.
 
 ---
 
