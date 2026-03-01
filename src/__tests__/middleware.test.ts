@@ -35,13 +35,11 @@ describe('src/middleware.ts – HTTP security headers', () => {
         expect(csp).toContain("default-src 'self'");
     });
 
-    it('CSP inneholder nødvendige domener for kart og auth', async () => {
+    it('CSP inneholder nødvendige domener for auth', async () => {
         const handler = await importMiddleware();
         const response = await handler({}, makeNext());
         const csp = response.headers.get('Content-Security-Policy')!;
 
-        // Leaflet/OSM kart-tiles
-        expect(csp).toContain('https://tile.openstreetmap.org');
         // Google OAuth og GIS
         expect(csp).toContain('https://accounts.google.com');
         // GAPI scripts
@@ -50,6 +48,18 @@ describe('src/middleware.ts – HTTP security headers', () => {
         expect(csp).toContain('https://drive.google.com');
         // GAPI iframe-kanaler (content-*.googleapis.com – wildcard dekker alle subdomener)
         expect(csp).toContain('https://*.googleapis.com');
+    });
+
+    it('CSP inneholder IKKE fjernede tredjepartsdomener (GDPR)', async () => {
+        const handler = await importMiddleware();
+        const response = await handler({}, makeNext());
+        const csp = response.headers.get('Content-Security-Policy')!;
+
+        // OSM tiles proxyes via CloudFront — skal ikke være i CSP
+        expect(csp).not.toContain('tile.openstreetmap.org');
+        // Fonter er self-hosted — Google Fonts skal ikke være i CSP
+        expect(csp).not.toContain('fonts.googleapis.com');
+        expect(csp).not.toContain('fonts.gstatic.com');
     });
 
     it('CSP inneholder CDN-er brukt i admin-panel', async () => {
