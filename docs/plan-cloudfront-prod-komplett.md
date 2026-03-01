@@ -16,6 +16,7 @@ Test-oppsettet (test2.aarrestad.com) er ferdig verifisert og fungerer. Denne pla
 - Husk å tilknytte OAC til originen — uten dette får CloudFront ikke tilgang til S3 (403)
 - Response Headers Policy må legges til på **begge** behaviors (default + `/api/*`)
 - CloudFront Function for URL-rewriting var nødvendig for Astro-undersider
+- **CSP i CloudFront må synces med `middleware.ts`** — middleware kjører kun i dev, CloudFront er det som gjelder i prod. Etter Leaflet/OSM-migrasjonen manglet `tile.openstreetmap.org` i CloudFront CSP → kartet viste kun markør uten tiles
 
 ## Resultat etter gjennomføring
 
@@ -44,7 +45,17 @@ Distribusjon opprettet med OAC, CachingOptimized (default) + CachingDisabled (`/
 
 Gjenbruk policyen `tenner-og-trivsel-security-headers` fra test, eller opprett ny for prod. Tilknytt den til **begge** behaviors (default + `/api/*`).
 
-Headere: CSP, X-Frame-Options (DENY), X-Content-Type-Options (nosniff), Referrer-Policy (strict-origin-when-cross-origin), HSTS (1 år, includeSubDomains, vurder preload for prod).
+Headere: X-Frame-Options (DENY), X-Content-Type-Options (nosniff), Referrer-Policy (strict-origin-when-cross-origin), HSTS (1 år, includeSubDomains, vurder preload for prod).
+
+**CSP — bruk verdien fra `src/middleware.ts` (denne er sannhetskilde):**
+
+```
+default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com https://tile.openstreetmap.org; frame-src https://drive.google.com https://accounts.google.com https://www.google.com https://*.googleapis.com; connect-src 'self' blob: https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://www.google.com https://tile.openstreetmap.org
+```
+
+> **Lærdom fra test:** CSP i CloudFront og `middleware.ts` må holdes synkronisert.
+> Middleware kjører kun i dev/SSR — CloudFront Response Headers Policy er det som gjelder i produksjon.
+> Når CSP endres i kode, oppdater alltid CloudFront-policyen samtidig.
 
 ### ~~Steg 1.4: S3 Bucket Policy (OAC)~~ ✅
 
