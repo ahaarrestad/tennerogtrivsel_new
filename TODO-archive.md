@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **E2E-test: intermittent timeout-feil på GitHub Actions**
+  - Rotårsak: `waitUntil: 'networkidle'` i accessibility-tester timeout under CI-last (Leaflet-tiles, Vite HMR)
+  - Fiks: byttet til `domcontentloaded` — `waitForSelector('main')` sikrer DOM-beredskap for axe-analyse
+  - Verifisert: 0 feil av 70 kjøringer (10 repetisjoner), full E2E-suite bestått
+
 - [x] **Besøksadresse-kortet: tydeliggjør at det er en lenke**
     - Erstattet tomt link-slot med "Vis veibeskrivelse →" i `Kontakt.astro`
     - Gjenbruker eksisterende `card-link`-klasse og hover-animasjon

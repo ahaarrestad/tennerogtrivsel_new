@@ -24,9 +24,6 @@
 
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plan-cloudfront-prod-komplett.md))
 ...
-- [ ] **E2E-test: intermittent timeout-feil på GitHub Actions**
-  - En eller flere E2E-tester feiler av og til med timeout i CI — finn årsak og fiks
-
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plan-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
