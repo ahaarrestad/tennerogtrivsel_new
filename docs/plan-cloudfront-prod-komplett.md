@@ -16,7 +16,7 @@ Test-oppsettet (test2.aarrestad.com) er ferdig verifisert og fungerer. Denne pla
 - Husk å tilknytte OAC til originen — uten dette får CloudFront ikke tilgang til S3 (403)
 - Response Headers Policy må legges til på **begge** behaviors (default + `/api/*`)
 - CloudFront Function for URL-rewriting var nødvendig for Astro-undersider
-- **CSP i CloudFront må synces med `middleware.ts`** — middleware kjører kun i dev, CloudFront er det som gjelder i prod. Etter Leaflet/OSM-migrasjonen manglet `tile.openstreetmap.org` i CloudFront CSP → kartet viste kun markør uten tiles
+- **CSP i CloudFront må synces med `middleware.ts`** — middleware kjører kun i dev, CloudFront er det som gjelder i prod. Tiles lastes fra `'self'` via CloudFront tile-proxy (CartoDB Voyager), så ingen ekstern tile-URL trengs i CSP
 
 ## Resultat etter gjennomføring
 
@@ -50,7 +50,7 @@ Headere: X-Frame-Options (DENY), X-Content-Type-Options (nosniff), Referrer-Poli
 **CSP — bruk verdien fra `src/middleware.ts` (denne er sannhetskilde):**
 
 ```
-default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com https://tile.openstreetmap.org; frame-src https://drive.google.com https://accounts.google.com https://www.google.com https://*.googleapis.com; connect-src 'self' blob: https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://www.google.com https://tile.openstreetmap.org
+default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com; frame-src https://drive.google.com https://accounts.google.com https://www.google.com https://*.googleapis.com; connect-src 'self' blob: https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://www.google.com
 ```
 
 > **Lærdom fra test:** CSP i CloudFront og `middleware.ts` må holdes synkronisert.
