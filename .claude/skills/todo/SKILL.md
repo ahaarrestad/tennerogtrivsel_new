@@ -74,7 +74,12 @@ Når en oppgave er ferdig:
 1. Les `TODO.md`
 2. Endre `- [ ]` til `- [x]` på oppgaven
 3. Legg til et kort sammendrag av hva som ble gjort (som underpunkter), basert på kontekst fra samtalen
-4. Arkiver oppgaven og eventuell planfil (se arbeidsflyten i TODO.md)
+4. Arkiver oppgaven:
+   - Flytt oppgaven fra TODO.md til TODO-archive.md
+   - Flytt planfilen til `docs/archive/` — sjekk BEGGE mulige plasseringer:
+     - `docs/plan-*.md` (prosjektets tradisjonelle konvensjon)
+     - `docs/plans/*.md` (superpowers writing-plans konvensjon)
+   - Oppdater lenken i TODO-archive.md til å peke på den nye plasseringen i `docs/archive/`
 5. Bekreft oppdateringen
 
 ---
