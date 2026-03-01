@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Leaflet-kart fanger scroll på mobil** ([plan](docs/plans/2026-03-01-leaflet-mobile-scroll.md))
+  - Deaktivert én-finger drag på touch-enheter, krever to fingre for panorering
+  - Overlay-melding «Bruk to fingre for å flytte kartet» ved én-finger touch, fader ut etter 1.5s
+  - Ekstrahert kartlogikk til `src/scripts/mapInit.ts` med 100% testdekning
+
 - [x] **E2E-test: intermittent timeout-feil på GitHub Actions**
   - Rotårsak: `waitUntil: 'networkidle'` i accessibility-tester timeout under CI-last (Leaflet-tiles, Vite HMR)
   - Fiks: byttet til `domcontentloaded` — `waitForSelector('main')` sikrer DOM-beredskap for axe-analyse
