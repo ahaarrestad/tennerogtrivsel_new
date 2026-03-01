@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Personvernerklæring — avgrensning til nettsiden** ([design](docs/plans/archive/2026-03-01-personvern-avgrensning-design.md))
+    - Innledende avsnitt som avgrenser erklæringen til nettsiden (tennerogtrivsel.no/.com/.net)
+    - Henvisning til helse- og personvernlovgivningen for pasientdata
+    - Meta-description oppdatert til domene-nøytral formulering
+
 - [x] **Lokal pre-push code review** ([plan](docs/plans/archive/2026-03-01-lokal-pre-push-review.md), [design](docs/designs/archive/2026-03-01-lokal-pre-push-review-design.md))
     - Nytt Step 4.5 i `/commit`-skillen: `superpowers:code-reviewer`-subagent reviewer diff før push
     - Differensiert strenghet: Critical blokkerer, Important lar bruker velge, Minor er rådgivende
