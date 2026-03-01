@@ -3,7 +3,7 @@ name: commit
 model: sonnet
 description: "Automate git commit and push following the project's review workflow. Stages files, generates a Norwegian conventional-commit message, and optionally pushes via `git review` (never `git push`). Use when the user says 'commit', 'committ', 'lagre endringer', 'push', 'send til review', or asks to save/commit their work. Also trigger when a quality gate passes and the user wants to commit the result."
 disable-model-invocation: false
-allowed-tools: ["Bash(git *)", "Bash(cat *)"]
+allowed-tools: ["Bash(git *)", "Bash(cat *)", "Agent"]
 ---
 
 # Commit Skill
@@ -72,6 +72,79 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 EOF
 )"
 ```
+
+## Step 4.5: Code Review Before Push
+
+**Skip this step if the user has NOT asked to push.** Only run this review when push is requested.
+
+First, get the git SHAs for the review range:
+
+```bash
+BASE_SHA=$(git rev-parse HEAD~1)
+HEAD_SHA=$(git rev-parse HEAD)
+```
+
+Then use the Agent tool to spawn a code review subagent:
+
+- **subagent_type:** `superpowers:code-reviewer`
+- **description:** `Review diff before push`
+- **prompt:** Fill in the template placeholders:
+
+> You are reviewing code changes for production readiness.
+>
+> **Your task:**
+> 1. Review the changes in the most recent commit
+> 2. Compare against project rules and coding standards
+> 3. Check code quality, architecture, testing
+> 4. Categorize issues by severity
+> 5. Assess production readiness
+>
+> ## What Was Implemented
+>
+> {COMMIT_MESSAGE from Step 2}
+>
+> ## Requirements/Plan
+>
+> Read CLAUDE.md for project rules. Pay special attention to these **project-specific rules — violations are Critical issues:**
+> - **CSS tokens:** Only CSS variables from `src/styles/global.css` — never hardcoded hex (#xxx), rgb(), or Tailwind color classes
+> - **Sheets API:** All `sheets.values.get` calls with numeric fields MUST use `valueRenderOption: 'UNFORMATTED_VALUE'`
+> - **Architecture docs:** Changes to subsystems (images, messages, section backgrounds, security) must follow patterns in `docs/architecture/`
+> - **Security:** No XSS, injection, exposed secrets, or unsafe innerHTML without DOMPurify
+>
+> ## Git Range to Review
+>
+> **Base:** {BASE_SHA}
+> **Head:** {HEAD_SHA}
+>
+> Run: `git diff {BASE_SHA}..{HEAD_SHA}`
+>
+> ## Output Format
+>
+> Use this exact structure:
+>
+> ### Strengths
+> [What's well done]
+>
+> ### Issues
+> #### Critical (Must Fix)
+> [Bugs, security issues, project rule violations from CLAUDE.md]
+> #### Important (Should Fix)
+> [Architecture problems, missing error handling, test gaps]
+> #### Minor (Nice to Have)
+> [Code style, optimization, documentation]
+>
+> For each issue: file:line reference, what's wrong, why it matters.
+>
+> ### Assessment
+> **Ready to merge?** Yes / No / With fixes
+> **Reasoning:** [1-2 sentences]
+
+After the subagent returns its review (Strengths, Issues, Assessment):
+
+1. **If "Ready to merge: Yes" with no Critical or Important issues:** Proceed directly to Step 5 (push).
+2. **If "Ready to merge: Yes/With fixes" with only Minor issues:** Display the issues to the user and ask: "Review fant noen forbedringsforslag (se over). Vil du fortsette med push?" If yes, proceed to Step 5.
+3. **If any Critical issues found:** Display all findings and say: "Review fant blokkerende problemer som må fikses før push. Rett opp og kjør /commit igjen." Do NOT proceed to Step 5.
+4. **If Important issues found:** Display them and let the user decide whether to fix now or push anyway.
 
 ## Step 5: Push (Only If Requested)
 
