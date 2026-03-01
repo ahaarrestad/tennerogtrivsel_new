@@ -13,11 +13,7 @@
 
 ## Pågående
 
-- [ ] **Full GDPR-vurdering av prosjektet** ([design](docs/plans/2026-03-01-gdpr-vurdering-design.md)) ([plan](docs/plans/2026-03-01-gdpr-vurdering.md))
-    - CloudFront tile-proxy for OSM (eliminerer IP-lekkasje)
-    - Personvernerklæring-side (`/personvern`) + footer-lenke
-    - Admin info-banner om localStorage-bruk
-    - CSP-opprydding (fjern ubrukte Google Fonts-referanser)
+*(Ingen oppgaver pågår)*
 
 ## Backlog
 

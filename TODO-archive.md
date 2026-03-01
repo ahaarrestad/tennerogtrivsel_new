@@ -2,6 +2,15 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Full GDPR-vurdering av prosjektet** ([design](docs/archive/2026-03-01-gdpr-vurdering-design.md)) ([plan](docs/archive/2026-03-01-gdpr-vurdering.md))
+    - CloudFront tile-proxy: `/tiles/*` → OSM via CloudFront (eliminerer IP-lekkasje til tredjepart)
+    - Vite dev proxy for lokal utvikling av tiles
+    - CSP-opprydding: fjernet `tile.openstreetmap.org`, `fonts.googleapis.com`, `fonts.gstatic.com`
+    - Ny `/personvern`-side med komplett personvernerklæring
+    - Footer-lenke til personvernerklæring
+    - Admin info-banner om localStorage under innlogging
+    - Middleware-test: negativ test for fjernede tredjepartsdomener
+
 - [x] **Erstatt Google Maps med Leaflet + OpenStreetMap (cookiefri)** ([design](docs/archive/2026-03-01-leaflet-osm-kart-design.md)) ([plan](docs/archive/2026-03-01-leaflet-osm-kart.md))
     - Google Maps Embed iframe erstattet med Leaflet.js + CartoDB Voyager tiles
     - Markør med permanent tooltip ("Tenner og Trivsel"), "Få veibeskrivelse"-knapp under kartet
