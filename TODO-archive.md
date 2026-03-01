@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **AI-drevet PR-review med Gemini Code Assist** ([plan](docs/plans/archive/2026-02-28-gemini-pr-reviewer.md))
+  - Gemini Code Assist installert fra GitHub Marketplace (automatisk review på alle PR-er)
+  - Fjernet auto-approve-steget fra `auto-pr.yml`, beholdt auto-merge
+  - Branch protection konfigurert: 1 required approval + required status checks (unit-tests, e2e-tests, build)
+
 - [x] **Leaflet-kart fanger scroll på mobil** ([plan](docs/plans/archive/2026-03-01-leaflet-mobilscroll.md))
   - Deaktivert én-finger drag på touch-enheter, krever to fingre for panorering
   - Overlay-melding «Bruk to fingre for å flytte kartet» ved én-finger touch, fader ut etter 1.5s
