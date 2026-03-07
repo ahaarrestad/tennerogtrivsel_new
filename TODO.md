@@ -27,6 +27,15 @@
     - Gjennomgå hele prosjektet for sikkerhetssårbarheter
     - Dekk OWASP Top 10, XSS, injection, CSP, autentisering, eksponerte hemmeligheter, og usikker datahåndtering
 
+- [ ] **Flytt "Skriv ut"-knapp fra prisliste-siden til admin-panelet**
+    - Undersøk om det er mulig å flytte knappen til admin, men fremdeles bruke prisliste-siden som rendring
+
+- [ ] **Fiks prisliste-admin (flere problemer)** ([plan](docs/plans/2026-03-07-fiks-prisliste-admin.md))
+    - Kategori-dropdown er dårlig (native datalist) — erstatt med skikkelig komponent (custom dropdown med søk/opprett ny)
+    - Mangler "Gå tilbake til liste"-knapp i redigeringsvisningen
+    - Ny prisrad: autosave trigger for tidlig → kastes tilbake til oversikten før brukeren er ferdig med å fylle inn
+    - Vis «sist oppdatert» (kun måned og år) basert på siste gang en pris ble endret
+
 
 ## Fullført
 
