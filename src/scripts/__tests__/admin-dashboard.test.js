@@ -78,6 +78,7 @@ const {
 
 describe('admin-dashboard.js', () => {
     beforeEach(() => {
+        vi.useFakeTimers({ now: new Date('2026-02-15T12:00:00') });
         document.body.innerHTML = `
             <div id="login-container"></div>
             <div id="dashboard" class="hidden"></div>
@@ -104,6 +105,10 @@ describe('admin-dashboard.js', () => {
             </div>
         `;
         vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     describe('renderSkeletonCards', () => {
@@ -332,9 +337,6 @@ describe('admin-dashboard.js', () => {
         });
 
         it('should categorize messages into groups', async () => {
-            const today = new Date('2026-02-15');
-            vi.setSystemTime(today);
-
             const mockFiles = [
                 { id: '1', name: 'active.md' },
                 { id: '2', name: 'planned.md' },
@@ -352,14 +354,9 @@ describe('admin-dashboard.js', () => {
             expect(html).toContain('Aktive oppslag');
             expect(html).toContain('Planlagte oppslag');
             expect(html).toContain('Historikk');
-
-            vi.useRealTimers();
         });
 
         it('should highlight overlapping messages with amber border', async () => {
-            const today = new Date('2026-02-15');
-            vi.setSystemTime(today);
-
             const mockFiles = [
                 { id: '1', name: 'msg1.md' },
                 { id: '2', name: 'msg2.md' }
@@ -375,8 +372,6 @@ describe('admin-dashboard.js', () => {
             await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
             const html = document.getElementById('module-inner').innerHTML;
             expect(html).toContain('border-amber-300');
-
-            vi.useRealTimers();
         });
 
         it('should use file name when message has no title', async () => {

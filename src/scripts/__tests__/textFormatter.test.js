@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { formatInfoText, formatDate, stripStackEditData, sortMessages, slugify } from '../textFormatter';
 
 describe('formatInfoText', () => {
@@ -146,6 +146,13 @@ describe('stripStackEditData', () => {
 });
 
 describe('sortMessages', () => {
+    beforeEach(() => {
+        vi.useFakeTimers({ now: new Date('2026-02-15T12:00:00') });
+    });
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     const activeMsg = { title: 'Aktiv', startDate: '2020-01-01', endDate: '2099-01-01' };
     const plannedMsg = { title: 'Planlagt', startDate: '2098-01-01', endDate: '2099-01-01' };
     const expiredMsg = { title: 'Utløpt', startDate: '2020-01-01', endDate: '2021-01-01' };
