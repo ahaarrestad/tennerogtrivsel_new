@@ -2,6 +2,10 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Footer-justeringer** ([design](docs/plans/archive/2026-03-07-brukertesting-forbedringer-design.md))
+    - `sentralbordTekst` allerede fjernet fra footer (brukes kun i Kontakt.astro)
+    - Prisliste-lenke allerede lagt til i copyright-linjen — beholdt der
+
 - [x] **"Skriv ut"-knapp på prisliste skal kun vises for innlogget admin**
     - Knappen skjules med `hidden`-attributt, inline script sjekker `admin_google_token` i storage
 - [x] **Prisliste — ny side og admin-modul** ([plan](docs/plans/archive/2026-03-07-prisliste.md))

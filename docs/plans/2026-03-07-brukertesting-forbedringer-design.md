@@ -12,7 +12,7 @@
 | 2. Redesign tannleger-seksjonen | Fullført |
 | 3. Redesign tjenester-seksjonen | Ikke startet |
 | 4. Prisliste — ny side og admin-modul | Ikke startet |
-| 5. Footer-justeringer | Ikke startet |
+| 5. Footer-justeringer | Fullført |
 
 ## Bakgrunn
 
