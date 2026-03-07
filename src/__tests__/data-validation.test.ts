@@ -10,6 +10,7 @@ vi.mock('astro:content', () => {
         number: vi.fn(() => zMock),
         boolean: vi.fn(() => zMock),
         array: vi.fn(() => zMock),
+        union: vi.fn(() => zMock),
         optional: vi.fn(() => zMock),
         default: vi.fn(() => zMock),
         coerce: {

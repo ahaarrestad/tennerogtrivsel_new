@@ -9,6 +9,7 @@ vi.mock('astro:content', () => {
         number: vi.fn(() => zMock),
         boolean: vi.fn(() => zMock),
         array: vi.fn(() => zMock),
+        union: vi.fn(() => zMock),
         optional: vi.fn(() => zMock),
         default: vi.fn(() => zMock),
         describe: vi.fn(() => zMock),
@@ -161,6 +162,33 @@ describe('content.config.ts - Loaders', () => {
             (fs.existsSync as any).mockReturnValue(false);
 
             const loader = (collections.tannleger as any).loader;
+            const result = await loader();
+
+            expect(result).toEqual([]);
+        });
+    });
+
+    describe('prisliste loader', () => {
+        it('should read prisliste from JSON file', async () => {
+            const mockPrisliste = [
+                { kategori: 'Undersokelser', behandling: 'Vanlig undersokelse', pris: 850 },
+            ];
+
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockPrisliste));
+
+            const loader = (collections.prisliste as any).loader;
+            const result = await loader();
+
+            expect(result).toHaveLength(1);
+            expect(result[0].id).toBe('prisliste-0');
+            expect(result[0].kategori).toBe('Undersokelser');
+        });
+
+        it('should return empty array if file does not exist', async () => {
+            (fs.existsSync as any).mockReturnValue(false);
+
+            const loader = (collections.prisliste as any).loader;
             const result = await loader();
 
             expect(result).toEqual([]);
