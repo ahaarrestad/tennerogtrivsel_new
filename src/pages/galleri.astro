@@ -7,7 +7,7 @@ import GalleriSide from '../components/Galleri.astro';
 
 const settings = await getSiteSettings();
 const galleri = await getCollection('galleri');
-const hasGalleryImages = galleri.some(item => (item.data.type ?? 'galleri') !== 'forsidebilde');
+const hasGalleryImages = galleri.some(item => (item.data.type ?? 'galleri') === 'galleri');
 ---
 <Layout
     title={`${settings.galleriTittel} | Tenner og Trivsel`}
