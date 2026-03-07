@@ -36,6 +36,15 @@ async function editPrisRad(rowIndex, data = null) {
 
     const p = data || { kategori: '', behandling: '', pris: '' };
 
+    // Fetch existing categories for the datalist
+    let existingCategories = [];
+    try {
+        const allRows = await getPrislisteRaw(SHEET_ID);
+        existingCategories = [...new Set(allRows.map(r => r.kategori).filter(Boolean))];
+    } catch { /* ignore — datalist will just be empty */ }
+
+    const datalistOptions = existingCategories.map(k => `<option value="${escapeHtml(k)}">`).join('');
+
     inner.innerHTML = DOMPurify.sanitize(`
         <div class="max-w-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
             <h3 class="text-brand font-black uppercase tracking-tighter mb-6">
@@ -44,7 +53,8 @@ async function editPrisRad(rowIndex, data = null) {
             <div class="space-y-4">
                 <div class="admin-field-container">
                     <label class="admin-label">Kategori</label>
-                    <input type="text" id="edit-pris-kategori" value="" class="admin-input" placeholder="F.eks. Undersokelser">
+                    <input type="text" id="edit-pris-kategori" list="kategori-options" value="" class="admin-input" placeholder="Velg eller skriv ny kategori">
+                    <datalist id="kategori-options">${datalistOptions}</datalist>
                 </div>
                 <div class="admin-field-container">
                     <label class="admin-label">Behandling</label>

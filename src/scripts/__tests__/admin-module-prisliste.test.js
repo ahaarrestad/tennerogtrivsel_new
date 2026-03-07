@@ -198,7 +198,7 @@ describe('loadPrislisteList', () => {
         const editBtn = document.querySelector('.edit-pris-btn');
         const event = new Event('click', { bubbles: true });
         event.stopPropagation = vi.fn();
-        editBtn.onclick(event);
+        await editBtn.onclick(event);
 
         // Editor should now be rendered
         const inner = document.getElementById('module-inner');
@@ -227,7 +227,7 @@ describe('loadPrislisteList', () => {
         await new Promise(r => setTimeout(r, 0));
 
         const btn = document.getElementById('btn-new-pris');
-        btn.onclick();
+        await btn.onclick();
 
         const inner = document.getElementById('module-inner');
         expect(inner.innerHTML).toContain('Ny prisrad');
@@ -441,5 +441,33 @@ describe('editPrisRad', () => {
         await window.editPrisRad(2, { kategori: 'K', behandling: 'B' });
 
         expect(document.getElementById('edit-pris-pris').value).toBe('');
+    });
+
+    it('should populate datalist with existing categories', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100 },
+            { rowIndex: 3, kategori: 'Kirurgi', behandling: 'B', pris: 200 },
+            { rowIndex: 4, kategori: 'Undersokelser', behandling: 'C', pris: 300 },
+        ]);
+
+        await window.editPrisRad(null, null);
+
+        const datalist = document.getElementById('kategori-options');
+        expect(datalist).not.toBeNull();
+        const options = datalist.querySelectorAll('option');
+        expect(options).toHaveLength(2);
+        const values = [...options].map(o => o.value);
+        expect(values).toContain('Undersokelser');
+        expect(values).toContain('Kirurgi');
+    });
+
+    it('should render empty datalist when getPrislisteRaw fails', async () => {
+        getPrislisteRaw.mockRejectedValue(new Error('fail'));
+
+        await window.editPrisRad(null, null);
+
+        const datalist = document.getElementById('kategori-options');
+        expect(datalist).not.toBeNull();
+        expect(datalist.querySelectorAll('option')).toHaveLength(0);
     });
 });

@@ -575,6 +575,7 @@ export async function ensurePrislisteSheet(spreadsheetId) {
 
 export async function getPrislisteRaw(spreadsheetId) {
     try {
+        await ensurePrislisteSheet(spreadsheetId);
         const response = await gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId,
             range: 'Prisliste!A:C',
