@@ -21,6 +21,11 @@ vi.mock('../admin-dialog.js', () => ({
 vi.mock('../admin-dashboard.js', () => ({
     formatTimestamp: vi.fn(() => '7. mar kl. 10:00'),
     ICON_ADD: '+',
+    renderActionButtons: vi.fn((editClass, deleteClass, dataAttrs) =>
+        `<div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
+            <button ${dataAttrs} class="${editClass} admin-icon-btn group/btn" title="Rediger">E</button>
+            <button ${dataAttrs} class="${deleteClass} admin-icon-btn-danger group/btn" title="Slett">D</button>
+        </div>`),
 }));
 
 vi.mock('../admin-editor-helpers.js', () => ({
