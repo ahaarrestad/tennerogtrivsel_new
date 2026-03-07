@@ -20,6 +20,7 @@ vi.mock('../admin-dialog.js', () => ({
 
 vi.mock('../admin-dashboard.js', () => ({
     formatTimestamp: vi.fn(() => '7. mar kl. 10:00'),
+    ICON_ADD: '+',
 }));
 
 vi.mock('../admin-editor-helpers.js', () => ({

@@ -33,7 +33,13 @@
     - Gjennomgå hele prosjektet for sikkerhetssårbarheter
     - Dekk OWASP Top 10, XSS, injection, CSP, autentisering, eksponerte hemmeligheter, og usikker datahåndtering
 
+- [ ] **Forenkle UI på admin-siden — kompaktere action-knapper** ([plan](docs/plans/2026-03-07-kompakte-action-knapper.md))
+    - Erstatt teksttunge «Legg til»-knapper med kompakte «+»-ikonknapper (btn-primary stil)
+    - Gjelder action-knappene oppe til høyre i modulvisningene (5 moduler)
 
+- [ ] **Admin-panel: Kompakt logg-ut-knapp med tooltip**
+    - Endre logg-ut-knappen fra å vise fullt navn til kun fornavn + ikon
+    - Mouse-over tooltip skal vise «Logg ut [hele navnet]»
 
 ## Fullført
 
