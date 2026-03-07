@@ -29,6 +29,10 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
+- [ ] **Grundig sikkerhetssjekk av prosjektet**
+    - Gjennomgå hele prosjektet for sikkerhetssårbarheter
+    - Dekk OWASP Top 10, XSS, injection, CSP, autentisering, eksponerte hemmeligheter, og usikker datahåndtering
+
 
 ## Fullført
 
