@@ -17,11 +17,6 @@
 
 ### Brukertesting-forbedringer ([design](docs/plans/2026-03-07-brukertesting-forbedringer-design.md))
 
-- [ ] **Fjern sticky card-stabling på mobil**
-    - Fjern `position: sticky`, `margin-bottom: 6vh`, mobil z-index fra `.stack-card` i `global.css`
-    - Behold `isStack`-prop og `--card-index` for desktop-effekter
-    - Kort vises som vanlig scrollbar liste, desktop-grid uendret
-
 - [ ] **Redesign tannleger-seksjonen**
     - Forsiden: én klikkbar boks med fellesbilde (placeholder) → lenke til `/tannleger`
     - **Synlig på mobil** (fjern `hidden md:block`-wrapper)

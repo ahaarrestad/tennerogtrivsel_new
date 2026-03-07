@@ -4,7 +4,6 @@ interface Props {
     title: string;
     index?: number | string;
     href?: string | null;
-    headerOffset?: string;
     minHeight?: string;
     centered?: boolean;
     isStack?: boolean;
@@ -16,7 +15,6 @@ const {
     index = 0,
     title,
     href = null,
-    headerOffset = "200px",
     minHeight = "auto",
     centered = true,
     isStack = true,
@@ -29,10 +27,6 @@ const Tag = href ? 'a' : 'div';
 // Samle alle inline-stiler på ett sted for en renere mal
 const cardStyles = {
     minHeight,
-    ...(isStack && {
-        '--card-index': index,
-        '--header-offset': headerOffset
-    })
 };
 ---
 
@@ -45,7 +39,6 @@ const cardStyles = {
             "card-base group no-underline text-inherit flex flex-col w-full",
             {
                 "cursor-pointer": href,
-                "stack-card": isStack,
                 "relative h-full": !isStack,
                 "items-center text-center justify-center": centered,
                 "items-start text-left": !centered

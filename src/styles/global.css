@@ -262,37 +262,6 @@
         @apply rounded-2xl border-4 border-white shadow-md overflow-hidden;
     }
 
-    /* FELLES KORT-LOGIKK */
-    .stack-card {
-        @apply sticky md:relative transition-all duration-300 overflow-hidden;
-        /* Standardverdier for desktop */
-        top: 0;
-        z-index: 1;
-    }
-
-    @media (max-width: 767px) {
-        .stack-card {
-            position: sticky !important;
-            /* Vi bruker en variabel --header-offset som vi kan justere per side hvis nødvendig */
-            top: calc(var(--nav-total-height, 4rem) + var(--header-offset, 150px) + (var(--card-index) * 4px)) !important;
-            z-index: var(--card-index);
-            margin-bottom: 6vh !important;
-        }
-
-        .stack-card:last-child {
-            margin-bottom: 2rem !important;
-        }
-    }
-
-    @media (min-width: 768px) {
-        .stack-card {
-            position: relative !important;
-            top: 0 !important;
-            z-index: 1 !important;
-            margin-bottom: 0 !important;
-        }
-    }
-
     /* FELLES DESIGN FOR ALLE KORT */
     .card-base {
         @apply bg-white p-6 md:p-8 rounded-2xl;
