@@ -39,6 +39,7 @@ function formatPris(pris) {
                     alt="Tenner og Trivsel"
                     width={280}
                     class="print-header-logo"
+                    loading="eager"
                 />
                 <div class="prisliste-header-text">
                     <h1 class="prisliste-tittel-print">Prisliste</h1>
@@ -59,13 +60,6 @@ function formatPris(pris) {
                 {sistOppdatertTekst && (
                     <p class="text-sm text-brand-hover/70 mt-1 prisliste-dato">Sist oppdatert: {sistOppdatertTekst}</p>
                 )}
-            </div>
-
-            <div id="print-wrapper" class="flex justify-end mb-6 print:hidden" hidden>
-                <button id="print-btn" class="btn-secondary text-sm py-2 px-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                    Skriv ut
-                </button>
             </div>
 
             {kategorier.size === 0 && (
@@ -188,22 +182,11 @@ function formatPris(pris) {
     }
 </style>
 
-<script>
-    function isAdminLoggedIn() {
-        for (const storage of [localStorage, sessionStorage]) {
-            const stored = storage.getItem('admin_google_token');
-            if (!stored) continue;
-            try {
-                const { expiry } = JSON.parse(stored);
-                if (Date.now() < expiry - 60000) return true;
-            } catch { /* ignore */ }
-        }
-        return false;
+<script is:inline>
+    if (new URLSearchParams(window.location.search).has('print')) {
+        window.addEventListener('load', function () {
+            window.print();
+        });
     }
-
-    if (isAdminLoggedIn()) {
-        document.getElementById('print-wrapper')?.removeAttribute('hidden');
-    }
-
-    document.getElementById('print-btn')?.addEventListener('click', () => window.print());
 </script>
+
