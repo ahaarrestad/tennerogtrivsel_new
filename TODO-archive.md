@@ -2,6 +2,13 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Redesign tjenester-seksjonen** ([plan](docs/plans/archive/2026-03-07-redesign-tjenester.md), [design](docs/plans/archive/2026-03-07-redesign-tjenester-design.md))
+    - Nytt `priority`-felt i schema (default 99), sorterer tjenester etter prioritet
+    - Forsiden viser maks 6 tjenester med "Se alle våre tjenester"-knapp (`btn-secondary`)
+    - Tjenester-seksjonen synlig på mobil (fjernet `hidden md:block`)
+    - Admin-editor med prioritet-felt og auto-save
+    - 964 tester bestått, 95.16% branch coverage, bygg OK
+
 - [x] **Redesign tannleger-seksjonen** ([plan](docs/plans/archive/2026-03-07-redesign-tannleger.md), [design](docs/plans/2026-03-07-brukertesting-forbedringer-design.md))
     - Forsiden: én klikkbar boks med fellesbilde → lenke til `/tannleger`, synlig på mobil
     - `/tannleger`: `rounded-xl` portrait grid (2 mobil, 3 desktop) med `imageConfig`-crop

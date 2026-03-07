@@ -17,11 +17,6 @@
 
 ### Brukertesting-forbedringer ([design](docs/plans/2026-03-07-brukertesting-forbedringer-design.md))
 
-- [ ] **Redesign tjenester-seksjonen**
-    - `priority`-felt som **frontmatter i markdown** (ikke Sheets — tjenester er Drive-basert)
-    - Vis 6 første basert på priority, `btn-secondary` "Se mer"-knapp viser resten
-    - Oppdater `config.ts` schema + admin-modul for priority-felt
-
 - [ ] **Prisliste — ny side og admin-modul**
     - Nytt Google Sheets-ark: `Prisliste` (Kategori, Behandling, Pris)
     - `valueRenderOption: 'UNFORMATTED_VALUE'` for Pris-kolonnen
