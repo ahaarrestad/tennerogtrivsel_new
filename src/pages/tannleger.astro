@@ -13,7 +13,8 @@ const sorterteTannleger = tannleger.sort((a, b) => a.data.name.localeCompare(b.d
     title={`${settings.tannlegerTittel} | Tenner og Trivsel`}
     description={settings.tannlegerBeskrivelse}
 >
-    <main class="section-container bg-white">
+    <main>
+        <section class="section-container bg-white">
         <div class="section-content">
             <div class="section-header section-header-centered">
                 <h1 class="section-heading">{settings.tannlegerTittel}</h1>
@@ -71,5 +72,6 @@ const sorterteTannleger = tannleger.sort((a, b) => a.data.name.localeCompare(b.d
                 })}
             </div>
         </div>
+        </section>
     </main>
 </Layout>

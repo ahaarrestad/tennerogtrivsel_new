@@ -9,7 +9,7 @@ import Tjenester from '../components/Tjenester.astro';
 import Tannleger from '../components/Tannleger.astro';
 
 // Beregn dynamisk annenhver bakgrunnsfarge basert på om galleriet er synlig
-const galleriSynlig = (await getCollection('galleri')).length > 0;
+const galleriSynlig = (await getCollection('galleri')).filter(item => (item.data.type ?? 'galleri') === 'galleri').length > 0;
 // Forside: hvit (hero, ingen variant)
 // Kontakt: brand (alltid #1)
 // Galleri: white (alltid #2 hvis synlig)
