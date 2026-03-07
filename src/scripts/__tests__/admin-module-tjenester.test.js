@@ -367,6 +367,67 @@ describe('editTjeneste', () => {
             expect(priorityInput).toBeNull();
         });
 
+        it('should assign priority after existing max for new tjeneste', async () => {
+            listFiles.mockResolvedValue([
+                { id: 'existing1', name: 'e1.md' },
+                { id: 'existing2', name: 'e2.md' }
+            ]);
+            getFileContent.mockResolvedValueOnce('raw1').mockResolvedValueOnce('raw2');
+            parseMarkdown
+                .mockReturnValueOnce({ data: { title: 'E1', priority: 3 }, body: '' })
+                .mockReturnValueOnce({ data: { title: 'E2', priority: 7 }, body: '' });
+            stringifyMarkdown.mockReturnValue('---\n---\n');
+            createFile.mockResolvedValue();
+
+            await window.editTjeneste(null, null);
+
+            const saveBtn = document.getElementById('btn-save-tjeneste');
+            await saveBtn.onclick();
+
+            expect(stringifyMarkdown).toHaveBeenCalledWith(
+                expect.objectContaining({ priority: 8 }),
+                expect.any(String)
+            );
+        });
+
+        it('should handle services with undefined priority when computing max', async () => {
+            listFiles.mockResolvedValue([
+                { id: 'existing1', name: 'e1.md' }
+            ]);
+            getFileContent.mockResolvedValueOnce('raw1');
+            parseMarkdown
+                .mockReturnValueOnce({ data: { title: 'E1' }, body: '' }); // no priority
+            stringifyMarkdown.mockReturnValue('---\n---\n');
+            createFile.mockResolvedValue();
+
+            await window.editTjeneste(null, null);
+
+            const saveBtn = document.getElementById('btn-save-tjeneste');
+            await saveBtn.onclick();
+
+            // undefined priority → treated as 0, so next = 1
+            expect(stringifyMarkdown).toHaveBeenCalledWith(
+                expect.objectContaining({ priority: 1 }),
+                expect.any(String)
+            );
+        });
+
+        it('should fallback to priority 99 if loading services fails', async () => {
+            listFiles.mockRejectedValue(new Error('network'));
+            stringifyMarkdown.mockReturnValue('---\n---\n');
+            createFile.mockResolvedValue();
+
+            await window.editTjeneste(null, null);
+
+            const saveBtn = document.getElementById('btn-save-tjeneste');
+            await saveBtn.onclick();
+
+            expect(stringifyMarkdown).toHaveBeenCalledWith(
+                expect.objectContaining({ priority: 99 }),
+                expect.any(String)
+            );
+        });
+
         it('should create file on Opprett button click', async () => {
             stringifyMarkdown.mockReturnValue('---\n---\n');
             createFile.mockResolvedValue();
@@ -629,53 +690,71 @@ describe('reorderTjeneste', () => {
         vi.clearAllMocks();
     });
 
-    it('should swap priorities and save both files', async () => {
+    it('should re-index all services sequentially after moving item down', async () => {
         listFiles.mockResolvedValue([
             { id: 'driveA', name: 'a.md' },
-            { id: 'driveB', name: 'b.md' }
+            { id: 'driveB', name: 'b.md' },
+            { id: 'driveC', name: 'c.md' }
         ]);
-        getFileContent.mockResolvedValueOnce('raw1').mockResolvedValueOnce('raw2');
+        getFileContent.mockResolvedValueOnce('raw1').mockResolvedValueOnce('raw2').mockResolvedValueOnce('raw3');
         parseMarkdown
-            .mockReturnValueOnce({ data: { title: 'A', priority: 1 }, body: 'bodyA' })
-            .mockReturnValueOnce({ data: { title: 'B', priority: 2 }, body: 'bodyB' });
+            .mockReturnValueOnce({ data: { title: 'A', priority: 99 }, body: 'bodyA' })
+            .mockReturnValueOnce({ data: { title: 'B', priority: 99 }, body: 'bodyB' })
+            .mockReturnValueOnce({ data: { title: 'C', priority: 99 }, body: 'bodyC' });
         stringifyMarkdown.mockReturnValue('md');
         saveFile.mockResolvedValue();
 
+        // Move A down (sorted: A, B, C alphabetically since all priority 99)
         await reorderFn('driveA', 1);
 
-        expect(getFileContent).toHaveBeenCalledTimes(2);
-        expect(saveFile).toHaveBeenCalledTimes(2);
-        // A gets priority 2, B gets priority 1
+        // All 3 should be saved with sequential priorities
+        expect(saveFile).toHaveBeenCalledTimes(3);
+        // New order: B(1), A(2), C(3)
+        expect(stringifyMarkdown).toHaveBeenCalledWith(
+            expect.objectContaining({ title: 'B', priority: 1 }),
+            'bodyB'
+        );
         expect(stringifyMarkdown).toHaveBeenCalledWith(
             expect.objectContaining({ title: 'A', priority: 2 }),
             'bodyA'
         );
         expect(stringifyMarkdown).toHaveBeenCalledWith(
-            expect.objectContaining({ title: 'B', priority: 1 }),
-            'bodyB'
+            expect.objectContaining({ title: 'C', priority: 3 }),
+            'bodyC'
         );
-        // Should reload the list
         expect(loadTjenesterModule).toHaveBeenCalled();
     });
 
-    it('should assign sequential priorities when values are equal', async () => {
+    it('should re-index all services sequentially after moving item up', async () => {
         listFiles.mockResolvedValue([
             { id: 'driveA', name: 'a.md' },
-            { id: 'driveB', name: 'b.md' }
+            { id: 'driveB', name: 'b.md' },
+            { id: 'driveC', name: 'c.md' }
         ]);
-        getFileContent.mockResolvedValueOnce('raw1').mockResolvedValueOnce('raw2');
+        getFileContent.mockResolvedValueOnce('raw1').mockResolvedValueOnce('raw2').mockResolvedValueOnce('raw3');
         parseMarkdown
-            .mockReturnValueOnce({ data: { title: 'A', priority: 5 }, body: 'bodyA' })
-            .mockReturnValueOnce({ data: { title: 'B', priority: 5 }, body: 'bodyB' });
+            .mockReturnValueOnce({ data: { title: 'A', priority: 1 }, body: 'bodyA' })
+            .mockReturnValueOnce({ data: { title: 'B', priority: 2 }, body: 'bodyB' })
+            .mockReturnValueOnce({ data: { title: 'C', priority: 3 }, body: 'bodyC' });
         stringifyMarkdown.mockReturnValue('md');
         saveFile.mockResolvedValue();
 
-        await reorderFn('driveA', 1);
+        // Move C up
+        await reorderFn('driveC', -1);
 
-        // When priorities are equal, they should get sequential values
-        const calls = stringifyMarkdown.mock.calls;
-        const priorities = calls.map(c => c[0].priority);
-        expect(priorities[0]).not.toBe(priorities[1]);
+        // New order: A(1), C(2), B(3)
+        expect(stringifyMarkdown).toHaveBeenCalledWith(
+            expect.objectContaining({ title: 'A', priority: 1 }),
+            'bodyA'
+        );
+        expect(stringifyMarkdown).toHaveBeenCalledWith(
+            expect.objectContaining({ title: 'C', priority: 2 }),
+            'bodyC'
+        );
+        expect(stringifyMarkdown).toHaveBeenCalledWith(
+            expect.objectContaining({ title: 'B', priority: 3 }),
+            'bodyB'
+        );
     });
 
     it('should show error toast on save failure', async () => {

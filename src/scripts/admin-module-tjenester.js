@@ -43,12 +43,19 @@ async function editTjeneste(id, name) {
     try {
         let data = { title: '', ingress: '', id: '' };
         let body = '';
+        let nextPriority = 99;
 
         if (id) {
             const raw = await getFileContent(id);
             const parsed = parseMarkdown(raw);
             data = parsed.data;
             body = stripStackEditData(parsed.body);
+        } else {
+            try {
+                const existing = await loadAllServices();
+                const maxPriority = existing.reduce((max, s) => Math.max(max, s.priority ?? 0), 0);
+                nextPriority = maxPriority + 1;
+            } catch (_) { /* fallback to 99 */ }
         }
 
         const isActive = data.active !== false && data.active !== 'false';
@@ -103,7 +110,7 @@ async function editTjeneste(id, name) {
                 title: title,
                 ingress: document.getElementById('edit-ingress').value,
                 active: activeVal,
-                priority: data.priority ?? 99
+                priority: data.priority ?? nextPriority
             };
             const content = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
             return { newFileName, frontmatter, content };
@@ -194,56 +201,39 @@ async function toggleTjenesteActive(driveId, fileName, service) {
     }
 }
 
-async function handleReorder(driveId, direction) {
+async function loadAllServices() {
     const { TJENESTER_FOLDER } = getAdminConfig();
+    const files = await listFiles(TJENESTER_FOLDER);
+    const services = await Promise.all(files.map(async (f) => {
+        const raw = await getFileContent(f.id);
+        const { data, body } = parseMarkdown(raw);
+        return { driveId: f.id, name: f.name, ...data, body };
+    }));
+    services.sort((a, b) => ((a.priority ?? 99) - (b.priority ?? 99)) || (a.title || '').localeCompare(b.title || '', 'nb'));
+    return services;
+}
 
+async function handleReorder(driveId, direction) {
     try {
-        const files = await listFiles(TJENESTER_FOLDER);
-        const services = await Promise.all(files.map(async (f) => {
-            const raw = await getFileContent(f.id);
-            const { data, body } = parseMarkdown(raw);
-            return { driveId: f.id, name: f.name, ...data, body };
-        }));
-
-        services.sort((a, b) => ((a.priority ?? 99) - (b.priority ?? 99)) || (a.title || '').localeCompare(b.title || '', 'nb'));
+        const services = await loadAllServices();
 
         const currentIdx = services.findIndex(s => s.driveId === driveId);
         const neighborIdx = currentIdx + direction;
         if (currentIdx < 0 || neighborIdx < 0 || neighborIdx >= services.length) return;
 
-        const current = services[currentIdx];
-        const neighbor = services[neighborIdx];
+        // Move item in array
+        const [moved] = services.splice(currentIdx, 1);
+        services.splice(neighborIdx, 0, moved);
 
-        let currentPriority = current.priority ?? 99;
-        let neighborPriority = neighbor.priority ?? 99;
-
-        // Swap priorities
-        const tmp = currentPriority;
-        currentPriority = neighborPriority;
-        neighborPriority = tmp;
-
-        // If equal after swap, assign sequential values
-        if (currentPriority === neighborPriority) {
-            currentPriority = currentIdx + direction;
-            neighborPriority = currentIdx;
-        }
-
-        const currentFrontmatter = { ...current };
-        delete currentFrontmatter.driveId;
-        delete currentFrontmatter.name;
-        delete currentFrontmatter.body;
-        currentFrontmatter.priority = currentPriority;
-
-        const neighborFrontmatter = { ...neighbor };
-        delete neighborFrontmatter.driveId;
-        delete neighborFrontmatter.name;
-        delete neighborFrontmatter.body;
-        neighborFrontmatter.priority = neighborPriority;
-
-        await Promise.all([
-            saveFile(current.driveId, current.name, stringifyMarkdown(currentFrontmatter, current.body)),
-            saveFile(neighbor.driveId, neighbor.name, stringifyMarkdown(neighborFrontmatter, neighbor.body))
-        ]);
+        // Re-index all with sequential priorities
+        await Promise.all(services.map((s, idx) => {
+            const frontmatter = { ...s };
+            delete frontmatter.driveId;
+            delete frontmatter.name;
+            delete frontmatter.body;
+            frontmatter.priority = idx + 1;
+            return saveFile(s.driveId, s.name, stringifyMarkdown(frontmatter, s.body));
+        }));
 
         reloadTjenester();
     } catch (e) {
