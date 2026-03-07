@@ -2,6 +2,15 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Kodestil og CSS-opprydding** ([plan](docs/plans/archive/2026-03-07-kodestil-css-opprydding.md))
+    - Erstattet udefinerte CSS-klasser (`bg-brand-surface`, `text-heading`, `text-body`) med gyldige tokens
+    - Konsolidert `.section-heading` inn i `.h2`, fjernet duplikat fra global.css
+    - Erstattet inline `style="font-family: ..."` med Tailwind utility-klasser (`font-heading`/`font-body`)
+    - Erstattet inline farge-styles i Forside med token-klasser (`bg-brand-message-box`, `text-brand`)
+    - Erstattet Tailwind arbitrary values (`font-[800]` → `font-extrabold`, `rounded-3xl` → `rounded-2xl`)
+    - Fjernet ubrukt `.brand-text` CSS-klasse
+    - Oppdatert design-guide.md til å reflektere endringene
+
 - [x] **Juster tannlege-bilder størrelse + admin-forhåndsvisning**
     - Mindre tannlege-bilder i oversikten
     - Admin-forhåndsvisning nøyaktig lik visningen på tannlege-siden
