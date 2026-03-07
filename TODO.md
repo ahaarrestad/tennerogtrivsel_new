@@ -13,12 +13,6 @@
 
 ## Pågående
 
-- [ ] **Kodestil og CSS-opprydding** ([plan](docs/plans/2026-03-07-kodestil-css-opprydding.md))
-    - Gå gjennom koden for kodestil og konsistens
-    - Gjenbruk av `global.css` — bruk eksisterende utility-klasser og CSS-variabler istedenfor ad-hoc variabler i komponentene
-    - Fjern ubrukte klasser i `global.css`
-    - Simplify/forenkling av hele kodebasen
-
 ## Backlog
 
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
