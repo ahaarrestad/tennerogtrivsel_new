@@ -13,11 +13,7 @@
 
 ## Pågående
 
-- [ ] **Fiks prisliste-admin (flere problemer)** ([plan](docs/plans/2026-03-07-fiks-prisliste-admin.md))
-    - Kategori-dropdown er dårlig (native datalist) — erstatt med skikkelig komponent (custom dropdown med søk/opprett ny)
-    - Mangler "Gå tilbake til liste"-knapp i redigeringsvisningen
-    - Ny prisrad: autosave trigger for tidlig → kastes tilbake til oversikten før brukeren er ferdig med å fylle inn
-    - Vis «sist oppdatert» (kun måned og år) basert på siste gang en pris ble endret
+(Ingen oppgaver pågår)
 
 ## Backlog
 
@@ -36,11 +32,6 @@
 - [ ] **Admin-panel: Kompakt logg-ut-knapp med tooltip**
     - Endre logg-ut-knappen fra å vise fullt navn til kun fornavn + ikon
     - Mouse-over tooltip skal vise «Logg ut [hele navnet]»
-
-- [ ] **Prisliste-admin: «+»-knapp per kategori for raskere opprettelse av ny rad**
-    - Legg til en «+»-knapp på kategori-tittelen i prislisteoversikten
-    - Klikk auto-fyller kategori og setter fokus i behandlings-feltet
-    - Slipper å velge kategori manuelt — raskere flyt for brukeren
 
 ## Fullført
 
