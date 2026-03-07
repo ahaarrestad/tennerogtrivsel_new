@@ -38,7 +38,7 @@ export function renderToggleSwitch(dataAttr, dataValue, isActive) {
  * Genererer HTML for edit- og delete-knapper.
  */
 export function renderActionButtons(editClass, deleteClass, dataAttrs) {
-    return `<div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
+    return `<div class="flex gap-2 shrink-0" onclick="event.stopPropagation()">
         <button ${dataAttrs} class="${editClass} admin-icon-btn group/btn" title="Rediger">${ICON_EDIT}</button>
         <button ${dataAttrs} class="${deleteClass} admin-icon-btn-danger group/btn" title="Slett">${ICON_DELETE}</button>
     </div>`;
@@ -422,7 +422,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                                 ${formatDate(msg.startDate)} til ${formatDate(msg.endDate || 'Uendelig')}
                             </p>
                         </div>
-                        ${renderActionButtons('edit-btn', 'delete-btn', `data-id="${msg.driveId}" data-name="${msg.name}"`)}
+                        <div class="self-end sm:self-auto">${renderActionButtons('edit-btn', 'delete-btn', `data-id="${msg.driveId}" data-name="${msg.name}"`)}</div>
                     </div>`;
             });
             inner.innerHTML = DOMPurify.sanitize(html + `</div>`);
@@ -562,7 +562,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
                                 <p class="text-xs text-admin-muted italic">${t.title || 'Ingen tittel'}</p>
                             </div>
                         </div>
-                        ${renderActionButtons('edit-tannlege-btn', 'delete-tannlege-btn', `data-row="${t.rowIndex}" data-name="${t.name}"`)}
+                        <div class="self-end sm:self-auto">${renderActionButtons('edit-tannlege-btn', 'delete-tannlege-btn', `data-row="${t.rowIndex}" data-name="${t.name}"`)}</div>
                     </div>`;
             });
             inner.innerHTML = DOMPurify.sanitize(html + `</div>`);

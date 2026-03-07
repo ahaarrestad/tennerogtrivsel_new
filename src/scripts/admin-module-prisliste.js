@@ -5,7 +5,7 @@ import {
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { getAdminConfig, escapeHtml, createAutoSaver, verifySave } from './admin-editor-helpers.js';
-import { formatTimestamp, ICON_ADD } from './admin-dashboard.js';
+import { formatTimestamp, ICON_ADD, renderActionButtons } from './admin-dashboard.js';
 
 function formatSistOppdatert(isoString) {
     if (!isoString) return '';
@@ -260,27 +260,24 @@ async function loadPrislisteList(sheetId) {
             html += '<div class="space-y-6 max-w-4xl">';
 
             for (const [kategori, rows] of grouped) {
-                html += `<div>
-                    <h3 class="font-bold text-brand text-sm uppercase tracking-wider mb-2">${escapeHtml(kategori)}</h3>
-                    <div class="space-y-2">`;
-                for (const item of rows) {
+                html += `<div class="bg-white rounded-2xl border border-brand-border/60 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-brand-border/60">
+                        <h3 class="font-heading font-bold text-xl text-brand">${escapeHtml(kategori)}</h3>
+                    </div>
+                    <div class="px-6 py-2">`;
+                for (let i = 0; i < rows.length; i++) {
+                    const item = rows[i];
                     const prisDisplay = typeof item.pris === 'number' ? `kr ${item.pris.toLocaleString('nb-NO')}` : escapeHtml(String(item.pris));
                     const oppdatertTekst = formatSistOppdatert(item.sistOppdatert);
+                    const borderClass = i < rows.length - 1 ? ' border-b border-brand-border/60' : '';
                     html += `
-                        <div class="admin-card-interactive group flex justify-between items-center gap-4" onclick="this.querySelector('.edit-pris-btn').click()">
+                        <div class="group flex items-center gap-4 py-3 cursor-pointer hover:bg-brand-light/30 transition-colors -mx-2 px-2 rounded${borderClass}" onclick="this.querySelector('.edit-pris-btn').click()">
                             <div class="flex-grow min-w-0">
-                                <span class="font-medium text-brand">${escapeHtml(item.behandling)}</span>
-                                <span class="text-admin-muted ml-2">${prisDisplay}</span>
+                                <span class="text-base text-brand">${escapeHtml(item.behandling)}</span>
                                 ${oppdatertTekst ? `<span class="block text-xs text-admin-muted-light">Oppdatert: ${escapeHtml(oppdatertTekst)}</span>` : ''}
                             </div>
-                            <div class="flex gap-2 shrink-0">
-                                <button class="edit-pris-btn admin-icon-btn" data-row="${item.rowIndex}" title="Rediger">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                </button>
-                                <button class="delete-pris-btn admin-icon-btn" data-row="${item.rowIndex}" data-name="${escapeHtml(item.behandling)}" title="Slett">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                </button>
-                            </div>
+                            <span class="font-semibold text-base whitespace-nowrap">${prisDisplay}</span>
+                            ${renderActionButtons('edit-pris-btn', 'delete-pris-btn', `data-row="${item.rowIndex}" data-name="${escapeHtml(item.behandling)}"`)}
                         </div>`;
                 }
                 html += '</div></div>';
