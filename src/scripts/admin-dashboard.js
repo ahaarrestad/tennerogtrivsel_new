@@ -649,10 +649,14 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
         if (images.length === 0) {
             container.innerHTML = `<div class="text-center py-8 text-admin-muted-light italic">Ingen galleribilder funnet.</div>`;
         } else {
-            // Forsidebilde først, deretter sortert på order
+            // Forsidebilde/fellesbilde først, deretter sortert på order
             images.sort((a, b) => {
-                if (a.type === 'forsidebilde' && b.type !== 'forsidebilde') return -1;
-                if (a.type !== 'forsidebilde' && b.type === 'forsidebilde') return 1;
+                const aSpecial = a.type === 'forsidebilde' || a.type === 'fellesbilde';
+                const bSpecial = b.type === 'forsidebilde' || b.type === 'fellesbilde';
+                if (aSpecial && !bSpecial) return -1;
+                if (!aSpecial && bSpecial) return 1;
+                if (a.type === 'forsidebilde' && b.type === 'fellesbilde') return -1;
+                if (a.type === 'fellesbilde' && b.type === 'forsidebilde') return 1;
                 return (a.order ?? 99) - (b.order ?? 99);
             });
 
@@ -660,16 +664,20 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
             html += `<div class="grid grid-cols-1 gap-4">`;
             images.forEach((img, idx) => {
                 const isForsidebilde = img.type === 'forsidebilde';
+                const isFellesbilde = img.type === 'fellesbilde';
+                const isSpecial = isForsidebilde || isFellesbilde;
                 const badgeHtml = isForsidebilde
                     ? `<span class="admin-status-pill bg-amber-100 text-amber-700 border-amber-300 text-[8px] shrink-0 font-black">Forsidebilde</span>`
+                    : isFellesbilde
+                    ? `<span class="admin-status-pill bg-sky-100 text-sky-700 border-sky-300 text-[8px] shrink-0 font-black">Fellesbilde</span>`
                     : '';
-                const toggleHtml = isForsidebilde ? '' : renderToggleSwitch('row', img.rowIndex, img.active);
-                const isFirst = idx === 0 || (idx === 1 && images[0].type === 'forsidebilde');
+                const toggleHtml = isSpecial ? '' : renderToggleSwitch('row', img.rowIndex, img.active);
+                const isFirst = idx === 0 || (idx === 1 && (images[0].type === 'forsidebilde' || images[0].type === 'fellesbilde'));
                 const isLast = idx === images.length - 1;
-                const thumbAspect = isForsidebilde ? 'aspect-[16/10]' : 'aspect-[4/3]';
+                const thumbAspect = isForsidebilde ? 'aspect-[16/10]' : isFellesbilde ? 'aspect-[16/9]' : 'aspect-[4/3]';
 
                 html += `
-                    <div class="admin-card-interactive group flex flex-col sm:flex-row sm:items-center gap-4 ${!img.active ? 'opacity-60' : ''} ${isForsidebilde ? 'border-amber-200 bg-amber-50/30' : ''}">
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row sm:items-center gap-4 ${!img.active ? 'opacity-60' : ''} ${isForsidebilde ? 'border-amber-200 bg-amber-50/30' : isFellesbilde ? 'border-sky-200 bg-sky-50/30' : ''}">
                         <div class="flex items-center gap-3 flex-grow min-w-0">
                             <div class="shrink-0 w-20 sm:w-24 ${thumbAspect} rounded-lg overflow-hidden bg-admin-hover flex items-center justify-center" data-thumb-row="${img.rowIndex}">
                                 ${ICON_IMAGE}
@@ -685,8 +693,8 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                         </div>
                         <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                             <div class="flex flex-col gap-1">
-                                <button data-row="${img.rowIndex}" data-dir="-1" class="reorder-btn admin-icon-btn-reorder ${isFirst || isForsidebilde ? 'invisible' : ''}" title="Flytt opp">${ICON_UP}</button>
-                                <button data-row="${img.rowIndex}" data-dir="1" class="reorder-btn admin-icon-btn-reorder ${isLast || isForsidebilde ? 'invisible' : ''}" title="Flytt ned">${ICON_DOWN}</button>
+                                <button data-row="${img.rowIndex}" data-dir="-1" class="reorder-btn admin-icon-btn-reorder ${isFirst || isSpecial ? 'invisible' : ''}" title="Flytt opp">${ICON_UP}</button>
+                                <button data-row="${img.rowIndex}" data-dir="1" class="reorder-btn admin-icon-btn-reorder ${isLast || isSpecial ? 'invisible' : ''}" title="Flytt ned">${ICON_DOWN}</button>
                             </div>
                             <button data-row="${img.rowIndex}" data-title="${img.title}" class="edit-galleri-btn admin-icon-btn" title="Rediger">${ICON_EDIT}</button>
                             <button data-row="${img.rowIndex}" data-title="${img.title}" class="delete-galleri-btn admin-icon-btn-danger" title="Slett">${ICON_DELETE}</button>
@@ -799,7 +807,7 @@ export async function loadDashboardCounts(config) {
     }
 
     if (galleriResult.status === 'fulfilled' && galleriResult.value) {
-        const images = galleriResult.value.filter(img => img.type !== 'forsidebilde');
+        const images = galleriResult.value.filter(img => img.type !== 'forsidebilde' && img.type !== 'fellesbilde');
         const active = images.filter(img => img.active).length;
         setCount('card-bilder-count', `${images.length} ${images.length === 1 ? 'bilde' : 'bilder'}, ${active} aktive`);
     }

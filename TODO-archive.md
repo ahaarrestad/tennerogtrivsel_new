@@ -2,6 +2,14 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Redesign tannleger-seksjonen** ([plan](docs/plans/archive/2026-03-07-redesign-tannleger.md), [design](docs/plans/2026-03-07-brukertesting-forbedringer-design.md))
+    - Forsiden: én klikkbar boks med fellesbilde → lenke til `/tannleger`, synlig på mobil
+    - `/tannleger`: `rounded-xl` portrait grid (2 mobil, 3 desktop) med `imageConfig`-crop
+    - Native `<details>`/`<summary>` accordion for beskrivelser
+    - Admin: fellesbilde-støtte i galleri (checkbox, gjenbruk av `setGalleriSpecialType()`)
+    - Admin preview matcher tannleger-sidens layout (aspect-[3/4], tekststyling)
+    - 960 tester bestått, bygg OK
+
 - [x] **Fjern sticky card-stabling på mobil** ([design](docs/plans/2026-03-07-brukertesting-forbedringer-design.md))
     - Fjernet `position: sticky`, `margin-bottom: 6vh`, mobil z-index og desktop-override media queries fra `.stack-card` i `global.css`
     - Beholdt `isStack`-prop og `--card-index` i Card.astro for eventuelle desktop-effekter

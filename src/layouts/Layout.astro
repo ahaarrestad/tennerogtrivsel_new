@@ -15,7 +15,7 @@ import { getCollection } from 'astro:content';
 
 const settings = await getSiteSettings();
 const galleri = await getCollection('galleri');
-const showGalleri = galleri.some(item => (item.data.type ?? 'galleri') !== 'forsidebilde');
+const showGalleri = galleri.some(item => (item.data.type ?? 'galleri') === 'galleri');
 
 const {
     title = settings.siteTitle,

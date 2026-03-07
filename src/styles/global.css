@@ -726,4 +726,14 @@
         font-weight: 500;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
+
+    /* Accordion — tannlege-kort */
+    .tannlege-summary::-webkit-details-marker,
+    .tannlege-summary::marker {
+        display: none;
+    }
+
+    details[open] .tannlege-summary {
+        @apply border-brand;
+    }
 }

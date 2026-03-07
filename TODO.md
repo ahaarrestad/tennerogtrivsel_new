@@ -17,13 +17,6 @@
 
 ### Brukertesting-forbedringer ([design](docs/plans/2026-03-07-brukertesting-forbedringer-design.md))
 
-- [ ] **Redesign tannleger-seksjonen**
-    - Forsiden: én klikkbar boks med fellesbilde (placeholder) → lenke til `/tannleger`
-    - **Synlig på mobil** (fjern `hidden md:block`-wrapper)
-    - /tannleger: `rounded-xl`-bilder i grid (3 desktop, 2 mobil) med `imageConfig`-crop
-    - Native `<details>`/`<summary>` accordion for beskrivelse, `btn-secondary`-styling
-    - Oppdater design-guide: 5.3, 5.7 (ny accordion-spec), 6, 8.1
-
 - [ ] **Redesign tjenester-seksjonen**
     - `priority`-felt som **frontmatter i markdown** (ikke Sheets — tjenester er Drive-basert)
     - Vis 6 første basert på priority, `btn-secondary` "Se mer"-knapp viser resten

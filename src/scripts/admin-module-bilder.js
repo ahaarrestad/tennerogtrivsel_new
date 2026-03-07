@@ -1,7 +1,7 @@
 import DOMPurify from 'dompurify';
 import {
     getSheetParentFolder, getGalleriRaw, updateGalleriRow, addGalleriRow,
-    deleteGalleriRowPermanently, setForsideBildeInGalleri, migrateForsideBildeToGalleri,
+    deleteGalleriRowPermanently, setForsideBildeInGalleri, setFellesBildeInGalleri, migrateForsideBildeToGalleri,
     findFileByName, deleteFile, listImages
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
@@ -55,7 +55,8 @@ export async function loadBilderModule() {
             if (!item) return;
 
             const isForsidebilde = item.type === 'forsidebilde';
-            const previewLabel = isForsidebilde ? 'Forhåndsvisning (16:10)' : 'Forhåndsvisning (4:3)';
+            const isFellesbilde = item.type === 'fellesbilde';
+            const previewLabel = isForsidebilde ? 'Forhåndsvisning (16:10)' : isFellesbilde ? 'Forhåndsvisning (16:9)' : 'Forhåndsvisning (4:3)';
 
             const { src: itemPreviewSrc } = await resolveImagePreview(item.image, parentFolderId);
 
@@ -90,6 +91,13 @@ export async function loadBilderModule() {
                                 </div>
                                 <input type="checkbox" id="galleri-edit-forsidebilde" class="w-5 h-5 accent-amber-500 cursor-pointer">
                             </div>
+                            <div class="admin-field-container flex items-center justify-between gap-3 p-4 rounded-xl border border-sky-200 bg-sky-50/50">
+                                <div>
+                                    <label class="admin-label !mb-0">Bruk som fellesbilde (tannleger)</label>
+                                    <p class="text-[10px] text-admin-muted-light mt-0.5">Vises på forsiden i tannleger-seksjonen</p>
+                                </div>
+                                <input type="checkbox" id="galleri-edit-fellesbilde" class="w-5 h-5 accent-sky-500 cursor-pointer">
+                            </div>
                             ${renderImageCropSliders({ prefix: 'galleri-edit', valPrefix: 'galleri-val' })}
                             <div class="pt-6 border-t border-admin-border">
                                 <button id="btn-ferdig-galleri" class="btn-primary w-full py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs flex items-center justify-center gap-2">
@@ -115,7 +123,7 @@ export async function loadBilderModule() {
             // Set preview aspect ratio and label
             const previewContainer = document.getElementById('galleri-preview-container');
             const previewLabelEl = document.getElementById('galleri-preview-label');
-            if (previewContainer) previewContainer.classList.add(isForsidebilde ? 'aspect-[16/10]' : 'aspect-[4/3]');
+            if (previewContainer) previewContainer.classList.add(isForsidebilde ? 'aspect-[16/10]' : isFellesbilde ? 'aspect-[16/9]' : 'aspect-[4/3]');
             if (previewLabelEl) previewLabelEl.textContent = previewLabel;
 
             // Set values programmatically (safe, not in template)
@@ -141,6 +149,11 @@ export async function loadBilderModule() {
                 if (activeField) activeField.classList.remove('hidden');
             }
             if (forsideCheckbox) forsideCheckbox.checked = isForsidebilde;
+            const fellesbildeCheckbox = document.getElementById('galleri-edit-fellesbilde');
+            if (fellesbildeCheckbox) fellesbildeCheckbox.checked = isFellesbilde;
+            // Gjem forsidebilde/fellesbilde-avhengig av type
+            if (isFellesbilde && forsideCheckbox) forsideCheckbox.closest('.admin-field-container')?.classList.add('hidden');
+            if (isForsidebilde && fellesbildeCheckbox) fellesbildeCheckbox.closest('.admin-field-container')?.classList.add('hidden');
             if (scaleInput) scaleInput.value = String(item.scale ?? 1);
             if (xInput) xInput.value = String(item.positionX ?? 50);
             if (yInput) yInput.value = String(item.positionY ?? 50);
@@ -221,6 +234,53 @@ export async function loadBilderModule() {
                 });
             }
 
+            if (fellesbildeCheckbox) {
+                fellesbildeCheckbox.addEventListener('change', async () => {
+                    if (fellesbildeCheckbox.checked) {
+                        if (forsideCheckbox) {
+                            forsideCheckbox.checked = false;
+                            forsideCheckbox.closest('.admin-field-container')?.classList.add('hidden');
+                        }
+                        try {
+                            await setFellesBildeInGalleri(SHEET_ID, rowIndex);
+                            if (previewContainer) {
+                                previewContainer.classList.remove('aspect-[4/3]', 'aspect-[16/10]');
+                                previewContainer.classList.add('aspect-[16/9]');
+                            }
+                            if (previewLabelEl) previewLabelEl.textContent = 'Forhåndsvisning (16:9)';
+                        } catch (e) {
+                            showToast('Kunne ikke sette fellesbilde: ' + e.message, 'error');
+                            fellesbildeCheckbox.checked = false;
+                            if (forsideCheckbox) forsideCheckbox.closest('.admin-field-container')?.classList.remove('hidden');
+                        }
+                    } else {
+                        if (forsideCheckbox) forsideCheckbox.closest('.admin-field-container')?.classList.remove('hidden');
+                        try {
+                            await updateGalleriRow(SHEET_ID, rowIndex, {
+                                ...item,
+                                title: titleInput?.value || item.title,
+                                image: imageInput?.value || item.image,
+                                altText: altInput?.value || item.altText,
+                                active: activeToggle?.dataset.active === 'true',
+                                scale: parseFloat(scaleInput?.value || '1'),
+                                positionX: parseInt(xInput?.value || '50'),
+                                positionY: parseInt(yInput?.value || '50'),
+                                type: 'galleri'
+                            });
+                            if (previewContainer) {
+                                previewContainer.classList.remove('aspect-[16/9]');
+                                previewContainer.classList.add('aspect-[4/3]');
+                            }
+                            if (previewLabelEl) previewLabelEl.textContent = 'Forhåndsvisning (4:3)';
+                        } catch (e) {
+                            showToast('Kunne ikke endre type: ' + e.message, 'error');
+                            fellesbildeCheckbox.checked = true;
+                            if (forsideCheckbox) forsideCheckbox.closest('.admin-field-container')?.classList.add('hidden');
+                        }
+                    }
+                });
+            }
+
             // Image picker for gallery item
             const btnPickImage = document.getElementById('btn-galleri-pick-image');
             const modal2 = document.getElementById('image-picker-modal');
@@ -253,7 +313,7 @@ export async function loadBilderModule() {
                     scale: parseFloat(scaleInput?.value || '1'),
                     positionX: parseInt(xInput?.value || '50'),
                     positionY: parseInt(yInput?.value || '50'),
-                    type: forsideCheckbox?.checked ? 'forsidebilde' : 'galleri'
+                    type: forsideCheckbox?.checked ? 'forsidebilde' : fellesbildeCheckbox?.checked ? 'fellesbilde' : 'galleri'
                 };
                 await updateGalleriRow(SHEET_ID, rowIndex, saveData);
                 await verifySave({
@@ -327,10 +387,14 @@ export async function loadBilderModule() {
 
         const handleReorder = async (rowIndex, direction) => {
             const items = await getGalleriRaw(SHEET_ID);
-            // Sort same way as list: forsidebilde first, then by order
+            // Sort same way as list: forsidebilde/fellesbilde first, then by order
             items.sort((a, b) => {
-                if (a.type === 'forsidebilde' && b.type !== 'forsidebilde') return -1;
-                if (a.type !== 'forsidebilde' && b.type === 'forsidebilde') return 1;
+                const aSpecial = a.type === 'forsidebilde' || a.type === 'fellesbilde';
+                const bSpecial = b.type === 'forsidebilde' || b.type === 'fellesbilde';
+                if (aSpecial && !bSpecial) return -1;
+                if (!aSpecial && bSpecial) return 1;
+                if (a.type === 'forsidebilde' && b.type === 'fellesbilde') return -1;
+                if (a.type === 'fellesbilde' && b.type === 'forsidebilde') return 1;
                 return (a.order ?? 99) - (b.order ?? 99);
             });
             await reorderGalleriItem(SHEET_ID, items, rowIndex, direction);
