@@ -222,6 +222,22 @@ og Astro parser frontmatter automatisk ved content collection-lasting.
 **Desktop:** Samme kort-liste-layout, men med `md:grid md:grid-cols-2`-mulighet for
 kategorikortene dersom det er mange kategorier.
 
+### Print-versjon
+
+Prislisten skal kunne skrives ut pent for opphenging på veggen (venteværelse, resepsjon etc.).
+
+- **Print-knapp** på siden: `btn-secondary` med print-ikon, kaller `window.print()`
+- **`@media print`-stylesheet** i `prisliste.astro` (eller `global.css`):
+  - Skjul navbar, footer, print-knapp og andre UI-elementer
+  - Vis klinikkens logo (fra `innstillinger`) sentrert øverst
+  - Klinikknavn (Montserrat 700) under logoen
+  - Valgfri undertekst: "Prisliste gjeldende fra [dato]" (fra Sheets eller statisk)
+  - Kategorikort rendres som rene lister uten shadow/border (sparevennlig)
+  - `page-break-inside: avoid` på kategorikort for å unngå at én kategori deles over to sider
+  - Svart tekst på hvit bakgrunn, ingen fargebakgrunner
+  - Passende marger for A4-format
+- **Ingen ekstra side/rute** — print-layout er ren CSS over eksisterende `/prisliste`-side
+
 ### Content collection schema
 
 ```typescript
