@@ -2,6 +2,16 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Prisliste-admin: «+»-knapp per kategori for raskere opprettelse av ny rad**
+    - Kompakt «+»-knapp i kategori-headeren i prislisteoversikten
+    - Klikk åpner ny-rad-editor med forhåndsutfylt kategori og fokus på behandlings-feltet
+
+- [x] **Fiks prisliste-admin (flere problemer)** ([plan](docs/plans/archive/2026-03-07-fiks-prisliste-admin.md))
+    - Custom kategori-dropdown med søk/opprett ny (erstatter native datalist)
+    - Autosave deaktivert for nye rader — eksplisitt Opprett/Avbryt-knapper
+    - "Tilbake til listen"-knapp i redigeringsvisningen for eksisterende rader
+    - "Sist oppdatert" (måned og år) vises på prisliste-siden
+
 - [x] **Prisliste-admin: Samkjør rediger/slett-ikoner med resten av admin**
     - Byttet inline SVG (14x14) til `renderActionButtons()` med `ICON_EDIT`/`ICON_DELETE`-konstanter (16x16)
     - Slett-knapp bruker nå `admin-icon-btn-danger` (rød) i stedet for grå
