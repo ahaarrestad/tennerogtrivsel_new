@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Fjern sticky card-stabling på mobil** ([design](docs/plans/2026-03-07-brukertesting-forbedringer-design.md))
+    - Fjernet `position: sticky`, `margin-bottom: 6vh`, mobil z-index og desktop-override media queries fra `.stack-card` i `global.css`
+    - Beholdt `isStack`-prop og `--card-index` i Card.astro for eventuelle desktop-effekter
+    - Kort vises nå som vanlig scrollbar liste på mobil
+
 - [x] **Feilsøk hvorfor alle pull requests feiler på GitHub**
     - Årsak: Hardkodet testdato `2026-03-01` i `textFormatter.test.js` passerte sluttdato, gjort meldingen "utløpt" i stedet for "aktiv"
     - Fiks: Endret testdatoer til 2027 for å unngå tidsavhengig feil
