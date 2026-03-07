@@ -42,6 +42,10 @@ const SHEET_ID = 'test-sheet-id';
 describe('Prisliste CRUD', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        // ensurePrislisteSheet needs spreadsheets.get to check if sheet exists
+        mockSheets.spreadsheets.get.mockResolvedValue({
+            result: { sheets: [{ properties: { title: 'Prisliste' } }] }
+        });
     });
 
     describe('getPrislisteRaw', () => {
