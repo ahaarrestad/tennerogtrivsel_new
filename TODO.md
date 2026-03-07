@@ -13,13 +13,6 @@
 
 ## Pågående
 
-### Brukertesting-forbedringer ([design](docs/plans/2026-03-07-brukertesting-forbedringer-design.md))
-
-- [ ] **Sortering av tjenester på admin-siden** ([plan](docs/plans/2026-03-07-tjenester-sortering.md))
-  - Piler opp og ned i oversikten (samme mønster som for bilder)
-  - Oversikten skal vises i riktig sorteringsrekkefølge
-  - Fjern priority-input fra redigeringsskjema
-
 ## Backlog
 
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
