@@ -98,6 +98,7 @@ async function editTannlege(rowIndex, data = null) {
                 <h3 class="text-brand font-black uppercase tracking-tighter text-center lg:text-left">Forhåndsvisning</h3>
                 <div class="flex justify-center lg:justify-start">
                     <div class="w-full max-w-[250px]">
+                        <div class="max-w-[75%] mx-auto">
                         <div class="relative aspect-[3/4] rounded-xl overflow-hidden bg-admin-surface">
                             <div id="no-image-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-admin-muted-light ${previewSrc ? 'hidden' : ''}">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
@@ -109,10 +110,19 @@ async function editTannlege(rowIndex, data = null) {
                                  style="object-position: ${t.positionX}% ${t.positionY}%; transform: scale(${t.scale}); transform-origin: ${t.positionX}% ${t.positionY}%;"
                             >
                         </div>
-                        <div class="mt-3 text-center">
-                            <span id="preview-name" class="font-heading font-bold text-sm block">${escapeHtml(t.name) || 'Navn'}</span>
-                            <span id="preview-title" class="text-brand-hover text-xs block">${escapeHtml(t.title) || 'Tittel'}</span>
-                            <p id="preview-desc" class="mt-2 text-sm leading-relaxed text-brand-hover line-clamp-3">${escapeHtml(t.description) || ''}</p>
+                        </div>
+                        <details class="mt-3" ${t.description ? '' : 'hidden'} id="preview-details">
+                            <summary class="tannlege-summary w-full text-center cursor-pointer list-none rounded-xl border border-brand-border py-2 px-3 transition-all duration-200 hover:border-brand">
+                                <span id="preview-name" class="font-heading font-bold text-sm block">${escapeHtml(t.name) || 'Navn'}</span>
+                                <span id="preview-title" class="text-brand-hover text-xs block">${escapeHtml(t.title) || 'Tittel'}</span>
+                            </summary>
+                            <div class="mt-3 text-sm leading-relaxed text-brand-hover">
+                                <span id="preview-desc">${escapeHtml(t.description) || ''}</span>
+                            </div>
+                        </details>
+                        <div class="mt-3 text-center ${t.description ? 'hidden' : ''}" id="preview-no-desc">
+                            <span id="preview-name-nodesc" class="font-heading font-bold text-sm block">${escapeHtml(t.name) || 'Navn'}</span>
+                            <span id="preview-title-nodesc" class="text-brand-hover text-xs block">${escapeHtml(t.title) || 'Tittel'}</span>
                         </div>
                     </div>
                 </div>
@@ -211,9 +221,27 @@ async function editTannlege(rowIndex, data = null) {
         const nameEl = document.getElementById('preview-name');
         const titleEl = document.getElementById('preview-title');
         const descEl = document.getElementById('preview-desc');
-        if (nameEl) nameEl.textContent = nameInp.value || 'Navn';
-        if (titleEl) titleEl.textContent = titleInp.value || 'Tittel';
-        if (descEl) descEl.textContent = descInp.value || '';
+        const nameNoDesc = document.getElementById('preview-name-nodesc');
+        const titleNoDesc = document.getElementById('preview-title-nodesc');
+        const detailsEl = document.getElementById('preview-details');
+        const noDescEl = document.getElementById('preview-no-desc');
+        const nameVal = nameInp.value || 'Navn';
+        const titleVal = titleInp.value || 'Tittel';
+        const descVal = descInp.value || '';
+        if (nameEl) nameEl.textContent = nameVal;
+        if (titleEl) titleEl.textContent = titleVal;
+        if (descEl) descEl.textContent = descVal;
+        if (nameNoDesc) nameNoDesc.textContent = nameVal;
+        if (titleNoDesc) titleNoDesc.textContent = titleVal;
+        if (detailsEl && noDescEl) {
+            if (descVal) {
+                detailsEl.hidden = false;
+                noDescEl.classList.add('hidden');
+            } else {
+                detailsEl.hidden = true;
+                noDescEl.classList.remove('hidden');
+            }
+        }
 
         const img = document.getElementById('preview-img');
         if (img) {
