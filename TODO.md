@@ -36,6 +36,7 @@
     - Auto-save admin-modul, `escapeHtml()`/programmatisk `.value`-setting
     - Navbar-lenke etter Tjenester: `…Tjenester → Prisliste → Tannleger`
     - Footer-lenke i kolonne 2
+    - Print-versjon: `@media print` med logo, klinikknavn, A4-vennlig layout for opphenging
     - Ny arkitekturdok: `docs/architecture/prisliste.md`
 
 - [ ] **Footer-justeringer**
@@ -49,6 +50,10 @@
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
+
+- [ ] **Audit tester for dato-avhengige feil**
+    - Gå gjennom alle tester og identifiser dato-feller som kan feile bygg avhengig av tidspunkt
+    - Ref: `sortMessages`-testen som feilet pga. tidsavhengighet (fe7ee0d)
 
 ## Fullført
 
