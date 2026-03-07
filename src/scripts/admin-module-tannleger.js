@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import {
     updateTannlegeRow, addTannlegeRow, deleteTannlegeRowPermanently,
     backupToSlettetSheet, getTannlegerRaw,
@@ -57,7 +58,7 @@ async function editTannlege(rowIndex, data = null) {
 
     const { src: previewSrc } = await resolveImagePreview(t.image, TANNLEGER_FOLDER, { localFallbackDir: '/src/assets/tannleger/' });
 
-    inner.innerHTML = `
+    inner.innerHTML = DOMPurify.sanitize(`
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 max-w-6xl animate-in fade-in slide-in-from-bottom-2 duration-300">
             <!-- VENSTRE: Skjema -->
             <div class="space-y-6">
@@ -117,7 +118,7 @@ async function editTannlege(rowIndex, data = null) {
                 </div>
             </div>
         </div>
-    `;
+    `);
 
     // Sett form-verdier programmatisk (sikkert — ingen HTML-parsing)
     const imageInput = document.getElementById('edit-t-image');
