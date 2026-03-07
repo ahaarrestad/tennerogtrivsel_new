@@ -1,6 +1,6 @@
 import {
     deleteFile, getFileContent, parseMarkdown, stringifyMarkdown,
-    saveFile, createFile
+    saveFile, createFile, listFiles
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { classifyError } from './admin-api-retry.js';
@@ -70,10 +70,6 @@ async function editTjeneste(id, name) {
                         <label class="admin-label">Ingress (kort sammendrag)</label>
                         <textarea id="edit-ingress" rows="3" class="admin-input resize-none"></textarea>
                     </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="admin-label">Prioritet (lavere tall = vises først)</label>
-                        <input type="number" id="edit-priority" min="1" max="99" class="admin-input w-24">
-                    </div>
                     <div class="flex flex-col gap-2 editor-container">
                         <label class="admin-label">Beskrivelse (Innhold)</label>
                         <textarea id="edit-content" placeholder="Full beskrivelse her..."></textarea>
@@ -88,7 +84,6 @@ async function editTjeneste(id, name) {
         document.getElementById('edit-title').value = data.title || '';
         document.getElementById('edit-ingress').value = data.ingress || '';
         document.getElementById('edit-content').value = body || '';
-        document.getElementById('edit-priority').value = data.priority ?? 99;
 
         const easyMDE = initMarkdownEditor();
 
@@ -108,7 +103,7 @@ async function editTjeneste(id, name) {
                 title: title,
                 ingress: document.getElementById('edit-ingress').value,
                 active: activeVal,
-                priority: parseInt(document.getElementById('edit-priority').value, 10) || 99
+                priority: data.priority ?? 99
             };
             const content = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
             return { newFileName, frontmatter, content };
@@ -140,7 +135,6 @@ async function editTjeneste(id, name) {
 
             document.getElementById('edit-title')?.addEventListener('input', () => autoSaver.trigger());
             document.getElementById('edit-ingress')?.addEventListener('input', () => autoSaver.trigger());
-            document.getElementById('edit-priority')?.addEventListener('input', () => autoSaver.trigger());
             if (easyMDE) easyMDE.codemirror.on('change', () => autoSaver.trigger());
             attachToggleClick('edit-active-toggle', () => autoSaver.trigger());
         } else {
@@ -200,10 +194,68 @@ async function toggleTjenesteActive(driveId, fileName, service) {
     }
 }
 
+async function handleReorder(driveId, direction) {
+    const { TJENESTER_FOLDER } = getAdminConfig();
+
+    try {
+        const files = await listFiles(TJENESTER_FOLDER);
+        const services = await Promise.all(files.map(async (f) => {
+            const raw = await getFileContent(f.id);
+            const { data, body } = parseMarkdown(raw);
+            return { driveId: f.id, name: f.name, ...data, body };
+        }));
+
+        services.sort((a, b) => ((a.priority ?? 99) - (b.priority ?? 99)) || (a.title || '').localeCompare(b.title || '', 'nb'));
+
+        const currentIdx = services.findIndex(s => s.driveId === driveId);
+        const neighborIdx = currentIdx + direction;
+        if (currentIdx < 0 || neighborIdx < 0 || neighborIdx >= services.length) return;
+
+        const current = services[currentIdx];
+        const neighbor = services[neighborIdx];
+
+        let currentPriority = current.priority ?? 99;
+        let neighborPriority = neighbor.priority ?? 99;
+
+        // Swap priorities
+        const tmp = currentPriority;
+        currentPriority = neighborPriority;
+        neighborPriority = tmp;
+
+        // If equal after swap, assign sequential values
+        if (currentPriority === neighborPriority) {
+            currentPriority = currentIdx + direction;
+            neighborPriority = currentIdx;
+        }
+
+        const currentFrontmatter = { ...current };
+        delete currentFrontmatter.driveId;
+        delete currentFrontmatter.name;
+        delete currentFrontmatter.body;
+        currentFrontmatter.priority = currentPriority;
+
+        const neighborFrontmatter = { ...neighbor };
+        delete neighborFrontmatter.driveId;
+        delete neighborFrontmatter.name;
+        delete neighborFrontmatter.body;
+        neighborFrontmatter.priority = neighborPriority;
+
+        await Promise.all([
+            saveFile(current.driveId, current.name, stringifyMarkdown(currentFrontmatter, current.body)),
+            saveFile(neighbor.driveId, neighbor.name, stringifyMarkdown(neighborFrontmatter, neighbor.body))
+        ]);
+
+        reloadTjenester();
+    } catch (e) {
+        console.error('Reorder failed:', e);
+        showToast('Kunne ikke sortere tjenesten.', 'error');
+    }
+}
+
 function reloadTjenester() {
     window.clearBreadcrumbEditor?.();
     const { TJENESTER_FOLDER } = getAdminConfig();
-    loadTjenesterModule(TJENESTER_FOLDER, editTjeneste, deleteTjeneste, toggleTjenesteActive);
+    loadTjenesterModule(TJENESTER_FOLDER, editTjeneste, deleteTjeneste, toggleTjenesteActive, handleReorder);
 }
 
 export function initTjenesterModule() {
