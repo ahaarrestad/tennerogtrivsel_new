@@ -1,0 +1,83 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getSiteSettings } from '../scripts/getSettings';
+import { getCollection } from 'astro:content';
+
+const settings = await getSiteSettings();
+const rawPrisliste = await getCollection('prisliste');
+
+const kategorier = new Map();
+for (const item of rawPrisliste) {
+    const key = item.data.kategori;
+    if (!kategorier.has(key)) kategorier.set(key, []);
+    kategorier.get(key).push(item.data);
+}
+
+function formatPris(pris) {
+    if (typeof pris === 'number') return `kr ${pris.toLocaleString('nb-NO')}`;
+    return String(pris);
+}
+---
+<Layout
+    title="Prisliste | Tenner og Trivsel"
+    description="Oversikt over priser for tannbehandlinger hos Tenner og Trivsel."
+>
+    <main class="section-container variant-white">
+        <div class="section-content max-w-4xl mx-auto">
+            <div class="text-center mb-10">
+                <h1 class="h1">Prisliste</h1>
+                <p class="text-brand-hover mt-2 max-w-2xl mx-auto">
+                    Prisene er veiledende og kan variere etter behandlingens omfang.
+                </p>
+            </div>
+
+            <div class="flex justify-end mb-6 print:hidden">
+                <button id="print-btn" class="btn-secondary text-sm py-2 px-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Skriv ut
+                </button>
+            </div>
+
+            {kategorier.size === 0 && (
+                <p class="text-center text-brand-hover italic py-12">Prislisten er tom.</p>
+            )}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                {[...kategorier.entries()].map(([kategori, items]) => (
+                    <div class="bg-white rounded-2xl border border-brand-border/60 shadow-sm overflow-hidden">
+                        <div class="p-5 border-b border-brand-border/60">
+                            <h2 class="font-heading font-bold text-xl text-brand">{kategori}</h2>
+                        </div>
+                        <div class="p-5">
+                            {items.map((item, i) => (
+                                <div class:list={[
+                                    "flex justify-between items-baseline py-3",
+                                    i < items.length - 1 && "border-b border-brand-border/60"
+                                ]}>
+                                    <span class="text-base">{item.behandling}</span>
+                                    <span class="font-semibold text-base ml-4 whitespace-nowrap">{formatPris(item.pris)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </main>
+</Layout>
+
+<style>
+    @media print {
+        nav, footer, #print-btn, .print\:hidden { display: none !important; }
+        main { padding: 0 !important; }
+        .shadow-sm { box-shadow: none !important; }
+        .border { border-color: #e5e5e5 !important; }
+        .rounded-2xl { border-radius: 0.5rem !important; }
+        div[class*="grid"] { display: block !important; }
+        div[class*="grid"] > * { break-inside: avoid; margin-bottom: 1rem; }
+    }
+</style>
+
+<script>
+    document.getElementById('print-btn')?.addEventListener('click', () => window.print());
+</script>
