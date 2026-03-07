@@ -199,13 +199,6 @@
         @apply text-center mx-auto max-w-4xl;
     }
 
-    /* .section-heading er konsolidert med .h2 — bruk .h2 i stedet */
-    .section-heading {
-        @apply text-3xl md:text-5xl font-extrabold text-brand tracking-tight;
-        font-family: var(--font-heading);
-        line-height: 1.15;
-        letter-spacing: -0.025em;
-    }
 
     .section-intro {
         @apply text-brand-hover max-w-2xl mx-auto mt-2 text-base md:text-lg leading-relaxed;
