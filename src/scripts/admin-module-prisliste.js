@@ -180,7 +180,7 @@ async function loadPrislisteList(sheetId) {
         document.getElementById('btn-new-pris').onclick = () => editPrisRad(null, null);
     } catch (e) {
         console.error('[Admin] Prisliste load failed:', e);
-        inner.innerHTML = '<div class="text-center py-12 text-red-500">Kunne ikke laste prisliste.</div>';
+        inner.innerHTML = '<div class="admin-alert-error">Kunne ikke laste prisliste.</div>';
     }
 }
 

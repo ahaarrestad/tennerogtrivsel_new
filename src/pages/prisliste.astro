@@ -1,9 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getSiteSettings } from '../scripts/getSettings';
 import { getCollection } from 'astro:content';
 
-const settings = await getSiteSettings();
 const rawPrisliste = await getCollection('prisliste');
 
 const kategorier = new Map();
@@ -71,7 +69,7 @@ function formatPris(pris) {
         nav, footer, #print-btn, .print\:hidden { display: none !important; }
         main { padding: 0 !important; }
         .shadow-sm { box-shadow: none !important; }
-        .border { border-color: #e5e5e5 !important; }
+        .border { border-color: var(--color-brand-border) !important; }
         .rounded-2xl { border-radius: 0.5rem !important; }
         div[class*="grid"] { display: block !important; }
         div[class*="grid"] > * { break-inside: avoid; margin-bottom: 1rem; }
