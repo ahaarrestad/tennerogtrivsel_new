@@ -261,6 +261,61 @@ describe('loadPrislisteList', () => {
         expect(inner.innerHTML).toContain('Ny prisrad');
     });
 
+    it('should show per-category add buttons', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100 },
+            { rowIndex: 3, kategori: 'Kirurgi', behandling: 'B', pris: 200 },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const addBtns = document.querySelectorAll('.add-pris-kategori-btn');
+        expect(addBtns).toHaveLength(2);
+        expect(addBtns[0].dataset.kategori).toBe('Undersokelser');
+        expect(addBtns[1].dataset.kategori).toBe('Kirurgi');
+    });
+
+    it('should open editor with pre-filled category when per-category add button is clicked', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100 },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const addBtn = document.querySelector('.add-pris-kategori-btn');
+        const event = new Event('click', { bubbles: true });
+        event.stopPropagation = vi.fn();
+        await addBtn.onclick(event);
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(document.getElementById('edit-pris-kategori').value).toBe('Undersokelser');
+        expect(document.getElementById('module-inner').innerHTML).toContain('Ny prisrad');
+    });
+
+    it('should focus behandling field when category is pre-filled from per-category add', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100 },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const focusSpy = vi.spyOn(HTMLInputElement.prototype, 'focus');
+
+        const addBtn = document.querySelector('.add-pris-kategori-btn');
+        const event = new Event('click', { bubbles: true });
+        event.stopPropagation = vi.fn();
+        await addBtn.onclick(event);
+        await new Promise(r => setTimeout(r, 0));
+
+        const behandlingInput = document.getElementById('edit-pris-behandling');
+        expect(focusSpy).toHaveBeenCalled();
+        // Verify that focus was called on the behandling input specifically
+        const focusCalls = focusSpy.mock.instances;
+        expect(focusCalls).toContain(behandlingInput);
+
+        focusSpy.mockRestore();
+    });
+
     it('should show add button in actions area', async () => {
         getPrislisteRaw.mockResolvedValue([]);
         reloadPrisliste();
