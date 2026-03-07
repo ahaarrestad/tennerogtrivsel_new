@@ -1137,12 +1137,12 @@ describe('sync-data.js', () => {
             fs.readdirSync.mockReturnValue([]);
         });
 
-        it('should sync prisliste from Sheets to JSON', async () => {
+        it('should sync prisliste from Sheets to JSON with sistOppdatert', async () => {
             mockSheets.spreadsheets.values.get.mockResolvedValue({
                 data: {
                     values: [
-                        ['Undersokelser', 'Vanlig undersokelse', 850],
-                        ['Undersokelser', 'Rontgen', 350],
+                        ['Undersokelser', 'Vanlig undersokelse', 850, '2026-03-01T10:00:00.000Z'],
+                        ['Undersokelser', 'Rontgen', 350, '2026-03-05T10:00:00.000Z'],
                         ['Bleking', 'Hjemmebleking', 2500],
                     ]
                 }
@@ -1152,7 +1152,7 @@ describe('sync-data.js', () => {
 
             expect(mockSheets.spreadsheets.values.get).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    range: 'Prisliste!A2:C',
+                    range: 'Prisliste!A2:D',
                     valueRenderOption: 'UNFORMATTED_VALUE',
                 })
             );
@@ -1162,12 +1162,14 @@ describe('sync-data.js', () => {
             );
             expect(writeCall).toBeTruthy();
             const written = JSON.parse(writeCall[1]);
-            expect(written).toHaveLength(3);
-            expect(written[0]).toEqual({
+            expect(written.items).toHaveLength(3);
+            expect(written.items[0]).toEqual({
                 kategori: 'Undersokelser',
                 behandling: 'Vanlig undersokelse',
                 pris: 850,
+                sistOppdatert: '2026-03-01T10:00:00.000Z',
             });
+            expect(written.sistOppdatert).toBe('2026-03-05T10:00:00.000Z');
         });
 
         it('should handle empty Prisliste sheet', async () => {
@@ -1182,13 +1184,13 @@ describe('sync-data.js', () => {
             );
             expect(writeCall).toBeTruthy();
             const written = JSON.parse(writeCall[1]);
-            expect(written).toEqual([]);
+            expect(written).toEqual({ sistOppdatert: '', items: [] });
         });
 
         it('should handle missing Prisliste sheet gracefully', async () => {
             mockSheets.spreadsheets.values.get.mockRejectedValue({
                 code: 400,
-                message: 'Unable to parse range: Prisliste!A2:C'
+                message: 'Unable to parse range: Prisliste!A2:D'
             });
 
             await syncPrisliste();
@@ -1216,7 +1218,26 @@ describe('sync-data.js', () => {
                 c => c[0].includes('prisliste.json')
             );
             const written = JSON.parse(writeCall[1]);
-            expect(written[0].pris).toBe('Fra 2500,-');
+            expect(written.items[0].pris).toBe('Fra 2500,-');
+        });
+
+        it('should handle rows without sistOppdatert column', async () => {
+            mockSheets.spreadsheets.values.get.mockResolvedValue({
+                data: {
+                    values: [
+                        ['Test', 'Behandling A', 500],
+                    ]
+                }
+            });
+
+            await syncPrisliste();
+
+            const writeCall = fs.writeFileSync.mock.calls.find(
+                c => c[0].includes('prisliste.json')
+            );
+            const written = JSON.parse(writeCall[1]);
+            expect(written.items[0].sistOppdatert).toBe('');
+            expect(written.sistOppdatert).toBe('');
         });
     });
 });

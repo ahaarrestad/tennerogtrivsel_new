@@ -86,6 +86,28 @@ describe('loadPrislisteList', () => {
         expect(inner.innerHTML).toContain('Ingen prisrader funnet');
     });
 
+    it('should display sistOppdatert when present', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Test', behandling: 'A', pris: 100, sistOppdatert: '2026-03-07T12:00:00.000Z' },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const inner = document.getElementById('module-inner');
+        expect(inner.innerHTML).toContain('Oppdatert:');
+    });
+
+    it('should not display sistOppdatert when empty', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Test', behandling: 'A', pris: 100, sistOppdatert: '' },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const inner = document.getElementById('module-inner');
+        expect(inner.innerHTML).not.toContain('Oppdatert:');
+    });
+
     it('should display items grouped by kategori', async () => {
         getPrislisteRaw.mockResolvedValue([
             { rowIndex: 2, kategori: 'Undersokelser', behandling: 'Vanlig undersokelse', pris: 850 },
@@ -333,6 +355,19 @@ describe('editPrisRad', () => {
         await expect(window.editPrisRad(null)).resolves.toBeUndefined();
     });
 
+    it('should show Tilbake button for existing rows', async () => {
+        window.clearBreadcrumbEditor = vi.fn();
+        getPrislisteRaw.mockResolvedValue([]);
+        await window.editPrisRad(2, { kategori: 'K', behandling: 'B', pris: 100 });
+
+        const backBtn = document.querySelector('.admin-btn-cancel');
+        expect(backBtn).not.toBeNull();
+        expect(backBtn.textContent).toBe('Tilbake til listen');
+
+        backBtn.click();
+        expect(window.clearBreadcrumbEditor).toHaveBeenCalled();
+    });
+
     it('should set up autoSaver with input listeners', async () => {
         await window.editPrisRad(2, { kategori: 'K', behandling: 'B', pris: 100 });
 
@@ -371,21 +406,58 @@ describe('editPrisRad', () => {
         expect(updatePrislisteRow).toHaveBeenCalledWith('test-sheet', 2, expect.objectContaining({ behandling: 'Updated' }));
     });
 
-    it('should call addPrislisteRow when no rowIndex in saveFn', async () => {
+    it('should call addPrislisteRow and reload when Opprett button is clicked', async () => {
+        window.clearBreadcrumbEditor = vi.fn();
         addPrislisteRow.mockResolvedValue();
-        getPrislisteRaw.mockResolvedValue([]);
+        getPrislisteRaw.mockResolvedValueOnce([]) // initial categories fetch
+            .mockResolvedValueOnce([]); // reloadPrisliste after create
 
         await window.editPrisRad(null, null);
 
         document.getElementById('edit-pris-behandling').value = 'New';
         document.getElementById('edit-pris-pris').value = '500';
-        const saveFn = createAutoSaver.mock.calls[0][0];
-        await saveFn();
+
+        const createBtn = document.querySelector('#new-row-actions .btn-primary');
+        expect(createBtn).not.toBeNull();
+        await createBtn.click();
+        await new Promise(r => setTimeout(r, 0));
 
         expect(addPrislisteRow).toHaveBeenCalledWith('test-sheet', expect.objectContaining({
             behandling: 'New',
             pris: 500,
         }));
+        expect(showToast).toHaveBeenCalledWith('Prisrad opprettet.', 'success');
+        expect(window.clearBreadcrumbEditor).toHaveBeenCalled();
+    });
+
+    it('should show error toast when Opprett fails', async () => {
+        addPrislisteRow.mockRejectedValue(new Error('fail'));
+        getPrislisteRaw.mockResolvedValue([]);
+
+        await window.editPrisRad(null, null);
+
+        document.getElementById('edit-pris-behandling').value = 'New';
+        const createBtn = document.querySelector('#new-row-actions .btn-primary');
+        await createBtn.click();
+
+        expect(showToast).toHaveBeenCalledWith('Kunne ikke opprette prisraden.', 'error');
+    });
+
+    it('should not set up autoSaver for new rows', async () => {
+        getPrislisteRaw.mockResolvedValue([]);
+        await window.editPrisRad(null, null);
+        expect(createAutoSaver).not.toHaveBeenCalled();
+    });
+
+    it('should navigate back when Avbryt button is clicked', async () => {
+        window.clearBreadcrumbEditor = vi.fn();
+        getPrislisteRaw.mockResolvedValue([]);
+        await window.editPrisRad(null, null);
+
+        const cancelBtn = document.querySelector('#new-row-actions .admin-btn-cancel');
+        expect(cancelBtn).not.toBeNull();
+        cancelBtn.click();
+        expect(window.clearBreadcrumbEditor).toHaveBeenCalled();
     });
 
     it('should parse numeric pris values', async () => {
@@ -443,7 +515,7 @@ describe('editPrisRad', () => {
         expect(document.getElementById('edit-pris-pris').value).toBe('');
     });
 
-    it('should populate datalist with existing categories', async () => {
+    it('should populate custom dropdown with existing categories on focus', async () => {
         getPrislisteRaw.mockResolvedValue([
             { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100 },
             { rowIndex: 3, kategori: 'Kirurgi', behandling: 'B', pris: 200 },
@@ -452,22 +524,145 @@ describe('editPrisRad', () => {
 
         await window.editPrisRad(null, null);
 
-        const datalist = document.getElementById('kategori-options');
-        expect(datalist).not.toBeNull();
-        const options = datalist.querySelectorAll('option');
+        const input = document.getElementById('edit-pris-kategori');
+        input.dispatchEvent(new Event('focus'));
+
+        const dropdown = document.querySelector('.admin-category-dropdown');
+        expect(dropdown).not.toBeNull();
+        const options = dropdown.querySelectorAll('.admin-category-option');
         expect(options).toHaveLength(2);
-        const values = [...options].map(o => o.value);
+        const values = [...options].map(o => o.dataset.value);
         expect(values).toContain('Undersokelser');
         expect(values).toContain('Kirurgi');
     });
 
-    it('should render empty datalist when getPrislisteRaw fails', async () => {
+    it('should show create option for new category text', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100 },
+        ]);
+
+        await window.editPrisRad(null, null);
+
+        const input = document.getElementById('edit-pris-kategori');
+        input.value = 'Ny kategori';
+        input.dispatchEvent(new Event('input'));
+
+        const dropdown = document.querySelector('.admin-category-dropdown');
+        const newOption = dropdown.querySelector('.admin-category-new');
+        expect(newOption).not.toBeNull();
+        expect(newOption.textContent).toContain('Ny kategori');
+    });
+
+    it('should render empty dropdown when getPrislisteRaw fails', async () => {
         getPrislisteRaw.mockRejectedValue(new Error('fail'));
 
         await window.editPrisRad(null, null);
 
-        const datalist = document.getElementById('kategori-options');
-        expect(datalist).not.toBeNull();
-        expect(datalist.querySelectorAll('option')).toHaveLength(0);
+        const input = document.getElementById('edit-pris-kategori');
+        input.dispatchEvent(new Event('focus'));
+
+        const dropdown = document.querySelector('.admin-category-dropdown');
+        expect(dropdown).not.toBeNull();
+        expect(dropdown.querySelectorAll('.admin-category-option')).toHaveLength(0);
+    });
+
+    it('should select category from dropdown on mousedown', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100 },
+        ]);
+
+        await window.editPrisRad(null, null);
+
+        const input = document.getElementById('edit-pris-kategori');
+        input.dispatchEvent(new Event('focus'));
+
+        const dropdown = document.querySelector('.admin-category-dropdown');
+        const option = dropdown.querySelector('.admin-category-option');
+        option.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+
+        expect(input.value).toBe('Undersokelser');
+    });
+
+    it('should navigate dropdown with ArrowDown key', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100 },
+            { rowIndex: 3, kategori: 'Kirurgi', behandling: 'B', pris: 200 },
+        ]);
+
+        await window.editPrisRad(null, null);
+
+        const input = document.getElementById('edit-pris-kategori');
+        input.dispatchEvent(new Event('focus'));
+
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+        const dropdown = document.querySelector('.admin-category-dropdown');
+        const active = dropdown.querySelector('.admin-category-option.active');
+        expect(active).not.toBeNull();
+    });
+
+    it('should navigate dropdown with ArrowUp key', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100 },
+            { rowIndex: 3, kategori: 'Kirurgi', behandling: 'B', pris: 200 },
+        ]);
+
+        await window.editPrisRad(null, null);
+
+        const input = document.getElementById('edit-pris-kategori');
+        input.dispatchEvent(new Event('focus'));
+
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+        const dropdown = document.querySelector('.admin-category-dropdown');
+        const active = dropdown.querySelector('.admin-category-option.active');
+        expect(active).not.toBeNull();
+    });
+
+    it('should select active option on Enter key', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100 },
+        ]);
+
+        await window.editPrisRad(null, null);
+
+        const input = document.getElementById('edit-pris-kategori');
+        input.dispatchEvent(new Event('focus'));
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+        expect(input.value).toBe('Undersokelser');
+    });
+
+    it('should close dropdown on Escape key', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100 },
+        ]);
+
+        await window.editPrisRad(null, null);
+
+        const input = document.getElementById('edit-pris-kategori');
+        input.dispatchEvent(new Event('focus'));
+
+        const dropdown = document.querySelector('.admin-category-dropdown');
+        expect(dropdown.classList.contains('hidden')).toBe(false);
+
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+        expect(dropdown.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should close dropdown on blur', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100 },
+        ]);
+
+        await window.editPrisRad(null, null);
+
+        const input = document.getElementById('edit-pris-kategori');
+        input.dispatchEvent(new Event('focus'));
+
+        const dropdown = document.querySelector('.admin-category-dropdown');
+        expect(dropdown.classList.contains('hidden')).toBe(false);
+
+        input.dispatchEvent(new Event('blur'));
+        expect(dropdown.classList.contains('hidden')).toBe(true);
     });
 });

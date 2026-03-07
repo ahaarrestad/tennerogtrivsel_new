@@ -7,6 +7,13 @@ import { showToast, showConfirm } from './admin-dialog.js';
 import { getAdminConfig, escapeHtml, createAutoSaver, verifySave } from './admin-editor-helpers.js';
 import { formatTimestamp } from './admin-dashboard.js';
 
+function formatSistOppdatert(isoString) {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 async function deletePrisRad(rowIndex, behandling) {
     const { SHEET_ID } = getAdminConfig();
     if (await showConfirm(`Vil du slette "${behandling}" permanent?`, { destructive: true })) {
@@ -25,6 +32,71 @@ async function deletePrisRad(rowIndex, behandling) {
     }
 }
 
+function setupCategoryDropdown(inputEl, categories) {
+    const container = inputEl.parentElement;
+    const dropdown = document.createElement('div');
+    dropdown.className = 'admin-category-dropdown hidden';
+    container.style.position = 'relative';
+    container.appendChild(dropdown);
+
+    function renderOptions(filter) {
+        const filtered = categories.filter(k =>
+            k.toLowerCase().includes((filter || '').toLowerCase())
+        );
+        const exactMatch = categories.some(k => k.toLowerCase() === (filter || '').toLowerCase());
+
+        let html = filtered.map(k =>
+            `<div class="admin-category-option" data-value="${escapeHtml(k)}">${escapeHtml(k)}</div>`
+        ).join('');
+
+        if (filter && !exactMatch) {
+            html += `<div class="admin-category-option admin-category-new" data-value="${escapeHtml(filter)}">+ Opprett «${escapeHtml(filter)}»</div>`;
+        }
+
+        dropdown.innerHTML = DOMPurify.sanitize(html);
+        dropdown.classList.toggle('hidden', !html);
+
+        dropdown.querySelectorAll('.admin-category-option').forEach(opt => {
+            opt.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                inputEl.value = opt.dataset.value;
+                dropdown.classList.add('hidden');
+                inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        });
+    }
+
+    inputEl.addEventListener('focus', () => renderOptions(inputEl.value));
+    inputEl.addEventListener('input', () => renderOptions(inputEl.value));
+    inputEl.addEventListener('blur', () => dropdown.classList.add('hidden'));
+
+    inputEl.addEventListener('keydown', (e) => {
+        const visible = dropdown.querySelectorAll('.admin-category-option');
+        const active = dropdown.querySelector('.admin-category-option.active');
+        const items = [...visible];
+        const idx = active ? items.indexOf(active) : -1;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            active?.classList.remove('active');
+            const next = items[idx + 1] || items[0];
+            next?.classList.add('active');
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            active?.classList.remove('active');
+            const prev = items[idx - 1] || items[items.length - 1];
+            prev?.classList.add('active');
+        } else if (e.key === 'Enter' && active) {
+            e.preventDefault();
+            inputEl.value = active.dataset.value;
+            dropdown.classList.add('hidden');
+            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+        } else if (e.key === 'Escape') {
+            dropdown.classList.add('hidden');
+        }
+    });
+}
+
 async function editPrisRad(rowIndex, data = null) {
     const { SHEET_ID } = getAdminConfig();
     const inner = document.getElementById('module-inner');
@@ -34,27 +106,25 @@ async function editPrisRad(rowIndex, data = null) {
     actions.innerHTML = '';
     window.setBreadcrumbEditor?.('Redigerer prisrad', reloadPrisliste);
 
+    const isNew = !rowIndex;
     const p = data || { kategori: '', behandling: '', pris: '' };
 
-    // Fetch existing categories for the datalist
+    // Fetch existing categories for dropdown
     let existingCategories = [];
     try {
         const allRows = await getPrislisteRaw(SHEET_ID);
         existingCategories = [...new Set(allRows.map(r => r.kategori).filter(Boolean))];
-    } catch { /* ignore — datalist will just be empty */ }
-
-    const datalistOptions = existingCategories.map(k => `<option value="${escapeHtml(k)}">`).join('');
+    } catch { /* ignore — dropdown will just be empty */ }
 
     inner.innerHTML = DOMPurify.sanitize(`
         <div class="max-w-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
             <h3 class="text-brand font-black uppercase tracking-tighter mb-6">
-                ${rowIndex ? 'Rediger prisrad' : 'Ny prisrad'}
+                ${isNew ? 'Ny prisrad' : 'Rediger prisrad'}
             </h3>
             <div class="space-y-4">
                 <div class="admin-field-container">
                     <label class="admin-label">Kategori</label>
-                    <input type="text" id="edit-pris-kategori" list="kategori-options" value="" class="admin-input" placeholder="Velg eller skriv ny kategori">
-                    <datalist id="kategori-options">${datalistOptions}</datalist>
+                    <input type="text" id="edit-pris-kategori" value="" class="admin-input" placeholder="Velg eller skriv ny kategori" autocomplete="off">
                 </div>
                 <div class="admin-field-container">
                     <label class="admin-label">Behandling</label>
@@ -65,6 +135,7 @@ async function editPrisRad(rowIndex, data = null) {
                     <input type="text" id="edit-pris-pris" value="" class="admin-input" placeholder="F.eks. 850 eller Fra 500,-">
                 </div>
             </div>
+            ${isNew ? '<div id="new-row-actions" class="flex gap-3 mt-6"></div>' : ''}
         </div>
     `);
 
@@ -76,37 +147,73 @@ async function editPrisRad(rowIndex, data = null) {
     if (behandlingInput) behandlingInput.value = p.behandling || '';
     if (prisInput) prisInput.value = p.pris !== undefined ? String(p.pris) : '';
 
-    const savePris = async () => {
+    // Set up custom category dropdown
+    if (kategoriInput) {
+        setupCategoryDropdown(kategoriInput, existingCategories);
+    }
+
+    function getFormData() {
         const kategori = document.getElementById('edit-pris-kategori')?.value || '';
         const behandling = document.getElementById('edit-pris-behandling')?.value || '';
         const prisStr = document.getElementById('edit-pris-pris')?.value || '';
         const prisNum = parseFloat(prisStr);
         const pris = isNaN(prisNum) ? prisStr : prisNum;
+        return { kategori, behandling, pris };
+    }
 
-        const updateData = { kategori, behandling, pris };
+    if (isNew) {
+        // New row: explicit Opprett + Avbryt buttons, no autosave
+        const actionsDiv = document.getElementById('new-row-actions');
+        if (actionsDiv) {
+            const createBtn = document.createElement('button');
+            createBtn.className = 'btn-primary';
+            createBtn.textContent = 'Opprett';
+            createBtn.addEventListener('click', async () => {
+                const updateData = getFormData();
+                try {
+                    await addPrislisteRow(SHEET_ID, updateData);
+                    showToast('Prisrad opprettet.', 'success');
+                    reloadPrisliste();
+                } catch (e) {
+                    showToast('Kunne ikke opprette prisraden.', 'error');
+                }
+            });
 
-        if (rowIndex) {
-            await updatePrislisteRow(SHEET_ID, rowIndex, updateData);
-        } else {
-            await addPrislisteRow(SHEET_ID, updateData);
-            reloadPrisliste();
-            return;
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'admin-btn-cancel';
+            cancelBtn.textContent = 'Avbryt';
+            cancelBtn.addEventListener('click', () => reloadPrisliste());
+
+            actionsDiv.appendChild(createBtn);
+            actionsDiv.appendChild(cancelBtn);
         }
-        await verifySave({
-            fetchFn: () => getPrislisteRaw(SHEET_ID),
-            rowIndex,
-            compareField: 'behandling',
-            expectedValue: updateData.behandling,
-            timestampElId: 'prisliste-last-fetched',
-            reloadFn: reloadPrisliste,
-        });
-    };
-    const autoSaver = createAutoSaver(savePris);
+    } else {
+        // Existing row: autosave on input + back button
+        const savePris = async () => {
+            const updateData = getFormData();
+            await updatePrislisteRow(SHEET_ID, rowIndex, updateData);
+            await verifySave({
+                fetchFn: () => getPrislisteRaw(SHEET_ID),
+                rowIndex,
+                compareField: 'behandling',
+                expectedValue: updateData.behandling,
+                timestampElId: 'prisliste-last-fetched',
+                reloadFn: reloadPrisliste,
+            });
+        };
+        const autoSaver = createAutoSaver(savePris);
 
-    ['edit-pris-kategori', 'edit-pris-behandling', 'edit-pris-pris'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('input', () => autoSaver.trigger());
-    });
+        ['edit-pris-kategori', 'edit-pris-behandling', 'edit-pris-pris'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', () => autoSaver.trigger());
+        });
+
+        const backBtn = document.createElement('button');
+        backBtn.className = 'admin-btn-cancel mt-6';
+        backBtn.textContent = 'Tilbake til listen';
+        backBtn.addEventListener('click', () => reloadPrisliste());
+        inner.querySelector('.max-w-2xl')?.appendChild(backBtn);
+    }
 }
 
 function reloadPrisliste() {
@@ -150,11 +257,13 @@ async function loadPrislisteList(sheetId) {
                     <div class="space-y-2">`;
                 for (const item of rows) {
                     const prisDisplay = typeof item.pris === 'number' ? `kr ${item.pris.toLocaleString('nb-NO')}` : escapeHtml(String(item.pris));
+                    const oppdatertTekst = formatSistOppdatert(item.sistOppdatert);
                     html += `
                         <div class="admin-card-interactive group flex justify-between items-center gap-4" onclick="this.querySelector('.edit-pris-btn').click()">
                             <div class="flex-grow min-w-0">
                                 <span class="font-medium text-brand">${escapeHtml(item.behandling)}</span>
                                 <span class="text-admin-muted ml-2">${prisDisplay}</span>
+                                ${oppdatertTekst ? `<span class="block text-xs text-admin-muted-light">Oppdatert: ${escapeHtml(oppdatertTekst)}</span>` : ''}
                             </div>
                             <div class="flex gap-2 shrink-0">
                                 <button class="edit-pris-btn admin-icon-btn" data-row="${item.rowIndex}" title="Rediger">

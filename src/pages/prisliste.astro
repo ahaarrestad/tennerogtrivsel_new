@@ -1,6 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import logoImage from '../assets/tt-logo-2026.png';
 
 const rawPrisliste = await getCollection('prisliste');
 
@@ -9,6 +11,15 @@ for (const item of rawPrisliste) {
     const key = item.data.kategori;
     if (!kategorier.has(key)) kategorier.set(key, []);
     kategorier.get(key).push(item.data);
+}
+
+const sistOppdatert = rawPrisliste[0]?.data.sistOppdatert || '';
+let sistOppdatertTekst = '';
+if (sistOppdatert) {
+    const d = new Date(sistOppdatert);
+    if (!isNaN(d.getTime())) {
+        sistOppdatertTekst = d.toLocaleDateString('nb-NO', { month: 'long', year: 'numeric' });
+    }
 }
 
 function formatPris(pris) {
@@ -22,11 +33,23 @@ function formatPris(pris) {
 >
     <main class="section-container variant-white">
         <div class="section-content max-w-4xl mx-auto">
+            <div class="print-logo hidden">
+                <Image
+                    src={logoImage}
+                    alt="Tenner og Trivsel"
+                    width={200}
+                    class="h-12 w-auto object-contain"
+                />
+            </div>
+
             <div class="text-center mb-10">
                 <h1 class="h1">Prisliste</h1>
                 <p class="text-brand-hover mt-2 max-w-2xl mx-auto">
                     Prisene er veiledende og kan variere etter behandlingens omfang.
                 </p>
+                {sistOppdatertTekst && (
+                    <p class="text-sm text-brand-hover/70 mt-1">Sist oppdatert: {sistOppdatertTekst}</p>
+                )}
             </div>
 
             <div id="print-wrapper" class="flex justify-end mb-6 print:hidden" hidden>
@@ -40,20 +63,20 @@ function formatPris(pris) {
                 <p class="text-center text-brand-hover italic py-12">Prislisten er tom.</p>
             )}
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            <div class="space-y-6">
                 {[...kategorier.entries()].map(([kategori, items]) => (
-                    <div class="bg-white rounded-2xl border border-brand-border/60 shadow-sm overflow-hidden">
-                        <div class="p-5 border-b border-brand-border/60">
-                            <h2 class="font-heading font-bold text-xl text-brand">{kategori}</h2>
+                    <div class="prisliste-kategori bg-white rounded-2xl border border-brand-border/60 shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 border-b border-brand-border/60">
+                            <h2 class="font-heading font-bold text-xl md:text-2xl text-brand">{kategori}</h2>
                         </div>
-                        <div class="p-5">
+                        <div class="px-6 py-2">
                             {items.map((item, i) => (
                                 <div class:list={[
                                     "flex justify-between items-baseline py-3",
                                     i < items.length - 1 && "border-b border-brand-border/60"
                                 ]}>
                                     <span class="text-base">{item.behandling}</span>
-                                    <span class="font-semibold text-base ml-4 whitespace-nowrap">{formatPris(item.pris)}</span>
+                                    <span class="font-semibold text-base whitespace-nowrap">{formatPris(item.pris)}</span>
                                 </div>
                             ))}
                         </div>
@@ -66,13 +89,26 @@ function formatPris(pris) {
 
 <style>
     @media print {
-        nav, footer, #print-btn, .print\:hidden { display: none !important; }
-        main { padding: 0 !important; }
-        .shadow-sm { box-shadow: none !important; }
-        .border { border-color: var(--color-brand-border) !important; }
-        .rounded-2xl { border-radius: 0.5rem !important; }
-        div[class*="grid"] { display: block !important; }
-        div[class*="grid"] > * { break-inside: avoid; margin-bottom: 1rem; }
+        nav, footer, .print\:hidden { display: none !important; }
+
+        .print-logo {
+            display: block !important;
+            margin-bottom: 1rem;
+        }
+
+        main {
+            padding: 0 !important;
+        }
+
+        .prisliste-kategori {
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            border-left: none !important;
+            border-right: none !important;
+            border-top: none !important;
+            overflow: visible !important;
+            break-inside: avoid;
+        }
     }
 </style>
 
