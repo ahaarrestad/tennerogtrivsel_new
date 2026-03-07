@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Prisliste-admin: Samkjør rediger/slett-ikoner med resten av admin**
+    - Byttet inline SVG (14x14) til `renderActionButtons()` med `ICON_EDIT`/`ICON_DELETE`-konstanter (16x16)
+    - Slett-knapp bruker nå `admin-icon-btn-danger` (rød) i stedet for grå
+    - Prisliste-layout endret til kategori-kort med linje-rader (ligner offentlig prisliste-side)
+    - Behandling til venstre, pris og action-knapper alignert til høyre
+
 - [x] **Forenkle UI på admin-siden — kompaktere action-knapper** ([plan](docs/plans/archive/2026-03-07-kompakte-action-knapper.md))
     - Erstatt teksttunge «Legg til»-knapper med kompakte «+»-ikonknapper (btn-primary stil)
     - Gjelder action-knappene oppe til høyre i modulvisningene (5 moduler)

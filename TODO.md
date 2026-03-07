@@ -37,10 +37,6 @@
     - Endre logg-ut-knappen fra å vise fullt navn til kun fornavn + ikon
     - Mouse-over tooltip skal vise «Logg ut [hele navnet]»
 
-- [ ] **Prisliste-admin: Samkjør rediger/slett-ikoner med resten av admin**
-    - Rediger- og slett-ikonene i prislistevisningen skal ha samme stil og plassering som de andre admin-sidene
-    - Gir visuell gjenkjennelse på tvers av moduler og sparer plass
-
 - [ ] **Prisliste-admin: «+»-knapp per kategori for raskere opprettelse av ny rad**
     - Legg til en «+»-knapp på kategori-tittelen i prislisteoversikten
     - Klikk auto-fyller kategori og setter fokus i behandlings-feltet
