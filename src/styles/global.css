@@ -550,6 +550,20 @@
         @apply bg-white hover:bg-red-50 border border-red-100 text-red-500 text-xs font-bold py-2 px-4 rounded-xl transition-colors;
     }
 
+    /* CATEGORY DROPDOWN */
+    .admin-category-dropdown {
+        @apply absolute left-0 right-0 top-full mt-1 bg-white border border-admin-border rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto;
+    }
+    .admin-category-option {
+        @apply px-4 py-2.5 text-sm text-brand cursor-pointer hover:bg-brand-light/30 transition-colors;
+    }
+    .admin-category-option.active {
+        @apply bg-brand-light/30;
+    }
+    .admin-category-new {
+        @apply text-brand-active font-medium border-t border-admin-border;
+    }
+
     /* ICON BUTTONS — edit, delete, reorder */
     .admin-icon-btn {
         @apply min-w-[44px] min-h-[44px] flex items-center justify-center

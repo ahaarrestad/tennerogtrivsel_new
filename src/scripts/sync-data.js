@@ -553,7 +553,7 @@ async function syncPrisliste() {
         try {
             res = await sheets.spreadsheets.values.get({
                 spreadsheetId: config.spreadsheetId,
-                range: 'Prisliste!A2:C',
+                range: 'Prisliste!A2:D',
                 valueRenderOption: 'UNFORMATTED_VALUE',
             });
         } catch (sheetErr) {
@@ -568,13 +568,23 @@ async function syncPrisliste() {
         const rows = res.data.values || [];
         const prislisteData = rows
             .filter(row => row[0] && row[1])
-            .map(([kategori, behandling, pris]) => ({
+            .map(([kategori, behandling, pris, sistOppdatert]) => ({
                 kategori: String(kategori).trim(),
                 behandling: String(behandling).trim(),
                 pris: pris ?? '',
+                sistOppdatert: sistOppdatert ? String(sistOppdatert).trim() : '',
             }));
 
-        fs.writeFileSync(config.paths.prislisteData, JSON.stringify(prislisteData, null, 2));
+        // Finn nyeste sistOppdatert-dato blant alle rader
+        let sistOppdatert = '';
+        for (const row of prislisteData) {
+            if (row.sistOppdatert && row.sistOppdatert > sistOppdatert) {
+                sistOppdatert = row.sistOppdatert;
+            }
+        }
+
+        const output = { sistOppdatert, items: prislisteData };
+        fs.writeFileSync(config.paths.prislisteData, JSON.stringify(output, null, 2));
         console.log(`  Synkroniserte ${prislisteData.length} prisrader.`);
     } catch (err) {
         console.error('Feil under synkronisering av prisliste:', err.message);

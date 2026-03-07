@@ -565,9 +565,9 @@ export async function ensurePrislisteSheet(spreadsheetId) {
         });
         await gapi.client.sheets.spreadsheets.values.update({
             spreadsheetId,
-            range: 'Prisliste!A1:C1',
+            range: 'Prisliste!A1:D1',
             valueInputOption: 'RAW',
-            resource: { values: [['Kategori', 'Behandling', 'Pris']] }
+            resource: { values: [['Kategori', 'Behandling', 'Pris', 'SistOppdatert']] }
         });
         console.log("[Admin] Prisliste-ark opprettet med overskrifter.");
     }
@@ -578,7 +578,7 @@ export async function getPrislisteRaw(spreadsheetId) {
         await ensurePrislisteSheet(spreadsheetId);
         const response = await gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Prisliste!A:C',
+            range: 'Prisliste!A:D',
             valueRenderOption: 'UNFORMATTED_VALUE',
         });
 
@@ -590,6 +590,7 @@ export async function getPrislisteRaw(spreadsheetId) {
             kategori: (row[0] || '') + '',
             behandling: (row[1] || '') + '',
             pris: row[2] ?? '',
+            sistOppdatert: (row[3] || '') + '',
         }));
     } catch (err) {
         console.error("[Admin] Kunne ikke hente prisliste:", err);
@@ -598,8 +599,8 @@ export async function getPrislisteRaw(spreadsheetId) {
 }
 
 export async function updatePrislisteRow(spreadsheetId, rowIndex, data) {
-    const values = [data.kategori, data.behandling, data.pris];
-    return updateSheetRow(spreadsheetId, 'Prisliste', rowIndex, 'C', values, 'Prisliste');
+    const values = [data.kategori, data.behandling, data.pris, new Date().toISOString()];
+    return updateSheetRow(spreadsheetId, 'Prisliste', rowIndex, 'D', values, 'Prisliste');
 }
 
 export async function addPrislisteRow(spreadsheetId, data) {
@@ -610,6 +611,7 @@ export async function addPrislisteRow(spreadsheetId, data) {
             data.kategori || '',
             data.behandling || 'Ny behandling',
             data.pris ?? '',
+            new Date().toISOString(),
         ]];
 
         await gapi.client.sheets.spreadsheets.values.append({

@@ -97,9 +97,11 @@ const prisliste = defineCollection({
         if (!fs.existsSync(filePath)) return [];
         const content = fs.readFileSync(filePath, 'utf-8');
         const data = JSON.parse(content);
-        return data.map((item: any, index: number) => ({
+        const items = Array.isArray(data) ? data : (data.items || []);
+        return items.map((item: any, index: number) => ({
             id: `prisliste-${index}`,
-            ...item
+            ...item,
+            sistOppdatert: data.sistOppdatert || '',
         }));
     },
     schema: z.object({
@@ -107,6 +109,7 @@ const prisliste = defineCollection({
         kategori: z.string(),
         behandling: z.string(),
         pris: z.union([z.string(), z.number()]),
+        sistOppdatert: z.string().default(''),
     }),
 });
 

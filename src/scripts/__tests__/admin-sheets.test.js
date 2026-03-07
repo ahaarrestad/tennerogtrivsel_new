@@ -67,6 +67,7 @@ describe('Prisliste CRUD', () => {
                 kategori: 'Undersokelser',
                 behandling: 'Vanlig undersokelse',
                 pris: 850,
+                sistOppdatert: '',
             });
             expect(result[1].pris).toBe('Fra 2500,-');
         });
@@ -108,7 +109,7 @@ describe('Prisliste CRUD', () => {
             expect(mockSheets.spreadsheets.values.append).toHaveBeenCalledWith(
                 expect.objectContaining({
                     range: 'Prisliste!A:C',
-                    resource: { values: [['Bleking', 'Hjemmebleking', 2500]] },
+                    resource: { values: [['Bleking', 'Hjemmebleking', 2500, expect.any(String)]] },
                 })
             );
         });
@@ -126,7 +127,7 @@ describe('Prisliste CRUD', () => {
 
             expect(mockSheets.spreadsheets.values.update).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    range: 'Prisliste!A3:C3',
+                    range: 'Prisliste!A3:D3',
                 })
             );
         });

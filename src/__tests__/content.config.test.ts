@@ -169,7 +169,27 @@ describe('content.config.ts - Loaders', () => {
     });
 
     describe('prisliste loader', () => {
-        it('should read prisliste from JSON file', async () => {
+        it('should read prisliste from new format (object with items)', async () => {
+            const mockPrisliste = {
+                sistOppdatert: '2026-03-07T12:00:00.000Z',
+                items: [
+                    { kategori: 'Undersokelser', behandling: 'Vanlig undersokelse', pris: 850, sistOppdatert: '2026-03-07T12:00:00.000Z' },
+                ],
+            };
+
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockPrisliste));
+
+            const loader = (collections.prisliste as any).loader;
+            const result = await loader();
+
+            expect(result).toHaveLength(1);
+            expect(result[0].id).toBe('prisliste-0');
+            expect(result[0].kategori).toBe('Undersokelser');
+            expect(result[0].sistOppdatert).toBe('2026-03-07T12:00:00.000Z');
+        });
+
+        it('should handle legacy array format', async () => {
             const mockPrisliste = [
                 { kategori: 'Undersokelser', behandling: 'Vanlig undersokelse', pris: 850 },
             ];
@@ -183,6 +203,7 @@ describe('content.config.ts - Loaders', () => {
             expect(result).toHaveLength(1);
             expect(result[0].id).toBe('prisliste-0');
             expect(result[0].kategori).toBe('Undersokelser');
+            expect(result[0].sistOppdatert).toBe('');
         });
 
         it('should return empty array if file does not exist', async () => {
