@@ -37,7 +37,7 @@ const currentYear = new Date().getFullYear();
 
             {/* Kolonne 2: Kontaktinfo */}
             <div>
-                <h3 class="font-semibold text-sm uppercase tracking-wider mb-4" style="font-family: var(--font-heading)">Kontakt</h3>
+                <h3 class="font-heading font-semibold text-sm uppercase tracking-wider mb-4">Kontakt</h3>
                 <div class="space-y-2 text-white/70 text-sm">
                     <p>{settings.adresse1}</p>
                     <p>{settings.adresse2}</p>
@@ -68,7 +68,7 @@ const currentYear = new Date().getFullYear();
             {/* Kolonne 3: Åpningstider */}
             {businessHours.length > 0 && (
                 <div>
-                    <h3 class="font-semibold text-sm uppercase tracking-wider mb-4" style="font-family: var(--font-heading)">Åpningstider</h3>
+                    <h3 class="font-heading font-semibold text-sm uppercase tracking-wider mb-4">Åpningstider</h3>
                     <div class="space-y-1 text-white/70 text-sm">
                         {businessHours.map(text => <p>{text}</p>)}
                     </div>
