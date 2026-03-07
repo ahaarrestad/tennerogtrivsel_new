@@ -15,6 +15,34 @@
 
 ## Backlog
 
+### Brukertesting-forbedringer ([design](docs/plans/2026-03-07-brukertesting-forbedringer-design.md))
+
+- [ ] **Fjern sticky card-stabling på mobil**
+    - Fjern `position: sticky` fra `.stack-card` på mobil i `global.css`
+    - Kort vises som vanlig scrollbar liste, desktop-grid uendret
+
+- [ ] **Redesign tannleger-seksjonen**
+    - Forsiden: én klikkbar boks med fellesbilde (placeholder) → lenke til `/tannleger`
+    - /tannleger: små bilder i grid (3 per rad desktop, 2 mobil), navn + tittel
+    - Klikk på tannlege utvider beskrivelse (accordion)
+
+- [ ] **Redesign tjenester-seksjonen**
+    - Vis 6 første tjenester basert på prioritet (nytt felt i Google Sheets)
+    - "Klikk her for å se mer av våre tjenester"-knapp viser resten
+    - Legg til `priority`-felt i sync-data og content collection
+
+- [ ] **Prisliste — ny side og admin-modul**
+    - Nytt Google Sheets-ark: `Prisliste` (Kategori, Behandling, Pris)
+    - Ny side `/prisliste` med kategorisert tabell
+    - Ny admin-modul for CRUD av prisliste
+    - Lenke i navbar og footer
+
+- [ ] **Footer-justeringer**
+    - Fjern `sentralbordTekst` fra footer
+    - Legg til prisliste-lenke
+
+---
+
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
