@@ -91,5 +91,24 @@ const galleri = defineCollection({
     }),
 });
 
+const prisliste = defineCollection({
+    loader: async () => {
+        const filePath = path.join(process.cwd(), 'src/content/prisliste.json');
+        if (!fs.existsSync(filePath)) return [];
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const data = JSON.parse(content);
+        return data.map((item: any, index: number) => ({
+            id: `prisliste-${index}`,
+            ...item
+        }));
+    },
+    schema: z.object({
+        id: z.string(),
+        kategori: z.string(),
+        behandling: z.string(),
+        pris: z.union([z.string(), z.number()]),
+    }),
+});
+
 // --- 4. EKSPORT ---
-export const collections = {tjenester, meldinger, innstillinger, tannleger, galleri};
+export const collections = {tjenester, meldinger, innstillinger, tannleger, galleri, prisliste};
