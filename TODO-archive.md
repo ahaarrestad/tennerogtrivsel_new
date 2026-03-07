@@ -2,6 +2,13 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Sortering av tjenester på admin-siden** ([plan](docs/plans/archive/2026-03-07-tjenester-sortering.md))
+    - Opp/ned-piler i tjenestelisten (samme mønster som galleri)
+    - Prioritetsbasert sortering (priority → alfabetisk)
+    - Fjernet priority-input fra redigeringsskjema (styres kun via piler)
+    - Re-indekserer alle tjenester sekvensielt (1, 2, 3, ...) ved hver flytt
+    - Nye tjenester legges sist (priority = max + 1)
+
 - [x] **Flytt "Prisliste" til siste plass i navbar**
     - Flyttet Prisliste-lenken fra posisjon 5 til sist i `allNavLinks` i `Navbar.astro`
 
