@@ -156,10 +156,10 @@ jobs:
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_TEST }} \
-            --paths "/" "/index.html" "/kontakt/" "/tjenester/" "/tjenester/*" "/tannleger/" "/galleri/" "/api/*" "/404.html" "/admin/*" "/sitemap-index.xml" "/robots.txt"
+            --paths "/" "/index.html" "/kontakt/" "/tjenester/" "/tjenester/*" "/tannleger/" "/galleri/" "/prisliste/" "/personvern/" "/api/*" "/404.html" "/admin/*" "/sitemap-index.xml" "/robots.txt"
 
 #      - name: Invalidate CloudFront cache PROD
 #        run: |
 #          aws cloudfront create-invalidation \
 #            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }} \
-#            --paths "/" "/index.html" "/kontakt/" "/tjenester/" "/tjenester/*" "/tannleger/" "/galleri/" "/api/*" "/404.html" "/admin/*" "/sitemap-index.xml" "/robots.txt"
+#            --paths "/" "/index.html" "/kontakt/" "/tjenester/" "/tjenester/*" "/tannleger/" "/galleri/" "/prisliste/" "/personvern/" "/api/*" "/404.html" "/admin/*" "/sitemap-index.xml" "/robots.txt"
