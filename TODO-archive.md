@@ -2,6 +2,8 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **"Skriv ut"-knapp på prisliste skal kun vises for innlogget admin**
+    - Knappen skjules med `hidden`-attributt, inline script sjekker `admin_google_token` i storage
 - [x] **Prisliste — ny side og admin-modul** ([plan](docs/plans/archive/2026-03-07-prisliste.md))
     - Nytt Google Sheets-ark: `Prisliste` (Kategori, Behandling, Pris) med `UNFORMATTED_VALUE`
     - Ny side `/prisliste` — kort-liste layout gruppert etter kategori, `md:grid-cols-2`
