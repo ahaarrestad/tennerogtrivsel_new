@@ -547,3 +547,85 @@ export async function migrateForsideBildeToGalleri(spreadsheetId) {
 export async function deleteGalleriRowPermanently(spreadsheetId, rowIndex) {
     return deleteSheetRow(spreadsheetId, 'galleri', rowIndex);
 }
+
+// --- PRISLISTE CRUD ---
+
+export async function ensurePrislisteSheet(spreadsheetId) {
+    const resp = await gapi.client.sheets.spreadsheets.get({
+        spreadsheetId,
+        fields: 'sheets.properties.title'
+    });
+    const exists = (resp.result.sheets || []).some(
+        s => s.properties.title === 'Prisliste'
+    );
+    if (!exists) {
+        await gapi.client.sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: { requests: [{ addSheet: { properties: { title: 'Prisliste' } } }] }
+        });
+        await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: 'Prisliste!A1:C1',
+            valueInputOption: 'RAW',
+            resource: { values: [['Kategori', 'Behandling', 'Pris']] }
+        });
+        console.log("[Admin] Prisliste-ark opprettet med overskrifter.");
+    }
+}
+
+export async function getPrislisteRaw(spreadsheetId) {
+    try {
+        const response = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Prisliste!A:C',
+            valueRenderOption: 'UNFORMATTED_VALUE',
+        });
+
+        const rows = response.result.values;
+        if (!rows || rows.length <= 1) return [];
+
+        return rows.slice(1).map((row, index) => ({
+            rowIndex: index + 2,
+            kategori: (row[0] || '') + '',
+            behandling: (row[1] || '') + '',
+            pris: row[2] ?? '',
+        }));
+    } catch (err) {
+        console.error("[Admin] Kunne ikke hente prisliste:", err);
+        throw err;
+    }
+}
+
+export async function updatePrislisteRow(spreadsheetId, rowIndex, data) {
+    const values = [data.kategori, data.behandling, data.pris];
+    return updateSheetRow(spreadsheetId, 'Prisliste', rowIndex, 'C', values, 'Prisliste');
+}
+
+export async function addPrislisteRow(spreadsheetId, data) {
+    try {
+        await ensurePrislisteSheet(spreadsheetId);
+
+        const values = [[
+            data.kategori || '',
+            data.behandling || 'Ny behandling',
+            data.pris ?? '',
+        ]];
+
+        await gapi.client.sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Prisliste!A:C',
+            valueInputOption: 'RAW',
+            resource: { values }
+        });
+
+        console.log("[Admin] Ny prisrad lagt til i Sheets.");
+        return true;
+    } catch (err) {
+        console.error("[Admin] Kunne ikke legge til prisrad:", err);
+        throw err;
+    }
+}
+
+export async function deletePrislisteRowPermanently(spreadsheetId, rowIndex) {
+    return deleteSheetRow(spreadsheetId, 'Prisliste', rowIndex);
+}
