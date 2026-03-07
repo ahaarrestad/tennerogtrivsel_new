@@ -2,6 +2,15 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Prisliste — ny side og admin-modul** ([plan](docs/plans/archive/2026-03-07-prisliste.md))
+    - Nytt Google Sheets-ark: `Prisliste` (Kategori, Behandling, Pris) med `UNFORMATTED_VALUE`
+    - Ny side `/prisliste` — kort-liste layout gruppert etter kategori, `md:grid-cols-2`
+    - Print-versjon via `@media print` med `break-inside: avoid`
+    - Auto-save admin-modul med CRUD, escapeHtml og DOMPurify
+    - Navbar-lenke (etter Tjenester) og footer-lenke
+    - Dashboard-teljer og arkitekturdok `docs/architecture/prisliste.md`
+    - 1013 tester bestått, alle berørte filer >80% branch coverage, bygg OK
+
 - [x] **Redesign tjenester-seksjonen** ([plan](docs/plans/archive/2026-03-07-redesign-tjenester.md), [design](docs/plans/archive/2026-03-07-redesign-tjenester-design.md))
     - Nytt `priority`-felt i schema (default 99), sorterer tjenester etter prioritet
     - Forsiden viser maks 6 tjenester med "Se alle våre tjenester"-knapp (`btn-secondary`)

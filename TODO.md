@@ -17,15 +17,6 @@
 
 ### Brukertesting-forbedringer ([design](docs/plans/2026-03-07-brukertesting-forbedringer-design.md))
 
-- [ ] **Prisliste — ny side og admin-modul**
-    - Nytt Google Sheets-ark: `Prisliste` (Kategori, Behandling, Pris)
-    - `valueRenderOption: 'UNFORMATTED_VALUE'` for Pris-kolonnen
-    - Ny side `/prisliste` — kort-liste layout (ikke tabell), `variant="white"`
-    - Auto-save admin-modul, `escapeHtml()`/programmatisk `.value`-setting
-    - Navbar-lenke etter Tjenester: `…Tjenester → Prisliste → Tannleger`
-    - Footer-lenke i kolonne 2
-    - Print-versjon: `@media print` med logo, klinikknavn, A4-vennlig layout for opphenging
-    - Ny arkitekturdok: `docs/architecture/prisliste.md`
 
 - [ ] **Footer-justeringer**
     - Fjern `sentralbordTekst` fra footer
