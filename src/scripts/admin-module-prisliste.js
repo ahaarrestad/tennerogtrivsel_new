@@ -114,7 +114,7 @@ async function editPrisRad(rowIndex, data = null) {
     try {
         const allRows = await getPrislisteRaw(SHEET_ID);
         existingCategories = [...new Set(allRows.map(r => r.kategori).filter(Boolean))];
-    } catch { /* ignore — dropdown will just be empty */ }
+    } catch (e) { console.error('[Admin] Kunne ikke hente priskategorier:', e); }
 
     inner.innerHTML = DOMPurify.sanitize(`
         <div class="max-w-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">

@@ -101,7 +101,6 @@ const prisliste = defineCollection({
         return items.map((item: any, index: number) => ({
             id: `prisliste-${index}`,
             ...item,
-            sistOppdatert: data.sistOppdatert || '',
         }));
     },
     schema: z.object({
