@@ -11,7 +11,7 @@ const settings = await getSiteSettings();
 const images = import.meta.glob('/src/assets/galleri/*.{jpeg,jpg,png,webp}');
 
 const sortert = [...galleri]
-    .filter(item => (item.data.type ?? 'galleri') !== 'forsidebilde')
+    .filter(item => (item.data.type ?? 'galleri') === 'galleri')
     .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
 
 interface Props { variant?: SectionVariant; standalone?: boolean }
