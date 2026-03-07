@@ -17,6 +17,11 @@
 
 ### Brukertesting-forbedringer ([design](docs/plans/2026-03-07-brukertesting-forbedringer-design.md))
 
+- [ ] **Sortering av tjenester på admin-siden** ([plan](docs/plans/2026-03-07-tjenester-sortering.md))
+  - Piler opp og ned i oversikten (samme mønster som for bilder)
+  - Oversikten skal vises i riktig sorteringsrekkefølge
+  - Fjern priority-input fra redigeringsskjema
+
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
@@ -24,6 +29,9 @@
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
+
+- [ ] **Flytt "Prisliste" til siste plass i navbar**
+  - "Prisliste"-lenken i menyen/navbar skal være siste element i rekkefølgen
 
 ## Fullført
 
