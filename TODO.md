@@ -15,6 +15,12 @@
 
 ## Backlog
 
+- [ ] **Kodestil og CSS-opprydding**
+    - Gå gjennom koden for kodestil og konsistens
+    - Gjenbruk av `global.css` — bruk eksisterende utility-klasser og CSS-variabler istedenfor ad-hoc variabler i komponentene
+    - Fjern ubrukte klasser i `global.css`
+    - Simplify/forenkling av hele kodebasen
+
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
