@@ -13,7 +13,8 @@ for (const item of rawPrisliste) {
     kategorier.get(key).push(item.data);
 }
 
-const sistOppdatert = rawPrisliste[0]?.data.sistOppdatert || '';
+const sistOppdatert = rawPrisliste.reduce((max, item) =>
+    item.data.sistOppdatert > max ? item.data.sistOppdatert : max, '');
 let sistOppdatertTekst = '';
 if (sistOppdatert) {
     const d = new Date(sistOppdatert);

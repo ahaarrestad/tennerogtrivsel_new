@@ -203,7 +203,7 @@ describe('content.config.ts - Loaders', () => {
             expect(result).toHaveLength(1);
             expect(result[0].id).toBe('prisliste-0');
             expect(result[0].kategori).toBe('Undersokelser');
-            expect(result[0].sistOppdatert).toBe('');
+            expect(result[0].sistOppdatert).toBeUndefined();
         });
 
         it('should return empty array if file does not exist', async () => {
