@@ -13,6 +13,7 @@ vi.mock('../admin-client.js', () => ({
     stringifyMarkdown: vi.fn(),
     saveFile: vi.fn(),
     createFile: vi.fn(),
+    listFiles: vi.fn(),
     silentLogin: vi.fn(),
 }));
 
@@ -48,7 +49,7 @@ vi.mock('../admin-api-retry.js', () => ({
     classifyError: vi.fn(() => 'non-retryable'),
 }));
 
-import { deleteFile, getFileContent, parseMarkdown, saveFile, createFile, stringifyMarkdown } from '../admin-client.js';
+import { deleteFile, getFileContent, parseMarkdown, saveFile, createFile, stringifyMarkdown, listFiles } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { classifyError } from '../admin-api-retry.js';
 import { loadTjenesterModule, formatTimestamp } from '../admin-dashboard.js';
@@ -83,10 +84,11 @@ describe('initTjenesterModule', () => {
 });
 
 describe('reloadTjenester', () => {
-    it('should call loadTjenesterModule with config and callbacks', () => {
+    it('should call loadTjenesterModule with config and callbacks including onReorder', () => {
         reloadTjenester();
         expect(loadTjenesterModule).toHaveBeenCalledWith(
             'test-folder',
+            expect.any(Function),
             expect.any(Function),
             expect.any(Function),
             expect.any(Function)
@@ -171,7 +173,7 @@ describe('editTjeneste', () => {
         expect(initMarkdownEditor).toHaveBeenCalled();
     });
 
-    it('should render priority input in editor form', async () => {
+    it('should NOT render priority input in editor form', async () => {
         getFileContent.mockResolvedValue('raw');
         parseMarkdown.mockReturnValue({
             data: { title: 'Test', ingress: 'Ing', id: 'test', active: true, priority: 5 },
@@ -181,9 +183,7 @@ describe('editTjeneste', () => {
         await window.editTjeneste('id1', 'Test');
 
         const priorityInput = document.getElementById('edit-priority');
-        expect(priorityInput).not.toBeNull();
-        expect(priorityInput.type).toBe('number');
-        expect(priorityInput.value).toBe('5');
+        expect(priorityInput).toBeNull();
     });
 
     it('should render empty form for new tjeneste', async () => {
@@ -263,14 +263,20 @@ describe('editTjeneste', () => {
             );
         });
 
-        it('should auto-save on priority input change', async () => {
+        it('should preserve existing priority in save payload from data', async () => {
+            parseMarkdown.mockReturnValue({
+                data: { title: 'Old', ingress: '', id: 'old', active: true, priority: 5 },
+                body: 'Body'
+            });
             await window.editTjeneste('id1', 'Old');
 
-            const autoSaver = createAutoSaver.mock.results[0].value;
-            document.getElementById('edit-priority').value = '2';
-            document.getElementById('edit-priority').dispatchEvent(new Event('input'));
+            const saveFn = createAutoSaver.mock.calls[0][0];
+            await saveFn();
 
-            expect(autoSaver.trigger).toHaveBeenCalled();
+            expect(stringifyMarkdown).toHaveBeenCalledWith(
+                expect.objectContaining({ priority: 5 }),
+                expect.any(String)
+            );
         });
 
         it('should auto-save on EasyMDE change', async () => {
@@ -354,11 +360,11 @@ describe('editTjeneste', () => {
             expect(saveBtn.textContent).toContain('Opprett tjeneste');
         });
 
-        it('should default priority to 99 for new tjeneste', async () => {
+        it('should not render priority input for new tjeneste', async () => {
             await window.editTjeneste(null, null);
 
             const priorityInput = document.getElementById('edit-priority');
-            expect(priorityInput.value).toBe('99');
+            expect(priorityInput).toBeNull();
         });
 
         it('should create file on Opprett button click', async () => {
@@ -609,6 +615,85 @@ describe('toggleTjenesteActive — additional branch coverage', () => {
         expect(btn.dataset.active).toBe('false');
         // No label to update, but toggle should still work
         expect(service.active).toBe(false);
+    });
+});
+
+describe('reorderTjeneste', () => {
+    let reorderFn;
+
+    beforeEach(() => {
+        initTjenesterModule();
+        reloadTjenester();
+        // onReorder is the 5th argument to loadTjenesterModule
+        reorderFn = loadTjenesterModule.mock.calls[0][4];
+        vi.clearAllMocks();
+    });
+
+    it('should swap priorities and save both files', async () => {
+        listFiles.mockResolvedValue([
+            { id: 'driveA', name: 'a.md' },
+            { id: 'driveB', name: 'b.md' }
+        ]);
+        getFileContent.mockResolvedValueOnce('raw1').mockResolvedValueOnce('raw2');
+        parseMarkdown
+            .mockReturnValueOnce({ data: { title: 'A', priority: 1 }, body: 'bodyA' })
+            .mockReturnValueOnce({ data: { title: 'B', priority: 2 }, body: 'bodyB' });
+        stringifyMarkdown.mockReturnValue('md');
+        saveFile.mockResolvedValue();
+
+        await reorderFn('driveA', 1);
+
+        expect(getFileContent).toHaveBeenCalledTimes(2);
+        expect(saveFile).toHaveBeenCalledTimes(2);
+        // A gets priority 2, B gets priority 1
+        expect(stringifyMarkdown).toHaveBeenCalledWith(
+            expect.objectContaining({ title: 'A', priority: 2 }),
+            'bodyA'
+        );
+        expect(stringifyMarkdown).toHaveBeenCalledWith(
+            expect.objectContaining({ title: 'B', priority: 1 }),
+            'bodyB'
+        );
+        // Should reload the list
+        expect(loadTjenesterModule).toHaveBeenCalled();
+    });
+
+    it('should assign sequential priorities when values are equal', async () => {
+        listFiles.mockResolvedValue([
+            { id: 'driveA', name: 'a.md' },
+            { id: 'driveB', name: 'b.md' }
+        ]);
+        getFileContent.mockResolvedValueOnce('raw1').mockResolvedValueOnce('raw2');
+        parseMarkdown
+            .mockReturnValueOnce({ data: { title: 'A', priority: 5 }, body: 'bodyA' })
+            .mockReturnValueOnce({ data: { title: 'B', priority: 5 }, body: 'bodyB' });
+        stringifyMarkdown.mockReturnValue('md');
+        saveFile.mockResolvedValue();
+
+        await reorderFn('driveA', 1);
+
+        // When priorities are equal, they should get sequential values
+        const calls = stringifyMarkdown.mock.calls;
+        const priorities = calls.map(c => c[0].priority);
+        expect(priorities[0]).not.toBe(priorities[1]);
+    });
+
+    it('should show error toast on save failure', async () => {
+        listFiles.mockResolvedValue([
+            { id: 'driveA', name: 'a.md' },
+            { id: 'driveB', name: 'b.md' }
+        ]);
+        getFileContent.mockResolvedValueOnce('raw1').mockResolvedValueOnce('raw2');
+        parseMarkdown
+            .mockReturnValueOnce({ data: { title: 'A', priority: 1 }, body: 'bodyA' })
+            .mockReturnValueOnce({ data: { title: 'B', priority: 2 }, body: 'bodyB' });
+        stringifyMarkdown.mockReturnValue('md');
+        saveFile.mockRejectedValue(new Error('fail'));
+
+        await reorderFn('driveA', 1);
+
+        const { showToast } = await import('../admin-dialog.js');
+        expect(showToast).toHaveBeenCalledWith(expect.stringContaining('sortere'), 'error');
     });
 });
 

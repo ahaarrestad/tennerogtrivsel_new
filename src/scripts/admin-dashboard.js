@@ -445,7 +445,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
 /**
  * Henter og viser tjenester-listen
  */
-export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleActive) {
+export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleActive, onReorder) {
     const inner = document.getElementById('module-inner');
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
@@ -465,11 +465,13 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
                 return { ...f, driveId: f.id, ...data };
             }));
 
-            services.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'nb'));
+            services.sort((a, b) => ((a.priority ?? 99) - (b.priority ?? 99)) || (a.title || '').localeCompare(b.title || '', 'nb'));
 
             let html = `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
-            services.forEach((s) => {
+            services.forEach((s, idx) => {
                 const isActive = s.active !== 'false' && s.active !== false;
+                const isFirst = idx === 0;
+                const isLast = idx === services.length - 1;
 
                 html += `
                     <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!isActive ? 'opacity-60' : ''}" onclick="this.querySelector('.edit-btn').click()">
@@ -480,7 +482,14 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
                             </div>
                             <p class="text-xs text-admin-muted mt-1">${s.ingress || ''}</p>
                         </div>
-                        ${renderActionButtons('edit-btn', 'delete-btn', `data-id="${s.driveId}" data-name="${s.name}"`)}
+                        <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                            <div class="flex flex-col gap-1">
+                                <button data-id="${s.driveId}" data-dir="-1" class="reorder-tjeneste-btn admin-icon-btn-reorder ${isFirst ? 'invisible' : ''}" title="Flytt opp">${ICON_UP}</button>
+                                <button data-id="${s.driveId}" data-dir="1" class="reorder-tjeneste-btn admin-icon-btn-reorder ${isLast ? 'invisible' : ''}" title="Flytt ned">${ICON_DOWN}</button>
+                            </div>
+                            <button data-id="${s.driveId}" data-name="${s.name}" class="edit-btn admin-icon-btn" title="Rediger">${ICON_EDIT}</button>
+                            <button data-id="${s.driveId}" data-name="${s.name}" class="delete-btn admin-icon-btn-danger" title="Slett">${ICON_DELETE}</button>
+                        </div>
                     </div>`;
             });
             inner.innerHTML = DOMPurify.sanitize(html + `</div>`);
@@ -499,13 +508,19 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
                     if (s && onToggleActive) onToggleActive(driveId, s.name, s);
                 };
             });
+            inner.querySelectorAll('.reorder-tjeneste-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (onReorder) onReorder(btn.dataset.id, parseInt(btn.dataset.dir));
+                };
+            });
             bindCardClickDelegation(inner, '.edit-btn');
         }
         applyViewEnter(inner);
         document.getElementById('btn-new-tjeneste').onclick = () => onEdit(null, null);
     } catch (e) {
         console.error("Load failed", e);
-        handleModuleError(e, 'behandlinger', inner, () => loadTjenesterModule(folderId, onEdit, onDelete, onToggleActive));
+        handleModuleError(e, 'behandlinger', inner, () => loadTjenesterModule(folderId, onEdit, onDelete, onToggleActive, onReorder));
     }
 }
 

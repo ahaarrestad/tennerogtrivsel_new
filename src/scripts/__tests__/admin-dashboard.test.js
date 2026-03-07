@@ -611,18 +611,142 @@ describe('admin-dashboard.js', () => {
             expect(() => toggleBtn.click()).not.toThrow();
         });
 
-        it('should pass onToggleActive to retry on error', async () => {
+        it('should pass onToggleActive and onReorder to retry on error', async () => {
             adminClient.listFiles.mockRejectedValueOnce(new Error('Fail'))
                 .mockResolvedValue([]);
 
             const onToggleActive = vi.fn();
-            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), onToggleActive);
+            const onReorder = vi.fn();
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), onToggleActive, onReorder);
 
             const inner = document.getElementById('module-inner');
             inner.querySelector('.retry-btn').click();
 
             await vi.waitFor(() => {
                 expect(adminClient.listFiles).toHaveBeenCalledTimes(2);
+            });
+        });
+
+        it('should sort services by priority then title', async () => {
+            adminClient.listFiles.mockResolvedValue([
+                { id: 'a', name: 'a.md' },
+                { id: 'b', name: 'b.md' },
+                { id: 'c', name: 'c.md' }
+            ]);
+            adminClient.parseMarkdown
+                .mockReturnValueOnce({ data: { title: 'Bleking', priority: 3 }, body: '' })
+                .mockReturnValueOnce({ data: { title: 'Amalgam', priority: 1 }, body: '' })
+                .mockReturnValueOnce({ data: { title: 'Cleaning', priority: 2 }, body: '' });
+
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            const titles = Array.from(inner.querySelectorAll('h3')).map(h => h.textContent);
+            expect(titles).toEqual(['Amalgam', 'Cleaning', 'Bleking']);
+        });
+
+        it('should sort services with same priority alphabetically', async () => {
+            adminClient.listFiles.mockResolvedValue([
+                { id: 'a', name: 'a.md' },
+                { id: 'b', name: 'b.md' }
+            ]);
+            adminClient.parseMarkdown
+                .mockReturnValueOnce({ data: { title: 'Zebra', priority: 1 }, body: '' })
+                .mockReturnValueOnce({ data: { title: 'Alpha', priority: 1 }, body: '' });
+
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            const titles = Array.from(inner.querySelectorAll('h3')).map(h => h.textContent);
+            expect(titles).toEqual(['Alpha', 'Zebra']);
+        });
+
+        it('should default priority to 99 when missing', async () => {
+            adminClient.listFiles.mockResolvedValue([
+                { id: 'a', name: 'a.md' },
+                { id: 'b', name: 'b.md' }
+            ]);
+            adminClient.parseMarkdown
+                .mockReturnValueOnce({ data: { title: 'No Priority' }, body: '' })
+                .mockReturnValueOnce({ data: { title: 'Has Priority', priority: 1 }, body: '' });
+
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), vi.fn(), vi.fn());
+
+            const inner = document.getElementById('module-inner');
+            const titles = Array.from(inner.querySelectorAll('h3')).map(h => h.textContent);
+            expect(titles).toEqual(['Has Priority', 'No Priority']);
+        });
+
+        it('should render reorder buttons on service cards', async () => {
+            adminClient.listFiles.mockResolvedValue([
+                { id: 's1', name: 'a.md' },
+                { id: 's2', name: 'b.md' }
+            ]);
+            adminClient.parseMarkdown
+                .mockReturnValueOnce({ data: { title: 'A', priority: 1 }, body: '' })
+                .mockReturnValueOnce({ data: { title: 'B', priority: 2 }, body: '' });
+
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), vi.fn(), vi.fn());
+
+            const reorderBtns = document.querySelectorAll('.reorder-tjeneste-btn');
+            expect(reorderBtns.length).toBe(4); // 2 services x 2 buttons (up/down)
+        });
+
+        it('should hide up arrow on first service and down arrow on last', async () => {
+            adminClient.listFiles.mockResolvedValue([
+                { id: 's1', name: 'a.md' },
+                { id: 's2', name: 'b.md' }
+            ]);
+            adminClient.parseMarkdown
+                .mockReturnValueOnce({ data: { title: 'A', priority: 1 }, body: '' })
+                .mockReturnValueOnce({ data: { title: 'B', priority: 2 }, body: '' });
+
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), vi.fn(), vi.fn());
+
+            const reorderBtns = document.querySelectorAll('.reorder-tjeneste-btn');
+            // First service: up invisible, down visible
+            const firstUp = reorderBtns[0]; // dir=-1
+            const firstDown = reorderBtns[1]; // dir=1
+            expect(firstUp.classList.contains('invisible')).toBe(true);
+            expect(firstDown.classList.contains('invisible')).toBe(false);
+            // Last service: up visible, down invisible
+            const lastUp = reorderBtns[2]; // dir=-1
+            const lastDown = reorderBtns[3]; // dir=1
+            expect(lastUp.classList.contains('invisible')).toBe(false);
+            expect(lastDown.classList.contains('invisible')).toBe(true);
+        });
+
+        it('should call onReorder when reorder button is clicked', async () => {
+            adminClient.listFiles.mockResolvedValue([
+                { id: 's1', name: 'a.md' },
+                { id: 's2', name: 'b.md' }
+            ]);
+            adminClient.parseMarkdown
+                .mockReturnValueOnce({ data: { title: 'A', priority: 1 }, body: '' })
+                .mockReturnValueOnce({ data: { title: 'B', priority: 2 }, body: '' });
+
+            const onReorder = vi.fn();
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), vi.fn(), onReorder);
+
+            // Click the down arrow on first service
+            const downBtn = document.querySelector('.reorder-tjeneste-btn[data-dir="1"]');
+            downBtn.click();
+
+            expect(onReorder).toHaveBeenCalledWith('s1', 1);
+        });
+
+        it('should not throw when onReorder is not provided', async () => {
+            adminClient.listFiles.mockResolvedValue([
+                { id: 's1', name: 'a.md' }
+            ]);
+            adminClient.parseMarkdown
+                .mockReturnValueOnce({ data: { title: 'A', priority: 1 }, body: '' });
+
+            await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), vi.fn(), null);
+
+            const reorderBtns = document.querySelectorAll('.reorder-tjeneste-btn');
+            reorderBtns.forEach(btn => {
+                expect(() => btn.click()).not.toThrow();
             });
         });
     });
