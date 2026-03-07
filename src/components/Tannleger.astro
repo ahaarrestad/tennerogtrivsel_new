@@ -33,7 +33,7 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                 {hasFellesbilde ? (
                     <Image
                         src={images[fellesbildePath]()}
-                        alt={settings.tannlegerTittel || 'Våre tannleger'}
+                        alt={fellesbildeEntry?.data.altText || 'Gruppebilde av teamet hos Tenner og Trivsel'}
                         class="absolute inset-0 w-full h-full object-cover"
                         style={{
                             objectPosition: `${posX}% ${posY}%`,
