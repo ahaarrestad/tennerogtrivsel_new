@@ -9,22 +9,25 @@ import { slugify } from '../scripts/slugify';
 // 1. Hent alle filene fra src/content/tjenester/
 const allServices = await getCollection('tjenester');
 
-// 2. Filtrer ut inaktive og sorter alfabetisk basert på tittelen i frontmatter (nb = norsk)
+// 2. Filtrer ut inaktive og sorter etter prioritet (lavest først), deretter alfabetisk
 const sortedServices = allServices
     .filter(s => s.data.active !== false)
-    .sort((a, b) => a.data.title.localeCompare(b.data.title, 'nb'));
+    .sort((a, b) => (a.data.priority ?? 99) - (b.data.priority ?? 99) || a.data.title.localeCompare(b.data.title, 'nb'));
 const settings = await getSiteSettings();
 
-interface Props { variant?: SectionVariant }
-const { variant = 'white' } = Astro.props;
+interface Props { variant?: SectionVariant; limit?: number }
+const { variant = 'white', limit } = Astro.props;
 const { sectionBg, headerBg } = getSectionClasses(variant);
+
+const displayServices = limit ? sortedServices.slice(0, limit) : sortedServices;
+const hasMore = limit ? sortedServices.length > limit : false;
 ---
 <section id="tjenester" class={`section-container ${sectionBg}`}>
     <div class="section-content">
         <SectionHeader title={settings.tjenesterTittel} intro={settings.tjenesteTekst} headerBg={headerBg} sticky />
 
         <div class="card-grid gap-6 md:gap-8">
-            {sortedServices.map((service, index) => (
+            {displayServices.map((service, index) => (
                     <Card
                             index={index}
                             title={service.data.title}
@@ -39,5 +42,13 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                     </Card>
             ))}
         </div>
+
+        {hasMore && (
+            <div class="flex justify-center mt-8">
+                <a href="/tjenester" class="btn-secondary">
+                    Se alle våre tjenester
+                </a>
+            </div>
+        )}
     </div>
 </section>
