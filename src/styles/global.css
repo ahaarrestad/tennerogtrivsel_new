@@ -158,10 +158,6 @@
         font-family: var(--font-heading);
     }
 
-    .brand-text {
-        color: var(--color-brand);
-    }
-
     /* SEKSJONS-LAYOUT */
     .layout-container {
         @apply container mx-auto px-4;
