@@ -152,6 +152,11 @@ async function editPrisRad(rowIndex, data = null) {
         setupCategoryDropdown(kategoriInput, existingCategories);
     }
 
+    // Auto-focus behandling when category is pre-filled (e.g. from per-category "+" button)
+    if (isNew && p.kategori && behandlingInput) {
+        behandlingInput.focus();
+    }
+
     function getFormData() {
         const kategori = document.getElementById('edit-pris-kategori')?.value || '';
         const behandling = document.getElementById('edit-pris-behandling')?.value || '';
@@ -261,8 +266,9 @@ async function loadPrislisteList(sheetId) {
 
             for (const [kategori, rows] of grouped) {
                 html += `<div class="bg-white rounded-2xl border border-brand-border/60 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-brand-border/60">
+                    <div class="px-6 py-4 border-b border-brand-border/60 flex items-center justify-between">
                         <h3 class="font-heading font-bold text-xl text-brand">${escapeHtml(kategori)}</h3>
+                        <button class="add-pris-kategori-btn btn-primary p-1.5 rounded-lg min-w-[32px] min-h-[32px] flex items-center justify-center" data-kategori="${escapeHtml(kategori)}" title="Ny prisrad i ${escapeHtml(kategori)}" aria-label="Ny prisrad i ${escapeHtml(kategori)}">${ICON_ADD}</button>
                     </div>
                     <div class="px-6 py-2">`;
                 for (let i = 0; i < rows.length; i++) {
@@ -286,6 +292,12 @@ async function loadPrislisteList(sheetId) {
 
             inner.innerHTML = DOMPurify.sanitize(html);
 
+            inner.querySelectorAll('.add-pris-kategori-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    editPrisRad(null, { kategori: btn.dataset.kategori, behandling: '', pris: '' });
+                };
+            });
             inner.querySelectorAll('.edit-pris-btn').forEach(btn => {
                 btn.onclick = (e) => {
                     e.stopPropagation();
