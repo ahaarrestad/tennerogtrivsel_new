@@ -25,7 +25,7 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
-- [ ] **Audit tester for dato-avhengige feil**
+- [ ] **Audit tester for dato-avhengige feil** ([plan](docs/plans/2026-03-07-audit-dato-tester.md))
     - Gå gjennom alle tester og identifiser dato-feller som kan feile bygg avhengig av tidspunkt
     - Ref: `sortMessages`-testen som feilet pga. tidsavhengighet (fe7ee0d)
 
