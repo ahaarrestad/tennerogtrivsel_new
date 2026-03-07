@@ -37,7 +37,8 @@ vi.mock('../admin-client.js', () => ({
     getGalleriRaw: vi.fn(),
     updateGalleriRow: vi.fn(),
     findFileByName: vi.fn(),
-    getDriveImageBlob: vi.fn()
+    getDriveImageBlob: vi.fn(),
+    getPrislisteRaw: vi.fn()
 }));
 
 // Mock admin-api-retry
@@ -97,6 +98,9 @@ describe('admin-dashboard.js', () => {
             </div>
             <div id="card-bilder" class="admin-card-interactive">
                 <span id="card-bilder-count" class="admin-card-count hidden"></span>
+            </div>
+            <div id="card-prisliste" class="admin-card-interactive">
+                <span id="card-prisliste-count" class="admin-card-count hidden"></span>
             </div>
         `;
         vi.clearAllMocks();
@@ -1828,6 +1832,7 @@ describe('admin-dashboard.js', () => {
                 .mockReturnValueOnce({ data: { active: true }, body: '' });
             adminClient.getTannlegerRaw.mockResolvedValue([]);
             adminClient.getGalleriRaw.mockResolvedValue([]);
+            adminClient.getPrislisteRaw.mockResolvedValue([]);
 
             await loadDashboardCounts(mockConfig);
 
@@ -1844,6 +1849,7 @@ describe('admin-dashboard.js', () => {
             adminClient.parseMarkdown.mockReturnValueOnce({ data: { active: true }, body: '' });
             adminClient.getTannlegerRaw.mockResolvedValue([]);
             adminClient.getGalleriRaw.mockResolvedValue([]);
+            adminClient.getPrislisteRaw.mockResolvedValue([]);
 
             await loadDashboardCounts(mockConfig);
 
@@ -1860,6 +1866,7 @@ describe('admin-dashboard.js', () => {
                 .mockReturnValueOnce({ data: { active: 'false' }, body: '' });
             adminClient.getTannlegerRaw.mockResolvedValue([]);
             adminClient.getGalleriRaw.mockResolvedValue([]);
+            adminClient.getPrislisteRaw.mockResolvedValue([]);
 
             await loadDashboardCounts(mockConfig);
 
@@ -1878,6 +1885,7 @@ describe('admin-dashboard.js', () => {
                 .mockReturnValueOnce({ data: { startDate: '2020-01-01', endDate: '2020-12-31' }, body: '' }); // expired
             adminClient.getTannlegerRaw.mockResolvedValue([]);
             adminClient.getGalleriRaw.mockResolvedValue([]);
+            adminClient.getPrislisteRaw.mockResolvedValue([]);
 
             await loadDashboardCounts(mockConfig);
 
@@ -1892,6 +1900,7 @@ describe('admin-dashboard.js', () => {
             adminClient.parseMarkdown.mockReturnValueOnce({ data: { startDate: '2020-01-01' }, body: '' });
             adminClient.getTannlegerRaw.mockResolvedValue([]);
             adminClient.getGalleriRaw.mockResolvedValue([]);
+            adminClient.getPrislisteRaw.mockResolvedValue([]);
 
             await loadDashboardCounts(mockConfig);
 
@@ -1906,6 +1915,7 @@ describe('admin-dashboard.js', () => {
             adminClient.parseMarkdown.mockReturnValueOnce({ data: { startDate: 'invalid', endDate: 'invalid' }, body: '' });
             adminClient.getTannlegerRaw.mockResolvedValue([]);
             adminClient.getGalleriRaw.mockResolvedValue([]);
+            adminClient.getPrislisteRaw.mockResolvedValue([]);
 
             await loadDashboardCounts(mockConfig);
 
@@ -1920,6 +1930,7 @@ describe('admin-dashboard.js', () => {
                 { name: 'Charlie', active: true },
             ]);
             adminClient.getGalleriRaw.mockResolvedValue([]);
+            adminClient.getPrislisteRaw.mockResolvedValue([]);
 
             await loadDashboardCounts(mockConfig);
 
@@ -1930,6 +1941,7 @@ describe('admin-dashboard.js', () => {
             adminClient.listFiles.mockResolvedValue([]);
             adminClient.getTannlegerRaw.mockResolvedValue([{ name: 'Alice', active: true }]);
             adminClient.getGalleriRaw.mockResolvedValue([]);
+            adminClient.getPrislisteRaw.mockResolvedValue([]);
 
             await loadDashboardCounts(mockConfig);
 
@@ -1945,6 +1957,7 @@ describe('admin-dashboard.js', () => {
                 { rowIndex: 3, active: true },
                 { rowIndex: 4, active: false },
             ]);
+            adminClient.getPrislisteRaw.mockResolvedValue([]);
 
             await loadDashboardCounts(mockConfig);
 
@@ -1955,16 +1968,46 @@ describe('admin-dashboard.js', () => {
             adminClient.listFiles.mockResolvedValue([]);
             adminClient.getTannlegerRaw.mockResolvedValue([]);
             adminClient.getGalleriRaw.mockResolvedValue([{ rowIndex: 2, active: true }]);
+            adminClient.getPrislisteRaw.mockResolvedValue([]);
 
             await loadDashboardCounts(mockConfig);
 
             expect(document.getElementById('card-bilder-count').textContent).toBe('1 bilde, 1 aktive');
         });
 
+        it('should show prisliste count', async () => {
+            adminClient.listFiles.mockResolvedValue([]);
+            adminClient.getTannlegerRaw.mockResolvedValue([]);
+            adminClient.getGalleriRaw.mockResolvedValue([]);
+            adminClient.getPrislisteRaw.mockResolvedValue([
+                { rowIndex: 2, behandling: 'Konsultasjon', pris: 500 },
+                { rowIndex: 3, behandling: 'Tannbleking', pris: 3000 },
+                { rowIndex: 4, behandling: 'Fylling', pris: 1200 },
+            ]);
+
+            await loadDashboardCounts(mockConfig);
+
+            expect(document.getElementById('card-prisliste-count').textContent).toBe('3 prisrader');
+        });
+
+        it('should show singular form for 1 prisrad', async () => {
+            adminClient.listFiles.mockResolvedValue([]);
+            adminClient.getTannlegerRaw.mockResolvedValue([]);
+            adminClient.getGalleriRaw.mockResolvedValue([]);
+            adminClient.getPrislisteRaw.mockResolvedValue([
+                { rowIndex: 2, behandling: 'Konsultasjon', pris: 500 },
+            ]);
+
+            await loadDashboardCounts(mockConfig);
+
+            expect(document.getElementById('card-prisliste-count').textContent).toBe('1 prisrad');
+        });
+
         it('should not throw when any fetch fails (Promise.allSettled)', async () => {
             adminClient.listFiles.mockRejectedValue(new Error('network'));
             adminClient.getTannlegerRaw.mockRejectedValue(new Error('network'));
             adminClient.getGalleriRaw.mockRejectedValue(new Error('network'));
+            adminClient.getPrislisteRaw.mockRejectedValue(new Error('network'));
 
             await expect(loadDashboardCounts(mockConfig)).resolves.not.toThrow();
         });
@@ -1976,6 +2019,7 @@ describe('admin-dashboard.js', () => {
             expect(document.getElementById('card-meldinger-count').classList.contains('hidden')).toBe(true);
             expect(document.getElementById('card-tannleger-count').classList.contains('hidden')).toBe(true);
             expect(document.getElementById('card-bilder-count').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('card-prisliste-count').classList.contains('hidden')).toBe(true);
         });
 
         it('should not throw when count elements are missing from DOM', async () => {
@@ -1983,6 +2027,7 @@ describe('admin-dashboard.js', () => {
             adminClient.listFiles.mockResolvedValue([]);
             adminClient.getTannlegerRaw.mockResolvedValue([{ name: 'X', active: true }]);
             adminClient.getGalleriRaw.mockResolvedValue([{ rowIndex: 1, active: true }]);
+            adminClient.getPrislisteRaw.mockResolvedValue([]);
 
             await expect(loadDashboardCounts(mockConfig)).resolves.not.toThrow();
         });

@@ -3,7 +3,7 @@ import {
     listFiles, getFileContent, saveFile, createFile, deleteFile,
     parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
     checkMultipleAccess, login, logout, getTannlegerRaw, updateTannlegeRow,
-    addTannlegeRow, getGalleriRaw, updateGalleriRow, findFileByName, getDriveImageBlob,
+    addTannlegeRow, getGalleriRaw, updateGalleriRow, findFileByName, getDriveImageBlob, getPrislisteRaw,
     updateSettingByKey, updateSettingOrder, silentLogin
 } from './admin-client.js';
 import { withRetry, createAuthRefresher, classifyError } from './admin-api-retry.js';
@@ -783,11 +783,12 @@ export async function loadDashboardCounts(config) {
         return { total: files.length, active };
     };
 
-    const [tjenesterResult, meldingerResult, tannlegerResult, galleriResult] = await Promise.allSettled([
+    const [tjenesterResult, meldingerResult, tannlegerResult, galleriResult, prislisteResult] = await Promise.allSettled([
         fetchTjenesterCount(),
         fetchMeldingerCount(),
         SHEET_ID ? withRetry(() => getTannlegerRaw(SHEET_ID), { refreshAuth: getRefreshAuth() }) : Promise.resolve(null),
         SHEET_ID ? withRetry(() => getGalleriRaw(SHEET_ID), { refreshAuth: getRefreshAuth() }) : Promise.resolve(null),
+        SHEET_ID ? withRetry(() => getPrislisteRaw(SHEET_ID), { refreshAuth: getRefreshAuth() }) : Promise.resolve(null),
     ]);
 
     if (tjenesterResult.status === 'fulfilled' && tjenesterResult.value) {
@@ -810,5 +811,10 @@ export async function loadDashboardCounts(config) {
         const images = galleriResult.value.filter(img => img.type !== 'forsidebilde' && img.type !== 'fellesbilde');
         const active = images.filter(img => img.active).length;
         setCount('card-bilder-count', `${images.length} ${images.length === 1 ? 'bilde' : 'bilder'}, ${active} aktive`);
+    }
+
+    if (prislisteResult.status === 'fulfilled' && prislisteResult.value) {
+        const rows = prislisteResult.value;
+        setCount('card-prisliste-count', `${rows.length} ${rows.length === 1 ? 'prisrad' : 'prisrader'}`);
     }
 }
