@@ -5,7 +5,7 @@ import {
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { getAdminConfig, escapeHtml, createAutoSaver, verifySave } from './admin-editor-helpers.js';
-import { formatTimestamp } from './admin-dashboard.js';
+import { formatTimestamp, ICON_ADD } from './admin-dashboard.js';
 
 function formatSistOppdatert(isoString) {
     if (!isoString) return '';
@@ -235,7 +235,7 @@ async function loadPrislisteList(sheetId) {
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
 
-    actions.innerHTML = `<div class="flex items-center gap-2"><button id="btn-new-pris" class="btn-primary text-xs py-2 px-4 shadow-md">+ Legg til prisrad</button><button id="btn-print-prisliste" class="btn-secondary text-xs py-2 px-4 shadow-md flex items-center justify-center" title="Skriv ut prisliste"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button></div>`;
+    actions.innerHTML = `<div class="flex items-center gap-2"><button id="btn-new-pris" class="btn-primary p-2.5 shadow-md rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center" title="Legg til prisrad" aria-label="Legg til prisrad">${ICON_ADD}</button><button id="btn-print-prisliste" class="btn-secondary p-2.5 shadow-md rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center" title="Skriv ut prisliste" aria-label="Skriv ut prisliste"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button></div>`;
     inner.innerHTML = '<div class="text-admin-muted italic text-sm animate-pulse">Henter prisliste...</div>';
 
     try {

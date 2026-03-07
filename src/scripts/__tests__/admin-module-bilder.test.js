@@ -36,6 +36,7 @@ vi.mock('../admin-dashboard.js', () => ({
     loadGalleriListeModule: vi.fn(),
     reorderGalleriItem: vi.fn(),
     formatTimestamp: vi.fn(() => '24. feb kl. 12:00'),
+    ICON_ADD: '+',
 }));
 
 vi.mock('../admin-editor-helpers.js', () => ({

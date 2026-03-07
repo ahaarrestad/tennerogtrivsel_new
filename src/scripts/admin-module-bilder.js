@@ -6,7 +6,7 @@ import {
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { loadGallery, setupUploadHandler } from './admin-gallery.js';
-import { loadGalleriListeModule, reorderGalleriItem, formatTimestamp } from './admin-dashboard.js';
+import { loadGalleriListeModule, reorderGalleriItem, formatTimestamp, ICON_ADD } from './admin-dashboard.js';
 import {
     getAdminConfig, renderToggleHtml, setToggleState, attachToggleClick,
     showDeletionToast, renderImageCropSliders, createAutoSaver,
@@ -21,7 +21,7 @@ export async function loadBilderModule() {
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
 
-    actions.innerHTML = `<button id="btn-new-galleribilde" class="btn-primary text-xs py-2 px-4 shadow-md">➕ Legg til bilde</button>`;
+    actions.innerHTML = `<button id="btn-new-galleribilde" class="btn-primary p-2.5 shadow-md rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center" title="Legg til bilde" aria-label="Legg til bilde">${ICON_ADD}</button>`;
     inner.innerHTML = '<div class="text-admin-muted italic text-sm animate-pulse">Henter bildeinnstillinger...</div>';
 
     try {
