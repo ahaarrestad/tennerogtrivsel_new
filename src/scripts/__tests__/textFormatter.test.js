@@ -159,8 +159,8 @@ describe('sortMessages', () => {
     });
 
     it('should sort active messages by end date (nearest first)', () => {
-        const active1 = { title: 'Slutter snart', startDate: '2020-01-01', endDate: '2026-03-01' };
-        const active2 = { title: 'Slutter senere', startDate: '2020-01-01', endDate: '2026-12-01' };
+        const active1 = { title: 'Slutter snart', startDate: '2020-01-01', endDate: '2090-03-01' };
+        const active2 = { title: 'Slutter senere', startDate: '2020-01-01', endDate: '2090-12-01' };
         const sorted = sortMessages([active2, active1]);
         expect(sorted[0].title).toBe('Slutter snart');
     });

@@ -2,6 +2,10 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Feilsøk hvorfor alle pull requests feiler på GitHub**
+    - Årsak: Hardkodet testdato `2026-03-01` i `textFormatter.test.js` passerte sluttdato, gjort meldingen "utløpt" i stedet for "aktiv"
+    - Fiks: Endret testdatoer til 2027 for å unngå tidsavhengig feil
+
 - [x] **Personvernerklæring — avgrensning til nettsiden** ([design](docs/plans/archive/2026-03-01-personvern-avgrensning-design.md))
     - Innledende avsnitt som avgrenser erklæringen til nettsiden (tennerogtrivsel.no/.com/.net)
     - Henvisning til helse- og personvernlovgivningen for pasientdata
