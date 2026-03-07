@@ -13,6 +13,7 @@ vi.mock('../admin-client.js', () => ({
     addGalleriRow: vi.fn(),
     deleteGalleriRowPermanently: vi.fn(),
     setForsideBildeInGalleri: vi.fn(),
+    setFellesBildeInGalleri: vi.fn(),
     migrateForsideBildeToGalleri: vi.fn(),
     getDriveImageBlob: vi.fn(),
     findFileByName: vi.fn(),
@@ -63,7 +64,7 @@ vi.mock('../admin-api-retry.js', () => ({
 
 import {
     getSheetParentFolder, getGalleriRaw, updateGalleriRow, addGalleriRow,
-    deleteGalleriRowPermanently, setForsideBildeInGalleri, migrateForsideBildeToGalleri,
+    deleteGalleriRowPermanently, setForsideBildeInGalleri, setFellesBildeInGalleri, migrateForsideBildeToGalleri,
     getDriveImageBlob, findFileByName, deleteFile, listImages
 } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
@@ -747,6 +748,162 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
             expect(showToast).toHaveBeenCalledWith(expect.stringContaining('Kunne ikke sette forsidebilde'), 'error');
         });
         expect(checkbox.checked).toBe(false);
+    });
+
+    it('should set fellesbilde checkbox for fellesbilde type', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        const editFn = loadGalleriListeModule.mock.calls[0][1];
+        getGalleriRaw.mockResolvedValue([
+            {
+                rowIndex: 3, title: 'Gruppebilde', image: 'gruppe.jpg', altText: '',
+                active: true, order: 1, scale: 1, positionX: 50, positionY: 50,
+                type: 'fellesbilde'
+            }
+        ]);
+
+        await editFn(3);
+
+        const inner = document.getElementById('module-inner');
+        expect(inner.querySelector('#galleri-edit-fellesbilde').checked).toBe(true);
+        expect(inner.querySelector('#galleri-edit-forsidebilde').closest('.admin-field-container').classList.contains('hidden')).toBe(true);
+    });
+
+    it('should handle fellesbilde checkbox toggle on', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        const editFn = loadGalleriListeModule.mock.calls[0][1];
+        getGalleriRaw.mockResolvedValue([
+            {
+                rowIndex: 3, title: 'Bilde', image: 'bilde.jpg', altText: '',
+                active: true, order: 1, scale: 1, positionX: 50, positionY: 50, type: 'galleri'
+            }
+        ]);
+        await editFn(3);
+
+        setFellesBildeInGalleri.mockResolvedValue();
+
+        const checkbox = document.getElementById('galleri-edit-fellesbilde');
+        checkbox.checked = true;
+        checkbox.dispatchEvent(new Event('change'));
+
+        await vi.waitFor(() => {
+            expect(setFellesBildeInGalleri).toHaveBeenCalledWith('test-sheet', 3);
+        });
+    });
+
+    it('should handle fellesbilde checkbox toggle off', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        const editFn = loadGalleriListeModule.mock.calls[0][1];
+        getGalleriRaw.mockResolvedValue([
+            {
+                rowIndex: 3, title: 'Gruppe', image: 'gruppe.jpg', altText: '',
+                active: true, order: 1, scale: 1, positionX: 50, positionY: 50, type: 'fellesbilde'
+            }
+        ]);
+        await editFn(3);
+
+        updateGalleriRow.mockResolvedValue();
+
+        const checkbox = document.getElementById('galleri-edit-fellesbilde');
+        checkbox.checked = false;
+        checkbox.dispatchEvent(new Event('change'));
+
+        await vi.waitFor(() => {
+            expect(updateGalleriRow).toHaveBeenCalledWith('test-sheet', 3, expect.objectContaining({ type: 'galleri' }));
+        });
+    });
+
+    it('should show error toast when fellesbilde toggle fails', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        const editFn = loadGalleriListeModule.mock.calls[0][1];
+        getGalleriRaw.mockResolvedValue([
+            {
+                rowIndex: 3, title: 'Bilde', image: 'bilde.jpg', altText: '',
+                active: true, order: 1, scale: 1, positionX: 50, positionY: 50, type: 'galleri'
+            }
+        ]);
+        await editFn(3);
+
+        setFellesBildeInGalleri.mockRejectedValue(new Error('API fail'));
+
+        const checkbox = document.getElementById('galleri-edit-fellesbilde');
+        checkbox.checked = true;
+        checkbox.dispatchEvent(new Event('change'));
+
+        await vi.waitFor(() => {
+            expect(showToast).toHaveBeenCalledWith('Kunne ikke sette fellesbilde: API fail', 'error');
+        });
+        expect(checkbox.checked).toBe(false);
+    });
+
+    it('should show error toast when fellesbilde toggle off fails', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        const editFn = loadGalleriListeModule.mock.calls[0][1];
+        getGalleriRaw.mockResolvedValue([
+            {
+                rowIndex: 3, title: 'Gruppe', image: 'gruppe.jpg', altText: '',
+                active: true, order: 1, scale: 1, positionX: 50, positionY: 50, type: 'fellesbilde'
+            }
+        ]);
+        await editFn(3);
+
+        updateGalleriRow.mockRejectedValue(new Error('save fail'));
+
+        const checkbox = document.getElementById('galleri-edit-fellesbilde');
+        checkbox.checked = false;
+        checkbox.dispatchEvent(new Event('change'));
+
+        await vi.waitFor(() => {
+            expect(showToast).toHaveBeenCalledWith('Kunne ikke endre type: save fail', 'error');
+        });
+        expect(checkbox.checked).toBe(true);
+    });
+
+    it('should save type as fellesbilde when fellesbilde checkbox is checked', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        const editFn = loadGalleriListeModule.mock.calls[0][1];
+        getGalleriRaw.mockResolvedValue([
+            {
+                rowIndex: 3, title: 'Gruppe', image: 'gruppe.jpg', altText: '',
+                active: true, order: 1, scale: 1, positionX: 50, positionY: 50, type: 'fellesbilde'
+            }
+        ]);
+        await editFn(3);
+        updateGalleriRow.mockResolvedValue();
+        getGalleriRaw.mockResolvedValue([{ rowIndex: 3, title: 'Gruppe' }]);
+
+        // The fellesbilde checkbox should be checked
+        const checkbox = document.getElementById('galleri-edit-fellesbilde');
+        expect(checkbox.checked).toBe(true);
+
+        // Call saveFn directly to verify type is included
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await saveFn();
+
+        expect(updateGalleriRow).toHaveBeenCalledWith('test-sheet', 3, expect.objectContaining({ type: 'fellesbilde' }));
+
+        // Exercise fetchFn callback inside verifySave to cover line 321
+        const verifyCall = verifySave.mock.calls[0][0];
+        expect(verifyCall.compareField).toBe('title');
+        await verifyCall.fetchFn();
+        expect(getGalleriRaw).toHaveBeenCalledWith('test-sheet');
     });
 
     it('should handle verification mismatch during auto-save', async () => {
@@ -1781,6 +1938,27 @@ describe('handleReorder sort edge cases', () => {
         const sortedItems = reorderGalleriItem.mock.calls[0][1];
         // forsidebilde should be first regardless of order
         expect(sortedItems[0].type).toBe('forsidebilde');
+    });
+
+    it('should sort fellesbilde before galleri but after forsidebilde', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        getGalleriRaw.mockResolvedValue([
+            { rowIndex: 4, type: 'galleri', order: 1 },
+            { rowIndex: 2, type: 'fellesbilde', order: 3 },
+            { rowIndex: 3, type: 'forsidebilde', order: 2 },
+        ]);
+        reorderGalleriItem.mockResolvedValue();
+
+        const handleReorder = loadGalleriListeModule.mock.calls[0][3];
+        await handleReorder(4, 1);
+
+        const sortedItems = reorderGalleriItem.mock.calls[0][1];
+        expect(sortedItems[0].type).toBe('forsidebilde');
+        expect(sortedItems[1].type).toBe('fellesbilde');
+        expect(sortedItems[2].type).toBe('galleri');
     });
 });
 

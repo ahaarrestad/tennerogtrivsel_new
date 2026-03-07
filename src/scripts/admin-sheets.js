@@ -469,26 +469,34 @@ export async function addGalleriRow(spreadsheetId, data) {
 }
 
 /**
- * Setter en galleri-rad som forsidebilde og nedgraderer evt. eksisterende forsidebilde.
- * Kun én rad kan ha type='forsidebilde' om gangen.
+ * Setter en galleri-rad som en spesiell type og nedgraderer evt. eksisterende rad med samme type.
+ * Kun én rad kan ha en gitt spesialtype om gangen.
  */
-export async function setForsideBildeInGalleri(spreadsheetId, rowIndex) {
+async function setGalleriSpecialType(spreadsheetId, rowIndex, targetType) {
     try {
         const allRows = await getGalleriRaw(spreadsheetId);
-        const existing = allRows.find(r => r.type === 'forsidebilde' && r.rowIndex !== rowIndex);
+        const existing = allRows.find(r => r.type === targetType && r.rowIndex !== rowIndex);
         if (existing) {
             await updateGalleriRow(spreadsheetId, existing.rowIndex, { ...existing, type: 'galleri' });
         }
         const target = allRows.find(r => r.rowIndex === rowIndex);
         if (target) {
-            await updateGalleriRow(spreadsheetId, rowIndex, { ...target, type: 'forsidebilde' });
+            await updateGalleriRow(spreadsheetId, rowIndex, { ...target, type: targetType });
         }
-        console.log(`[Admin] Rad ${rowIndex} satt som forsidebilde.`);
+        console.log(`[Admin] Rad ${rowIndex} satt som ${targetType}.`);
         return true;
     } catch (err) {
-        console.error("[Admin] Kunne ikke sette forsidebilde:", err);
+        console.error(`[Admin] Kunne ikke sette ${targetType}:`, err);
         throw err;
     }
+}
+
+export function setForsideBildeInGalleri(spreadsheetId, rowIndex) {
+    return setGalleriSpecialType(spreadsheetId, rowIndex, 'forsidebilde');
+}
+
+export function setFellesBildeInGalleri(spreadsheetId, rowIndex) {
+    return setGalleriSpecialType(spreadsheetId, rowIndex, 'fellesbilde');
 }
 
 /**

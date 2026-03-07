@@ -96,32 +96,23 @@ async function editTannlege(rowIndex, data = null) {
             <div class="space-y-6">
                 <h3 class="text-brand font-black uppercase tracking-tighter text-center lg:text-left">Forhåndsvisning</h3>
                 <div class="flex justify-center lg:justify-start">
-                    <div class="card-base w-full max-w-[350px] min-h-[320px] sm:min-h-[450px] items-center text-center justify-center">
-                        <div class="card-accent-corner"></div>
-
-                        <div class="relative z-10 mb-6 w-36 sm:w-48 h-36 sm:h-48 mx-auto">
-                            <div class="relative overflow-hidden z-10 h-full w-full rounded-2xl border-4 border-white shadow-md bg-admin-surface flex items-center justify-center">
-                                <div id="no-image-placeholder" class="flex flex-col items-center justify-center text-admin-muted-light ${previewSrc ? 'hidden' : ''}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                    <span class="text-[10px] font-black uppercase tracking-widest">Velg bilde</span>
-                                </div>
-                                <img id="preview-img"
-                                     src="${previewSrc}"
-                                     class="absolute inset-0 w-full h-full object-cover transition-all duration-75 ${previewSrc ? '' : 'hidden'}"
-                                     style="object-position: ${t.positionX}% ${t.positionY}%; transform: scale(${t.scale}); transform-origin: ${t.positionX}% ${t.positionY}%;"
-                                >
+                    <div class="w-full max-w-[250px]">
+                        <div class="relative aspect-[3/4] rounded-xl overflow-hidden bg-admin-surface">
+                            <div id="no-image-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-admin-muted-light ${previewSrc ? 'hidden' : ''}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                <span class="text-[10px] font-black uppercase tracking-widest">Velg bilde</span>
                             </div>
+                            <img id="preview-img"
+                                 src="${previewSrc}"
+                                 class="absolute inset-0 w-full h-full object-cover transition-all duration-75 ${previewSrc ? '' : 'hidden'}"
+                                 style="object-position: ${t.positionX}% ${t.positionY}%; transform: scale(${t.scale}); transform-origin: ${t.positionX}% ${t.positionY}%;"
+                            >
                         </div>
-
-                        <div class="relative z-10 w-full flex flex-col grow">
-                            <h3 id="preview-name" class="h3 mb-1">${escapeHtml(t.name) || 'Navn'}</h3>
-                            <div class="card-text space-y-1 grow">
-                                <p id="preview-title" class="card-subtitle">${escapeHtml(t.title) || 'Tittel'}</p>
-                                <p id="preview-desc" class="line-clamp-6">${escapeHtml(t.description) || 'Beskrivelse kommer her...'}</p>
-                            </div>
+                        <div class="mt-3 text-center">
+                            <span id="preview-name" class="font-heading font-bold text-sm block">${escapeHtml(t.name) || 'Navn'}</span>
+                            <span id="preview-title" class="text-brand-hover text-xs block">${escapeHtml(t.title) || 'Tittel'}</span>
+                            <p id="preview-desc" class="mt-2 text-sm leading-relaxed text-brand-hover line-clamp-3">${escapeHtml(t.description) || ''}</p>
                         </div>
-
-                        <div class="card-progress-bar !w-full"></div>
                     </div>
                 </div>
             </div>
@@ -221,7 +212,7 @@ async function editTannlege(rowIndex, data = null) {
         const descEl = document.getElementById('preview-desc');
         if (nameEl) nameEl.textContent = nameInp.value || 'Navn';
         if (titleEl) titleEl.textContent = titleInp.value || 'Tittel';
-        if (descEl) descEl.textContent = descInp.value || 'Beskrivelse kommer her...';
+        if (descEl) descEl.textContent = descInp.value || '';
 
         const img = document.getElementById('preview-img');
         if (img) {

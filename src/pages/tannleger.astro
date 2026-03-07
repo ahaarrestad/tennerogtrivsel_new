@@ -1,16 +1,75 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
 import { getSiteSettings } from '../scripts/getSettings';
 
-import TannlegerSide from '../components/Tannleger.astro';
-
 const settings = await getSiteSettings();
+const tannleger = await getCollection('tannleger');
+const images = import.meta.glob('/src/assets/tannleger/*.{jpeg,jpg,png,webp}');
+const sorterteTannleger = tannleger.sort((a, b) => a.data.name.localeCompare(b.data.name, 'nb'));
 ---
 <Layout
     title={`${settings.tannlegerTittel} | Tenner og Trivsel`}
     description={settings.tannlegerBeskrivelse}
 >
-    <main class="min-h-[50vh]">
-        <TannlegerSide variant="white" />
+    <main class="section-container bg-white">
+        <div class="section-content">
+            <div class="section-header section-header-centered">
+                <h1 class="section-heading">{settings.tannlegerTittel}</h1>
+                {settings.tannlegerTekst && <p class="section-intro">{settings.tannlegerTekst}</p>}
+                <div class="heading-accent"></div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+                {sorterteTannleger.map((t) => {
+                    const d = t.data;
+                    const imagePath = `/src/assets/tannleger/${d.image}`;
+                    const hasImage = d.image && images[imagePath];
+                    const posX = d.imageConfig?.positionX ?? 50;
+                    const posY = d.imageConfig?.positionY ?? 50;
+                    const scale = d.imageConfig?.scale ?? 1;
+
+                    return (
+                        <div class="tannlege-card">
+                            <div class="relative aspect-[3/4] rounded-xl overflow-hidden bg-brand-surface">
+                                {hasImage ? (
+                                    <Image
+                                        src={images[imagePath]()}
+                                        alt={d.name}
+                                        class="absolute inset-0 w-full h-full object-cover"
+                                        style={{
+                                            objectPosition: `${posX}% ${posY}%`,
+                                            transform: `scale(${scale})`,
+                                            transformOrigin: `${posX}% ${posY}%`
+                                        }}
+                                    />
+                                ) : (
+                                    <div class="absolute inset-0 flex items-center justify-center text-brand-hover text-sm italic">
+                                        Bilde mangler
+                                    </div>
+                                )}
+                            </div>
+                            {d.description ? (
+                                <details class="mt-3">
+                                    <summary class="tannlege-summary w-full text-center cursor-pointer list-none rounded-xl border border-brand-border py-2 px-3 transition-all duration-200 hover:border-brand">
+                                        <span class="font-heading font-bold text-sm block">{d.name}</span>
+                                        <span class="text-brand-hover text-xs block">{d.title}</span>
+                                    </summary>
+                                    <div class="mt-3 text-sm leading-relaxed text-brand-hover">
+                                        {d.description}
+                                    </div>
+                                </details>
+                            ) : (
+                                <div class="mt-3 text-center">
+                                    <span class="font-heading font-bold text-sm block">{d.name}</span>
+                                    <span class="text-brand-hover text-xs block">{d.title}</span>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
     </main>
 </Layout>

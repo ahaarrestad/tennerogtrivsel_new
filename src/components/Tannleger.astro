@@ -1,19 +1,24 @@
 ---
-import {Image} from 'astro:assets';
-import {getCollection} from 'astro:content';
-import {getSiteSettings} from '../scripts/getSettings';
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import { getSiteSettings } from '../scripts/getSettings';
 import { getSectionClasses, type SectionVariant } from '../scripts/sectionVariant';
 import SectionHeader from './SectionHeader.astro';
-import Card from "./Card.astro";
 
-// Hent alle tannleger fra den nye collectionen
-const tannleger = await getCollection('tannleger');
 const settings = await getSiteSettings();
+const galleri = await getCollection('galleri');
+const fellesbildeEntry = galleri.find(item => item.data.type === 'fellesbilde');
 
-// For å dynamisk importere bilder i Astro
-const images = import.meta.glob('/src/assets/tannleger/*.{jpeg,jpg,png,webp}');
+const images = import.meta.glob('/src/assets/galleri/*.{jpeg,jpg,png,webp}');
+const fellesbildePath = fellesbildeEntry?.data.image
+    ? `/src/assets/galleri/${fellesbildeEntry.data.image}`
+    : null;
+const hasFellesbilde = fellesbildePath && images[fellesbildePath];
 
-const sorterteTannleger = tannleger.sort((a, b) => a.data.name.localeCompare(b.data.name, 'nb'));
+const fellesbildeConfig = fellesbildeEntry?.data.imageConfig;
+const posX = fellesbildeConfig?.positionX ?? 50;
+const posY = fellesbildeConfig?.positionY ?? 50;
+const scale = fellesbildeConfig?.scale ?? 1;
 
 interface Props { variant?: SectionVariant }
 const { variant = 'brand' } = Astro.props;
@@ -23,44 +28,31 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
     <div class="section-content">
         <SectionHeader title={settings.tannlegerTittel} intro={settings.tannlegerTekst} headerBg={headerBg} sticky />
 
-        <div class="card-grid gap-6 md:gap-8">
-            {sorterteTannleger.map((t, index) => {
-                const tannlegeData = t.data;
-                const imagePath = `/src/assets/tannleger/${tannlegeData.image}`;
-                const hasImage = tannlegeData.image && images[imagePath];
-
-                return (
-                        <Card
-                                index={index}
-                                title={tannlegeData.name}
-                                isStack={true}
-                                image={true}
-                                minHeight="450px"
-                        >
-                            {hasImage ? (
-                                    <Image slot="image"
-                                           src={images[imagePath]()}
-                                           alt={tannlegeData.name}
-                                           class="absolute inset-0 w-full h-full object-cover"
-                                           style={{
-                                               objectPosition: `${tannlegeData.imageConfig?.positionX ?? 50}% ${tannlegeData.imageConfig?.positionY ?? 50}%`,
-                                               transform: `scale(${tannlegeData.imageConfig?.scale ?? 1.0})`,
-                                               transformOrigin: `${tannlegeData.imageConfig?.positionX ?? 50}% ${tannlegeData.imageConfig?.positionY ?? 50}%`
-                                           }}
-                                    />
-                            ) : (
-                                    <div slot="image"
-                                         class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
-                                        Bilde mangler
-                                    </div>
-                            )}
-                            <p class="card-subtitle">{tannlegeData.title}</p>
-                            <p class="card-text line-clamp-6">
-                                {tannlegeData.description}
-                            </p>
-                        </Card>
-                );
-            })}
-        </div>
+        <a href="/tannleger" class="block rounded-2xl overflow-hidden border border-brand-border/60 shadow-sm transition-all duration-300 hover:shadow-md hover:border-brand-border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+            <div class="relative aspect-[16/9]">
+                {hasFellesbilde ? (
+                    <Image
+                        src={images[fellesbildePath]()}
+                        alt={settings.tannlegerTittel || 'Våre tannleger'}
+                        class="absolute inset-0 w-full h-full object-cover"
+                        style={{
+                            objectPosition: `${posX}% ${posY}%`,
+                            transform: `scale(${scale})`,
+                            transformOrigin: `${posX}% ${posY}%`
+                        }}
+                    />
+                ) : (
+                    <div class="absolute inset-0 w-full h-full bg-brand-surface flex items-center justify-center">
+                        <span class="text-brand-hover text-sm italic">Fellesbilde kommer</span>
+                    </div>
+                )}
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                <div class="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                    <h3 class="font-heading font-[800] text-2xl md:text-3xl text-white">
+                        {settings.tannlegerTittel || 'Våre tannleger'}
+                    </h3>
+                </div>
+            </div>
+        </a>
     </div>
 </section>
