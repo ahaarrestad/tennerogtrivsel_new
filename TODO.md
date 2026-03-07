@@ -29,10 +29,6 @@
     - Gjennomgå hele prosjektet for sikkerhetssårbarheter
     - Dekk OWASP Top 10, XSS, injection, CSP, autentisering, eksponerte hemmeligheter, og usikker datahåndtering
 
-- [ ] **Admin-panel: Kompakt logg-ut-knapp med tooltip**
-    - Endre logg-ut-knappen fra å vise fullt navn til kun fornavn + ikon
-    - Mouse-over tooltip skal vise «Logg ut [hele navnet]»
-
 ## Fullført
 
 Se [TODO-archive.md](TODO-archive.md) for alle fullførte oppgaver.

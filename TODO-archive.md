@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Admin-panel: Kompakt logg-ut-knapp med tooltip**
+    - Endret bruker-pillen til å vise kun fornavn i stedet for fullt navn
+    - Tooltip (title) settes dynamisk til «Logg ut [hele navnet]»
+    - Email brukes som fallback hvis navn mangler
+
 - [x] **Prisliste-admin: «+»-knapp per kategori for raskere opprettelse av ny rad**
     - Kompakt «+»-knapp i kategori-headeren i prislisteoversikten
     - Klikk åpner ny-rad-editor med forhåndsutfylt kategori og fokus på behandlings-feltet
