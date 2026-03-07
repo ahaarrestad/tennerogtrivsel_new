@@ -2,6 +2,14 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Flytt "Skriv ut"-knapp fra prisliste-siden til admin-panelet** ([plan](docs/plans/archive/2026-03-07-flytt-skriv-ut-knapp.md))
+    - Printer-ikon i prisliste-modulens action-bar i admin (ved siden av "Legg til prisrad")
+    - Popup-vindu med auto-print og afterprint-lukking (ikke ny fane)
+    - Prisliste-logo satt til loading="eager" for pålitelig print
+    - Inline-script (`is:inline`) for auto-print ved `?print=1`
+    - Fjernet gammel print-knapp fra offentlig prisliste-side
+    - 55 tester, 88.5% branch coverage
+
 - [x] **Kodestil og CSS-opprydding** ([plan](docs/plans/archive/2026-03-07-kodestil-css-opprydding.md))
     - Erstattet udefinerte CSS-klasser (`bg-brand-surface`, `text-heading`, `text-body`) med gyldige tokens
     - Konsolidert `.section-heading` inn i `.h2`, fjernet duplikat fra global.css
