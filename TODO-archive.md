@@ -2,6 +2,10 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Juster tannlege-bilder størrelse + admin-forhåndsvisning**
+    - Mindre tannlege-bilder i oversikten
+    - Admin-forhåndsvisning nøyaktig lik visningen på tannlege-siden
+
 - [x] **Sortering av tjenester på admin-siden** ([plan](docs/plans/archive/2026-03-07-tjenester-sortering.md))
     - Opp/ned-piler i tjenestelisten (samme mønster som galleri)
     - Prioritetsbasert sortering (priority → alfabetisk)
