@@ -216,6 +216,14 @@ async function editPrisRad(rowIndex, data = null) {
     }
 }
 
+function printPrisliste() {
+    const popup = window.open('/prisliste?print=1', 'prisliste-print',
+        'width=800,height=600,left=100,top=100');
+    if (popup) {
+        popup.addEventListener('afterprint', () => popup.close());
+    }
+}
+
 function reloadPrisliste() {
     window.clearBreadcrumbEditor?.();
     const { SHEET_ID } = getAdminConfig();
@@ -227,7 +235,7 @@ async function loadPrislisteList(sheetId) {
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
 
-    actions.innerHTML = `<button id="btn-new-pris" class="btn-primary text-xs py-2 px-4 shadow-md">+ Legg til prisrad</button>`;
+    actions.innerHTML = `<div class="flex items-center gap-2"><button id="btn-new-pris" class="btn-primary text-xs py-2 px-4 shadow-md">+ Legg til prisrad</button><button id="btn-print-prisliste" class="btn-secondary text-xs py-2 px-4 shadow-md flex items-center justify-center" title="Skriv ut prisliste"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button></div>`;
     inner.innerHTML = '<div class="text-admin-muted italic text-sm animate-pulse">Henter prisliste...</div>';
 
     try {
@@ -297,6 +305,7 @@ async function loadPrislisteList(sheetId) {
         }
 
         document.getElementById('btn-new-pris').onclick = () => editPrisRad(null, null);
+        document.getElementById('btn-print-prisliste').onclick = () => printPrisliste();
     } catch (e) {
         console.error('[Admin] Prisliste load failed:', e);
         inner.innerHTML = '<div class="admin-alert-error">Kunne ikke laste prisliste.</div>';
@@ -307,6 +316,7 @@ export function initPrislisteModule() {
     window.deletePrisRad = deletePrisRad;
     window.editPrisRad = editPrisRad;
     window.openPrislisteModule = reloadPrisliste;
+    window.printPrisliste = printPrisliste;
 }
 
 export { reloadPrisliste };

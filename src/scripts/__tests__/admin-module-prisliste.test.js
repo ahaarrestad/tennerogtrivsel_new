@@ -263,6 +263,74 @@ describe('loadPrislisteList', () => {
         const actions = document.getElementById('module-actions');
         expect(actions.innerHTML).toContain('Legg til prisrad');
     });
+
+    it('should show print button in actions area', async () => {
+        getPrislisteRaw.mockResolvedValue([]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const printBtn = document.getElementById('btn-print-prisliste');
+        expect(printBtn).not.toBeNull();
+        expect(printBtn.title).toBe('Skriv ut prisliste');
+        expect(printBtn.querySelector('svg')).not.toBeNull();
+    });
+
+    it('should call printPrisliste when print button is clicked', async () => {
+        initPrislisteModule();
+        getPrislisteRaw.mockResolvedValue([]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const mockPopup = { addEventListener: vi.fn(), close: vi.fn() };
+        const openSpy = vi.spyOn(window, 'open').mockReturnValue(mockPopup);
+
+        const printBtn = document.getElementById('btn-print-prisliste');
+        printBtn.click();
+
+        expect(openSpy).toHaveBeenCalledWith('/prisliste?print=1', 'prisliste-print', expect.stringContaining('width='));
+        openSpy.mockRestore();
+    });
+
+    it('should open a popup window with correct URL when printing', () => {
+        initPrislisteModule();
+        const mockPopup = { addEventListener: vi.fn(), close: vi.fn() };
+        const openSpy = vi.spyOn(window, 'open').mockReturnValue(mockPopup);
+
+        window.printPrisliste();
+
+        expect(openSpy).toHaveBeenCalledWith(
+            '/prisliste?print=1',
+            'prisliste-print',
+            expect.stringContaining('width=')
+        );
+        openSpy.mockRestore();
+    });
+
+    it('should register afterprint listener to close popup', () => {
+        initPrislisteModule();
+        const mockPopup = { addEventListener: vi.fn(), close: vi.fn() };
+        const openSpy = vi.spyOn(window, 'open').mockReturnValue(mockPopup);
+
+        window.printPrisliste();
+
+        expect(mockPopup.addEventListener).toHaveBeenCalledWith('afterprint', expect.any(Function));
+
+        // Simulate afterprint — should close popup
+        const afterprintHandler = mockPopup.addEventListener.mock.calls[0][1];
+        afterprintHandler();
+        expect(mockPopup.close).toHaveBeenCalled();
+
+        openSpy.mockRestore();
+    });
+
+    it('should handle popup blocker gracefully', () => {
+        initPrislisteModule();
+        const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+
+        expect(() => window.printPrisliste()).not.toThrow();
+
+        openSpy.mockRestore();
+    });
 });
 
 describe('deletePrisRad', () => {
