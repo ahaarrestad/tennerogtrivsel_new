@@ -30,6 +30,10 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
+- [ ] **Juster tannlege-bilder størrelse + admin-forhåndsvisning**
+  - Bildene i tannleger-oversikten er for store — gjør dem mindre
+  - Forhåndsvisning på admin-siden skal være nøyaktig lik visningen på tannlege-siden
+
 ## Fullført
 
 Se [TODO-archive.md](TODO-archive.md) for alle fullførte oppgaver.
