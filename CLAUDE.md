@@ -32,6 +32,21 @@ Alle `sheets.values.get`-kall med numeriske felter **SKAL** bruke `valueRenderOp
 | `build` | `sync-data.js && astro build` | Lokalt |
 | `build:ci` | `astro build` | CI/CD (sync kjøres som eget steg før) |
 
+## Dato-avhengige tester
+
+Alle tester som sammenligner datoer mot "nå" **SKAL** bruke `vi.useFakeTimers()`. Aldri bruk hardkodede fremtidsdatoer som antar at testen kjøres før en viss dato.
+
+```js
+beforeEach(() => {
+    vi.useFakeTimers({ now: new Date('2026-02-15T12:00:00') });
+});
+afterEach(() => {
+    vi.useRealTimers();
+});
+```
+
+Hvis én test trenger en annen tid enn resten av describe-blokken: bruk `vi.setSystemTime(new Date('...'))` inne i den testen (ikke `vi.useFakeTimers` på nytt).
+
 ## Arkitekturdokumentasjon
 
 Detaljert arkitekturdokumentasjon for spesifikke subsystemer finnes i `docs/architecture/`:

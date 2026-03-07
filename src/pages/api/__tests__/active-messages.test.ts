@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { GET } from '../active-messages.json.ts';
 import { getCollection } from 'astro:content';
 
@@ -15,7 +15,12 @@ const getCollectionMock = getCollection as Mock;
 
 describe('active-messages API', () => {
     beforeEach(() => {
+        vi.useFakeTimers({ now: new Date('2026-02-15T12:00:00') });
         vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     it('should return active messages with cleaned content', async () => {

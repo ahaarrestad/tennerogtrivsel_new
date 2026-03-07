@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getActiveMessage } from '../messageClient.js';
 
 // Mock marked
@@ -17,8 +17,13 @@ global.fetch = mockFetch;
 
 describe('messageClient.js', () => {
     beforeEach(() => {
+        vi.useFakeTimers({ now: new Date('2026-02-15T12:00:00') });
         vi.clearAllMocks();
         vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     it('skal hente aktiv melding og formatere med marked', async () => {
@@ -128,7 +133,7 @@ describe('messageClient.js', () => {
 
     it('skal bruke start-of-day og end-of-day for datofiltrering', async () => {
         // Bruker statisk dato for å unngå midnatt-problemer med tidssoner
-        vi.useFakeTimers({ now: new Date('2025-06-15T12:00:00') });
+        vi.setSystemTime(new Date('2025-06-15T12:00:00'));
 
         const mockApiResponse = [
             {
@@ -147,8 +152,6 @@ describe('messageClient.js', () => {
         const result = await getActiveMessage();
         expect(result).not.toBeNull();
         expect(result.title).toBe('Dagens melding');
-
-        vi.useRealTimers();
     });
 
     it('skal returnere null hvis ingen meldinger finnes i API-svaret', async () => {
