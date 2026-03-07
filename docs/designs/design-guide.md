@@ -82,7 +82,7 @@ fra Google Fonts API (velg woff2-format).
 | Element | Mobil | Desktop | Font | Vekt | Line-height | Letter-spacing |
 |---------|-------|---------|------|------|-------------|----------------|
 | h1 | text-4xl (36px) | text-6xl (60px) | Montserrat | 900 | 1.15 | -0.025em |
-| h2 / section-heading | text-3xl (30px) | text-5xl (48px) | Montserrat | 800 | 1.15 | -0.025em |
+| h2 (`.h2`) | text-3xl (30px) | text-5xl (48px) | Montserrat | 800 | 1.15 | -0.025em |
 | h3 / card-title | text-2xl (24px) | text-3xl (30px) | Montserrat | 700 | 1.25 | normal |
 | h4 | text-lg (18px) | text-lg (18px) | Montserrat | 700 | 1.4 | 0.05em, uppercase |
 | body-lg / section-intro | text-lg (18px) | text-lg (18px) | Inter | 400 | 1.75 | normal |
@@ -101,7 +101,7 @@ fra Google Fonts API (velg woff2-format).
 }
 ```
 
-**Regel:** `.h2` og `.section-heading` er i dag duplisert — konsolider til én klasse.
+**Regel:** `.section-heading` er konsolidert inn i `.h2` — bruk kun `.h2`.
 Reservér `font-black` (900) kun for h1. H2 bruker `font-extrabold` (800) for tydeligere hierarki.
 
 > **Merk:** `line-height: 1.15` (ikke 1.1) brukes for h1/h2 for å unngå at underkanten av
@@ -119,7 +119,7 @@ Alle klasser som trenger eksplisitt `font-family`-deklarasjon:
 | Klasse | Font |
 |--------|------|
 | `.h1`, `.h2`, `.h3`, `.h4` | `var(--font-heading)` |
-| `.section-heading` (konsolideres med .h2) | `var(--font-heading)` |
+| ~~`.section-heading`~~ (fjernet, bruk `.h2`) | `var(--font-heading)` |
 | `.card-title`, `.card-subtitle` | `var(--font-heading)` |
 | `body` | `var(--font-body)` |
 | `.section-intro`, `.card-text`, `.card-link` | `var(--font-body)` |
