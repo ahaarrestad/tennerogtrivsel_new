@@ -38,8 +38,8 @@
     - Lenke i navbar og footer
 
 - [ ] **Footer-justeringer**
-    - Fjern `sentralbordTekst` fra footer
-    - Legg til prisliste-lenke
+    - ~~Fjern `sentralbordTekst` fra footer~~ ✓
+    - Legg til prisliste-lenke (venter på oppgave 4: Prisliste)
 
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
 
