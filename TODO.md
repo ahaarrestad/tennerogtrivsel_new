@@ -30,9 +30,6 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
-- [ ] **Flytt "Prisliste" til siste plass i navbar**
-  - "Prisliste"-lenken i menyen/navbar skal være siste element i rekkefølgen
-
 ## Fullført
 
 Se [TODO-archive.md](TODO-archive.md) for alle fullførte oppgaver.

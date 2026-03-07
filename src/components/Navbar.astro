@@ -11,8 +11,8 @@ const allNavLinks = [
     { name: settings.kontaktTittel || 'Kontakt', href: '/#kontakt', mobileHref: '/#kontakt' },
     { name: settings.galleriTittel || 'Klinikken vår', href: '/#galleri', mobileHref: '/galleri' },
     { name: settings.tjenesterTittel || 'Tjenester', href: '/#tjenester', mobileHref: '/tjenester' },
-    { name: 'Prisliste', href: '/prisliste', mobileHref: '/prisliste' },
     { name: settings.tannlegerTittel || 'Om oss', href: '/#tannleger', mobileHref: '/tannleger' },
+    { name: 'Prisliste', href: '/prisliste', mobileHref: '/prisliste' },
 ];
 
 const navLinks = showGalleri ? allNavLinks : allNavLinks.filter(link => link.href !== '/#galleri');

@@ -2,6 +2,9 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Flytt "Prisliste" til siste plass i navbar**
+    - Flyttet Prisliste-lenken fra posisjon 5 til sist i `allNavLinks` i `Navbar.astro`
+
 - [x] **Audit tester for dato-avhengige feil** ([plan](docs/plans/archive/2026-03-07-audit-dato-tester.md))
     - Lagt til `vi.useFakeTimers()` i 4 testfiler: textFormatter, messageClient, active-messages, admin-dashboard
     - Fjernet per-test setSystemTime/useRealTimers der global fake timer dekker
