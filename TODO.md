@@ -18,28 +18,34 @@
 ### Brukertesting-forbedringer ([design](docs/plans/2026-03-07-brukertesting-forbedringer-design.md))
 
 - [ ] **Fjern sticky card-stabling på mobil**
-    - Fjern `position: sticky` fra `.stack-card` på mobil i `global.css`
+    - Fjern `position: sticky`, `margin-bottom: 6vh`, mobil z-index fra `.stack-card` i `global.css`
+    - Behold `isStack`-prop og `--card-index` for desktop-effekter
     - Kort vises som vanlig scrollbar liste, desktop-grid uendret
 
 - [ ] **Redesign tannleger-seksjonen**
     - Forsiden: én klikkbar boks med fellesbilde (placeholder) → lenke til `/tannleger`
-    - /tannleger: små bilder i grid (3 per rad desktop, 2 mobil), navn + tittel
-    - Klikk på tannlege utvider beskrivelse (accordion)
+    - **Synlig på mobil** (fjern `hidden md:block`-wrapper)
+    - /tannleger: `rounded-xl`-bilder i grid (3 desktop, 2 mobil) med `imageConfig`-crop
+    - Native `<details>`/`<summary>` accordion for beskrivelse, `btn-secondary`-styling
+    - Oppdater design-guide: 5.3, 5.7 (ny accordion-spec), 6, 8.1
 
 - [ ] **Redesign tjenester-seksjonen**
-    - Vis 6 første tjenester basert på prioritet (nytt felt i Google Sheets)
-    - "Klikk her for å se mer av våre tjenester"-knapp viser resten
-    - Legg til `priority`-felt i sync-data og content collection
+    - `priority`-felt som **frontmatter i markdown** (ikke Sheets — tjenester er Drive-basert)
+    - Vis 6 første basert på priority, `btn-secondary` "Se mer"-knapp viser resten
+    - Oppdater `config.ts` schema + admin-modul for priority-felt
 
 - [ ] **Prisliste — ny side og admin-modul**
     - Nytt Google Sheets-ark: `Prisliste` (Kategori, Behandling, Pris)
-    - Ny side `/prisliste` med kategorisert tabell
-    - Ny admin-modul for CRUD av prisliste
-    - Lenke i navbar og footer
+    - `valueRenderOption: 'UNFORMATTED_VALUE'` for Pris-kolonnen
+    - Ny side `/prisliste` — kort-liste layout (ikke tabell), `variant="white"`
+    - Auto-save admin-modul, `escapeHtml()`/programmatisk `.value`-setting
+    - Navbar-lenke etter Tjenester: `…Tjenester → Prisliste → Tannleger`
+    - Footer-lenke i kolonne 2
+    - Ny arkitekturdok: `docs/architecture/prisliste.md`
 
 - [ ] **Footer-justeringer**
-    - ~~Fjern `sentralbordTekst` fra footer~~ ✓
-    - Legg til prisliste-lenke (venter på oppgave 4: Prisliste)
+    - Fjern `sentralbordTekst` fra footer
+    - Legg til prisliste-lenke i kolonne 2 (venter på oppgave 4: Prisliste)
 
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
 
