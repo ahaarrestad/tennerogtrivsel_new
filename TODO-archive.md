@@ -2,6 +2,10 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Forenkle UI på admin-siden — kompaktere action-knapper** ([plan](docs/plans/archive/2026-03-07-kompakte-action-knapper.md))
+    - Erstatt teksttunge «Legg til»-knapper med kompakte «+»-ikonknapper (btn-primary stil)
+    - Gjelder action-knappene oppe til høyre i modulvisningene (5 moduler)
+
 - [x] **Flytt "Skriv ut"-knapp fra prisliste-siden til admin-panelet** ([plan](docs/plans/archive/2026-03-07-flytt-skriv-ut-knapp.md))
     - Printer-ikon i prisliste-modulens action-bar i admin (ved siden av "Legg til prisrad")
     - Popup-vindu med auto-print og afterprint-lukking (ikke ny fane)
