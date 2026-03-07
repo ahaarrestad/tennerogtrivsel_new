@@ -171,6 +171,21 @@ describe('editTjeneste', () => {
         expect(initMarkdownEditor).toHaveBeenCalled();
     });
 
+    it('should render priority input in editor form', async () => {
+        getFileContent.mockResolvedValue('raw');
+        parseMarkdown.mockReturnValue({
+            data: { title: 'Test', ingress: 'Ing', id: 'test', active: true, priority: 5 },
+            body: 'Content'
+        });
+
+        await window.editTjeneste('id1', 'Test');
+
+        const priorityInput = document.getElementById('edit-priority');
+        expect(priorityInput).not.toBeNull();
+        expect(priorityInput.type).toBe('number');
+        expect(priorityInput.value).toBe('5');
+    });
+
     it('should render empty form for new tjeneste', async () => {
         await window.editTjeneste(null, null);
 
@@ -232,6 +247,28 @@ describe('editTjeneste', () => {
             const autoSaver = createAutoSaver.mock.results[0].value;
             document.getElementById('edit-ingress').value = 'New ingress';
             document.getElementById('edit-ingress').dispatchEvent(new Event('input'));
+
+            expect(autoSaver.trigger).toHaveBeenCalled();
+        });
+
+        it('should include priority in save payload', async () => {
+            await window.editTjeneste('id1', 'Old');
+
+            const saveFn = createAutoSaver.mock.calls[0][0];
+            await saveFn();
+
+            expect(stringifyMarkdown).toHaveBeenCalledWith(
+                expect.objectContaining({ priority: expect.any(Number) }),
+                expect.any(String)
+            );
+        });
+
+        it('should auto-save on priority input change', async () => {
+            await window.editTjeneste('id1', 'Old');
+
+            const autoSaver = createAutoSaver.mock.results[0].value;
+            document.getElementById('edit-priority').value = '2';
+            document.getElementById('edit-priority').dispatchEvent(new Event('input'));
 
             expect(autoSaver.trigger).toHaveBeenCalled();
         });
@@ -315,6 +352,13 @@ describe('editTjeneste', () => {
             const saveBtn = document.getElementById('btn-save-tjeneste');
             expect(saveBtn).not.toBeNull();
             expect(saveBtn.textContent).toContain('Opprett tjeneste');
+        });
+
+        it('should default priority to 99 for new tjeneste', async () => {
+            await window.editTjeneste(null, null);
+
+            const priorityInput = document.getElementById('edit-priority');
+            expect(priorityInput.value).toBe('99');
         });
 
         it('should create file on Opprett button click', async () => {

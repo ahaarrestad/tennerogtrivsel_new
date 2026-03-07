@@ -61,6 +61,7 @@ const tjenester = defineCollection({
         title: z.string(),
         ingress: z.string(),
         active: z.boolean().default(true),
+        priority: z.number().default(99),
     }),
 });
 

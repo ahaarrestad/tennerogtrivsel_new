@@ -70,6 +70,10 @@ async function editTjeneste(id, name) {
                         <label class="admin-label">Ingress (kort sammendrag)</label>
                         <textarea id="edit-ingress" rows="3" class="admin-input resize-none"></textarea>
                     </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="admin-label">Prioritet (lavere tall = vises først)</label>
+                        <input type="number" id="edit-priority" min="1" max="99" class="admin-input w-24">
+                    </div>
                     <div class="flex flex-col gap-2 editor-container">
                         <label class="admin-label">Beskrivelse (Innhold)</label>
                         <textarea id="edit-content" placeholder="Full beskrivelse her..."></textarea>
@@ -84,6 +88,7 @@ async function editTjeneste(id, name) {
         document.getElementById('edit-title').value = data.title || '';
         document.getElementById('edit-ingress').value = data.ingress || '';
         document.getElementById('edit-content').value = body || '';
+        document.getElementById('edit-priority').value = data.priority ?? 99;
 
         const easyMDE = initMarkdownEditor();
 
@@ -102,7 +107,8 @@ async function editTjeneste(id, name) {
                 id: entryId,
                 title: title,
                 ingress: document.getElementById('edit-ingress').value,
-                active: activeVal
+                active: activeVal,
+                priority: parseInt(document.getElementById('edit-priority').value, 10) || 99
             };
             const content = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
             return { newFileName, frontmatter, content };
@@ -134,6 +140,7 @@ async function editTjeneste(id, name) {
 
             document.getElementById('edit-title')?.addEventListener('input', () => autoSaver.trigger());
             document.getElementById('edit-ingress')?.addEventListener('input', () => autoSaver.trigger());
+            document.getElementById('edit-priority')?.addEventListener('input', () => autoSaver.trigger());
             if (easyMDE) easyMDE.codemirror.on('change', () => autoSaver.trigger());
             attachToggleClick('edit-active-toggle', () => autoSaver.trigger());
         } else {
