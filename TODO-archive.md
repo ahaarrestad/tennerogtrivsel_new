@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Audit tester for dato-avhengige feil** ([plan](docs/plans/archive/2026-03-07-audit-dato-tester.md))
+    - Lagt til `vi.useFakeTimers()` i 4 testfiler: textFormatter, messageClient, active-messages, admin-dashboard
+    - Fjernet per-test setSystemTime/useRealTimers der global fake timer dekker
+    - Lagt til konvensjon i CLAUDE.md
+
 - [x] **Footer-justeringer** ([design](docs/plans/archive/2026-03-07-brukertesting-forbedringer-design.md))
     - `sentralbordTekst` allerede fjernet fra footer (brukes kun i Kontakt.astro)
     - Prisliste-lenke allerede lagt til i copyright-linjen — beholdt der
