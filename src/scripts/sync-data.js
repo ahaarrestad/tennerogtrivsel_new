@@ -31,6 +31,7 @@ function getConfig() {
             galleriAssets: path.join(process.cwd(), 'src/assets/galleri'),
             galleriData: path.join(process.cwd(), 'src/content/galleri.json'),
             innstillingerData: path.join(process.cwd(), 'src/content/innstillinger.json'),
+            prislisteData: path.join(process.cwd(), 'src/content/prisliste.json'),
         },
         collections: [
             {
@@ -540,6 +541,47 @@ async function syncInnstillinger() {
     }
 }
 
+// Synkroniserer prisliste fra Google Sheets til lokal JSON
+async function syncPrisliste() {
+    const config = getConfig();
+    const sheets = getSheets();
+
+    console.log('Synkroniserer prisliste...');
+
+    try {
+        let res;
+        try {
+            res = await sheets.spreadsheets.values.get({
+                spreadsheetId: config.spreadsheetId,
+                range: 'Prisliste!A2:C',
+                valueRenderOption: 'UNFORMATTED_VALUE',
+            });
+        } catch (sheetErr) {
+            if (sheetErr.code === 400 || sheetErr.message?.includes('Unable to parse range')) {
+                console.log('  Fane "Prisliste" finnes ikke enda. Skriver tom fil.');
+                fs.writeFileSync(config.paths.prislisteData, JSON.stringify([]));
+                return;
+            }
+            throw sheetErr;
+        }
+
+        const rows = res.data.values || [];
+        const prislisteData = rows
+            .filter(row => row[0] && row[1])
+            .map(([kategori, behandling, pris]) => ({
+                kategori: String(kategori).trim(),
+                behandling: String(behandling).trim(),
+                pris: pris ?? '',
+            }));
+
+        fs.writeFileSync(config.paths.prislisteData, JSON.stringify(prislisteData, null, 2));
+        console.log(`  Synkroniserte ${prislisteData.length} prisrader.`);
+    } catch (err) {
+        console.error('Feil under synkronisering av prisliste:', err.message);
+        throw err;
+    }
+}
+
 // --- KJØRER ALT ---
 
 async function runSync() {
@@ -575,6 +617,9 @@ async function runSync() {
     try {
         // 1. Synkroniser innstillinger fra Sheets
         await syncInnstillinger();
+
+        // 1b. Synkroniser prisliste fra Sheets
+        await syncPrisliste();
 
         // 2. Synkroniser tannleger fra ark
         await syncTannleger();
@@ -617,4 +662,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 /* v8 ignore stop */
 
-export { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, syncInnstillinger, runSync, getConfig, getLocalHash, shouldDownload, downloadImageIfNeeded, HARD_DEFAULT_KEYS };
+export { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, syncPrisliste, syncInnstillinger, runSync, getConfig, getLocalHash, shouldDownload, downloadImageIfNeeded, HARD_DEFAULT_KEYS };

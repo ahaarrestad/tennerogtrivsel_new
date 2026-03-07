@@ -77,7 +77,7 @@ vi.mock('stream/promises', () => ({
 }));
 
 // Importer etter mocks
-const { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, runSync, cropToOG } = await import('../sync-data.js');
+const { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, syncPrisliste, runSync, cropToOG } = await import('../sync-data.js');
 
 describe('sync-data.js', () => {
     let logSpy;
@@ -1127,6 +1127,96 @@ describe('sync-data.js', () => {
             
             exitSpy.mockRestore();
             process.env.NODE_ENV = originalNodeEnv;
+        });
+    });
+
+    describe('syncPrisliste', () => {
+        beforeEach(() => {
+            vi.clearAllMocks();
+            fs.existsSync.mockReturnValue(true);
+            fs.readdirSync.mockReturnValue([]);
+        });
+
+        it('should sync prisliste from Sheets to JSON', async () => {
+            mockSheets.spreadsheets.values.get.mockResolvedValue({
+                data: {
+                    values: [
+                        ['Undersokelser', 'Vanlig undersokelse', 850],
+                        ['Undersokelser', 'Rontgen', 350],
+                        ['Bleking', 'Hjemmebleking', 2500],
+                    ]
+                }
+            });
+
+            await syncPrisliste();
+
+            expect(mockSheets.spreadsheets.values.get).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    range: 'Prisliste!A2:C',
+                    valueRenderOption: 'UNFORMATTED_VALUE',
+                })
+            );
+
+            const writeCall = fs.writeFileSync.mock.calls.find(
+                c => c[0].includes('prisliste.json')
+            );
+            expect(writeCall).toBeTruthy();
+            const written = JSON.parse(writeCall[1]);
+            expect(written).toHaveLength(3);
+            expect(written[0]).toEqual({
+                kategori: 'Undersokelser',
+                behandling: 'Vanlig undersokelse',
+                pris: 850,
+            });
+        });
+
+        it('should handle empty Prisliste sheet', async () => {
+            mockSheets.spreadsheets.values.get.mockResolvedValue({
+                data: { values: [] }
+            });
+
+            await syncPrisliste();
+
+            const writeCall = fs.writeFileSync.mock.calls.find(
+                c => c[0].includes('prisliste.json')
+            );
+            expect(writeCall).toBeTruthy();
+            const written = JSON.parse(writeCall[1]);
+            expect(written).toEqual([]);
+        });
+
+        it('should handle missing Prisliste sheet gracefully', async () => {
+            mockSheets.spreadsheets.values.get.mockRejectedValue({
+                code: 400,
+                message: 'Unable to parse range: Prisliste!A2:C'
+            });
+
+            await syncPrisliste();
+
+            const writeCall = fs.writeFileSync.mock.calls.find(
+                c => c[0].includes('prisliste.json')
+            );
+            expect(writeCall).toBeTruthy();
+            const written = JSON.parse(writeCall[1]);
+            expect(written).toEqual([]);
+        });
+
+        it('should preserve string prices like "Fra 500,-"', async () => {
+            mockSheets.spreadsheets.values.get.mockResolvedValue({
+                data: {
+                    values: [
+                        ['Bleking', 'Hjemmebleking', 'Fra 2500,-'],
+                    ]
+                }
+            });
+
+            await syncPrisliste();
+
+            const writeCall = fs.writeFileSync.mock.calls.find(
+                c => c[0].includes('prisliste.json')
+            );
+            const written = JSON.parse(writeCall[1]);
+            expect(written[0].pris).toBe('Fra 2500,-');
         });
     });
 });
