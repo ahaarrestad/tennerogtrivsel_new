@@ -170,7 +170,10 @@ export function updateUIWithUser(user) {
     
     if (pill && info) {
         pill.style.display = 'flex';
-        info.textContent = user.name || user.email;
+        const fullName = user.name || user.email;
+        const firstName = fullName.split(' ')[0];
+        info.textContent = firstName;
+        pill.title = `Logg ut ${fullName}`;
     }
 }
 

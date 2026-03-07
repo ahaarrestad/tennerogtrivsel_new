@@ -166,10 +166,17 @@ describe('admin-dashboard.js', () => {
 
     describe('updateUIWithUser', () => {
         it('should show dashboard and hide login when user is provided', () => {
-            updateUIWithUser({ name: 'Ola', email: 'ola@test.no' });
+            updateUIWithUser({ name: 'Ola Nordmann', email: 'ola@test.no' });
             expect(document.getElementById('login-container').classList.contains('hidden')).toBe(true);
             expect(document.getElementById('dashboard').classList.contains('hidden')).toBe(false);
             expect(document.getElementById('nav-user-info').textContent).toBe('Ola');
+            expect(document.getElementById('user-pill').title).toBe('Logg ut Ola Nordmann');
+        });
+
+        it('should use email as fallback and show first part as name', () => {
+            updateUIWithUser({ name: '', email: 'ola@test.no' });
+            expect(document.getElementById('nav-user-info').textContent).toBe('ola@test.no');
+            expect(document.getElementById('user-pill').title).toBe('Logg ut ola@test.no');
         });
     });
 
