@@ -1,8 +1,18 @@
 # Design: Forbedringer etter brukertesting
 
 **Dato:** 2026-03-07
-**Status:** Godkjent
-**Sist oppdatert:** 2026-03-07 (arkitektur- og designgjennomgang)
+**Status:** Delvis implementert
+**Sist oppdatert:** 2026-03-07
+
+### Fremdrift
+
+| Seksjon | Status |
+|---------|--------|
+| 1. Fjern sticky card-stabling | Fullført |
+| 2. Redesign tannleger-seksjonen | Fullført |
+| 3. Redesign tjenester-seksjonen | Ikke startet |
+| 4. Prisliste — ny side og admin-modul | Ikke startet |
+| 5. Footer-justeringer | Ikke startet |
 
 ## Bakgrunn
 
