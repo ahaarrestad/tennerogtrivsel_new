@@ -15,6 +15,7 @@
 
 (Ingen oppgaver pågår)
 
+
 ## Backlog
 
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
@@ -24,11 +25,6 @@
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
-
-- [ ] **Print-knapp: legg til admin-sjekk**
-    - `?print=1` URL-parameter trigger `window.print()` for alle besøkende
-    - Bør kun trigge for innloggede admins
-    - Kilde: Gemini Code Assist, PR #144/#145
 
 - [ ] **Ustabil sortering i prisliste**
     - Elementer med samme `order`-verdi kan endre rekkefølge mellom builds

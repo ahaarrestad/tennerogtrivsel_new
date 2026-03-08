@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Print-knapp: legg til admin-sjekk**
+    - `?print=1` URL-parameter trigget `window.print()` for alle besøkende
+    - Løst: Sjekker `admin_google_token` i localStorage/sessionStorage før `window.print()` trigges
+    - Kilde: Gemini Code Assist, PR #144/#145
+
 - [x] **formatPris: håndter trim() og string-input**
     - Lagt til `.trim()` på string-input for å håndtere whitespace
     - Lagt til sjekk for numeriske strenger (f.eks. `'1234'`) fra Google Sheets — konverteres til tall med `kr`-prefiks
