@@ -2,6 +2,13 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Landscape print av prisliste med to kolonner** ([plan](docs/plans/archive/2026-03-08-landscape-print-prisliste.md))
+    - Landscape-orientering med eksplisitt to-kolonners CSS grid (CSS columns var upålitelig i print)
+    - Ny `findColumnSplitIndex()` utility for optimal fordeling av kategorier (100% coverage)
+    - Kompakt header på én linje, tilpassede fontstørrelser for å få alt på én side
+    - Admin popup-bredde økt til 1100px for landscape
+    - Lik fontstørrelse på behandling og pris (web + admin)
+
 - [x] **Pen formatering av ulike pristyper i prislisten** ([plan](docs/plans/archive/2026-03-08-formatering-pristyper.md))
     - Flyttet `formatPris()` fra inline i prisliste.astro til `src/utils/format-pris.js`
     - Støtter 5 prisformater: heltall, prisområde (X–Y), pr time, +tekn., m/tannteknikk
