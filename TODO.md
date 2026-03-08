@@ -26,7 +26,7 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
-- [ ] **Gjennomgang av admin-seksjonsnavn**
+- [ ] **Gjennomgang av admin-seksjonsnavn** ([plan](docs/plans/2026-03-08-admin-seksjonsnavn.md))
     - Gå gjennom navnene på framsiden av admin-panelet og sjekk at de er forståelige
     - Navnene bør ha et hint av tannlegehumor
 
