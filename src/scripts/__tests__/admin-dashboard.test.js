@@ -38,7 +38,8 @@ vi.mock('../admin-client.js', () => ({
     updateGalleriRow: vi.fn(),
     findFileByName: vi.fn(),
     getDriveImageBlob: vi.fn(),
-    getPrislisteRaw: vi.fn()
+    getPrislisteRaw: vi.fn(),
+    updatePrislisteRow: vi.fn()
 }));
 
 // Mock admin-api-retry
@@ -71,7 +72,7 @@ const {
     enforceAccessControl, updateUIWithUser, autoResizeTextarea,
     saveSingleSetting, loadMeldingerModule, loadTjenesterModule,
     loadTannlegerModule, loadGalleriListeModule, reorderGalleriItem,
-    reorderSettingItem, mergeSettingsWithDefaults, formatTimestamp,
+    reorderSettingItem, reorderPrislisteItem, mergeSettingsWithDefaults, formatTimestamp,
     updateLastFetchedTime, updateBreadcrumbCount, renderSkeletonCards,
     handleModuleError, loadDashboardCounts
 } = adminDashboard;
@@ -2185,6 +2186,84 @@ describe('admin-dashboard.js', () => {
             adminClient.getPrislisteRaw.mockResolvedValue([]);
 
             await expect(loadDashboardCounts(mockConfig)).resolves.not.toThrow();
+        });
+    });
+
+    describe('reorderPrislisteItem', () => {
+        it('should swap order values between current and neighbor (down)', async () => {
+            const items = [
+                { rowIndex: 2, kategori: 'Bleking', behandling: 'A', pris: 100, order: 1 },
+                { rowIndex: 3, kategori: 'Bleking', behandling: 'B', pris: 200, order: 2 }
+            ];
+            adminClient.updatePrislisteRow.mockResolvedValue(true);
+
+            const result = await reorderPrislisteItem('sheet-id', items, 2, 1);
+
+            expect(result).toBe(true);
+            expect(items[0].order).toBe(2);
+            expect(items[1].order).toBe(1);
+            expect(adminClient.updatePrislisteRow).toHaveBeenCalledTimes(2);
+        });
+
+        it('should swap order values between current and neighbor (up)', async () => {
+            const items = [
+                { rowIndex: 2, kategori: 'Bleking', behandling: 'A', pris: 100, order: 1 },
+                { rowIndex: 3, kategori: 'Bleking', behandling: 'B', pris: 200, order: 2 }
+            ];
+            adminClient.updatePrislisteRow.mockResolvedValue(true);
+
+            const result = await reorderPrislisteItem('sheet-id', items, 3, -1);
+
+            expect(result).toBe(true);
+            expect(items[0].order).toBe(2);
+            expect(items[1].order).toBe(1);
+        });
+
+        it('should return false if neighbor is out of bounds (move first up)', async () => {
+            const items = [
+                { rowIndex: 2, kategori: 'Bleking', behandling: 'A', pris: 100, order: 1 }
+            ];
+
+            const result = await reorderPrislisteItem('sheet-id', items, 2, -1);
+
+            expect(result).toBe(false);
+            expect(adminClient.updatePrislisteRow).not.toHaveBeenCalled();
+        });
+
+        it('should return false if neighbor is out of bounds (move last down)', async () => {
+            const items = [
+                { rowIndex: 2, kategori: 'Bleking', behandling: 'A', pris: 100, order: 1 }
+            ];
+
+            const result = await reorderPrislisteItem('sheet-id', items, 2, 1);
+
+            expect(result).toBe(false);
+            expect(adminClient.updatePrislisteRow).not.toHaveBeenCalled();
+        });
+
+        it('should force different order values when both have same order', async () => {
+            const items = [
+                { rowIndex: 2, kategori: 'Bleking', behandling: 'A', pris: 100, order: 5 },
+                { rowIndex: 3, kategori: 'Bleking', behandling: 'B', pris: 200, order: 5 }
+            ];
+            adminClient.updatePrislisteRow.mockResolvedValue(true);
+
+            await reorderPrislisteItem('sheet-id', items, 2, 1);
+
+            expect(items[0].order).not.toBe(items[1].order);
+        });
+
+        it('should call updatePrislisteRow with correct rowIndex and data', async () => {
+            const items = [
+                { rowIndex: 4, kategori: 'A', behandling: 'X', pris: 100, order: 10 },
+                { rowIndex: 7, kategori: 'B', behandling: 'Y', pris: 200, order: 20 }
+            ];
+            adminClient.updatePrislisteRow.mockResolvedValue(true);
+
+            await reorderPrislisteItem('sheet-id', items, 4, 1);
+
+            expect(adminClient.updatePrislisteRow).toHaveBeenCalledWith('sheet-id', 4, expect.objectContaining({ order: 20 }));
+            expect(adminClient.updatePrislisteRow).toHaveBeenCalledWith('sheet-id', 7, expect.objectContaining({ order: 10 }));
         });
     });
 });

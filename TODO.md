@@ -13,7 +13,10 @@
 
 ## Pågående
 
-(Ingen oppgaver pågår)
+- [ ] **Sortering av elementer i prisliste-kategorier (admin)** ([plan](docs/plans/2026-03-08-prisliste-sortering.md))
+    - Opp/ned-knapper for å sortere elementer internt i en kategori, samme mønster som resten av admin-sidene
+    - Nye elementer legges til sist i kategorien
+    - Ved kategori-endring flyttes elementet til sist i den nye kategorien
 
 ## Backlog
 
@@ -28,11 +31,6 @@
 - [ ] **Grundig sikkerhetssjekk av prosjektet** ([plan](docs/plans/2026-03-07-sikkerhetssjekk.md))
     - Gjennomgå hele prosjektet for sikkerhetssårbarheter
     - Dekk OWASP Top 10, XSS, injection, CSP, autentisering, eksponerte hemmeligheter, og usikker datahåndtering
-
-- [ ] **Sortering av elementer i prisliste-kategorier (admin)** ([plan](docs/plans/2026-03-08-prisliste-sortering.md))
-    - Opp/ned-knapper for å sortere elementer internt i en kategori, samme mønster som resten av admin-sidene
-    - Nye elementer legges til sist i kategorien
-    - Ved kategori-endring flyttes elementet til sist i den nye kategorien
 
 - [ ] **Sortering av prisliste-kategorier (admin)** ([plan](docs/plans/2026-03-08-prisliste-kategori-sortering.md))
     - Opp/ned-knapper for å endre rekkefølgen på selve kategoriene i prislisten
