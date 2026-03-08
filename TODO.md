@@ -13,10 +13,7 @@
 
 ## Pågående
 
-- [ ] **Landscape print av prisliste med to kolonner** ([plan](docs/plans/2026-03-08-landscape-print-prisliste.md))
-    - Landscape-orientering med `column-count: 2`
-    - Jevn fordeling av kategorier over kolonnene (beregnet ved build-tid)
-    - `break-inside: avoid` — ingen kategori deles over kolonner
+(Ingen oppgaver pågår)
 
 ## Backlog
 
