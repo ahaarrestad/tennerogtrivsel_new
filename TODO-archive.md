@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Forbedre sortering i prisliste-admin** ([plan](docs/plans/archive/2026-03-08-prisliste-sortering-ui.md))
+    - Flyttet item-reorder-knapper fra venstre til høyre side (ved edit/delete), konsistent med tjenester og galleri
+    - Kategori-sortering forblir i headeren til venstre
+    - Eksporterte ICON_EDIT/ICON_DELETE fra admin-dashboard.js, inlinet knapper i stedet for renderActionButtons
+
 - [x] **Landscape print av prisliste med to kolonner** ([plan](docs/plans/archive/2026-03-08-landscape-print-prisliste.md))
     - Landscape-orientering med eksplisitt to-kolonners CSS grid (CSS columns var upålitelig i print)
     - Ny `findColumnSplitIndex()` utility for optimal fordeling av kategorier (100% coverage)

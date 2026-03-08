@@ -7,7 +7,7 @@ import {
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { getAdminConfig, escapeHtml, createAutoSaver, verifySave } from './admin-editor-helpers.js';
-import { formatTimestamp, ICON_ADD, ICON_UP, ICON_DOWN, renderActionButtons, reorderPrislisteItem, reorderPrislisteKategori } from './admin-dashboard.js';
+import { formatTimestamp, ICON_ADD, ICON_UP, ICON_DOWN, ICON_EDIT, ICON_DELETE, reorderPrislisteItem, reorderPrislisteKategori } from './admin-dashboard.js';
 
 function formatSistOppdatert(isoString) {
     if (!isoString) return '';
@@ -341,16 +341,19 @@ async function loadPrislisteList(sheetId) {
                     const borderClass = i < rows.length - 1 ? ' border-b border-brand-border/60' : '';
                     html += `
                         <div class="group flex items-center gap-4 py-3 cursor-pointer hover:bg-brand-light/30 transition-colors -mx-2 px-2 rounded${borderClass}" onclick="this.querySelector('.edit-pris-btn').click()">
-                            <div class="flex flex-col gap-1" onclick="event.stopPropagation()">
-                                <button data-row="${item.rowIndex}" data-dir="-1" class="reorder-pris-btn admin-icon-btn-reorder ${isFirst ? 'invisible' : ''}" title="Flytt opp">${ICON_UP}</button>
-                                <button data-row="${item.rowIndex}" data-dir="1" class="reorder-pris-btn admin-icon-btn-reorder ${isLast ? 'invisible' : ''}" title="Flytt ned">${ICON_DOWN}</button>
-                            </div>
                             <div class="flex-grow min-w-0">
                                 <span class="text-sm text-brand">${escapeHtml(item.behandling)}</span>
                                 ${oppdatertTekst ? `<span class="block text-xs text-admin-muted-light">Oppdatert: ${escapeHtml(oppdatertTekst)}</span>` : ''}
                             </div>
                             <span class="text-sm whitespace-nowrap">${prisDisplay}</span>
-                            ${renderActionButtons('edit-pris-btn', 'delete-pris-btn', `data-row="${item.rowIndex}" data-name="${escapeHtml(item.behandling)}"`)}
+                            <div class="flex items-center gap-2 shrink-0" onclick="event.stopPropagation()">
+                                <div class="flex flex-col gap-1">
+                                    <button data-row="${item.rowIndex}" data-dir="-1" class="reorder-pris-btn admin-icon-btn-reorder ${isFirst ? 'invisible' : ''}" title="Flytt opp">${ICON_UP}</button>
+                                    <button data-row="${item.rowIndex}" data-dir="1" class="reorder-pris-btn admin-icon-btn-reorder ${isLast ? 'invisible' : ''}" title="Flytt ned">${ICON_DOWN}</button>
+                                </div>
+                                <button data-row="${item.rowIndex}" data-name="${escapeHtml(item.behandling)}" class="edit-pris-btn admin-icon-btn group/btn" title="Rediger">${ICON_EDIT}</button>
+                                <button data-row="${item.rowIndex}" data-name="${escapeHtml(item.behandling)}" class="delete-pris-btn admin-icon-btn-danger group/btn" title="Slett">${ICON_DELETE}</button>
+                            </div>
                         </div>`;
                 }
                 html += '</div></div>';

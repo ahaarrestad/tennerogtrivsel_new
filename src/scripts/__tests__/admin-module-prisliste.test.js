@@ -25,11 +25,8 @@ vi.mock('../admin-dashboard.js', () => ({
     ICON_ADD: '+',
     ICON_UP: '^',
     ICON_DOWN: 'v',
-    renderActionButtons: vi.fn((editClass, deleteClass, dataAttrs) =>
-        `<div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
-            <button ${dataAttrs} class="${editClass} admin-icon-btn group/btn" title="Rediger">E</button>
-            <button ${dataAttrs} class="${deleteClass} admin-icon-btn-danger group/btn" title="Slett">D</button>
-        </div>`),
+    ICON_EDIT: 'E',
+    ICON_DELETE: 'D',
     reorderPrislisteItem: vi.fn().mockResolvedValue(undefined),
     reorderPrislisteKategori: vi.fn().mockResolvedValue(undefined),
 }));
