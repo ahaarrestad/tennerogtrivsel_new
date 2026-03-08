@@ -618,7 +618,7 @@ export async function addPrislisteRow(spreadsheetId, data) {
 
         await gapi.client.sheets.spreadsheets.values.append({
             spreadsheetId,
-            range: 'Prisliste!A:C',
+            range: 'Prisliste!A:E',
             valueInputOption: 'RAW',
             resource: { values }
         });
