@@ -2,6 +2,15 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Sortering av prisliste-kategorier (admin)** ([plan](docs/plans/archive/2026-03-08-prisliste-kategori-sortering.md))
+    - Opp/ned-knapper per kategori-header i admin-prisliste for å endre kategori-rekkefølge
+    - Nytt Sheets-ark `KategoriRekkefølge` (kategori + order)
+    - `reorderPrislisteKategori()` i admin-dashboard.js — swapper order mellom naboer
+    - Nye kategorier auto-legges til i KategoriRekkefølge ved lasting
+    - `sync-data.js` synker kategoriOrder til prisliste.json
+    - `prisliste.astro` sorterer kategorier etter rekkefølge (fallback: alfabetisk)
+    - 7 nye tester, 88.95% branch coverage på admin-dashboard.js
+
 - [x] **Sortering av elementer i prisliste-kategorier (admin)** ([plan](docs/plans/archive/2026-03-08-prisliste-sortering.md))
     - Ny kolonne E (`Rekkefølge`) i Prisliste-arket — numerisk `order`-felt
     - `getPrislisteRaw` leser A:E og returnerer `order` (parseInt, fallback 0)
