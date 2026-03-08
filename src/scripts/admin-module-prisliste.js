@@ -5,7 +5,7 @@ import {
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { getAdminConfig, escapeHtml, createAutoSaver, verifySave } from './admin-editor-helpers.js';
-import { formatTimestamp, ICON_ADD, renderActionButtons } from './admin-dashboard.js';
+import { formatTimestamp, ICON_ADD, ICON_UP, ICON_DOWN, renderActionButtons, reorderPrislisteItem } from './admin-dashboard.js';
 
 function formatSistOppdatert(isoString) {
     if (!isoString) return '';
@@ -109,12 +109,15 @@ async function editPrisRad(rowIndex, data = null) {
     const isNew = !rowIndex;
     const p = data || { kategori: '', behandling: '', pris: '' };
 
-    // Fetch existing categories for dropdown
+    // Fetch existing categories for dropdown and order computation
     let existingCategories = [];
+    let allRows = [];
     try {
-        const allRows = await getPrislisteRaw(SHEET_ID);
+        allRows = await getPrislisteRaw(SHEET_ID);
         existingCategories = [...new Set(allRows.map(r => r.kategori).filter(Boolean))];
     } catch (e) { console.error('[Admin] Kunne ikke hente priskategorier:', e); }
+
+    const originalKategori = p.kategori || '';
 
     inner.innerHTML = DOMPurify.sanitize(`
         <div class="max-w-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -175,6 +178,11 @@ async function editPrisRad(rowIndex, data = null) {
             createBtn.textContent = 'Opprett';
             createBtn.addEventListener('click', async () => {
                 const updateData = getFormData();
+                const kategori = updateData.kategori;
+                const maxOrder = allRows
+                    .filter(r => r.kategori === kategori)
+                    .reduce((max, r) => Math.max(max, r.order ?? 0), 0);
+                updateData.order = maxOrder + 1;
                 try {
                     await addPrislisteRow(SHEET_ID, updateData);
                     showToast('Prisrad opprettet.', 'success');
@@ -196,6 +204,14 @@ async function editPrisRad(rowIndex, data = null) {
         // Existing row: autosave on input + back button
         const savePris = async () => {
             const updateData = getFormData();
+            if (updateData.kategori !== originalKategori) {
+                const maxOrder = allRows
+                    .filter(r => r.kategori === updateData.kategori)
+                    .reduce((max, r) => Math.max(max, r.order ?? 0), 0);
+                updateData.order = maxOrder + 1;
+            } else {
+                updateData.order = p.order;
+            }
             await updatePrislisteRow(SHEET_ID, rowIndex, updateData);
             await verifySave({
                 fetchFn: () => getPrislisteRaw(SHEET_ID),
@@ -260,6 +276,13 @@ async function loadPrislisteList(sheetId) {
                 if (!grouped.has(item.kategori)) grouped.set(item.kategori, []);
                 grouped.get(item.kategori).push(item);
             }
+            // Sort each category's rows by order ascending, using original index as tiebreaker
+            for (const [, rows] of grouped) {
+                rows.sort((a, b) => {
+                    const orderDiff = (a.order ?? 0) - (b.order ?? 0);
+                    return orderDiff !== 0 ? orderDiff : items.indexOf(a) - items.indexOf(b);
+                });
+            }
 
             let html = `<p class="text-xs text-admin-muted-light mb-3">Sist hentet: <span id="prisliste-last-fetched">${formatTimestamp(new Date())}</span></p>`;
             html += '<div class="space-y-6 max-w-4xl">';
@@ -273,11 +296,17 @@ async function loadPrislisteList(sheetId) {
                     <div class="px-6 py-2">`;
                 for (let i = 0; i < rows.length; i++) {
                     const item = rows[i];
+                    const isFirst = i === 0;
+                    const isLast = i === rows.length - 1;
                     const prisDisplay = typeof item.pris === 'number' ? `kr ${item.pris.toLocaleString('nb-NO')}` : escapeHtml(String(item.pris));
                     const oppdatertTekst = formatSistOppdatert(item.sistOppdatert);
                     const borderClass = i < rows.length - 1 ? ' border-b border-brand-border/60' : '';
                     html += `
                         <div class="group flex items-center gap-4 py-3 cursor-pointer hover:bg-brand-light/30 transition-colors -mx-2 px-2 rounded${borderClass}" onclick="this.querySelector('.edit-pris-btn').click()">
+                            <div class="flex flex-col gap-1" onclick="event.stopPropagation()">
+                                <button data-row="${item.rowIndex}" data-dir="-1" class="reorder-pris-btn admin-icon-btn-reorder ${isFirst ? 'invisible' : ''}" title="Flytt opp">${ICON_UP}</button>
+                                <button data-row="${item.rowIndex}" data-dir="1" class="reorder-pris-btn admin-icon-btn-reorder ${isLast ? 'invisible' : ''}" title="Flytt ned">${ICON_DOWN}</button>
+                            </div>
                             <div class="flex-grow min-w-0">
                                 <span class="text-base text-brand">${escapeHtml(item.behandling)}</span>
                                 ${oppdatertTekst ? `<span class="block text-xs text-admin-muted-light">Oppdatert: ${escapeHtml(oppdatertTekst)}</span>` : ''}
@@ -309,6 +338,19 @@ async function loadPrislisteList(sheetId) {
                 btn.onclick = (e) => {
                     e.stopPropagation();
                     deletePrisRad(parseInt(btn.dataset.row), btn.dataset.name);
+                };
+            });
+            inner.querySelectorAll('.reorder-pris-btn').forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    const rowIndex = parseInt(btn.dataset.row);
+                    const direction = parseInt(btn.dataset.dir);
+                    // Find the category rows for this item
+                    const item = items.find(i => i.rowIndex === rowIndex);
+                    if (!item) return;
+                    const categoryRows = grouped.get(item.kategori) || [];
+                    await reorderPrislisteItem(sheetId, categoryRows, rowIndex, direction);
+                    reloadPrisliste();
                 };
             });
         }
