@@ -13,9 +13,7 @@
 
 ## Pågående
 
-- [ ] **Sortering av prisliste-kategorier (admin)** ([plan](docs/plans/2026-03-08-prisliste-kategori-sortering.md))
-    - Opp/ned-knapper for å endre rekkefølgen på selve kategoriene i prislisten
-    - Eget Sheets-ark `KategoriRekkefølge` for lagring
+(Ingen oppgaver pågår)
 
 ## Backlog
 
