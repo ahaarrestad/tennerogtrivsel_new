@@ -86,7 +86,7 @@ export function loadThumbnails(container, items, parentFolderId) {
                     thumbContainer.innerHTML = `<img src="${blobUrl}" class="w-full h-full object-cover" alt="" style="object-position:${pX}% ${pY}%;transform:scale(${sc});transform-origin:${pX}% ${pY}%">`;
                 }
             }
-        } catch (_) { /* thumbnail er best-effort */ }
+        } catch (e) { console.error('[Dashboard] Kunne ikke laste thumbnail:', e); }
     });
 }
 
