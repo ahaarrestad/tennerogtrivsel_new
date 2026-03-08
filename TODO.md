@@ -25,6 +25,35 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
+- [ ] **Fiks package-lock.json pakkenavn**
+    - Pakkenavnet ble utilsiktet endret fra `tennerogtrivsel2` til `prisliste-kategori-sortering` i PR #149
+    - Rett tilbake til korrekt navn
+
+- [ ] **formatPris: håndter trim() og string-input**
+    - `formatPris` mangler `.trim()` på input-strenger
+    - Håndterer ikke numeriske strenger (f.eks. `'1234'`) fra Google Sheets
+    - Kilde: Gemini Code Assist, PR #150
+
+- [ ] **Print-knapp: legg til admin-sjekk**
+    - `?print=1` URL-parameter trigger `window.print()` for alle besøkende
+    - Bør kun trigge for innloggede admins
+    - Kilde: Gemini Code Assist, PR #144/#145
+
+- [ ] **Ustabil sortering i prisliste**
+    - Elementer med samme `order`-verdi kan endre rekkefølge mellom builds
+    - Legg til tie-breaker (f.eks. original array-indeks)
+    - Kilde: Gemini Code Assist, PR #148
+
+- [ ] **Tomme catch-blokker i prisliste/admin**
+    - Stille `catch`-blokker i kategorilasting skjuler feil
+    - Legg til minimum `console.error` for feillogging
+    - Kilde: Gemini Code Assist, PR #144/#149
+
+- [ ] **loadAllServices mangler withRetry**
+    - `loadAllServices` i `admin-module-tjenester.js` dupliserer logikk uten retry-mekanisme
+    - Bør bruke `withRetry` som resten av admin-modulene
+    - Kilde: Gemini Code Assist, PR #135
+
 
 ## Fullført
 
