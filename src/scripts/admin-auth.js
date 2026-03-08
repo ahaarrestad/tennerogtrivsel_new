@@ -170,11 +170,16 @@ export function silentLogin() {
     _silentLoginPending = true;
     console.log("[Admin] Forsøker silent login...");
 
-    const resetPending = () => { _silentLoginPending = false; };
+    const fallbackTimeout = setTimeout(() => {
+        _silentLoginPending = false;
+    }, 15000);
+
+    const resetPending = () => {
+        clearTimeout(fallbackTimeout);
+        _silentLoginPending = false;
+    };
     window.addEventListener('admin-auth-refreshed', resetPending, { once: true });
     window.addEventListener('admin-auth-failed', resetPending, { once: true });
-    // Fallback-timeout i tilfelle ingen event utløses
-    setTimeout(resetPending, 15000);
 
     tokenClient.requestAccessToken({ prompt: 'none' });
 }
