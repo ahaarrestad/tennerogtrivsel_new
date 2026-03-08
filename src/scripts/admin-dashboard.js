@@ -121,7 +121,8 @@ export async function enforceAccessControl(config) {
         { id: 'tjenester', resource: config.TJENESTER_FOLDER, card: 'card-tjenester' },
         { id: 'meldinger', resource: config.MELDINGER_FOLDER, card: 'card-meldinger' },
         { id: 'tannleger', resources: [config.TANNLEGER_FOLDER, config.SHEET_ID], card: 'card-tannleger' },
-        { id: 'bilder', resources: [config.SHEET_ID, config.BILDER_FOLDER].filter(Boolean), card: 'card-bilder' }
+        { id: 'bilder', resources: [config.SHEET_ID, config.BILDER_FOLDER].filter(Boolean), card: 'card-bilder' },
+        { id: 'prisliste', resource: config.SHEET_ID, card: 'card-prisliste' },
     ];
 
     let hasAnyAccess = false;

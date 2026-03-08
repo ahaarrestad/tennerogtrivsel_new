@@ -1792,6 +1792,7 @@ describe('admin-dashboard.js', () => {
             expect(document.getElementById('card-tjenester').style.display).toBe('none');
             expect(document.getElementById('card-tannleger').style.display).toBe('none');
             expect(document.getElementById('card-bilder').style.display).toBe('none');
+            expect(document.getElementById('card-prisliste').style.display).toBe('none');
             expect(adminClient.logout).not.toHaveBeenCalled();
             expect(result['m']).toBe(true);
         });
@@ -1807,6 +1808,7 @@ describe('admin-dashboard.js', () => {
             expect(document.getElementById('card-meldinger').style.display).toBe('none');
             expect(document.getElementById('card-tannleger').style.display).toBe('none');
             expect(document.getElementById('card-bilder').style.display).toBe('none');
+            expect(document.getElementById('card-prisliste').style.display).toBe('none');
             expect(adminClient.logout).not.toHaveBeenCalled();
             expect(result['tj']).toBe(true);
         });
@@ -1822,6 +1824,7 @@ describe('admin-dashboard.js', () => {
             expect(document.getElementById('card-bilder').style.display).toBe('flex');
             expect(document.getElementById('card-tjenester').style.display).toBe('none');
             expect(document.getElementById('card-meldinger').style.display).toBe('none');
+            expect(document.getElementById('card-prisliste').style.display).toBe('flex');
             expect(adminClient.logout).not.toHaveBeenCalled();
             expect(result['s']).toBe(true);
             expect(result['ta']).toBe(true);
@@ -1838,6 +1841,7 @@ describe('admin-dashboard.js', () => {
             expect(document.getElementById('card-tjenester').style.display).toBe('none');
             expect(document.getElementById('card-meldinger').style.display).toBe('none');
             expect(document.getElementById('card-tannleger').style.display).toBe('none');
+            expect(document.getElementById('card-prisliste').style.display).toBe('flex');
             expect(adminClient.logout).not.toHaveBeenCalled();
         });
 
@@ -1853,6 +1857,7 @@ describe('admin-dashboard.js', () => {
             expect(document.getElementById('card-tannleger').style.display).toBe('none');
             expect(document.getElementById('card-settings').style.display).toBe('none');
             expect(document.getElementById('card-bilder').style.display).toBe('none');
+            expect(document.getElementById('card-prisliste').style.display).toBe('none');
             expect(adminClient.logout).not.toHaveBeenCalled();
         });
 
@@ -1882,7 +1887,7 @@ describe('admin-dashboard.js', () => {
 
         it('should not crash when card elements are missing from DOM', async () => {
             // Remove all cards from DOM
-            ['card-settings', 'card-tjenester', 'card-meldinger', 'card-tannleger', 'card-bilder'].forEach(id => {
+            ['card-settings', 'card-tjenester', 'card-meldinger', 'card-tannleger', 'card-bilder', 'card-prisliste'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.remove();
             });
@@ -1892,6 +1897,30 @@ describe('admin-dashboard.js', () => {
 
             // Should not throw
             await expect(enforceAccessControl(config)).resolves.toBeDefined();
+        });
+
+        it('should show prisliste card when user has sheet access', async () => {
+            adminClient.checkMultipleAccess.mockResolvedValue({ 's': true });
+
+            await enforceAccessControl({ SHEET_ID: 's' });
+
+            expect(document.getElementById('card-prisliste').style.display).toBe('flex');
+        });
+
+        it('should hide prisliste card when user lacks sheet access', async () => {
+            adminClient.checkMultipleAccess.mockResolvedValue({ 's': false });
+
+            await enforceAccessControl({ SHEET_ID: 's' });
+
+            expect(document.getElementById('card-prisliste').style.display).toBe('none');
+        });
+
+        it('should hide prisliste card when no SHEET_ID configured', async () => {
+            adminClient.checkMultipleAccess.mockResolvedValue({ 'tj': true });
+
+            await enforceAccessControl({ TJENESTER_FOLDER: 'tj' });
+
+            expect(document.getElementById('card-prisliste').style.display).toBe('none');
         });
     });
 
