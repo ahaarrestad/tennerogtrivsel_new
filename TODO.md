@@ -41,6 +41,10 @@
     - Bør bruke `withRetry` som resten av admin-modulene
     - Kilde: Gemini Code Assist, PR #135
 
+- [ ] **Gjennomgang av admin-seksjonsnavn**
+    - Gå gjennom navnene på framsiden av admin-panelet og sjekk at de er forståelige
+    - Navnene bør ha et hint av tannlegehumor
+
 
 ## Fullført
 
