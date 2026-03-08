@@ -1131,6 +1131,8 @@ describe('sync-data.js', () => {
     });
 
     describe('syncPrisliste', () => {
+        const emptyKategoriRekkefølge = { data: { values: [] } };
+
         beforeEach(() => {
             vi.clearAllMocks();
             fs.existsSync.mockReturnValue(true);
@@ -1138,15 +1140,17 @@ describe('sync-data.js', () => {
         });
 
         it('should sync prisliste from Sheets to JSON with sistOppdatert', async () => {
-            mockSheets.spreadsheets.values.get.mockResolvedValue({
-                data: {
-                    values: [
-                        ['Undersokelser', 'Vanlig undersokelse', 850, '2026-03-01T10:00:00.000Z', 2],
-                        ['Undersokelser', 'Rontgen', 350, '2026-03-05T10:00:00.000Z', 1],
-                        ['Bleking', 'Hjemmebleking', 2500],
-                    ]
-                }
-            });
+            mockSheets.spreadsheets.values.get
+                .mockResolvedValueOnce({
+                    data: {
+                        values: [
+                            ['Undersokelser', 'Vanlig undersokelse', 850, '2026-03-01T10:00:00.000Z', 2],
+                            ['Undersokelser', 'Rontgen', 350, '2026-03-05T10:00:00.000Z', 1],
+                            ['Bleking', 'Hjemmebleking', 2500],
+                        ]
+                    }
+                })
+                .mockResolvedValueOnce({ data: { values: [['Undersokelser', 1], ['Bleking', 2]] } });
 
             await syncPrisliste();
 
@@ -1172,17 +1176,23 @@ describe('sync-data.js', () => {
             });
             expect(written.items[1].order).toBe(1);
             expect(written.sistOppdatert).toBe('2026-03-05T10:00:00.000Z');
+            expect(written.kategoriOrder).toEqual([
+                { kategori: 'Undersokelser', order: 1 },
+                { kategori: 'Bleking', order: 2 },
+            ]);
         });
 
         it('should default order to 0 when column E is missing or invalid', async () => {
-            mockSheets.spreadsheets.values.get.mockResolvedValue({
-                data: {
-                    values: [
-                        ['Test', 'Behandling A', 500, '', undefined],
-                        ['Test', 'Behandling B', 600],
-                    ]
-                }
-            });
+            mockSheets.spreadsheets.values.get
+                .mockResolvedValueOnce({
+                    data: {
+                        values: [
+                            ['Test', 'Behandling A', 500, '', undefined],
+                            ['Test', 'Behandling B', 600],
+                        ]
+                    }
+                })
+                .mockResolvedValueOnce(emptyKategoriRekkefølge);
 
             await syncPrisliste();
 
@@ -1195,9 +1205,9 @@ describe('sync-data.js', () => {
         });
 
         it('should handle empty Prisliste sheet', async () => {
-            mockSheets.spreadsheets.values.get.mockResolvedValue({
-                data: { values: [] }
-            });
+            mockSheets.spreadsheets.values.get
+                .mockResolvedValueOnce({ data: { values: [] } })
+                .mockResolvedValueOnce(emptyKategoriRekkefølge);
 
             await syncPrisliste();
 
@@ -1206,7 +1216,7 @@ describe('sync-data.js', () => {
             );
             expect(writeCall).toBeTruthy();
             const written = JSON.parse(writeCall[1]);
-            expect(written).toEqual({ sistOppdatert: '', items: [] });
+            expect(written).toEqual({ sistOppdatert: '', kategoriOrder: [], items: [] });
         });
 
         it('should handle missing Prisliste sheet gracefully', async () => {
@@ -1226,13 +1236,15 @@ describe('sync-data.js', () => {
         });
 
         it('should preserve string prices like "Fra 500,-"', async () => {
-            mockSheets.spreadsheets.values.get.mockResolvedValue({
-                data: {
-                    values: [
-                        ['Bleking', 'Hjemmebleking', 'Fra 2500,-'],
-                    ]
-                }
-            });
+            mockSheets.spreadsheets.values.get
+                .mockResolvedValueOnce({
+                    data: {
+                        values: [
+                            ['Bleking', 'Hjemmebleking', 'Fra 2500,-'],
+                        ]
+                    }
+                })
+                .mockResolvedValueOnce(emptyKategoriRekkefølge);
 
             await syncPrisliste();
 

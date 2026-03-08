@@ -579,6 +579,27 @@ async function syncPrisliste() {
                 };
             });
 
+        // Hent kategori-rekkefølge fra eget ark
+        let kategoriOrder = [];
+        try {
+            const katRes = await sheets.spreadsheets.values.get({
+                spreadsheetId: config.spreadsheetId,
+                range: 'KategoriRekkefølge!A2:B',
+                valueRenderOption: 'UNFORMATTED_VALUE',
+            });
+            const katRows = katRes.data.values || [];
+            kategoriOrder = katRows.map(([kategori, order]) => ({
+                kategori: String(kategori).trim(),
+                order: parseInt(order) || 0,
+            }));
+        } catch (katErr) {
+            if (katErr.code === 400 || katErr.message?.includes('Unable to parse range')) {
+                console.log('  Fane "KategoriRekkefølge" finnes ikke enda. Bruker alfabetisk sortering.');
+            } else {
+                throw katErr;
+            }
+        }
+
         // Finn nyeste sistOppdatert-dato blant alle rader
         let sistOppdatert = '';
         for (const row of prislisteData) {
@@ -587,7 +608,7 @@ async function syncPrisliste() {
             }
         }
 
-        const output = { sistOppdatert, items: prislisteData };
+        const output = { sistOppdatert, kategoriOrder, items: prislisteData };
         fs.writeFileSync(config.paths.prislisteData, JSON.stringify(output, null, 2));
         console.log(`  Synkroniserte ${prislisteData.length} prisrader.`);
     } catch (err) {

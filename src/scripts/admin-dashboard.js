@@ -4,7 +4,8 @@ import {
     parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
     checkMultipleAccess, login, logout, getTannlegerRaw, updateTannlegeRow,
     addTannlegeRow, getGalleriRaw, updateGalleriRow, findFileByName, getDriveImageBlob, getPrislisteRaw,
-    updatePrislisteRow, updateSettingByKey, updateSettingOrder, silentLogin
+    updatePrislisteRow, updateSettingByKey, updateSettingOrder, silentLogin,
+    getKategoriRekkefølge, updateKategoriOrder, addKategoriRekkefølge
 } from './admin-client.js';
 import { withRetry, createAuthRefresher, classifyError } from './admin-api-retry.js';
 import { showAuthExpired } from './admin-dialog.js';
@@ -678,6 +679,35 @@ export async function reorderPrislisteItem(sheetId, items, rowIndex, direction) 
     await Promise.all([
         withRetry(() => updatePrislisteRow(sheetId, current.rowIndex, current), { refreshAuth: getRefreshAuth() }),
         withRetry(() => updatePrislisteRow(sheetId, neighbor.rowIndex, neighbor), { refreshAuth: getRefreshAuth() })
+    ]);
+    return true;
+}
+
+/**
+ * Bytter rekkefølge (order) mellom to prisliste-kategorier.
+ * direction: -1 = opp, +1 = ned
+ */
+export async function reorderPrislisteKategori(sheetId, kategoriOrder, kategori, direction) {
+    const sorted = [...kategoriOrder].sort((a, b) => a.order - b.order);
+    const currentIdx = sorted.findIndex(k => k.kategori === kategori);
+    const neighborIdx = currentIdx + direction;
+    if (currentIdx < 0 || neighborIdx < 0 || neighborIdx >= sorted.length) return false;
+
+    const current = sorted[currentIdx];
+    const neighbor = sorted[neighborIdx];
+
+    const tmpOrder = current.order;
+    current.order = neighbor.order;
+    neighbor.order = tmpOrder;
+
+    if (current.order === neighbor.order) {
+        current.order = currentIdx + direction;
+        neighbor.order = currentIdx;
+    }
+
+    await Promise.all([
+        withRetry(() => updateKategoriOrder(sheetId, current.rowIndex, current.order), { refreshAuth: getRefreshAuth() }),
+        withRetry(() => updateKategoriOrder(sheetId, neighbor.rowIndex, neighbor.order), { refreshAuth: getRefreshAuth() })
     ]);
     return true;
 }

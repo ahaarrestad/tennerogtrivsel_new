@@ -39,7 +39,10 @@ vi.mock('../admin-client.js', () => ({
     findFileByName: vi.fn(),
     getDriveImageBlob: vi.fn(),
     getPrislisteRaw: vi.fn(),
-    updatePrislisteRow: vi.fn()
+    updatePrislisteRow: vi.fn(),
+    getKategoriRekkefølge: vi.fn(),
+    updateKategoriOrder: vi.fn(),
+    addKategoriRekkefølge: vi.fn(),
 }));
 
 // Mock admin-api-retry
@@ -72,7 +75,7 @@ const {
     enforceAccessControl, updateUIWithUser, autoResizeTextarea,
     saveSingleSetting, loadMeldingerModule, loadTjenesterModule,
     loadTannlegerModule, loadGalleriListeModule, reorderGalleriItem,
-    reorderSettingItem, reorderPrislisteItem, mergeSettingsWithDefaults, formatTimestamp,
+    reorderSettingItem, reorderPrislisteItem, reorderPrislisteKategori, mergeSettingsWithDefaults, formatTimestamp,
     updateLastFetchedTime, updateBreadcrumbCount, renderSkeletonCards,
     handleModuleError, loadDashboardCounts
 } = adminDashboard;
@@ -2264,6 +2267,99 @@ describe('admin-dashboard.js', () => {
 
             expect(adminClient.updatePrislisteRow).toHaveBeenCalledWith('sheet-id', 4, expect.objectContaining({ order: 20 }));
             expect(adminClient.updatePrislisteRow).toHaveBeenCalledWith('sheet-id', 7, expect.objectContaining({ order: 10 }));
+        });
+    });
+
+    describe('reorderPrislisteKategori', () => {
+        it('should swap order values between two categories (down)', async () => {
+            const kategoriOrder = [
+                { rowIndex: 2, kategori: 'Bleking', order: 1 },
+                { rowIndex: 3, kategori: 'Kirurgi', order: 2 },
+            ];
+            adminClient.updateKategoriOrder.mockResolvedValue(true);
+
+            const result = await reorderPrislisteKategori('sheet-id', kategoriOrder, 'Bleking', 1);
+
+            expect(result).toBe(true);
+            expect(adminClient.updateKategoriOrder).toHaveBeenCalledTimes(2);
+            expect(adminClient.updateKategoriOrder).toHaveBeenCalledWith('sheet-id', 2, 2);
+            expect(adminClient.updateKategoriOrder).toHaveBeenCalledWith('sheet-id', 3, 1);
+        });
+
+        it('should swap order values between two categories (up)', async () => {
+            const kategoriOrder = [
+                { rowIndex: 2, kategori: 'Bleking', order: 1 },
+                { rowIndex: 3, kategori: 'Kirurgi', order: 2 },
+            ];
+            adminClient.updateKategoriOrder.mockResolvedValue(true);
+
+            const result = await reorderPrislisteKategori('sheet-id', kategoriOrder, 'Kirurgi', -1);
+
+            expect(result).toBe(true);
+            expect(adminClient.updateKategoriOrder).toHaveBeenCalledTimes(2);
+        });
+
+        it('should return false when moving first category up', async () => {
+            const kategoriOrder = [
+                { rowIndex: 2, kategori: 'Bleking', order: 1 },
+            ];
+
+            const result = await reorderPrislisteKategori('sheet-id', kategoriOrder, 'Bleking', -1);
+
+            expect(result).toBe(false);
+            expect(adminClient.updateKategoriOrder).not.toHaveBeenCalled();
+        });
+
+        it('should return false when moving last category down', async () => {
+            const kategoriOrder = [
+                { rowIndex: 2, kategori: 'Bleking', order: 1 },
+            ];
+
+            const result = await reorderPrislisteKategori('sheet-id', kategoriOrder, 'Bleking', 1);
+
+            expect(result).toBe(false);
+            expect(adminClient.updateKategoriOrder).not.toHaveBeenCalled();
+        });
+
+        it('should return false for unknown category', async () => {
+            const kategoriOrder = [
+                { rowIndex: 2, kategori: 'Bleking', order: 1 },
+            ];
+
+            const result = await reorderPrislisteKategori('sheet-id', kategoriOrder, 'Ukjent', -1);
+
+            expect(result).toBe(false);
+        });
+
+        it('should force different order values when both have same order', async () => {
+            const kategoriOrder = [
+                { rowIndex: 2, kategori: 'Bleking', order: 5 },
+                { rowIndex: 3, kategori: 'Kirurgi', order: 5 },
+            ];
+            adminClient.updateKategoriOrder.mockResolvedValue(true);
+
+            await reorderPrislisteKategori('sheet-id', kategoriOrder, 'Bleking', 1);
+
+            // After swap both would be 5, so the force-different logic kicks in
+            expect(adminClient.updateKategoriOrder).toHaveBeenCalledTimes(2);
+            const calls = adminClient.updateKategoriOrder.mock.calls;
+            expect(calls[0][2]).not.toBe(calls[1][2]);
+        });
+
+        it('should sort by order before finding neighbors', async () => {
+            const kategoriOrder = [
+                { rowIndex: 5, kategori: 'Bleking', order: 3 },
+                { rowIndex: 2, kategori: 'Kirurgi', order: 1 },
+                { rowIndex: 3, kategori: 'Undersokelser', order: 2 },
+            ];
+            adminClient.updateKategoriOrder.mockResolvedValue(true);
+
+            // Move Undersokelser down — neighbor should be Bleking (order 3), not based on array position
+            const result = await reorderPrislisteKategori('sheet-id', kategoriOrder, 'Undersokelser', 1);
+
+            expect(result).toBe(true);
+            expect(adminClient.updateKategoriOrder).toHaveBeenCalledWith('sheet-id', 3, 3);
+            expect(adminClient.updateKategoriOrder).toHaveBeenCalledWith('sheet-id', 5, 2);
         });
     });
 });

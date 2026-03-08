@@ -3,8 +3,21 @@ import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 import logoImage from '../assets/tt-logo-2026.png';
+import fs from 'fs';
+import path from 'path';
 
 const rawPrisliste = await getCollection('prisliste');
+
+// Read category order from prisliste.json (top-level field set by sync-data)
+let kategoriOrderMap = new Map();
+try {
+    const prislisteJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/content/prisliste.json'), 'utf-8'));
+    if (prislisteJson.kategoriOrder) {
+        for (const k of prislisteJson.kategoriOrder) {
+            kategoriOrderMap.set(k.kategori, k.order);
+        }
+    }
+} catch { /* fallback to alphabetical */ }
 
 const kategorier = new Map();
 for (const item of rawPrisliste) {
@@ -15,6 +28,16 @@ for (const item of rawPrisliste) {
 for (const items of kategorier.values()) {
     items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
+
+// Sort categories by kategoriOrder, fallback to alphabetical
+const sortedKategorier = new Map(
+    [...kategorier.entries()].sort(([a], [b]) => {
+        const orderA = kategoriOrderMap.get(a) ?? Number.MAX_SAFE_INTEGER;
+        const orderB = kategoriOrderMap.get(b) ?? Number.MAX_SAFE_INTEGER;
+        if (orderA !== orderB) return orderA - orderB;
+        return a.localeCompare(b, 'nb');
+    })
+);
 
 const sistOppdatert = rawPrisliste.reduce((max, item) =>
     item.data.sistOppdatert > max ? item.data.sistOppdatert : max, '');
@@ -71,7 +94,7 @@ function formatPris(pris) {
             )}
 
             <div class="space-y-6 print:space-y-0">
-                {[...kategorier.entries()].map(([kategori, items]) => (
+                {[...sortedKategorier.entries()].map(([kategori, items]) => (
                     <div class="prisliste-kategori bg-white rounded-2xl border border-brand-border/60 shadow-sm overflow-hidden">
                         <div class="px-6 py-4 border-b border-brand-border/60">
                             <h2 class="font-heading font-bold text-xl md:text-2xl text-brand">{kategori}</h2>

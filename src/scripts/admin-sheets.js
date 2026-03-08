@@ -634,3 +634,84 @@ export async function addPrislisteRow(spreadsheetId, data) {
 export async function deletePrislisteRowPermanently(spreadsheetId, rowIndex) {
     return deleteSheetRow(spreadsheetId, 'Prisliste', rowIndex);
 }
+
+// --- KATEGORI-REKKEFØLGE ---
+
+export async function ensureKategoriRekkefølgeSheet(spreadsheetId) {
+    const resp = await gapi.client.sheets.spreadsheets.get({
+        spreadsheetId,
+        fields: 'sheets.properties.title'
+    });
+    const exists = (resp.result.sheets || []).some(
+        s => s.properties.title === 'KategoriRekkefølge'
+    );
+    if (!exists) {
+        await gapi.client.sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: { requests: [{ addSheet: { properties: { title: 'KategoriRekkefølge' } } }] }
+        });
+        await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: 'KategoriRekkefølge!A1:B1',
+            valueInputOption: 'RAW',
+            resource: { values: [['Kategori', 'Rekkefølge']] }
+        });
+        console.log("[Admin] KategoriRekkefølge-ark opprettet med overskrifter.");
+    }
+}
+
+export async function getKategoriRekkefølge(spreadsheetId) {
+    try {
+        await ensureKategoriRekkefølgeSheet(spreadsheetId);
+        const response = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'KategoriRekkefølge!A:B',
+            valueRenderOption: 'UNFORMATTED_VALUE',
+        });
+
+        const rows = response.result.values;
+        if (!rows || rows.length <= 1) return [];
+
+        return rows.slice(1).map((row, index) => ({
+            rowIndex: index + 2,
+            kategori: (row[0] || '') + '',
+            order: parseInt(row[1]) || 0,
+        }));
+    } catch (err) {
+        console.error("[Admin] Kunne ikke hente kategori-rekkefølge:", err);
+        throw err;
+    }
+}
+
+export async function updateKategoriOrder(spreadsheetId, rowNumber, order) {
+    try {
+        await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `KategoriRekkefølge!B${rowNumber}`,
+            valueInputOption: 'RAW',
+            resource: { values: [[order]] }
+        });
+        console.log(`[Admin] Kategori-rekkefølge for rad ${rowNumber} satt til ${order}.`);
+        return true;
+    } catch (err) {
+        console.error(`[Admin] Kunne ikke oppdatere kategori-rekkefølge for rad ${rowNumber}:`, err);
+        throw err;
+    }
+}
+
+export async function addKategoriRekkefølge(spreadsheetId, kategori, order) {
+    try {
+        await ensureKategoriRekkefølgeSheet(spreadsheetId);
+        await gapi.client.sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'KategoriRekkefølge!A:B',
+            valueInputOption: 'RAW',
+            resource: { values: [[kategori, order]] }
+        });
+        console.log(`[Admin] Kategori "${kategori}" lagt til med rekkefølge ${order}.`);
+        return true;
+    } catch (err) {
+        console.error(`[Admin] Kunne ikke legge til kategori "${kategori}":`, err);
+        throw err;
+    }
+}
