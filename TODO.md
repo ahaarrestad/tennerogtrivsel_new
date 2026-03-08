@@ -29,10 +29,6 @@
     - Gjennomgå hele prosjektet for sikkerhetssårbarheter
     - Dekk OWASP Top 10, XSS, injection, CSP, autentisering, eksponerte hemmeligheter, og usikker datahåndtering
 
-- [ ] **Forbedre sortering i prisliste-admin**
-    - Forvirrende med to forskjellige sorterings-knapper helt ved siden av hverandre
-    - Sjekk hvordan sortering er gjort på andre admin-sider og gjør det enklere/mer konsistent
-    - Mål: brukeren skal intuitivt forstå sorteringsmekanismen
 
 ## Fullført
 
