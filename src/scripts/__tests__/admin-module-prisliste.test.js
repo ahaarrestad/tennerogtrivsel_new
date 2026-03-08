@@ -11,6 +11,8 @@ vi.mock('../admin-client.js', () => ({
     updatePrislisteRow: vi.fn(),
     deletePrislisteRowPermanently: vi.fn(),
     backupToSlettetSheet: vi.fn(),
+    getKategoriRekkefølge: vi.fn().mockResolvedValue([]),
+    addKategoriRekkefølge: vi.fn().mockResolvedValue(true),
 }));
 
 vi.mock('../admin-dialog.js', () => ({
@@ -29,6 +31,7 @@ vi.mock('../admin-dashboard.js', () => ({
             <button ${dataAttrs} class="${deleteClass} admin-icon-btn-danger group/btn" title="Slett">D</button>
         </div>`),
     reorderPrislisteItem: vi.fn().mockResolvedValue(undefined),
+    reorderPrislisteKategori: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../admin-editor-helpers.js', () => ({
@@ -41,6 +44,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
 import {
     getPrislisteRaw, addPrislisteRow, updatePrislisteRow,
     deletePrislisteRowPermanently, backupToSlettetSheet,
+    getKategoriRekkefølge, addKategoriRekkefølge,
 } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { createAutoSaver, verifySave } from '../admin-editor-helpers.js';
@@ -275,6 +279,7 @@ describe('loadPrislisteList', () => {
 
         const addBtns = document.querySelectorAll('.add-pris-kategori-btn');
         expect(addBtns).toHaveLength(2);
+        // New categories are auto-added with incremental order based on discovery
         expect(addBtns[0].dataset.kategori).toBe('Undersokelser');
         expect(addBtns[1].dataset.kategori).toBe('Kirurgi');
     });

@@ -2,10 +2,11 @@ import DOMPurify from 'dompurify';
 import {
     getPrislisteRaw, addPrislisteRow, updatePrislisteRow,
     deletePrislisteRowPermanently, backupToSlettetSheet,
+    getKategoriRekkefølge, addKategoriRekkefølge,
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { getAdminConfig, escapeHtml, createAutoSaver, verifySave } from './admin-editor-helpers.js';
-import { formatTimestamp, ICON_ADD, ICON_UP, ICON_DOWN, renderActionButtons, reorderPrislisteItem } from './admin-dashboard.js';
+import { formatTimestamp, ICON_ADD, ICON_UP, ICON_DOWN, renderActionButtons, reorderPrislisteItem, reorderPrislisteKategori } from './admin-dashboard.js';
 
 function formatSistOppdatert(isoString) {
     if (!isoString) return '';
@@ -261,6 +262,23 @@ async function loadPrislisteList(sheetId) {
 
     try {
         const items = await getPrislisteRaw(sheetId);
+        let kategoriOrder = [];
+        try {
+            kategoriOrder = await getKategoriRekkefølge(sheetId);
+        } catch (e) { console.error('[Admin] Kunne ikke hente kategori-rekkefølge:', e); }
+
+        // Ensure all categories from items exist in kategoriOrder
+        const existingKategorier = new Set(kategoriOrder.map(k => k.kategori));
+        const itemKategorier = [...new Set(items.map(i => i.kategori).filter(Boolean))];
+        const newKategorier = itemKategorier.filter(k => !existingKategorier.has(k));
+        for (const k of newKategorier) {
+            const maxOrder = kategoriOrder.reduce((max, ko) => Math.max(max, ko.order), 0);
+            const newOrder = maxOrder + 1;
+            try {
+                await addKategoriRekkefølge(sheetId, k, newOrder);
+                kategoriOrder.push({ rowIndex: -1, kategori: k, order: newOrder });
+            } catch (e) { console.error(`[Admin] Kunne ikke legge til kategori "${k}":`, e); }
+        }
 
         const countEl = document.getElementById('breadcrumb-count');
         if (countEl) {
@@ -284,13 +302,32 @@ async function loadPrislisteList(sheetId) {
                 });
             }
 
+            // Sort categories by kategoriOrder
+            const kategoriOrderMap = new Map(kategoriOrder.map(k => [k.kategori, k.order]));
+            const sortedKategoriKeys = [...grouped.keys()].sort((a, b) => {
+                const orderA = kategoriOrderMap.get(a) ?? Number.MAX_SAFE_INTEGER;
+                const orderB = kategoriOrderMap.get(b) ?? Number.MAX_SAFE_INTEGER;
+                if (orderA !== orderB) return orderA - orderB;
+                return a.localeCompare(b, 'nb');
+            });
+
             let html = `<p class="text-xs text-admin-muted-light mb-3">Sist hentet: <span id="prisliste-last-fetched">${formatTimestamp(new Date())}</span></p>`;
             html += '<div class="space-y-6 max-w-4xl">';
 
-            for (const [kategori, rows] of grouped) {
+            for (let ki = 0; ki < sortedKategoriKeys.length; ki++) {
+                const kategori = sortedKategoriKeys[ki];
+                const rows = grouped.get(kategori);
+                const isFirstKat = ki === 0;
+                const isLastKat = ki === sortedKategoriKeys.length - 1;
                 html += `<div class="bg-white rounded-2xl border border-brand-border/60 shadow-sm overflow-hidden">
                     <div class="px-6 py-4 border-b border-brand-border/60 flex items-center justify-between">
-                        <h3 class="font-heading font-bold text-xl text-brand">${escapeHtml(kategori)}</h3>
+                        <div class="flex items-center gap-2">
+                            <div class="flex flex-col gap-1">
+                                <button data-kategori="${escapeHtml(kategori)}" data-dir="-1" class="reorder-kategori-btn admin-icon-btn-reorder ${isFirstKat ? 'invisible' : ''}" title="Flytt kategori opp">${ICON_UP}</button>
+                                <button data-kategori="${escapeHtml(kategori)}" data-dir="1" class="reorder-kategori-btn admin-icon-btn-reorder ${isLastKat ? 'invisible' : ''}" title="Flytt kategori ned">${ICON_DOWN}</button>
+                            </div>
+                            <h3 class="font-heading font-bold text-xl text-brand">${escapeHtml(kategori)}</h3>
+                        </div>
                         <button class="add-pris-kategori-btn btn-primary p-1.5 rounded-lg min-w-[32px] min-h-[32px] flex items-center justify-center" data-kategori="${escapeHtml(kategori)}" title="Ny prisrad i ${escapeHtml(kategori)}" aria-label="Ny prisrad i ${escapeHtml(kategori)}">${ICON_ADD}</button>
                     </div>
                     <div class="px-6 py-2">`;
@@ -350,6 +387,15 @@ async function loadPrislisteList(sheetId) {
                     if (!item) return;
                     const categoryRows = grouped.get(item.kategori) || [];
                     await reorderPrislisteItem(sheetId, categoryRows, rowIndex, direction);
+                    reloadPrisliste();
+                };
+            });
+            inner.querySelectorAll('.reorder-kategori-btn').forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    const kategori = btn.dataset.kategori;
+                    const direction = parseInt(btn.dataset.dir);
+                    await reorderPrislisteKategori(sheetId, kategoriOrder, kategori, direction);
                     reloadPrisliste();
                 };
             });
