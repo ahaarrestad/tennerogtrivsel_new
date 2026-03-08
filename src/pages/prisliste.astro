@@ -272,9 +272,12 @@ if (sistOppdatert) {
 
 <script is:inline>
     if (new URLSearchParams(window.location.search).has('print')) {
-        window.addEventListener('load', function () {
-            window.print();
-        });
+        var hasToken = localStorage.getItem('admin_google_token') || sessionStorage.getItem('admin_google_token');
+        if (hasToken) {
+            window.addEventListener('load', function () {
+                window.print();
+            });
+        }
     }
 </script>
 
