@@ -58,17 +58,12 @@ describe('Admin-kort: titler og aria-labels skal være konsistente', () => {
     );
 
     it.each(allCardIds)(
-        '%s: aria-label inneholder h2-tittelen',
+        '%s: aria-label er korrekt formatert',
         (cardId) => {
-            const { ariaLabel, h2Title } = astroCards.get(cardId)!;
+            const card = astroCards.get(cardId);
+            expect(card).toBeDefined();
+            const { ariaLabel, h2Title } = card!;
             expect(ariaLabel).toContain(h2Title);
-        },
-    );
-
-    it.each(allCardIds)(
-        '%s: aria-label starter med "Gå til"',
-        (cardId) => {
-            const { ariaLabel } = astroCards.get(cardId)!;
             expect(ariaLabel).toMatch(/^Gå til /);
         },
     );
