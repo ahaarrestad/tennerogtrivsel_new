@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Grundig sikkerhetssjekk av prosjektet** ([plan](docs/plans/archive/2026-03-07-sikkerhetssjekk.md))
+    - OWASP Top 10-gjennomgang av hele kodebasen
+    - Fikset: Drive API query-escaping (A03), path traversal i sync-data.js (A08), silentLogin race condition (A07), manglende BILDER_FOLDER i tilgangskontroll (A01)
+    - Dokumentert nye aksepterte risikoer (L7, L8) i sikkerhet.md
+
 - [x] **Forbedre sortering i prisliste-admin** ([plan](docs/plans/archive/2026-03-08-prisliste-sortering-ui.md))
     - Flyttet item-reorder-knapper fra venstre til høyre side (ved edit/delete), konsistent med tjenester og galleri
     - Kategori-sortering forblir i headeren til venstre

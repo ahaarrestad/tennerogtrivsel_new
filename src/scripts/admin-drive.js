@@ -1,12 +1,20 @@
 // src/scripts/admin-drive.js — Drive-operasjoner: filer, bilder, markdown
 
 /**
+ * Escaper spesialtegn for Drive API query-strenger.
+ * Drive API bruker enkle anførselstegn som streng-delimiter og backslash som escape-tegn.
+ */
+export function escapeDriveQuery(value) {
+    return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+/**
  * Finner en fil ved navn i en bestemt mappe
  */
 export async function findFileByName(name, folderId) {
     try {
         const response = await gapi.client.drive.files.list({
-            q: `'${folderId}' in parents and name = '${name}' and trashed = false`,
+            q: `'${escapeDriveQuery(folderId)}' in parents and name = '${escapeDriveQuery(name)}' and trashed = false`,
             fields: 'files(id, name)',
             pageSize: 1,
             supportsAllDrives: true,
@@ -25,7 +33,7 @@ export async function findFileByName(name, folderId) {
 export async function listFiles(folderId) {
     try {
         const response = await gapi.client.drive.files.list({
-            q: `'${folderId}' in parents and trashed = false and name contains '.md'`,
+            q: `'${escapeDriveQuery(folderId)}' in parents and trashed = false and name contains '.md'`,
             fields: 'files(id, name, modifiedTime)',
             orderBy: 'name',
             supportsAllDrives: true,
@@ -172,7 +180,7 @@ export async function listImages(folderId) {
 
     try {
         const response = await gapi.client.drive.files.list({
-            q: `'${folderId}' in parents and trashed = false`,
+            q: `'${escapeDriveQuery(folderId)}' in parents and trashed = false`,
             fields: 'files(id, name, mimeType, thumbnailLink, webContentLink), nextPageToken',
             pageSize: 100,
             supportsAllDrives: true,

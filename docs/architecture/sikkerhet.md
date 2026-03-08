@@ -105,6 +105,22 @@ Alle CDN-lastede scripts og stylesheets i `admin/index.astro` har:
 
 Dette beskytter mot forsyningskjede-angrep der et kompromittert CDN endrer filinnholdet.
 
+## Drive API query-escaping
+
+Alle Drive API `q`-strenger der verdier interpoleres bruker `escapeDriveQuery()` som escaper backslash og enkle anførselstegn. Dette beskytter mot query-injeksjon fra spesialtegn i filnavn eller mappe-IDer.
+
+**Berørte filer:** `admin-drive.js` (klient-side), `sync-data.js` (server-side build-script)
+
+## Path traversal-beskyttelse
+
+`sync-data.js` bruker `assertSafePath()` for å validere at filstier fra Google Drive/Sheets holder seg innenfor forventet basemappe. Dette beskytter mot path traversal-angrep der et filnavn som `../../etc/passwd` kunne skrive til uforventede steder.
+
+**Berørte funksjoner:** `syncTannleger`, `syncMarkdownCollection`, `syncGalleri`
+
+## Silent login debounce
+
+`silentLogin()` i `admin-auth.js` har en debounce-mekanisme som forhindrer samtidige token-forespørsler. Flagget `_silentLoginPending` settes til `true` ved kall og resettes ved `admin-auth-refreshed`/`admin-auth-failed`-events, eller via en 15-sekunders fallback-timeout.
+
 ## Akseptert risiko
 
 | Funn | Begrunnelse |
@@ -114,6 +130,8 @@ Dette beskytter mot forsyningskjede-angrep der et kompromittert CDN endrer filin
 | Ingen audit-logging (M6) | Krever ekstra infrastruktur. Kan vurderes som egen oppgave. |
 | `repository_dispatch` uten tester (L6) | Akseptert avveining — koden er allerede testet på main, risiko begrenset til kompromittert Drive-innhold. |
 | Admin-side offentlig (L5) | Alle data/funksjonalitet krever gyldig OAuth-token. `noindex` + `robots.txt Disallow` hindrer indeksering. |
+| API-feilmeldinger til bruker (L7) | Admin er OAuth-beskyttet — kun autoriserte brukere ser feilmeldinger. Google API-detaljer i feilmeldinger gir ikke angrepsoverflate. |
+| Vite dev proxy uten path-validering (L8) | Kun aktiv i dev, hardkodet til `basemaps.cartocdn.com`. Ingen brukerdata interpoleres i URL. |
 
 ## Web Storage og modul-tilstand i tester
 

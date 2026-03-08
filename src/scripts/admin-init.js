@@ -76,7 +76,7 @@ function closeModule() {
 }
 
 async function handleAuth(userInfo = null) {
-    const { SHEET_ID, TJENESTER_FOLDER, MELDINGER_FOLDER, TANNLEGER_FOLDER } = getAdminConfig();
+    const { SHEET_ID, TJENESTER_FOLDER, MELDINGER_FOLDER, TANNLEGER_FOLDER, BILDER_FOLDER } = getAdminConfig();
     const user = userInfo || getStoredUser();
     if (user) {
         window.scrollTo(0, 0);
@@ -85,7 +85,8 @@ async function handleAuth(userInfo = null) {
             SHEET_ID,
             TJENESTER_FOLDER,
             MELDINGER_FOLDER,
-            TANNLEGER_FOLDER
+            TANNLEGER_FOLDER,
+            BILDER_FOLDER
         });
         loadDashboardCounts({ SHEET_ID, TJENESTER_FOLDER, MELDINGER_FOLDER });
         showInstallPromptIfEligible();

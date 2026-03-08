@@ -42,7 +42,8 @@ import {
     deleteGalleriRowPermanently,
     ensureGalleriSheet,
     setForsideBildeInGalleri,
-    migrateForsideBildeToGalleri
+    migrateForsideBildeToGalleri,
+    escapeDriveQuery
 } from '../admin-client';
 
 describe('admin-client.js', () => {
@@ -1713,6 +1714,75 @@ describe('admin-client.js', () => {
             const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
             await expect(updateSettingOrder('sheet-id', 2, 1)).rejects.toThrow('API-feil');
             consoleSpy.mockRestore();
+        });
+    });
+
+    describe('escapeDriveQuery', () => {
+        it('skal escape enkle anførselstegn', () => {
+            expect(escapeDriveQuery("fil'navn.md")).toBe("fil\\'navn.md");
+        });
+
+        it('skal escape backslash', () => {
+            expect(escapeDriveQuery('fil\\navn.md')).toBe('fil\\\\navn.md');
+        });
+
+        it('skal escape både backslash og anførselstegn', () => {
+            expect(escapeDriveQuery("fil\\'navn.md")).toBe("fil\\\\\\'navn.md");
+        });
+
+        it('skal håndtere streng uten spesialtegn', () => {
+            expect(escapeDriveQuery('normal-fil.md')).toBe('normal-fil.md');
+        });
+
+        it('skal konvertere ikke-streng til streng', () => {
+            expect(escapeDriveQuery(123)).toBe('123');
+        });
+    });
+
+    describe('silentLogin debounce', () => {
+        afterEach(() => {
+            // Reset debounce-tilstanden for neste test
+            window.dispatchEvent(new Event('admin-auth-failed'));
+        });
+
+        it('skal ignorere andre kall mens silentLogin pågår', () => {
+            const requestSpy = vi.fn();
+            google.accounts.oauth2.initTokenClient.mockReturnValue({ requestAccessToken: requestSpy });
+            initGis(() => {});
+
+            silentLogin();
+            silentLogin();
+            silentLogin();
+
+            expect(requestSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it('skal tillate nytt kall etter admin-auth-refreshed event', () => {
+            const requestSpy = vi.fn();
+            google.accounts.oauth2.initTokenClient.mockReturnValue({ requestAccessToken: requestSpy });
+            initGis(() => {});
+
+            silentLogin();
+            expect(requestSpy).toHaveBeenCalledTimes(1);
+
+            window.dispatchEvent(new Event('admin-auth-refreshed'));
+
+            silentLogin();
+            expect(requestSpy).toHaveBeenCalledTimes(2);
+        });
+
+        it('skal tillate nytt kall etter admin-auth-failed event', () => {
+            const requestSpy = vi.fn();
+            google.accounts.oauth2.initTokenClient.mockReturnValue({ requestAccessToken: requestSpy });
+            initGis(() => {});
+
+            silentLogin();
+            expect(requestSpy).toHaveBeenCalledTimes(1);
+
+            window.dispatchEvent(new Event('admin-auth-failed'));
+
+            silentLogin();
+            expect(requestSpy).toHaveBeenCalledTimes(2);
         });
     });
 });

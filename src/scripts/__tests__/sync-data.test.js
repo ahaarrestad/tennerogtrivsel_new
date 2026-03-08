@@ -77,7 +77,7 @@ vi.mock('stream/promises', () => ({
 }));
 
 // Importer etter mocks
-const { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, syncPrisliste, runSync, cropToOG } = await import('../sync-data.js');
+const { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, syncPrisliste, runSync, cropToOG, escapeDriveQuery, assertSafePath } = await import('../sync-data.js');
 
 describe('sync-data.js', () => {
     let logSpy;
@@ -266,6 +266,21 @@ describe('sync-data.js', () => {
             expect(writtenData[0].imageConfig.scale).toBe(3.0); // 5.0 → clamped til 3.0
             expect(writtenData[1].imageConfig.scale).toBe(3.0); // 3.0 → eksakt maks, beholdes
             expect(writtenData[2].imageConfig.scale).toBe(3.0); // 3.1 → clamped til 3.0
+        });
+
+        it('bør logge advarsel ved path traversal i bildeFil', async () => {
+            const mockData = {
+                data: {
+                    values: [['Ola', 'T', 'B', '../../../etc/passwd', 'ja']],
+                },
+            };
+            mockSheets.spreadsheets.values.get.mockResolvedValue(mockData);
+            mockDrive.files.list.mockResolvedValue({ data: { files: [{ id: '123', md5Checksum: 'abc' }] } });
+
+            await syncTannleger();
+
+            // Path traversal kastes inne i try/catch og logges som advarsel
+            expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Path traversal'));
         });
 
         it('bør returnere tomt array når Sheets returnerer undefined values', async () => {
@@ -1272,6 +1287,50 @@ describe('sync-data.js', () => {
             const written = JSON.parse(writeCall[1]);
             expect(written.items[0].sistOppdatert).toBe('');
             expect(written.sistOppdatert).toBe('');
+        });
+    });
+
+    describe('escapeDriveQuery', () => {
+        it('skal escape enkle anførselstegn', () => {
+            expect(escapeDriveQuery("fil'navn")).toBe("fil\\'navn");
+        });
+
+        it('skal escape backslash', () => {
+            expect(escapeDriveQuery('fil\\navn')).toBe('fil\\\\navn');
+        });
+
+        it('skal escape begge i riktig rekkefølge', () => {
+            expect(escapeDriveQuery("a\\'b")).toBe("a\\\\\\'b");
+        });
+
+        it('skal returnere uendret streng uten spesialtegn', () => {
+            expect(escapeDriveQuery('normal')).toBe('normal');
+        });
+
+        it('skal konvertere tall til streng', () => {
+            expect(escapeDriveQuery(42)).toBe('42');
+        });
+    });
+
+    describe('assertSafePath', () => {
+        it('skal akseptere fil innenfor basemappe', () => {
+            expect(() => assertSafePath('/base/dir/file.txt', '/base/dir')).not.toThrow();
+        });
+
+        it('skal kaste ved path traversal med ..', () => {
+            expect(() => assertSafePath('/base/dir/../etc/passwd', '/base/dir')).toThrow('Path traversal');
+        });
+
+        it('skal kaste ved absolutt sti utenfor base', () => {
+            expect(() => assertSafePath('/etc/passwd', '/base/dir')).toThrow('Path traversal');
+        });
+
+        it('skal kaste ved dobbel path traversal', () => {
+            expect(() => assertSafePath('/base/dir/../../etc/shadow', '/base/dir')).toThrow('Path traversal');
+        });
+
+        it('skal akseptere fil i undermapper', () => {
+            expect(() => assertSafePath('/base/dir/sub/file.txt', '/base/dir')).not.toThrow();
         });
     });
 });
