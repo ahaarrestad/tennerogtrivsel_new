@@ -13,10 +13,7 @@
 
 ## Pågående
 
-- [ ] **Sortering av elementer i prisliste-kategorier (admin)** ([plan](docs/plans/2026-03-08-prisliste-sortering.md))
-    - Opp/ned-knapper for å sortere elementer internt i en kategori, samme mønster som resten av admin-sidene
-    - Nye elementer legges til sist i kategorien
-    - Ved kategori-endring flyttes elementet til sist i den nye kategorien
+(Ingen oppgaver pågår)
 
 ## Backlog
 
