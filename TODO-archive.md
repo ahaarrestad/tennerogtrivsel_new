@@ -2,6 +2,18 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Sortering av elementer i prisliste-kategorier (admin)** ([plan](docs/plans/archive/2026-03-08-prisliste-sortering.md))
+    - Ny kolonne E (`Rekkefølge`) i Prisliste-arket — numerisk `order`-felt
+    - `getPrislisteRaw` leser A:E og returnerer `order` (parseInt, fallback 0)
+    - `updatePrislisteRow` og `addPrislisteRow` skriver order til kolonne E
+    - `reorderPrislisteItem()` i admin-dashboard.js — swapper order mellom to naboer (som reorderGalleriItem)
+    - Opp/ned-knapper per rad i admin-prisliste-UI, synlig for alle unntatt første/siste
+    - Nye rader legges til sist i kategorien (order = max + 1)
+    - Kategoribytte setter elementet sist i ny kategori
+    - `sync-data.js` leser og eksporterer order-felt
+    - `prisliste.astro` sorterer elementer per kategori etter order
+    - 80%+ branch coverage på alle berørte filer
+
 - [x] **Skjul «Juster prisene»-knapp uten Sheet-tilgang** ([plan](docs/plans/archive/2026-03-08-skjul-prisliste-knapp.md))
     - Prisliste-kortet skjules i admin-dashboardet når brukeren mangler Google Sheet-tilgang
     - Utvidet `enforceAccessControl()` med `{ id: 'prisliste', resource: config.SHEET_ID, card: 'card-prisliste' }`
