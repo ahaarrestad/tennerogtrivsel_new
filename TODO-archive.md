@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Skjul «Juster prisene»-knapp uten Sheet-tilgang** ([plan](docs/plans/archive/2026-03-08-skjul-prisliste-knapp.md))
+    - Prisliste-kortet skjules i admin-dashboardet når brukeren mangler Google Sheet-tilgang
+    - Utvidet `enforceAccessControl()` med `{ id: 'prisliste', resource: config.SHEET_ID, card: 'card-prisliste' }`
+    - 3 nye tester + 6 oppdaterte eksisterende tester
+
 - [x] **Admin-panel: Kompakt logg-ut-knapp med tooltip**
     - Endret bruker-pillen til å vise kun fornavn i stedet for fullt navn
     - Tooltip (title) settes dynamisk til «Logg ut [hele navnet]»

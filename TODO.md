@@ -34,9 +34,6 @@
     - Nye elementer legges til sist i kategorien
     - Ved kategori-endring flyttes elementet til sist i den nye kategorien
 
-- [ ] **Skjul «Juster prisene»-knapp uten Sheet-tilgang**
-    - «Juster prisene»-knappen skal ikke vises hvis brukeren ikke har tilgang til Google Sheet
-
 - [ ] **Sortering av prisliste-kategorier (admin)** ([plan](docs/plans/2026-03-08-prisliste-kategori-sortering.md))
     - Opp/ned-knapper for å endre rekkefølgen på selve kategoriene i prislisten
     - Eget Sheets-ark `KategoriRekkefølge` for lagring
