@@ -3,11 +3,11 @@ import {
     saveFile, createFile, listFiles
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
-import { classifyError } from './admin-api-retry.js';
+import { classifyError, withRetry } from './admin-api-retry.js';
 import { stripStackEditData, slugify } from './textFormatter.js';
 import { loadTjenesterModule } from './admin-dashboard.js';
 import {
-    getAdminConfig, renderToggleHtml, attachToggleClick,
+    getAdminConfig, getRefreshAuth, renderToggleHtml, attachToggleClick,
     showDeletionToast, initMarkdownEditor, createAutoSaver, showSaveBar
 } from './admin-editor-helpers.js';
 
@@ -203,9 +203,10 @@ async function toggleTjenesteActive(driveId, fileName, service) {
 
 async function loadAllServices() {
     const { TJENESTER_FOLDER } = getAdminConfig();
-    const files = await listFiles(TJENESTER_FOLDER);
+    const retryOpts = { refreshAuth: getRefreshAuth() };
+    const files = await withRetry(() => listFiles(TJENESTER_FOLDER), retryOpts);
     const services = await Promise.all(files.map(async (f) => {
-        const raw = await getFileContent(f.id);
+        const raw = await withRetry(() => getFileContent(f.id), retryOpts);
         const { data, body } = parseMarkdown(raw);
         return { driveId: f.id, name: f.name, ...data, body };
     }));
