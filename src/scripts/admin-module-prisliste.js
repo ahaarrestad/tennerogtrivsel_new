@@ -1,4 +1,5 @@
 import DOMPurify from 'dompurify';
+import { formatPris } from '../utils/format-pris.js';
 import {
     getPrislisteRaw, addPrislisteRow, updatePrislisteRow,
     deletePrislisteRowPermanently, backupToSlettetSheet,
@@ -335,7 +336,7 @@ async function loadPrislisteList(sheetId) {
                     const item = rows[i];
                     const isFirst = i === 0;
                     const isLast = i === rows.length - 1;
-                    const prisDisplay = typeof item.pris === 'number' ? `kr ${item.pris.toLocaleString('nb-NO')}` : escapeHtml(String(item.pris));
+                    const prisDisplay = escapeHtml(formatPris(item.pris));
                     const oppdatertTekst = formatSistOppdatert(item.sistOppdatert);
                     const borderClass = i < rows.length - 1 ? ' border-b border-brand-border/60' : '';
                     html += `
