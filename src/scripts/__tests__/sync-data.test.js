@@ -1141,8 +1141,8 @@ describe('sync-data.js', () => {
             mockSheets.spreadsheets.values.get.mockResolvedValue({
                 data: {
                     values: [
-                        ['Undersokelser', 'Vanlig undersokelse', 850, '2026-03-01T10:00:00.000Z'],
-                        ['Undersokelser', 'Rontgen', 350, '2026-03-05T10:00:00.000Z'],
+                        ['Undersokelser', 'Vanlig undersokelse', 850, '2026-03-01T10:00:00.000Z', 2],
+                        ['Undersokelser', 'Rontgen', 350, '2026-03-05T10:00:00.000Z', 1],
                         ['Bleking', 'Hjemmebleking', 2500],
                     ]
                 }
@@ -1152,7 +1152,7 @@ describe('sync-data.js', () => {
 
             expect(mockSheets.spreadsheets.values.get).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    range: 'Prisliste!A2:D',
+                    range: 'Prisliste!A2:E',
                     valueRenderOption: 'UNFORMATTED_VALUE',
                 })
             );
@@ -1168,8 +1168,30 @@ describe('sync-data.js', () => {
                 behandling: 'Vanlig undersokelse',
                 pris: 850,
                 sistOppdatert: '2026-03-01T10:00:00.000Z',
+                order: 2,
             });
+            expect(written.items[1].order).toBe(1);
             expect(written.sistOppdatert).toBe('2026-03-05T10:00:00.000Z');
+        });
+
+        it('should default order to 0 when column E is missing or invalid', async () => {
+            mockSheets.spreadsheets.values.get.mockResolvedValue({
+                data: {
+                    values: [
+                        ['Test', 'Behandling A', 500, '', undefined],
+                        ['Test', 'Behandling B', 600],
+                    ]
+                }
+            });
+
+            await syncPrisliste();
+
+            const writeCall = fs.writeFileSync.mock.calls.find(
+                c => c[0].includes('prisliste.json')
+            );
+            const written = JSON.parse(writeCall[1]);
+            expect(written.items[0].order).toBe(0);
+            expect(written.items[1].order).toBe(0);
         });
 
         it('should handle empty Prisliste sheet', async () => {
@@ -1190,7 +1212,7 @@ describe('sync-data.js', () => {
         it('should handle missing Prisliste sheet gracefully', async () => {
             mockSheets.spreadsheets.values.get.mockRejectedValue({
                 code: 400,
-                message: 'Unable to parse range: Prisliste!A2:D'
+                message: 'Unable to parse range: Prisliste!A2:E'
             });
 
             await syncPrisliste();

@@ -12,6 +12,9 @@ for (const item of rawPrisliste) {
     if (!kategorier.has(key)) kategorier.set(key, []);
     kategorier.get(key).push(item.data);
 }
+for (const items of kategorier.values()) {
+    items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
 
 const sistOppdatert = rawPrisliste.reduce((max, item) =>
     item.data.sistOppdatert > max ? item.data.sistOppdatert : max, '');
