@@ -132,12 +132,12 @@ const setup = async () => {
         document.getElementById('back-to-dashboard')?.addEventListener('click', () => closeModule());
 
         const cardModules = [
-            ['card-settings',  'settings',  'Innstillinger'],
-            ['card-tjenester', 'tjenester', 'Tjenester'],
-            ['card-meldinger', 'meldinger', 'Meldinger'],
-            ['card-tannleger', 'tannleger', 'Tannleger'],
-            ['card-bilder',    'bilder',    'Bilder'],
-            ['card-prisliste', 'prisliste', 'Prisliste'],
+            ['card-settings',  'settings',  'Rutinesjekken'],
+            ['card-tjenester', 'tjenester', 'Finpussen'],
+            ['card-meldinger', 'meldinger', 'Oppslagstavla'],
+            ['card-tannleger', 'tannleger', 'Tannlegekrakken'],
+            ['card-bilder',    'bilder',    'Røntgenbildene'],
+            ['card-prisliste', 'prisliste', 'Takstlista'],
         ];
         for (const [cardId, moduleId, title] of cardModules) {
             const card = document.getElementById(cardId);
