@@ -530,6 +530,19 @@ describe('editTannlege', () => {
         expect(img.src).toContain('/src/assets/tannleger/bilde.jpg');
     });
 
+    it('should escape previewSrc in img src attribute (XSS prevention)', async () => {
+        const { escapeHtml } = await import('../admin-editor-helpers.js');
+        const maliciousSrc = '" onerror="alert(1)';
+        resolveImagePreview.mockResolvedValue({ src: maliciousSrc, imageId: 'file-id' });
+
+        await window.editTannlege(2, {
+            name: 'N', title: 'T', description: 'D',
+            image: 'test.jpg', active: true, scale: 1, positionX: 50, positionY: 50
+        });
+
+        expect(escapeHtml).toHaveBeenCalledWith(maliciousSrc);
+    });
+
     it('should handle image with no preview src', async () => {
         resolveImagePreview.mockResolvedValue({ src: '', imageId: null });
 

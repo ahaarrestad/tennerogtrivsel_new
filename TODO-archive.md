@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **XSS-fix i admin-module-tannleger.js**
+    - `previewSrc` fra Google Sheets ble injisert i `img src` via innerHTML uten sanitering
+    - Fikset med `escapeHtml(previewSrc)` i src-attributtet (linje 108)
+    - Lagt til XSS-test som verifiserer at escapeHtml kalles med previewSrc
+    - Kilde: Gemini Code Assist, PR #126
+
 - [x] **Grundig sikkerhetssjekk av prosjektet** ([plan](docs/plans/archive/2026-03-07-sikkerhetssjekk.md))
     - OWASP Top 10-gjennomgang av hele kodebasen
     - Fikset: Drive API query-escaping (A03), path traversal i sync-data.js (A08), silentLogin race condition (A07), manglende BILDER_FOLDER i tilgangskontroll (A01)

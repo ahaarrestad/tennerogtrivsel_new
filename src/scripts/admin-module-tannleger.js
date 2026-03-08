@@ -105,7 +105,7 @@ async function editTannlege(rowIndex, data = null) {
                                 <span class="text-[10px] font-black uppercase tracking-widest">Velg bilde</span>
                             </div>
                             <img id="preview-img"
-                                 src="${previewSrc}"
+                                 src="${escapeHtml(previewSrc)}"
                                  class="absolute inset-0 w-full h-full object-cover transition-all duration-75 ${previewSrc ? '' : 'hidden'}"
                                  style="object-position: ${t.positionX}% ${t.positionY}%; transform: scale(${t.scale}); transform-origin: ${t.positionX}% ${t.positionY}%;"
                             >
