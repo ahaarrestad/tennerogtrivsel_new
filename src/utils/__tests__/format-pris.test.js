@@ -21,6 +21,22 @@ describe('formatPris', () => {
         expect(formatPris('330 - 410')).toBe('kr 330 – 410');
     });
 
+    it('formaterer pris med suffiks "pr time"', () => {
+        expect(formatPris('2700 pr time')).toBe('kr 2 700 pr time');
+        expect(formatPris('3380 pr time')).toBe('kr 3 380 pr time');
+    });
+
+    it('formaterer pris med suffiks "+ tekn." (med og uten punktum)', () => {
+        expect(formatPris('5950 + tekn.')).toBe('kr 5 950 + tekn.');
+        expect(formatPris('1730 + tekn')).toBe('kr 1 730 + tekn');
+        expect(formatPris('9720 + tekn.')).toBe('kr 9 720 + tekn.');
+    });
+
+    it('formaterer pris med suffiks "m/tannteknikk"', () => {
+        expect(formatPris('2980 m/tannteknikk')).toBe('kr 2 980 m/tannteknikk');
+        expect(formatPris('4500 m/tannteknikk')).toBe('kr 4 500 m/tannteknikk');
+    });
+
     it('returnerer string-input uendret', () => {
         expect(formatPris('Fra 830')).toBe('Fra 830');
         expect(formatPris('Inkludert')).toBe('Inkludert');

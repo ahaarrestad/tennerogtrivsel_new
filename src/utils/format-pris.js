@@ -21,5 +21,11 @@ export function formatPris(pris) {
         return `kr ${formatNumber(Number(rangeMatch[1]))} – ${formatNumber(Number(rangeMatch[2]))}`;
     }
 
+    // Suffiks: "2700 pr time", "5950 + tekn.", "2980 m/tannteknikk"
+    const suffixMatch = str.match(/^(\d+)\s+(.+)$/);
+    if (suffixMatch) {
+        return `kr ${formatNumber(Number(suffixMatch[1]))} ${suffixMatch[2]}`;
+    }
+
     return str;
 }
