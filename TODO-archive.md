@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Fiks package-lock.json pakkenavn**
+    - Pakkenavnet var endret fra `tennerogtrivsel2` til `prisliste-kategori-sortering` i PR #149
+    - Rettet i både `package.json` (var tomt) og `package-lock.json`
+    - Kjørt `npm install --package-lock-only` for å verifisere konsistens
+
 - [x] **XSS-fix i admin-module-tannleger.js**
     - `previewSrc` fra Google Sheets ble injisert i `img src` via innerHTML uten sanitering
     - Fikset med `escapeHtml(previewSrc)` i src-attributtet (linje 108)
