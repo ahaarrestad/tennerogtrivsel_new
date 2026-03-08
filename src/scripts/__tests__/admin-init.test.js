@@ -238,8 +238,8 @@ describe('admin-init', () => {
         expect(document.getElementById('dashboard').classList.contains('hidden')).toBe(true);
         expect(document.getElementById('module-container').classList.contains('hidden')).toBe(false);
         expect(document.getElementById('module-container').classList.contains('admin-view-enter')).toBe(true);
-        expect(document.getElementById('module-title').textContent).toBe('Innstillinger');
-        expect(document.getElementById('breadcrumb-module').textContent).toBe('Innstillinger');
+        expect(document.getElementById('module-title').textContent).toBe('Rutinesjekken');
+        expect(document.getElementById('breadcrumb-module').textContent).toBe('Rutinesjekken');
         expect(document.getElementById('breadcrumb-count').classList.contains('hidden')).toBe(true);
     });
 
@@ -247,30 +247,30 @@ describe('admin-init', () => {
         await import('../admin-init.js');
         await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
         document.getElementById('card-tjenester').click();
-        expect(document.getElementById('breadcrumb-module').textContent).toBe('Tjenester');
+        expect(document.getElementById('breadcrumb-module').textContent).toBe('Finpussen');
         document.getElementById('card-tannleger').click();
-        expect(document.getElementById('breadcrumb-module').textContent).toBe('Tannleger');
+        expect(document.getElementById('breadcrumb-module').textContent).toBe('Tannlegekrakken');
     });
 
     it('should bind card-tannleger click', async () => {
         await import('../admin-init.js');
         await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
         document.getElementById('card-tannleger').click();
-        expect(document.getElementById('module-title').textContent).toBe('Tannleger');
+        expect(document.getElementById('module-title').textContent).toBe('Tannlegekrakken');
     });
 
     it('should bind card-bilder click', async () => {
         await import('../admin-init.js');
         await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
         document.getElementById('card-bilder').click();
-        expect(document.getElementById('module-title').textContent).toBe('Bilder');
+        expect(document.getElementById('module-title').textContent).toBe('Røntgenbildene');
     });
 
     it('should bind card-meldinger click', async () => {
         await import('../admin-init.js');
         await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
         document.getElementById('card-meldinger').click();
-        expect(document.getElementById('module-title').textContent).toBe('Meldinger');
+        expect(document.getElementById('module-title').textContent).toBe('Oppslagstavla');
     });
 
     it('should bind back button to close module', async () => {
@@ -295,7 +295,7 @@ describe('admin-init', () => {
         });
         const card = document.getElementById('card-tjenester');
         card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-        expect(document.getElementById('module-title').textContent).toBe('Tjenester');
+        expect(document.getElementById('module-title').textContent).toBe('Finpussen');
     });
 
     it('should register window globals for tjenester, meldinger, tannleger', async () => {
@@ -372,7 +372,7 @@ describe('admin-init', () => {
         await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
         const card = document.getElementById('card-meldinger');
         card.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
-        expect(document.getElementById('module-title').textContent).toBe('Meldinger');
+        expect(document.getElementById('module-title').textContent).toBe('Oppslagstavla');
     });
 
     it('should ignore non-Enter/Space key on cards', async () => {
@@ -529,7 +529,7 @@ describe('admin-init openModule branches', () => {
         document.getElementById('card-bilder').click();
 
         expect(loadBilderModule).toHaveBeenCalled();
-        expect(document.getElementById('module-title').textContent).toBe('Bilder');
+        expect(document.getElementById('module-title').textContent).toBe('Røntgenbildene');
     });
 
     it('openModule settings should call loadSettingsModule', async () => {

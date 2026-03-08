@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Gjennomgang av admin-seksjonsnavn** ([plan](docs/plans/archive/2026-03-08-admin-seksjonsnavn.md))
+    - Oppdatert alle 6 seksjonskort med nye kortnavn og beskrivelser (tannklinikk-metafor)
+    - Oppdatert modultittel-mapping i admin-init.js
+    - Oppdatert tilhørende tester
+
 - [x] **loadAllServices mangler withRetry**
     - Wrappet `listFiles` og `getFileContent`-kall i `loadAllServices()` med `withRetry` og `refreshAuth`
     - Importert `withRetry` fra `admin-api-retry.js` og `getRefreshAuth` fra `admin-editor-helpers.js`
