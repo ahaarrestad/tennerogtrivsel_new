@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Tomme catch-blokker i prisliste/admin**
+    - Lagt til `console.error` i 2 stille catch-blokker: `admin-dashboard.js` (thumbnail-lasting) og `admin-module-tjenester.js` (prioritet-beregning)
+    - De 3 catch-blokkene i `admin-module-prisliste.js` hadde allerede `console.error`
+    - Kilde: Gemini Code Assist, PR #144/#149
+
 - [x] **Ustabil sortering i prisliste** ([plan](docs/plans/archive/2026-03-08-ustabil-sortering-prisliste.md))
     - Lagt til tiebreaker i `prisliste.astro` (sorterer på `tjeneste`-navn ved lik `order`)
     - Lagt til tiebreaker i `admin-dashboard.js` `reorderPrislisteKategori` (sorterer på `kategori`-navn ved lik `order`)

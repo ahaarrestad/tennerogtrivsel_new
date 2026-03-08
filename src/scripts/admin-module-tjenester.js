@@ -55,7 +55,7 @@ async function editTjeneste(id, name) {
                 const existing = await loadAllServices();
                 const maxPriority = existing.reduce((max, s) => Math.max(max, s.priority ?? 0), 0);
                 nextPriority = maxPriority + 1;
-            } catch (_) { /* fallback to 99 */ }
+            } catch (e) { console.error('[Tjenester] Kunne ikke beregne neste prioritet:', e); }
         }
 
         const isActive = data.active !== false && data.active !== 'false';

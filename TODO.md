@@ -26,11 +26,6 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
-- [ ] **Tomme catch-blokker i prisliste/admin**
-    - Stille `catch`-blokker i kategorilasting skjuler feil
-    - Legg til minimum `console.error` for feillogging
-    - Kilde: Gemini Code Assist, PR #144/#149
-
 - [ ] **loadAllServices mangler withRetry**
     - `loadAllServices` i `admin-module-tjenester.js` dupliserer logikk uten retry-mekanisme
     - Bør bruke `withRetry` som resten av admin-modulene
