@@ -2346,6 +2346,24 @@ describe('admin-dashboard.js', () => {
             expect(calls[0][2]).not.toBe(calls[1][2]);
         });
 
+        it('should use kategori name as tiebreaker when order values are equal', async () => {
+            const kategoriOrder = [
+                { rowIndex: 2, kategori: 'Kirurgi', order: 1 },
+                { rowIndex: 3, kategori: 'Bleking', order: 1 },
+                { rowIndex: 4, kategori: 'Undersokelser', order: 2 },
+            ];
+            adminClient.updateKategoriOrder.mockResolvedValue(true);
+
+            // Tiebreaker: Bleking < Kirurgi alphabetically, so sorted = [Bleking(0), Kirurgi(1), Undersokelser(2)]
+            // Move Bleking down → swaps with Kirurgi, but both have order=1
+            // Force-different: current.order = 0+1 = 1, neighbor.order = 0
+            const result = await reorderPrislisteKategori('sheet-id', kategoriOrder, 'Bleking', 1);
+
+            expect(result).toBe(true);
+            expect(adminClient.updateKategoriOrder).toHaveBeenCalledWith('sheet-id', 3, 1); // Bleking
+            expect(adminClient.updateKategoriOrder).toHaveBeenCalledWith('sheet-id', 2, 0); // Kirurgi
+        });
+
         it('should sort by order before finding neighbors', async () => {
             const kategoriOrder = [
                 { rowIndex: 5, kategori: 'Bleking', order: 3 },
