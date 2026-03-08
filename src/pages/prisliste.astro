@@ -5,6 +5,7 @@ import { Image } from 'astro:assets';
 import logoImage from '../assets/tt-logo-2026.png';
 import fs from 'fs';
 import path from 'path';
+import { formatPris } from '../utils/format-pris.js';
 
 const rawPrisliste = await getCollection('prisliste');
 
@@ -49,10 +50,6 @@ if (sistOppdatert) {
     }
 }
 
-function formatPris(pris) {
-    if (typeof pris === 'number') return `kr ${pris.toLocaleString('nb-NO')}`;
-    return String(pris);
-}
 ---
 <Layout
     title="Prisliste | Tenner og Trivsel"
