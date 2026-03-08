@@ -103,6 +103,18 @@ async function shouldDownload(driveFile, localPath) {
     return localHash !== driveFile.md5Checksum;
 }
 
+/**
+ * Validerer at en filsti er innenfor forventet basemappe.
+ * Beskytter mot path traversal fra filnavn med «..» eller absolutte stier.
+ */
+function assertSafePath(filePath, baseDir) {
+    const resolved = path.resolve(filePath);
+    const resolvedBase = path.resolve(baseDir);
+    if (!resolved.startsWith(resolvedBase + path.sep) && resolved !== resolvedBase) {
+        throw new Error(`Path traversal oppdaget: "${filePath}" er utenfor "${baseDir}"`);
+    }
+}
+
 async function downloadFile(fileId, destinationPath) {
     const drive = getDrive();
     const res = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' });
@@ -128,11 +140,15 @@ async function downloadImageIfNeeded(fileName, folderId, destinationPath, label)
     return true;
 }
 
+function escapeDriveQuery(value) {
+    return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
 async function findFileMetadataByName(name, folderId) {
     const drive = getDrive();
-    let q = `name = '${name}' and trashed = false`;
+    let q = `name = '${escapeDriveQuery(name)}' and trashed = false`;
     if (folderId) {
-        q = `'${folderId}' in parents and ${q}`;
+        q = `'${escapeDriveQuery(folderId)}' in parents and ${q}`;
     }
     const res = await drive.files.list({
         q: q,
@@ -172,6 +188,7 @@ async function syncTannleger() {
             if (bildeFil) {
                 try {
                     const destinationPath = path.join(config.paths.tannlegerAssets, bildeFil);
+                    assertSafePath(destinationPath, config.paths.tannlegerAssets);
                     imageFound = await downloadImageIfNeeded(bildeFil, config.tannlegerFolderId, destinationPath, 'Bilde');
                     if (!imageFound) syncWarnings.tannleger.push(bildeFil);
                 } catch (imgErr) {
@@ -221,7 +238,7 @@ async function syncMarkdownCollection(collection) {
     if (!fs.existsSync(collection.dest)) fs.mkdirSync(collection.dest, { recursive: true });
 
     const res = await drive.files.list({
-        q: `'${collection.folderId}' in parents and trashed = false`,
+        q: `'${escapeDriveQuery(collection.folderId)}' in parents and trashed = false`,
         fields: 'files(id, name, md5Checksum)',
         supportsAllDrives: true,
         includeItemsFromAllDrives: true
@@ -249,6 +266,7 @@ async function syncMarkdownCollection(collection) {
     // Last ned alle filer i denne samlingen i parallell
     await Promise.all(files.map(async (file) => {
         const destinationPath = path.join(collection.dest, file.name);
+        assertSafePath(destinationPath, collection.dest);
 
         if (await shouldDownload(file, destinationPath)) {
             await downloadFile(file.id, destinationPath);
@@ -455,6 +473,7 @@ async function syncGalleri() {
             if (bildeFil && !isForsidebilde) {
                 try {
                     const destinationPath = path.join(config.paths.galleriAssets, bildeFil);
+                    assertSafePath(destinationPath, config.paths.galleriAssets);
                     imageFound = await downloadImageIfNeeded(bildeFil, folderId, destinationPath, 'Galleribilde');
                     if (!imageFound) syncWarnings.galleri.push(bildeFil);
                 } catch (imgErr) {
@@ -697,4 +716,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 /* v8 ignore stop */
 
-export { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, syncPrisliste, syncInnstillinger, runSync, getConfig, getLocalHash, shouldDownload, downloadImageIfNeeded, HARD_DEFAULT_KEYS };
+export { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, syncPrisliste, syncInnstillinger, runSync, getConfig, getLocalHash, shouldDownload, downloadImageIfNeeded, HARD_DEFAULT_KEYS, escapeDriveQuery, assertSafePath };

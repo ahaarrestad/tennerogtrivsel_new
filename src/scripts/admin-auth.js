@@ -152,16 +152,30 @@ export function tryRestoreSession() {
     return false;
 }
 
+let _silentLoginPending = false;
+
 /**
- * Prøver å hente token uten popup hvis brukeren allerede er autentisert
+ * Prøver å hente token uten popup hvis brukeren allerede er autentisert.
+ * Debounced: ignorerer kall mens en forespørsel allerede pågår.
  */
 export function silentLogin() {
     if (!tokenClient) {
         console.warn("[Admin] silentLogin avbrutt: tokenClient ikke klar.");
         return;
     }
+    if (_silentLoginPending) {
+        console.log("[Admin] silentLogin allerede pågår, ignorerer.");
+        return;
+    }
+    _silentLoginPending = true;
     console.log("[Admin] Forsøker silent login...");
-    // Bruk 'prompt: none' for ekte silent auth, men det krever at vi håndterer feil hvis sesjon mangler
+
+    const resetPending = () => { _silentLoginPending = false; };
+    window.addEventListener('admin-auth-refreshed', resetPending, { once: true });
+    window.addEventListener('admin-auth-failed', resetPending, { once: true });
+    // Fallback-timeout i tilfelle ingen event utløses
+    setTimeout(resetPending, 15000);
+
     tokenClient.requestAccessToken({ prompt: 'none' });
 }
 
