@@ -13,7 +13,10 @@
 
 ## Pågående
 
-(Ingen oppgaver pågår)
+- [ ] **Landscape print av prisliste med to kolonner** ([plan](docs/plans/2026-03-08-landscape-print-prisliste.md))
+    - Landscape-orientering med `column-count: 2`
+    - Jevn fordeling av kategorier over kolonnene (beregnet ved build-tid)
+    - `break-inside: avoid` — ingen kategori deles over kolonner
 
 ## Backlog
 
@@ -29,11 +32,10 @@
     - Gjennomgå hele prosjektet for sikkerhetssårbarheter
     - Dekk OWASP Top 10, XSS, injection, CSP, autentisering, eksponerte hemmeligheter, og usikker datahåndtering
 
-- [ ] **Landscape print av prisliste med to kolonner**
-    - Print-modus (`/prisliste?print=1`) skal støtte landscape-orientering
-    - To-kolonners layout for bedre utnyttelse av bredden i landscape
-    - God rendring: jevn fordeling av kategorier over kolonnene, unngå brudd midt i en kategori
-    - Referanse: `~/Downloads/2.png` viser ønsket layout med to kolonner side om side
+- [ ] **Forbedre sortering i prisliste-admin**
+    - Forvirrende med to forskjellige sorterings-knapper helt ved siden av hverandre
+    - Sjekk hvordan sortering er gjort på andre admin-sider og gjør det enklere/mer konsistent
+    - Mål: brukeren skal intuitivt forstå sorteringsmekanismen
 
 ## Fullført
 

@@ -6,6 +6,7 @@ import logoImage from '../assets/tt-logo-2026.png';
 import fs from 'fs';
 import path from 'path';
 import { formatPris } from '../utils/format-pris.js';
+import { findColumnSplitIndex } from '../utils/column-split.js';
 
 const rawPrisliste = await getCollection('prisliste');
 
@@ -39,6 +40,13 @@ const sortedKategorier = new Map(
         return a.localeCompare(b, 'nb');
     })
 );
+
+const categoryList = [...sortedKategorier.entries()].map(([kategori, items]) => ({
+    kategori,
+    items,
+    rows: items.length + 1,
+}));
+const columnSplitIndex = findColumnSplitIndex(categoryList);
 
 const sistOppdatert = rawPrisliste.reduce((max, item) =>
     item.data.sistOppdatert > max ? item.data.sistOppdatert : max, '');
@@ -90,8 +98,9 @@ if (sistOppdatert) {
                 <p class="text-center text-brand-hover italic py-12">Prislisten er tom.</p>
             )}
 
-            <div class="space-y-6 print:space-y-0">
-                {[...sortedKategorier.entries()].map(([kategori, items]) => (
+            {/* Web: enkel kolonne */}
+            <div class="prisliste-web space-y-6">
+                {categoryList.map(({ kategori, items }) => (
                     <div class="prisliste-kategori bg-white rounded-2xl border border-brand-border/60 shadow-sm overflow-hidden">
                         <div class="px-6 py-4 border-b border-brand-border/60">
                             <h2 class="font-heading font-bold text-xl md:text-2xl text-brand">{kategori}</h2>
@@ -102,13 +111,47 @@ if (sistOppdatert) {
                                     "flex justify-between items-baseline py-3",
                                     i < items.length - 1 && "border-b border-brand-border/60"
                                 ]}>
-                                    <span class="text-base">{item.behandling}</span>
-                                    <span class="font-semibold text-base whitespace-nowrap">{formatPris(item.pris)}</span>
+                                    <span class="text-sm">{item.behandling}</span>
+                                    <span class="text-sm whitespace-nowrap">{formatPris(item.pris)}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
                 ))}
+            </div>
+
+            {/* Print: to eksplisitte kolonner via grid */}
+            <div class="prisliste-print">
+                <div class="print-kolonne">
+                    {categoryList.slice(0, columnSplitIndex).map(({ kategori, items }) => (
+                        <div class="prisliste-kategori">
+                            <h2>{kategori}</h2>
+                            <div>
+                                {items.map((item, i) => (
+                                    <div class:list={["print-rad", i < items.length - 1 && "print-rad-border"]}>
+                                        <span>{item.behandling}</span>
+                                        <span class="whitespace-nowrap">{formatPris(item.pris)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div class="print-kolonne">
+                    {categoryList.slice(columnSplitIndex).map(({ kategori, items }) => (
+                        <div class="prisliste-kategori">
+                            <h2>{kategori}</h2>
+                            <div>
+                                {items.map((item, i) => (
+                                    <div class:list={["print-rad", i < items.length - 1 && "print-rad-border"]}>
+                                        <span>{item.behandling}</span>
+                                        <span class="whitespace-nowrap">{formatPris(item.pris)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     </main>
@@ -116,17 +159,23 @@ if (sistOppdatert) {
 
 <style is:global>
     .not-print { display: none; }
+    .prisliste-print { display: none; }
 
     @page {
+        size: landscape;
         margin: 0;
     }
 
     @media print {
-        /* Skjul ALT fra layout utenom prisliste-innholdet */
         nav, footer, .skip-link, #navbar-sticky-wrapper, #banner-root,
         .print\:hidden { display: none !important; }
 
         .not-print { display: flex !important; }
+
+        /* Skjul web-layout, vis print-layout */
+        .prisliste-web { display: none !important; }
+        .prisliste-print { display: grid !important; }
+        .prisliste-header-web { display: none !important; }
 
         html, body {
             margin: 0 !important;
@@ -134,8 +183,10 @@ if (sistOppdatert) {
         }
 
         body {
-            padding: 1cm 2cm !important;
+            padding: 0.5cm 1.2cm !important;
             min-height: auto !important;
+            font-size: 8pt;
+            line-height: 1.25;
         }
 
         main, .section-container, .section-content {
@@ -144,64 +195,77 @@ if (sistOppdatert) {
             max-width: none !important;
         }
 
-        /* Skjul web-headeren i print */
-        .prisliste-header-web {
-            display: none !important;
-        }
-
-        /* Print header: logo venstre, tekst høyre — kompakt */
+        /* Print header: én kompakt linje */
         .prisliste-header-print {
             display: flex !important;
             align-items: center;
-            gap: 0.6cm;
-            margin-bottom: 0.5cm;
-            padding-bottom: 0.3cm;
+            gap: 0.3cm;
+            margin-bottom: 0.35cm;
+            padding-bottom: 0.15cm;
+            border-bottom: 1px solid var(--color-brand);
         }
         .print-header-logo {
-            height: 1.2cm;
+            height: 0.8cm;
             width: auto;
             flex-shrink: 0;
         }
         .prisliste-header-text {
             flex: 1;
+            display: flex;
+            align-items: baseline;
+            gap: 0.3cm;
         }
         .prisliste-tittel-print {
-            font-size: 18pt;
+            font-size: 12pt;
             font-weight: 900;
             font-family: var(--font-heading);
             margin: 0;
-            line-height: 1.2;
+            line-height: 1;
         }
         .prisliste-undertekst-print {
-            font-size: 9pt;
+            font-size: 6pt;
             color: var(--color-brand-hover);
-            margin: 0.05cm 0 0;
+            margin: 0;
         }
         .prisliste-dato-print {
-            font-size: 8pt;
+            font-size: 6pt;
             color: var(--color-brand-hover);
-            margin: 0.05cm 0 0;
+            margin: 0;
+            margin-left: auto;
         }
 
-        /* Kategorikort */
+        /* To-kolonners grid */
+        .prisliste-print {
+            grid-template-columns: 1fr 1fr;
+            gap: 0 0.8cm;
+            align-items: start;
+        }
+
         .prisliste-kategori {
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            border: none !important;
-            overflow: visible !important;
-            break-inside: avoid;
+            margin-bottom: 0.2cm;
         }
 
         .prisliste-kategori h2 {
-            font-size: 11pt;
+            font-size: 8.5pt;
+            font-weight: bold;
+            font-family: var(--font-heading);
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            padding: 0.2cm 0 0.1cm 0;
+            letter-spacing: 0.05em;
+            padding: 0.1cm 0 0.05cm 0;
+            margin: 0;
             border-bottom: 1px solid var(--color-brand);
         }
 
-        .prisliste-kategori > div:last-child {
-            padding: 0;
+        .print-rad {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 0.04cm 0;
+            font-size: 8pt;
+        }
+
+        .print-rad-border {
+            border-bottom: 0.5px solid var(--color-brand-border);
         }
     }
 </style>

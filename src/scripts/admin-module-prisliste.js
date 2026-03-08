@@ -241,7 +241,7 @@ async function editPrisRad(rowIndex, data = null) {
 
 function printPrisliste() {
     const popup = window.open('/prisliste?print=1', 'prisliste-print',
-        'width=800,height=600,left=100,top=100');
+        'width=1100,height=600,left=100,top=100');
     if (popup) {
         popup.addEventListener('afterprint', () => popup.close());
     }
@@ -346,10 +346,10 @@ async function loadPrislisteList(sheetId) {
                                 <button data-row="${item.rowIndex}" data-dir="1" class="reorder-pris-btn admin-icon-btn-reorder ${isLast ? 'invisible' : ''}" title="Flytt ned">${ICON_DOWN}</button>
                             </div>
                             <div class="flex-grow min-w-0">
-                                <span class="text-base text-brand">${escapeHtml(item.behandling)}</span>
+                                <span class="text-sm text-brand">${escapeHtml(item.behandling)}</span>
                                 ${oppdatertTekst ? `<span class="block text-xs text-admin-muted-light">Oppdatert: ${escapeHtml(oppdatertTekst)}</span>` : ''}
                             </div>
-                            <span class="font-semibold text-base whitespace-nowrap">${prisDisplay}</span>
+                            <span class="text-sm whitespace-nowrap">${prisDisplay}</span>
                             ${renderActionButtons('edit-pris-btn', 'delete-pris-btn', `data-row="${item.rowIndex}" data-name="${escapeHtml(item.behandling)}"`)}
                         </div>`;
                 }
