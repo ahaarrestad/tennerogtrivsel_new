@@ -109,6 +109,7 @@ const prisliste = defineCollection({
         behandling: z.string(),
         pris: z.union([z.string(), z.number()]),
         sistOppdatert: z.string().default(''),
+        order: z.number().default(0),
     }),
 });
 

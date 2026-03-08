@@ -214,5 +214,24 @@ describe('content.config.ts - Loaders', () => {
 
             expect(result).toEqual([]);
         });
+
+        it('should include order field when present in data', async () => {
+            const mockPrisliste = {
+                sistOppdatert: '2026-03-07T12:00:00.000Z',
+                items: [
+                    { kategori: 'Bleking', behandling: 'Hjemmebleking', pris: 2500, sistOppdatert: '', order: 3 },
+                    { kategori: 'Bleking', behandling: 'Klinikk', pris: 5000, sistOppdatert: '', order: 1 },
+                ],
+            };
+
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockPrisliste));
+
+            const loader = (collections.prisliste as any).loader;
+            const result = await loader();
+
+            expect(result[0].order).toBe(3);
+            expect(result[1].order).toBe(1);
+        });
     });
 });

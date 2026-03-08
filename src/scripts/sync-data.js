@@ -553,7 +553,7 @@ async function syncPrisliste() {
         try {
             res = await sheets.spreadsheets.values.get({
                 spreadsheetId: config.spreadsheetId,
-                range: 'Prisliste!A2:D',
+                range: 'Prisliste!A2:E',
                 valueRenderOption: 'UNFORMATTED_VALUE',
             });
         } catch (sheetErr) {
@@ -568,12 +568,16 @@ async function syncPrisliste() {
         const rows = res.data.values || [];
         const prislisteData = rows
             .filter(row => row[0] && row[1])
-            .map(([kategori, behandling, pris, sistOppdatert]) => ({
-                kategori: String(kategori).trim(),
-                behandling: String(behandling).trim(),
-                pris: pris ?? '',
-                sistOppdatert: sistOppdatert ? String(sistOppdatert).trim() : '',
-            }));
+            .map(([kategori, behandling, pris, sistOppdatert, orderRaw]) => {
+                const orderParsed = parseInt(orderRaw);
+                return {
+                    kategori: String(kategori).trim(),
+                    behandling: String(behandling).trim(),
+                    pris: pris ?? '',
+                    sistOppdatert: sistOppdatert ? String(sistOppdatert).trim() : '',
+                    order: isNaN(orderParsed) ? 0 : orderParsed,
+                };
+            });
 
         // Finn nyeste sistOppdatert-dato blant alle rader
         let sistOppdatert = '';
