@@ -36,6 +36,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
     getAdminConfig: vi.fn(() => ({
         TJENESTER_FOLDER: 'test-folder',
     })),
+    getRefreshAuth: vi.fn(() => vi.fn()),
     renderToggleHtml: vi.fn((id, active) => `<button id="${id}" data-active="${active}"><span class="toggle-label">${active ? 'Aktiv' : 'Inaktiv'}</span></button>`),
     attachToggleClick: vi.fn(),
     showDeletionToast: vi.fn(),
@@ -47,13 +48,14 @@ vi.mock('../admin-editor-helpers.js', () => ({
 vi.mock('../admin-api-retry.js', () => ({
     createAuthRefresher: vi.fn(() => () => Promise.resolve(true)),
     classifyError: vi.fn(() => 'non-retryable'),
+    withRetry: vi.fn((fn) => fn()),
 }));
 
 import { deleteFile, getFileContent, parseMarkdown, saveFile, createFile, stringifyMarkdown, listFiles } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
-import { classifyError } from '../admin-api-retry.js';
+import { classifyError, withRetry } from '../admin-api-retry.js';
 import { loadTjenesterModule, formatTimestamp } from '../admin-dashboard.js';
-import { showDeletionToast, initMarkdownEditor, attachToggleClick, showSaveBar, createAutoSaver } from '../admin-editor-helpers.js';
+import { showDeletionToast, initMarkdownEditor, attachToggleClick, showSaveBar, createAutoSaver, getRefreshAuth } from '../admin-editor-helpers.js';
 import { initTjenesterModule, reloadTjenester } from '../admin-module-tjenester.js';
 
 function setupDOM() {
@@ -773,6 +775,52 @@ describe('reorderTjeneste', () => {
 
         const { showToast } = await import('../admin-dialog.js');
         expect(showToast).toHaveBeenCalledWith(expect.stringContaining('sortere'), 'error');
+    });
+});
+
+describe('loadAllServices — withRetry integration', () => {
+    beforeEach(() => {
+        initTjenesterModule();
+    });
+
+    it('should wrap listFiles call with withRetry and refreshAuth', async () => {
+        listFiles.mockResolvedValue([]);
+
+        await window.editTjeneste(null, null);
+
+        expect(withRetry).toHaveBeenCalledWith(
+            expect.any(Function),
+            expect.objectContaining({ refreshAuth: expect.any(Function) })
+        );
+    });
+
+    it('should wrap getFileContent calls with withRetry', async () => {
+        listFiles.mockResolvedValue([
+            { id: 'f1', name: 'f1.md' },
+            { id: 'f2', name: 'f2.md' }
+        ]);
+        getFileContent.mockResolvedValueOnce('raw1').mockResolvedValueOnce('raw2');
+        parseMarkdown
+            .mockReturnValueOnce({ data: { title: 'S1', priority: 1 }, body: 'b1' })
+            .mockReturnValueOnce({ data: { title: 'S2', priority: 2 }, body: 'b2' });
+
+        await window.editTjeneste(null, null);
+
+        // 1 call for listFiles + 2 calls for getFileContent = 3 withRetry calls
+        expect(withRetry).toHaveBeenCalledTimes(3);
+    });
+
+    it('should pass getRefreshAuth result as refreshAuth option', async () => {
+        const mockRefreshFn = vi.fn();
+        getRefreshAuth.mockReturnValueOnce(mockRefreshFn);
+        listFiles.mockResolvedValue([]);
+
+        await window.editTjeneste(null, null);
+
+        expect(withRetry).toHaveBeenCalledWith(
+            expect.any(Function),
+            { refreshAuth: mockRefreshFn }
+        );
     });
 });
 

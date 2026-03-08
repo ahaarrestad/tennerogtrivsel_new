@@ -26,11 +26,6 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
-- [ ] **loadAllServices mangler withRetry**
-    - `loadAllServices` i `admin-module-tjenester.js` dupliserer logikk uten retry-mekanisme
-    - Bør bruke `withRetry` som resten av admin-modulene
-    - Kilde: Gemini Code Assist, PR #135
-
 - [ ] **Gjennomgang av admin-seksjonsnavn**
     - Gå gjennom navnene på framsiden av admin-panelet og sjekk at de er forståelige
     - Navnene bør ha et hint av tannlegehumor

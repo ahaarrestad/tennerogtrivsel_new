@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **loadAllServices mangler withRetry**
+    - Wrappet `listFiles` og `getFileContent`-kall i `loadAllServices()` med `withRetry` og `refreshAuth`
+    - Importert `withRetry` fra `admin-api-retry.js` og `getRefreshAuth` fra `admin-editor-helpers.js`
+    - Lagt til tester som verifiserer withRetry-integrasjonen
+    - Kilde: Gemini Code Assist, PR #135
+
 - [x] **Tomme catch-blokker i prisliste/admin**
     - Lagt til `console.error` i 2 stille catch-blokker: `admin-dashboard.js` (thumbnail-lasting) og `admin-module-tjenester.js` (prioritet-beregning)
     - De 3 catch-blokkene i `admin-module-prisliste.js` hadde allerede `console.error`
