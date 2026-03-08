@@ -29,6 +29,12 @@
     - Gjennomgå hele prosjektet for sikkerhetssårbarheter
     - Dekk OWASP Top 10, XSS, injection, CSP, autentisering, eksponerte hemmeligheter, og usikker datahåndtering
 
+- [ ] **Landscape print av prisliste med to kolonner**
+    - Print-modus (`/prisliste?print=1`) skal støtte landscape-orientering
+    - To-kolonners layout for bedre utnyttelse av bredden i landscape
+    - God rendring: jevn fordeling av kategorier over kolonnene, unngå brudd midt i en kategori
+    - Referanse: `~/Downloads/2.png` viser ønsket layout med to kolonner side om side
+
 ## Fullført
 
 Se [TODO-archive.md](TODO-archive.md) for alle fullførte oppgaver.
