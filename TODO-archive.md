@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Pen formatering av ulike pristyper i prislisten** ([plan](docs/plans/archive/2026-03-08-formatering-pristyper.md))
+    - Flyttet `formatPris()` fra inline i prisliste.astro til `src/utils/format-pris.js`
+    - Støtter 5 prisformater: heltall, prisområde (X–Y), pr time, +tekn., m/tannteknikk
+    - Alle får "kr"-prefiks og tusen-mellomrom, områder får typografisk tankestrek (–)
+    - 7 tester, 100% branch coverage
+
 - [x] **Sortering av prisliste-kategorier (admin)** ([plan](docs/plans/archive/2026-03-08-prisliste-kategori-sortering.md))
     - Opp/ned-knapper per kategori-header i admin-prisliste for å endre kategori-rekkefølge
     - Nytt Sheets-ark `KategoriRekkefølge` (kategori + order)
