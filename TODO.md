@@ -25,10 +25,6 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
-- [ ] **Fiks package-lock.json pakkenavn**
-    - Pakkenavnet ble utilsiktet endret fra `tennerogtrivsel2` til `prisliste-kategori-sortering` i PR #149
-    - Rett tilbake til korrekt navn
-
 - [ ] **formatPris: håndter trim() og string-input**
     - `formatPris` mangler `.trim()` på input-strenger
     - Håndterer ikke numeriske strenger (f.eks. `'1234'`) fra Google Sheets
