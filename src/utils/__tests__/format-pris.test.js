@@ -41,4 +41,16 @@ describe('formatPris', () => {
         expect(formatPris('Fra 830')).toBe('Fra 830');
         expect(formatPris('Inkludert')).toBe('Inkludert');
     });
+
+    it('håndterer numeriske strenger fra Google Sheets', () => {
+        expect(formatPris('1234')).toBe('kr 1 234');
+        expect(formatPris('830')).toBe('kr 830');
+        expect(formatPris('17170')).toBe('kr 17 170');
+    });
+
+    it('trimmer whitespace på string-input', () => {
+        expect(formatPris('  1234  ')).toBe('kr 1 234');
+        expect(formatPris(' 1050 - 1350 ')).toBe('kr 1 050 – 1 350');
+        expect(formatPris('  2700 pr time  ')).toBe('kr 2 700 pr time');
+    });
 });

@@ -13,7 +13,10 @@ export function formatPris(pris) {
     if (pris == null) return '';
     if (typeof pris === 'number') return `kr ${formatNumber(pris)}`;
 
-    const str = String(pris);
+    const str = String(pris).trim();
+
+    // Numerisk streng: "1234" → "kr 1 234"
+    if (/^\d+$/.test(str)) return `kr ${formatNumber(Number(str))}`;
 
     // Prisområde: "1050 - 1350" → "kr 1 050 – 1 350"
     const rangeMatch = str.match(/^(\d+)\s*-\s*(\d+)$/);
