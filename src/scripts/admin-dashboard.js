@@ -688,7 +688,7 @@ export async function reorderPrislisteItem(sheetId, items, rowIndex, direction) 
  * direction: -1 = opp, +1 = ned
  */
 export async function reorderPrislisteKategori(sheetId, kategoriOrder, kategori, direction) {
-    const sorted = [...kategoriOrder].sort((a, b) => a.order - b.order);
+    const sorted = [...kategoriOrder].sort((a, b) => a.order - b.order || a.kategori.localeCompare(b.kategori, 'nb'));
     const currentIdx = sorted.findIndex(k => k.kategori === kategori);
     const neighborIdx = currentIdx + direction;
     if (currentIdx < 0 || neighborIdx < 0 || neighborIdx >= sorted.length) return false;

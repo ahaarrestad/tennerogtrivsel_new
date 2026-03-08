@@ -2,6 +2,13 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Ustabil sortering i prisliste** ([plan](docs/plans/archive/2026-03-08-ustabil-sortering-prisliste.md))
+    - Lagt til tiebreaker i `prisliste.astro` (sorterer på `tjeneste`-navn ved lik `order`)
+    - Lagt til tiebreaker i `admin-dashboard.js` `reorderPrislisteKategori` (sorterer på `kategori`-navn ved lik `order`)
+    - Admin-modulen (`admin-module-prisliste.js`) hadde allerede tiebreaker med `indexOf()`
+    - Ny test for tiebreaker-oppførsel i admin-dashboard
+    - Kilde: Gemini Code Assist, PR #148
+
 - [x] **Print-knapp: legg til admin-sjekk**
     - `?print=1` URL-parameter trigget `window.print()` for alle besøkende
     - Løst: Sjekker `admin_google_token` i localStorage/sessionStorage før `window.print()` trigges

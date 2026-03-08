@@ -26,11 +26,6 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
-- [ ] **Ustabil sortering i prisliste**
-    - Elementer med samme `order`-verdi kan endre rekkefølge mellom builds
-    - Legg til tie-breaker (f.eks. original array-indeks)
-    - Kilde: Gemini Code Assist, PR #148
-
 - [ ] **Tomme catch-blokker i prisliste/admin**
     - Stille `catch`-blokker i kategorilasting skjuler feil
     - Legg til minimum `console.error` for feillogging
