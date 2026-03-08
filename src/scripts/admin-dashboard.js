@@ -4,7 +4,7 @@ import {
     parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
     checkMultipleAccess, login, logout, getTannlegerRaw, updateTannlegeRow,
     addTannlegeRow, getGalleriRaw, updateGalleriRow, findFileByName, getDriveImageBlob, getPrislisteRaw,
-    updateSettingByKey, updateSettingOrder, silentLogin
+    updatePrislisteRow, updateSettingByKey, updateSettingOrder, silentLogin
 } from './admin-client.js';
 import { withRetry, createAuthRefresher, classifyError } from './admin-api-retry.js';
 import { showAuthExpired } from './admin-dialog.js';
@@ -649,6 +649,35 @@ export async function reorderSettingItem(sheetId, items, index, direction) {
     await Promise.all([
         withRetry(() => updateSettingOrder(sheetId, current.row, current.order), { refreshAuth: getRefreshAuth() }),
         withRetry(() => updateSettingOrder(sheetId, neighbor.row, neighbor.order), { refreshAuth: getRefreshAuth() })
+    ]);
+    return true;
+}
+
+/**
+ * Bytter rekkefølge (order) mellom to prisliste-rader.
+ * direction: -1 = opp, +1 = ned
+ */
+export async function reorderPrislisteItem(sheetId, items, rowIndex, direction) {
+    const currentIdx = items.findIndex(i => i.rowIndex === rowIndex);
+    const neighborIdx = currentIdx + direction;
+    if (neighborIdx < 0 || neighborIdx >= items.length) return false;
+
+    const current = items[currentIdx];
+    const neighbor = items[neighborIdx];
+
+    const tmpOrder = current.order;
+    current.order = neighbor.order;
+    neighbor.order = tmpOrder;
+
+    // Hvis begge har samme order, tving ulik
+    if (current.order === neighbor.order) {
+        current.order = currentIdx + direction;
+        neighbor.order = currentIdx;
+    }
+
+    await Promise.all([
+        withRetry(() => updatePrislisteRow(sheetId, current.rowIndex, current), { refreshAuth: getRefreshAuth() }),
+        withRetry(() => updatePrislisteRow(sheetId, neighbor.rowIndex, neighbor), { refreshAuth: getRefreshAuth() })
     ]);
     return true;
 }
