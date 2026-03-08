@@ -25,11 +25,6 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
-- [ ] **formatPris: håndter trim() og string-input**
-    - `formatPris` mangler `.trim()` på input-strenger
-    - Håndterer ikke numeriske strenger (f.eks. `'1234'`) fra Google Sheets
-    - Kilde: Gemini Code Assist, PR #150
-
 - [ ] **Print-knapp: legg til admin-sjekk**
     - `?print=1` URL-parameter trigger `window.print()` for alle besøkende
     - Bør kun trigge for innloggede admins

@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **formatPris: håndter trim() og string-input**
+    - Lagt til `.trim()` på string-input for å håndtere whitespace
+    - Lagt til sjekk for numeriske strenger (f.eks. `'1234'`) fra Google Sheets — konverteres til tall med `kr`-prefiks
+    - 2 nye tester, 100% branch coverage
+    - Kilde: Gemini Code Assist, PR #150
+
 - [x] **Fiks package-lock.json pakkenavn**
     - Pakkenavnet var endret fra `tennerogtrivsel2` til `prisliste-kategori-sortering` i PR #149
     - Rettet i både `package.json` (var tomt) og `package-lock.json`
