@@ -21,11 +21,14 @@ vi.mock('../admin-dialog.js', () => ({
 vi.mock('../admin-dashboard.js', () => ({
     formatTimestamp: vi.fn(() => '7. mar kl. 10:00'),
     ICON_ADD: '+',
+    ICON_UP: '^',
+    ICON_DOWN: 'v',
     renderActionButtons: vi.fn((editClass, deleteClass, dataAttrs) =>
         `<div class="flex gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
             <button ${dataAttrs} class="${editClass} admin-icon-btn group/btn" title="Rediger">E</button>
             <button ${dataAttrs} class="${deleteClass} admin-icon-btn-danger group/btn" title="Slett">D</button>
         </div>`),
+    reorderPrislisteItem: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../admin-editor-helpers.js', () => ({
@@ -41,6 +44,7 @@ import {
 } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { createAutoSaver, verifySave } from '../admin-editor-helpers.js';
+import { reorderPrislisteItem } from '../admin-dashboard.js';
 import { initPrislisteModule, reloadPrisliste } from '../admin-module-prisliste.js';
 
 function setupDOM() {
@@ -793,5 +797,239 @@ describe('editPrisRad', () => {
 
         input.dispatchEvent(new Event('blur'));
         expect(dropdown.classList.contains('hidden')).toBe(true);
+    });
+});
+
+describe('loadPrislisteList - sorting and reorder buttons', () => {
+    it('should sort items by order within each category', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Test', behandling: 'B', pris: 200, order: 2 },
+            { rowIndex: 3, kategori: 'Test', behandling: 'A', pris: 100, order: 1 },
+            { rowIndex: 4, kategori: 'Test', behandling: 'C', pris: 300, order: 3 },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const inner = document.getElementById('module-inner');
+        const items = inner.querySelectorAll('.edit-pris-btn');
+        // First item should be row 3 (order 1), then row 2 (order 2), then row 4 (order 3)
+        expect(items[0].dataset.row).toBe('3');
+        expect(items[1].dataset.row).toBe('2');
+        expect(items[2].dataset.row).toBe('4');
+    });
+
+    it('should use original index as tiebreaker for equal order values', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Test', behandling: 'First', pris: 100, order: 1 },
+            { rowIndex: 3, kategori: 'Test', behandling: 'Second', pris: 200, order: 1 },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const inner = document.getElementById('module-inner');
+        const items = inner.querySelectorAll('.edit-pris-btn');
+        // Should maintain original order when order values are equal
+        expect(items[0].dataset.row).toBe('2');
+        expect(items[1].dataset.row).toBe('3');
+    });
+
+    it('should render reorder buttons for each item', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Test', behandling: 'A', pris: 100, order: 1 },
+            { rowIndex: 3, kategori: 'Test', behandling: 'B', pris: 200, order: 2 },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const reorderBtns = document.querySelectorAll('.reorder-pris-btn');
+        expect(reorderBtns).toHaveLength(4); // 2 items × 2 buttons each
+    });
+
+    it('should make first item up-button invisible', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Test', behandling: 'A', pris: 100, order: 1 },
+            { rowIndex: 3, kategori: 'Test', behandling: 'B', pris: 200, order: 2 },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const upBtns = document.querySelectorAll('.reorder-pris-btn[data-dir="-1"]');
+        expect(upBtns[0].classList.contains('invisible')).toBe(true);
+        expect(upBtns[1].classList.contains('invisible')).toBe(false);
+    });
+
+    it('should make last item down-button invisible', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Test', behandling: 'A', pris: 100, order: 1 },
+            { rowIndex: 3, kategori: 'Test', behandling: 'B', pris: 200, order: 2 },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const downBtns = document.querySelectorAll('.reorder-pris-btn[data-dir="1"]');
+        expect(downBtns[0].classList.contains('invisible')).toBe(false);
+        expect(downBtns[1].classList.contains('invisible')).toBe(true);
+    });
+
+    it('should call reorderPrislisteItem and reload when reorder button is clicked', async () => {
+        window.clearBreadcrumbEditor = vi.fn();
+        const items = [
+            { rowIndex: 2, kategori: 'Test', behandling: 'A', pris: 100, order: 1 },
+            { rowIndex: 3, kategori: 'Test', behandling: 'B', pris: 200, order: 2 },
+        ];
+        getPrislisteRaw.mockResolvedValue(items);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        // Click the down button on the first item (rowIndex=2, dir=1)
+        const downBtn = document.querySelector('.reorder-pris-btn[data-row="2"][data-dir="1"]');
+        expect(downBtn).not.toBeNull();
+        const event = new Event('click', { bubbles: true });
+        event.stopPropagation = vi.fn();
+        await downBtn.onclick(event);
+
+        expect(reorderPrislisteItem).toHaveBeenCalledWith('test-sheet', expect.any(Array), 2, 1);
+        expect(window.clearBreadcrumbEditor).toHaveBeenCalled();
+    });
+
+    it('should not crash when reorder button row is not found in items', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Test', behandling: 'A', pris: 100, order: 1 },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        // Simulate btn with a rowIndex that won't match any item
+        const btn = document.querySelector('.reorder-pris-btn');
+        // Manually set data-row to an invalid rowIndex
+        btn.dataset.row = '999';
+        const event = new Event('click', { bubbles: true });
+        event.stopPropagation = vi.fn();
+        await expect(btn.onclick(event)).resolves.toBeUndefined();
+        expect(reorderPrislisteItem).not.toHaveBeenCalled();
+    });
+
+    it('should treat items with no order as order=0', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Test', behandling: 'B', pris: 200 },       // no order
+            { rowIndex: 3, kategori: 'Test', behandling: 'A', pris: 100, order: 0 },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        // Both have effective order 0, so original order should be preserved
+        const inner = document.getElementById('module-inner');
+        const editBtns = inner.querySelectorAll('.edit-pris-btn');
+        expect(editBtns[0].dataset.row).toBe('2');
+        expect(editBtns[1].dataset.row).toBe('3');
+    });
+});
+
+describe('editPrisRad - order computation', () => {
+    beforeEach(() => {
+        initPrislisteModule();
+    });
+
+    it('should compute order=max+1 for new row in existing category', async () => {
+        window.clearBreadcrumbEditor = vi.fn();
+        addPrislisteRow.mockResolvedValue();
+        getPrislisteRaw
+            .mockResolvedValueOnce([
+                { rowIndex: 2, kategori: 'Test', behandling: 'A', pris: 100, order: 1 },
+                { rowIndex: 3, kategori: 'Test', behandling: 'B', pris: 200, order: 3 },
+            ])
+            .mockResolvedValueOnce([]);
+
+        await window.editPrisRad(null, { kategori: 'Test', behandling: '', pris: '' });
+
+        document.getElementById('edit-pris-behandling').value = 'C';
+        document.getElementById('edit-pris-pris').value = '300';
+
+        const createBtn = document.querySelector('#new-row-actions .btn-primary');
+        await createBtn.click();
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(addPrislisteRow).toHaveBeenCalledWith('test-sheet', expect.objectContaining({
+            kategori: 'Test',
+            order: 4, // max(3) + 1
+        }));
+    });
+
+    it('should compute order=1 for new row in empty category', async () => {
+        window.clearBreadcrumbEditor = vi.fn();
+        addPrislisteRow.mockResolvedValue();
+        getPrislisteRaw
+            .mockResolvedValueOnce([
+                { rowIndex: 2, kategori: 'AndreKategori', behandling: 'X', pris: 100, order: 5 },
+            ])
+            .mockResolvedValueOnce([]);
+
+        await window.editPrisRad(null, null);
+
+        document.getElementById('edit-pris-kategori').value = 'NyKategori';
+        document.getElementById('edit-pris-behandling').value = 'Ny behandling';
+
+        const createBtn = document.querySelector('#new-row-actions .btn-primary');
+        await createBtn.click();
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(addPrislisteRow).toHaveBeenCalledWith('test-sheet', expect.objectContaining({
+            order: 1, // no existing items in NyKategori, so max=0, order=1
+        }));
+    });
+
+    it('should preserve existing order when category has not changed on autosave', async () => {
+        updatePrislisteRow.mockResolvedValue();
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'K', behandling: 'B', pris: 100, order: 5 },
+        ]);
+
+        await window.editPrisRad(2, { kategori: 'K', behandling: 'B', pris: 100, order: 5 });
+
+        document.getElementById('edit-pris-behandling').value = 'Updated';
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await saveFn();
+
+        expect(updatePrislisteRow).toHaveBeenCalledWith('test-sheet', 2, expect.objectContaining({
+            order: 5,
+        }));
+    });
+
+    it('should compute new order when category changes on autosave', async () => {
+        updatePrislisteRow.mockResolvedValue();
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'K', behandling: 'B', pris: 100, order: 2 },
+            { rowIndex: 3, kategori: 'NyK', behandling: 'X', pris: 200, order: 7 },
+        ]);
+
+        await window.editPrisRad(2, { kategori: 'K', behandling: 'B', pris: 100, order: 2 });
+
+        // Change category to NyK
+        document.getElementById('edit-pris-kategori').value = 'NyK';
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await saveFn();
+
+        expect(updatePrislisteRow).toHaveBeenCalledWith('test-sheet', 2, expect.objectContaining({
+            kategori: 'NyK',
+            order: 8, // max(7) + 1
+        }));
+    });
+
+    it('should set order=1 when moving to empty category on autosave', async () => {
+        updatePrislisteRow.mockResolvedValue();
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'K', behandling: 'B', pris: 100, order: 2 },
+        ]);
+
+        await window.editPrisRad(2, { kategori: 'K', behandling: 'B', pris: 100, order: 2 });
+
+        document.getElementById('edit-pris-kategori').value = 'BrandNewCategory';
+        const saveFn = createAutoSaver.mock.calls[0][0];
+        await saveFn();
+
+        expect(updatePrislisteRow).toHaveBeenCalledWith('test-sheet', 2, expect.objectContaining({
+            kategori: 'BrandNewCategory',
+            order: 1,
+        }));
     });
 });
