@@ -7,10 +7,12 @@
     - Koordinater, åpningstider (splittet til 5 dager), og forenklede titler synkronisert
     - businessHours3–5 lagt til i HARD_DEFAULT_KEYS i sync-data.js
 
+
 - [x] **Legg til hjelpetekst på alle innstillinger i admin** ([plan](docs/plans/archive/2026-03-09-admin-hjelpetekst.md))
     - Hjelpetekst lagt til i alle 6 admin-moduler: settings, tjenester, meldinger, tannleger, bilder, prisliste
     - businessHours3–5 lagt til i SETTING_HINTS (manglet fra Google Sheets-data)
     - Alle hints følger eksisterende mønster: `<p class="text-xs text-admin-muted-light">Vises på: ...</p>`
+
 
 
 - [x] **Begrens workflow-kjøring for fork-PRer**
