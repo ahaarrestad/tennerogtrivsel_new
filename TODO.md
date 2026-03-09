@@ -26,9 +26,6 @@
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
     - Opprett GitHub Environment (f.eks. `production`) med protection rules for deploy-jobben — begrenser hvem/hva som kan trigge deploy og sikrer at secrets kun er tilgjengelige i riktig miljø
 
-- [ ] **Kollapserbare kategorier i prisliste-admin** ([plan](docs/plans/2026-03-09-kollapserbare-kategorier.md)) ([design](docs/plans/2026-03-09-kollapserbare-kategorier-design.md))
-    - Klikk på kategori-header for å kollapse/ekspandere rader
-    - Global ikon-knapp i topplinjen for kollaps/ekspander alle
 
 ## Fullført
 

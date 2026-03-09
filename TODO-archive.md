@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Kollapserbare kategorier i prisliste-admin** ([plan](docs/plans/archive/2026-03-09-kollapserbare-kategorier.md)) ([design](docs/plans/archive/2026-03-09-kollapserbare-kategorier-design.md))
+    - Chevron-ikon i kategori-headers med klikk for kollaps/ekspander
+    - Global "Kollaps/Ekspander alle"-knapp i topplinjen
+    - 7 tester dekker funksjonaliteten
+
 - [x] **Optimalisere responstid i admin-moduler** ([plan](docs/plans/archive/2026-03-09-optimistisk-reorder.md)) ([design](docs/plans/archive/2026-03-09-optimistisk-reorder-design.md))
     - Optimistisk DOM-swap med animasjon, API i bakgrunn, revert ved feil
     - Ny felles `admin-reorder.js`-modul med `animateSwap()`, `disableReorderButtons()`, `enableReorderButtons()`, `updateReorderButtonVisibility()`
