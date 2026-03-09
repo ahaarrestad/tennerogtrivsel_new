@@ -2,6 +2,7 @@ import {
     deleteFile, getFileContent, parseMarkdown, stringifyMarkdown,
     saveFile, createFile, listFiles
 } from './admin-client.js';
+import { animateSwap, disableReorderButtons, enableReorderButtons, updateReorderButtonVisibility } from './admin-reorder.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { classifyError, withRetry } from './admin-api-retry.js';
 import { stripStackEditData, slugify } from './textFormatter.js';
@@ -218,18 +219,32 @@ async function loadAllServices() {
 }
 
 async function handleReorder(driveId, direction) {
+    const container = document.getElementById('module-inner');
+    const allCards = container ? [...container.querySelectorAll('.admin-card-interactive')] : [];
+    const currentCard = allCards.find(c => c.querySelector(`.reorder-tjeneste-btn[data-id="${driveId}"]`));
+    const currentCardIdx = allCards.indexOf(currentCard);
+    const neighborCard = allCards[currentCardIdx + direction];
+
+    if (container) disableReorderButtons(container, '.reorder-tjeneste-btn');
+
+    if (currentCard && neighborCard) {
+        await animateSwap(currentCard, neighborCard);
+    }
+
     try {
         const services = await loadAllServices();
 
         const currentIdx = services.findIndex(s => s.driveId === driveId);
         const neighborIdx = currentIdx + direction;
-        if (currentIdx < 0 || neighborIdx < 0 || neighborIdx >= services.length) return;
+        if (currentIdx < 0 || neighborIdx < 0 || neighborIdx >= services.length) {
+            if (currentCard && neighborCard) await animateSwap(neighborCard, currentCard);
+            if (container) enableReorderButtons(container, '.reorder-tjeneste-btn');
+            return;
+        }
 
-        // Move item in array
         const [moved] = services.splice(currentIdx, 1);
         services.splice(neighborIdx, 0, moved);
 
-        // Re-index all with sequential priorities
         await Promise.all(services.map((s, idx) => {
             const frontmatter = { ...s };
             delete frontmatter.driveId;
@@ -239,9 +254,17 @@ async function handleReorder(driveId, direction) {
             return saveFile(s.driveId, s.name, stringifyMarkdown(frontmatter, s.body));
         }));
 
-        reloadTjenester();
+        if (container) {
+            enableReorderButtons(container, '.reorder-tjeneste-btn');
+            const updatedCards = [...container.querySelectorAll('.admin-card-interactive')];
+            updateReorderButtonVisibility(updatedCards, '.reorder-tjeneste-btn');
+        }
     } catch (e) {
         console.error('Reorder failed:', e);
+        if (currentCard && neighborCard) {
+            await animateSwap(neighborCard, currentCard);
+        }
+        if (container) enableReorderButtons(container, '.reorder-tjeneste-btn');
         showToast('Kunne ikke sortere tjenesten.', 'error');
     }
 }

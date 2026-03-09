@@ -7,6 +7,13 @@ import { createMockAutoSaver, mockAdminDialog, setupModuleDOM } from './test-hel
 vi.mock('dompurify');
 vi.mock('marked');
 
+vi.mock('../admin-reorder.js', () => ({
+    animateSwap: vi.fn().mockResolvedValue(undefined),
+    disableReorderButtons: vi.fn(),
+    enableReorderButtons: vi.fn(),
+    updateReorderButtonVisibility: vi.fn(),
+}));
+
 vi.mock('../admin-client.js', () => ({
     deleteFile: vi.fn(),
     getFileContent: vi.fn(),
@@ -53,6 +60,7 @@ import { deleteFile, getFileContent, parseMarkdown, saveFile, createFile, string
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { classifyError, withRetry } from '../admin-api-retry.js';
 import { loadTjenesterModule, formatTimestamp } from '../admin-dashboard.js';
+import { animateSwap, disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
 import { showDeletionToast, initMarkdownEditor, attachToggleClick, showSaveBar, createAutoSaver, getRefreshAuth } from '../admin-editor-helpers.js';
 import { initTjenesterModule, reloadTjenester } from '../admin-module-tjenester.js';
 
@@ -618,7 +626,7 @@ describe('reorderTjeneste', () => {
             expect.objectContaining({ title: 'C', priority: 3 }),
             'bodyC'
         );
-        expect(loadTjenesterModule).toHaveBeenCalled();
+        expect(enableReorderButtons).toHaveBeenCalled();
     });
 
     it('should re-index all services sequentially after moving item up', async () => {
@@ -653,7 +661,7 @@ describe('reorderTjeneste', () => {
         );
     });
 
-    it('should show error toast on save failure', async () => {
+    it('should show error toast and revert on save failure', async () => {
         listFiles.mockResolvedValue([
             { id: 'driveA', name: 'a.md' },
             { id: 'driveB', name: 'b.md' }
@@ -669,6 +677,24 @@ describe('reorderTjeneste', () => {
 
         const { showToast } = await import('../admin-dialog.js');
         expect(showToast).toHaveBeenCalledWith(expect.stringContaining('sortere'), 'error');
+        expect(enableReorderButtons).toHaveBeenCalled();
+    });
+
+    it('should call disableReorderButtons and animateSwap before API call', async () => {
+        listFiles.mockResolvedValue([
+            { id: 'driveA', name: 'a.md' },
+            { id: 'driveB', name: 'b.md' }
+        ]);
+        getFileContent.mockResolvedValueOnce('raw1').mockResolvedValueOnce('raw2');
+        parseMarkdown
+            .mockReturnValueOnce({ data: { title: 'A', priority: 1 }, body: 'bodyA' })
+            .mockReturnValueOnce({ data: { title: 'B', priority: 2 }, body: 'bodyB' });
+        stringifyMarkdown.mockReturnValue('md');
+        saveFile.mockResolvedValue();
+
+        await reorderFn('driveA', 1);
+
+        expect(disableReorderButtons).toHaveBeenCalled();
     });
 });
 

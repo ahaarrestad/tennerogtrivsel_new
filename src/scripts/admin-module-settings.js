@@ -5,6 +5,7 @@ import {
     reorderSettingItem, formatTimestamp, updateLastFetchedTime, updateBreadcrumbCount,
     handleModuleError
 } from './admin-dashboard.js';
+import { animateSwap, disableReorderButtons, enableReorderButtons, updateReorderButtonVisibility } from './admin-reorder.js';
 import { getAdminConfig, getRefreshAuth, escapeHtml } from './admin-editor-helpers.js';
 
 const SETTING_HINTS = {
@@ -148,10 +149,27 @@ export async function loadSettingsModule() {
                     e.stopPropagation();
                     const idx = parseInt(btn.dataset.idx);
                     const dir = parseInt(btn.dataset.dir);
-                    const ok = await reorderSettingItem(SHEET_ID, allSettings, idx, dir);
-                    if (ok) {
-                        updateLastFetchedTime(new Date());
-                        loadSettingsModule();
+
+                    const currentEl = document.getElementById(`setting-container-${idx}`);
+                    const neighborEl = document.getElementById(`setting-container-${idx + dir}`);
+                    if (!currentEl || !neighborEl) return;
+
+                    disableReorderButtons(inner, '.settings-reorder-btn');
+                    await animateSwap(currentEl, neighborEl);
+
+                    try {
+                        const ok = await reorderSettingItem(SHEET_ID, allSettings, idx, dir);
+                        if (ok) {
+                            updateLastFetchedTime(new Date());
+                            currentEl.id = `setting-container-${idx + dir}`;
+                            neighborEl.id = `setting-container-${idx}`;
+                        }
+                        enableReorderButtons(inner, '.settings-reorder-btn');
+                        const containers = [...inner.querySelectorAll('[id^="setting-container-"]')];
+                        updateReorderButtonVisibility(containers, '.settings-reorder-btn');
+                    } catch (err) {
+                        await animateSwap(neighborEl, currentEl);
+                        enableReorderButtons(inner, '.settings-reorder-btn');
                     }
                 });
             });

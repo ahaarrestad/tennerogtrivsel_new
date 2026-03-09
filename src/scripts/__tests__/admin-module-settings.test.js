@@ -7,6 +7,13 @@ import { setupModuleDOM } from './test-helpers.js';
 vi.mock('dompurify');
 vi.mock('marked');
 
+vi.mock('../admin-reorder.js', () => ({
+    animateSwap: vi.fn().mockResolvedValue(undefined),
+    disableReorderButtons: vi.fn(),
+    enableReorderButtons: vi.fn(),
+    updateReorderButtonVisibility: vi.fn(),
+}));
+
 vi.mock('../admin-client.js', () => ({
     getSettingsWithNotes: vi.fn(),
     updateSettingByKey: vi.fn(),
@@ -41,6 +48,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
 
 import { getSettingsWithNotes, updateSettingByKey, updateSettingOrder } from '../admin-client.js';
 import { mergeSettingsWithDefaults, reorderSettingItem, updateLastFetchedTime, updateBreadcrumbCount, handleModuleError } from '../admin-dashboard.js';
+import { animateSwap, disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
 
 beforeEach(() => {
     setupModuleDOM({ configAttrs: 'data-sheet-id="sid" data-defaults=\'{}\'', extraHTML: '<span id="breadcrumb-count" class="hidden"></span>' });
@@ -248,7 +256,7 @@ describe('loadSettingsModule', () => {
         expect(document.querySelectorAll('.setting-field').length).toBe(0);
     });
 
-    it('should handle reorder button click', async () => {
+    it('should handle reorder button click with optimistic swap', async () => {
         const mockSettings = [
             { id: 'a', value: '', description: 'A', order: 1, row: 2 },
             { id: 'b', value: '', description: 'B', order: 2, row: 3 },
@@ -270,14 +278,15 @@ describe('loadSettingsModule', () => {
 
         // Click a reorder button
         reorderSettingItem.mockResolvedValue(true);
-        getSettingsWithNotes.mockResolvedValue(mockSettings);
-        mergeSettingsWithDefaults.mockReturnValue([...mockSettings]);
 
         const reorderBtn = document.querySelector('.settings-reorder-btn:not(.invisible)');
         reorderBtn.click();
         await vi.waitFor(() => {
             expect(reorderSettingItem).toHaveBeenCalled();
         });
+        expect(disableReorderButtons).toHaveBeenCalled();
+        expect(animateSwap).toHaveBeenCalled();
+        expect(enableReorderButtons).toHaveBeenCalled();
         expect(updateLastFetchedTime).toHaveBeenCalled();
     });
 
