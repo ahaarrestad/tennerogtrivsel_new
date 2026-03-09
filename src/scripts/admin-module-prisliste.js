@@ -10,6 +10,10 @@ import { showToast, showConfirm } from './admin-dialog.js';
 import { getAdminConfig, escapeHtml, createAutoSaver, verifySave } from './admin-editor-helpers.js';
 import { formatTimestamp, ICON_ADD, ICON_UP, ICON_DOWN, ICON_EDIT, ICON_DELETE, reorderPrislisteItem, reorderPrislisteKategori } from './admin-dashboard.js';
 
+const ICON_CHEVRON_DOWN = '<svg class="kategori-chevron transition-transform duration-150" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+const ICON_COLLAPSE_ALL = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 3 12 8 17 3"/><polyline points="7 13 12 18 17 13"/></svg>';
+const ICON_EXPAND_ALL = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 12 3 17 8"/><polyline points="7 18 12 13 17 18"/></svg>';
+
 function formatSistOppdatert(isoString) {
     if (!isoString) return '';
     const d = new Date(isoString);
@@ -262,7 +266,7 @@ async function loadPrislisteList(sheetId) {
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
 
-    actions.innerHTML = `<div class="flex items-center gap-2"><button id="btn-new-pris" class="btn-primary p-2.5 shadow-md rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center" title="Legg til prisrad" aria-label="Legg til prisrad">${ICON_ADD}</button><button id="btn-print-prisliste" class="btn-secondary p-2.5 shadow-md rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center" title="Skriv ut prisliste" aria-label="Skriv ut prisliste"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button></div>`;
+    actions.innerHTML = `<div class="flex items-center gap-2"><button id="btn-new-pris" class="btn-primary p-2.5 shadow-md rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center" title="Legg til prisrad" aria-label="Legg til prisrad">${ICON_ADD}</button><button id="btn-print-prisliste" class="btn-secondary p-2.5 shadow-md rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center" title="Skriv ut prisliste" aria-label="Skriv ut prisliste"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button><button id="btn-toggle-collapse" class="btn-secondary p-2.5 shadow-md rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center" title="Kollaps alle kategorier" aria-label="Kollaps alle kategorier">${ICON_COLLAPSE_ALL}</button></div>`;
     inner.innerHTML = '<div class="text-admin-muted italic text-sm animate-pulse">Henter prisliste...</div>';
 
     try {
@@ -325,17 +329,20 @@ async function loadPrislisteList(sheetId) {
                 const isFirstKat = ki === 0;
                 const isLastKat = ki === sortedKategoriKeys.length - 1;
                 html += `<div class="bg-white rounded-2xl border border-brand-border/60 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-brand-border/60 flex items-center justify-between">
+                    <div class="kategori-header px-6 py-4 border-b border-brand-border/60 flex items-center justify-between cursor-pointer select-none">
                         <div class="flex items-center gap-2">
-                            <div class="flex flex-col gap-1">
+                            <div class="flex flex-col gap-1" onclick="event.stopPropagation()">
                                 <button data-kategori="${escapeHtml(kategori)}" data-dir="-1" class="reorder-kategori-btn admin-icon-btn-reorder ${isFirstKat ? 'invisible' : ''}" title="Flytt kategori opp">${ICON_UP}</button>
                                 <button data-kategori="${escapeHtml(kategori)}" data-dir="1" class="reorder-kategori-btn admin-icon-btn-reorder ${isLastKat ? 'invisible' : ''}" title="Flytt kategori ned">${ICON_DOWN}</button>
                             </div>
+                            ${ICON_CHEVRON_DOWN}
                             <h3 class="font-heading font-bold text-xl text-brand">${escapeHtml(kategori)}</h3>
                         </div>
-                        <button class="add-pris-kategori-btn btn-primary p-1.5 rounded-lg min-w-[32px] min-h-[32px] flex items-center justify-center" data-kategori="${escapeHtml(kategori)}" title="Ny prisrad i ${escapeHtml(kategori)}" aria-label="Ny prisrad i ${escapeHtml(kategori)}">${ICON_ADD}</button>
+                        <div class="flex items-center gap-2" onclick="event.stopPropagation()">
+                            <button class="add-pris-kategori-btn btn-primary p-1.5 rounded-lg min-w-[32px] min-h-[32px] flex items-center justify-center" data-kategori="${escapeHtml(kategori)}" title="Ny prisrad i ${escapeHtml(kategori)}" aria-label="Ny prisrad i ${escapeHtml(kategori)}">${ICON_ADD}</button>
+                        </div>
                     </div>
-                    <div class="px-6 py-2">`;
+                    <div class="kategori-content px-6 py-2">`;
                 for (let i = 0; i < rows.length; i++) {
                     const item = rows[i];
                     const isFirst = i === 0;
@@ -365,6 +372,17 @@ async function loadPrislisteList(sheetId) {
             html += '</div>';
 
             inner.innerHTML = DOMPurify.sanitize(html);
+
+            // Kollaps/ekspander kategori-headers
+            inner.querySelectorAll('.kategori-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const section = header.closest('.bg-white');
+                    const content = section?.querySelector('.kategori-content');
+                    const chevron = header.querySelector('.kategori-chevron');
+                    if (content) content.classList.toggle('hidden');
+                    if (chevron) chevron.classList.toggle('-rotate-90');
+                });
+            });
 
             inner.querySelectorAll('.add-pris-kategori-btn').forEach(btn => {
                 btn.onclick = (e) => {
@@ -449,6 +467,23 @@ async function loadPrislisteList(sheetId) {
 
         document.getElementById('btn-new-pris').onclick = () => editPrisRad(null, null);
         document.getElementById('btn-print-prisliste').onclick = () => printPrisliste();
+
+        let allCollapsed = false;
+        document.getElementById('btn-toggle-collapse').onclick = () => {
+            allCollapsed = !allCollapsed;
+            const contents = inner.querySelectorAll('.kategori-content');
+            const chevrons = inner.querySelectorAll('.kategori-chevron');
+            const btn = document.getElementById('btn-toggle-collapse');
+
+            contents.forEach(c => c.classList.toggle('hidden', allCollapsed));
+            chevrons.forEach(c => c.classList.toggle('-rotate-90', allCollapsed));
+
+            if (btn) {
+                btn.innerHTML = allCollapsed ? ICON_EXPAND_ALL : ICON_COLLAPSE_ALL;
+                btn.title = allCollapsed ? 'Ekspander alle kategorier' : 'Kollaps alle kategorier';
+                btn.setAttribute('aria-label', btn.title);
+            }
+        };
     } catch (e) {
         console.error('[Admin] Prisliste load failed:', e);
         inner.innerHTML = '<div class="admin-alert-error">Kunne ikke laste prisliste.</div>';
