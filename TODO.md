@@ -19,6 +19,10 @@
 
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
 
+- [ ] **Redirect fra gamle sider til nye** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md#fase-5-redirects-fra-gammel-side))
+    - Utvid CloudFront Function `url-rewrite-index` med 301-redirects for gamle `?page=`-URL-er
+    - `?page=kontakt` → `/kontakt`, `?page=behandlingstilbud` → `/tjenester`, `?page=trygdeordninger` → `/tjenester`, `?page=omoss` → `/tannleger`
+
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
@@ -27,9 +31,6 @@
     - Opprett GitHub Environment (f.eks. `production`) med protection rules for deploy-jobben — begrenser hvem/hva som kan trigge deploy og sikrer at secrets kun er tilgjengelige i riktig miljø
 
 
-- [ ] **Fiks layout-hopp på admin-sider**
-    - Admin-framsiden og modulene "hopper" visuelt ved lasting
-    - Undersøk årsak (CLS) og fiks for jevnere innlasting
 
 ## Fullført
 
