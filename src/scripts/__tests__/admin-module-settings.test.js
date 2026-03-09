@@ -290,6 +290,52 @@ describe('loadSettingsModule', () => {
         expect(updateLastFetchedTime).toHaveBeenCalled();
     });
 
+    it('should update data-idx on buttons after swap so second click targets correct container', async () => {
+        const mockSettings = [
+            { id: 'a', value: '', description: 'A', order: 1, row: 2 },
+            { id: 'b', value: '', description: 'B', order: 2, row: 3 },
+            { id: 'c', value: '', description: 'C', order: 3, row: 4 },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue([...mockSettings]);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        // Enter reorder mode
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue([...mockSettings]);
+        document.getElementById('settings-reorder-toggle').click();
+
+        await vi.waitFor(() => {
+            expect(document.querySelectorAll('.settings-reorder-btn').length).toBeGreaterThan(0);
+        });
+
+        reorderSettingItem.mockResolvedValue(true);
+
+        // First click: move A (idx=0) down
+        const downBtnA = document.querySelector('.settings-reorder-btn[data-idx="0"][data-dir="1"]');
+        downBtnA.click();
+        await vi.waitFor(() => {
+            expect(reorderSettingItem).toHaveBeenCalledTimes(1);
+        });
+
+        // After swap: A's buttons should now have data-idx="1", B's should have data-idx="0"
+        const containerThatWasA = document.getElementById('setting-container-1');
+        const updatedBtns = containerThatWasA.querySelectorAll('.settings-reorder-btn');
+        expect(updatedBtns[0].dataset.idx).toBe('1');
+
+        // Second click: move A (now idx=1) down again
+        const downBtnA2 = containerThatWasA.querySelector('.settings-reorder-btn[data-dir="1"]');
+        downBtnA2.click();
+        await vi.waitFor(() => {
+            expect(reorderSettingItem).toHaveBeenCalledTimes(2);
+        });
+
+        // Should have been called with idx=1 (A's new position), not idx=0 (stale)
+        expect(reorderSettingItem).toHaveBeenLastCalledWith('test-sheet', expect.any(Array), 1, 1);
+    });
+
     it('should handle updateSettingByKey failure for virtual settings', async () => {
         const mockSettings = [
             { id: 'newKey', value: 'v', description: 'New', order: 1, row: 2, isVirtual: true },

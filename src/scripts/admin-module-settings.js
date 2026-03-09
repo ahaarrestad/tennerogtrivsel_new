@@ -95,7 +95,7 @@ export async function loadSettingsModule() {
         let html = `<div class="space-y-4 max-w-4xl">`;
         html += `<div class="flex items-center justify-between">`;
         html += `<p class="text-xs text-admin-muted-light">Sist hentet: <span id="settings-last-fetched">${fetchedAt}</span></p>`;
-        html += `<button id="settings-reorder-toggle" class="text-xs px-3 py-1 rounded border border-admin-border hover:bg-admin-hover transition-colors ${settingsReorderMode ? 'bg-admin-hover font-bold' : ''}" type="button">Endre rekkefølge</button>`;
+        html += `<button id="settings-reorder-toggle" class="text-xs px-3 py-1 rounded border border-admin-border hover:bg-admin-hover transition-colors ${settingsReorderMode ? 'bg-admin-hover font-bold' : ''}" type="button">${settingsReorderMode ? 'Ferdig' : 'Endre rekkefølge'}</button>`;
         html += `</div>`;
         allSettings.forEach((setting, i) => {
             const label = setting.description || setting.id;
@@ -161,8 +161,16 @@ export async function loadSettingsModule() {
                         const ok = await reorderSettingItem(SHEET_ID, allSettings, idx, dir);
                         if (ok) {
                             updateLastFetchedTime(new Date());
+                            // Oppdater container-IDer
                             currentEl.id = `setting-container-${idx + dir}`;
                             neighborEl.id = `setting-container-${idx}`;
+                            // Oppdater data-idx på knappene så neste klikk finner riktig container
+                            currentEl.querySelectorAll('.settings-reorder-btn').forEach(b => {
+                                b.dataset.idx = String(idx + dir);
+                            });
+                            neighborEl.querySelectorAll('.settings-reorder-btn').forEach(b => {
+                                b.dataset.idx = String(idx);
+                            });
                         }
                         enableReorderButtons(inner, '.settings-reorder-btn');
                         const containers = [...inner.querySelectorAll('[id^="setting-container-"]')];
