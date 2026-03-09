@@ -2,9 +2,10 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { createMockAutoSaver, mockAdminDialog, setupModuleDOM } from './test-helpers.js';
 
-vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
-vi.mock('marked', () => ({ marked: { parse: vi.fn(text => `<p>${text}</p>`) } }));
+vi.mock('dompurify');
+vi.mock('marked');
 
 vi.mock('../admin-client.js', () => ({
     getSheetParentFolder: vi.fn(),
@@ -22,10 +23,7 @@ vi.mock('../admin-client.js', () => ({
     silentLogin: vi.fn(),
 }));
 
-vi.mock('../admin-dialog.js', () => ({
-    showToast: vi.fn(),
-    showConfirm: vi.fn().mockResolvedValue(false),
-}));
+vi.mock('../admin-dialog.js', () => mockAdminDialog());
 
 vi.mock('../admin-gallery.js', () => ({
     loadGallery: vi.fn(),
@@ -49,7 +47,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
     showDeletionToast: vi.fn(),
     renderImageCropSliders: vi.fn(({ prefix, valPrefix, scale = 1, posX = 50, posY = 50 }) =>
         `<div><input type="range" id="${prefix}-scale" value="${scale}"><span id="${valPrefix}-scale">${scale}x</span><input type="range" id="${prefix}-x" value="${posX}"><span id="${valPrefix}-x">${posX}%</span><input type="range" id="${prefix}-y" value="${posY}"><span id="${valPrefix}-y">${posY}%</span></div>`),
-    createAutoSaver: vi.fn((saveFn) => ({ trigger: vi.fn(), cancel: vi.fn(), _saveFn: saveFn })),
+    createAutoSaver: createMockAutoSaver(),
     bindSliderStepButtons: vi.fn(),
     bindWheelPrevent: vi.fn(),
     showSaveBar: vi.fn(),
@@ -74,17 +72,8 @@ import { loadGalleriListeModule, reorderGalleriItem } from '../admin-dashboard.j
 import { getAdminConfig, showDeletionToast, bindSliderStepButtons, bindWheelPrevent, showSaveBar, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave } from '../admin-editor-helpers.js';
 import { loadBilderModule } from '../admin-module-bilder.js';
 
-function setupDOM() {
-    document.body.innerHTML = `
-        <div id="admin-config" data-sheet-id="sid"></div>
-        <div id="module-inner"></div>
-        <div id="module-actions"></div>
-        <dialog id="image-picker-modal"></dialog>
-    `;
-}
-
 beforeEach(() => {
-    setupDOM();
+    setupModuleDOM({ configAttrs: 'data-sheet-id="sid"', extraHTML: '<dialog id="image-picker-modal"></dialog>' });
     vi.clearAllMocks();
     resolveImagePreview.mockResolvedValue({ src: '', imageId: null });
 });
