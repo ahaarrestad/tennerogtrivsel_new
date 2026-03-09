@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { animateSwap, disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
+import { animateSwap, disableReorderButtons, enableReorderButtons, updateReorderButtonVisibility } from '../admin-reorder.js';
 
 describe('animateSwap', () => {
     let container, elA, elB;
@@ -86,5 +86,37 @@ describe('enableReorderButtons', () => {
         enableReorderButtons(container, '.reorder-btn');
         expect(container.querySelectorAll('.reorder-btn')[0].disabled).toBe(false);
         expect(container.querySelectorAll('.reorder-btn')[1].disabled).toBe(false);
+    });
+});
+
+describe('updateReorderButtonVisibility', () => {
+    it('should hide up-button on first item and down-button on last item', () => {
+        document.body.innerHTML = `
+            <div id="list">
+                <div class="item">
+                    <button data-dir="-1" class="reorder-btn">Up</button>
+                    <button data-dir="1" class="reorder-btn">Down</button>
+                </div>
+                <div class="item">
+                    <button data-dir="-1" class="reorder-btn">Up</button>
+                    <button data-dir="1" class="reorder-btn">Down</button>
+                </div>
+                <div class="item">
+                    <button data-dir="-1" class="reorder-btn">Up</button>
+                    <button data-dir="1" class="reorder-btn">Down</button>
+                </div>
+            </div>`;
+        const items = document.querySelectorAll('.item');
+        updateReorderButtonVisibility(items, '.reorder-btn');
+
+        // First: up invisible, down visible
+        expect(items[0].querySelector('[data-dir="-1"]').classList.contains('invisible')).toBe(true);
+        expect(items[0].querySelector('[data-dir="1"]').classList.contains('invisible')).toBe(false);
+        // Middle: both visible
+        expect(items[1].querySelector('[data-dir="-1"]').classList.contains('invisible')).toBe(false);
+        expect(items[1].querySelector('[data-dir="1"]').classList.contains('invisible')).toBe(false);
+        // Last: up visible, down invisible
+        expect(items[2].querySelector('[data-dir="-1"]').classList.contains('invisible')).toBe(false);
+        expect(items[2].querySelector('[data-dir="1"]').classList.contains('invisible')).toBe(true);
     });
 });
