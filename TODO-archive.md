@@ -12,9 +12,11 @@
     - businessHours3–5 lagt til i SETTING_HINTS (manglet fra Google Sheets-data)
     - Alle hints følger eksisterende mønster: `<p class="text-xs text-admin-muted-light">Vises på: ...</p>`
 
+
 - [x] **Begrens workflow-kjøring for fork-PRer**
     - Lagt til `github.event.pull_request.head.repo.fork != true` på `unit-tests` og `e2e-tests` jobbene
     - Fork-PRer kjører ingen CI — sparer CI-minutter og unngår feilende kjøringer uten secrets
+
 
 
 - [x] **Admin-lenke på framsiden for innlogget bruker**
