@@ -415,6 +415,8 @@ export async function loadBilderModule() {
                 });
                 const ok = await reorderGalleriItem(SHEET_ID, items, rowIndex, direction);
                 if (ok) {
+                    const fetchedEl = document.getElementById('galleri-last-fetched');
+                    if (fetchedEl) fetchedEl.textContent = formatTimestamp(new Date());
                     if (container) {
                         const updatedCards = [...container.querySelectorAll('.admin-card-interactive')];
                         updateReorderButtonVisibility(updatedCards, '.reorder-btn');
