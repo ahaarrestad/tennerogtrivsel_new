@@ -167,7 +167,8 @@
         --section-py: var(--spacing-section-py);
         padding-top: var(--section-py);
         padding-bottom: var(--section-py);
-        @apply scroll-mt-6 relative;
+        scroll-margin-top: var(--nav-total-height, 1.5rem);
+        @apply relative;
     }
 
     @media (min-width: 768px) {
@@ -309,6 +310,7 @@
     .card-text {
         @apply text-brand-hover text-sm md:text-base leading-relaxed relative z-10;
         font-family: var(--font-body);
+        text-wrap: pretty;
     }
 
     /* Spesifikk styling for "Les mer" eller smådetaljer */
