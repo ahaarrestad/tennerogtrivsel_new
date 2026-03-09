@@ -1101,3 +1101,140 @@ describe('loadPrislisteList - optimistic kategori reorder', () => {
         expect(showToast).toHaveBeenCalledWith('Kunne ikke endre rekkefølge.', 'error');
     });
 });
+
+describe('collapsible categories', () => {
+    async function loadPrislisteModule() {
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+    }
+
+    it('should render chevron icon in each category header', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, behandling: 'Tannbleking', pris: 3000, kategori: 'Bleking', order: 1 },
+            { rowIndex: 3, behandling: 'Undersøkelse', pris: 800, kategori: 'Generelt', order: 1 }
+        ]);
+        getKategoriRekkefølge.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Bleking', order: 1 },
+            { rowIndex: 3, kategori: 'Generelt', order: 2 }
+        ]);
+        await loadPrislisteModule();
+
+        const chevrons = document.querySelectorAll('.kategori-chevron');
+        expect(chevrons).toHaveLength(2);
+    });
+
+    it('should hide category rows when header is clicked', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, behandling: 'Tannbleking', pris: 3000, kategori: 'Bleking', order: 1 }
+        ]);
+        getKategoriRekkefølge.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Bleking', order: 1 }
+        ]);
+        await loadPrislisteModule();
+
+        const header = document.querySelector('.kategori-header');
+        const content = document.querySelector('.kategori-content');
+        expect(content.classList.contains('hidden')).toBe(false);
+
+        header.click();
+        expect(content.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should show category rows when collapsed header is clicked again', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, behandling: 'Tannbleking', pris: 3000, kategori: 'Bleking', order: 1 }
+        ]);
+        getKategoriRekkefølge.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Bleking', order: 1 }
+        ]);
+        await loadPrislisteModule();
+
+        const header = document.querySelector('.kategori-header');
+        const content = document.querySelector('.kategori-content');
+
+        header.click(); // collapse
+        header.click(); // expand
+        expect(content.classList.contains('hidden')).toBe(false);
+    });
+
+    it('should rotate chevron when collapsed', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, behandling: 'Tannbleking', pris: 3000, kategori: 'Bleking', order: 1 }
+        ]);
+        getKategoriRekkefølge.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Bleking', order: 1 }
+        ]);
+        await loadPrislisteModule();
+
+        const header = document.querySelector('.kategori-header');
+        const chevron = document.querySelector('.kategori-chevron');
+
+        header.click();
+        expect(chevron.classList.contains('-rotate-90')).toBe(true);
+
+        header.click();
+        expect(chevron.classList.contains('-rotate-90')).toBe(false);
+    });
+
+    it('should render collapse-all icon button in module-actions', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, behandling: 'Test', pris: 100, kategori: 'Kat', order: 1 }
+        ]);
+        getKategoriRekkefølge.mockResolvedValue([{ rowIndex: 2, kategori: 'Kat', order: 1 }]);
+        await loadPrislisteModule();
+
+        const btn = document.getElementById('btn-toggle-collapse');
+        expect(btn).not.toBeNull();
+    });
+
+    it('should collapse all categories when collapse-all button is clicked', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, behandling: 'A', pris: 100, kategori: 'Kat1', order: 1 },
+            { rowIndex: 3, behandling: 'B', pris: 200, kategori: 'Kat2', order: 1 }
+        ]);
+        getKategoriRekkefølge.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Kat1', order: 1 },
+            { rowIndex: 3, kategori: 'Kat2', order: 2 }
+        ]);
+        await loadPrislisteModule();
+
+        const btn = document.getElementById('btn-toggle-collapse');
+        btn.click();
+
+        const contents = document.querySelectorAll('.kategori-content');
+        contents.forEach(c => expect(c.classList.contains('hidden')).toBe(true));
+    });
+
+    it('should expand all categories when clicked again after collapsing', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, behandling: 'A', pris: 100, kategori: 'Kat1', order: 1 },
+            { rowIndex: 3, behandling: 'B', pris: 200, kategori: 'Kat2', order: 1 }
+        ]);
+        getKategoriRekkefølge.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Kat1', order: 1 },
+            { rowIndex: 3, kategori: 'Kat2', order: 2 }
+        ]);
+        await loadPrislisteModule();
+
+        const btn = document.getElementById('btn-toggle-collapse');
+        btn.click(); // collapse all
+        btn.click(); // expand all
+
+        const contents = document.querySelectorAll('.kategori-content');
+        contents.forEach(c => expect(c.classList.contains('hidden')).toBe(false));
+    });
+
+    it('should update chevrons when collapse-all is clicked', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, behandling: 'A', pris: 100, kategori: 'Kat1', order: 1 }
+        ]);
+        getKategoriRekkefølge.mockResolvedValue([{ rowIndex: 2, kategori: 'Kat1', order: 1 }]);
+        await loadPrislisteModule();
+
+        const btn = document.getElementById('btn-toggle-collapse');
+        btn.click();
+
+        const chevrons = document.querySelectorAll('.kategori-chevron');
+        chevrons.forEach(c => expect(c.classList.contains('-rotate-90')).toBe(true));
+    });
+});
