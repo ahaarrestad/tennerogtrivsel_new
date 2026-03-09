@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { animateSwap, disableReorderButtons, enableReorderButtons, updateReorderButtonVisibility } from '../admin-reorder.js';
 
 describe('animateSwap', () => {
@@ -56,6 +56,98 @@ describe('animateSwap', () => {
         expect(children[0].textContent).toBe('B');
         expect(children[1].textContent).toBe('M');
         expect(children[2].textContent).toBe('A');
+    });
+});
+
+describe('animateSwap - with layout (non-jsdom)', () => {
+    let container, elA, elB;
+
+    beforeEach(() => {
+        vi.useFakeTimers();
+        container = document.createElement('div');
+        document.body.innerHTML = '';
+        document.body.appendChild(container);
+
+        elA = document.createElement('div');
+        elA.textContent = 'A';
+        container.appendChild(elA);
+
+        elB = document.createElement('div');
+        elB.textContent = 'B';
+        container.appendChild(elB);
+
+        // Mock getBoundingClientRect to simulate real layout
+        elA.getBoundingClientRect = () => ({ top: 0, left: 0, width: 100, height: 50, right: 100, bottom: 50 });
+        elB.getBoundingClientRect = () => ({ top: 50, left: 0, width: 100, height: 50, right: 100, bottom: 100 });
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    it('should set transition and transform styles for animation', async () => {
+        const promise = animateSwap(elA, elB);
+
+        // Styles should be applied before timeout fires
+        expect(elA.style.transition).toContain('transform');
+        expect(elA.style.transform).toContain('translateY(50px)');
+        expect(elB.style.transform).toContain('translateY(-50px)');
+
+        // Fire the timeout fallback
+        vi.advanceTimersByTime(250);
+        await promise;
+
+        // After animation, styles should be cleared and elements swapped
+        expect(elA.style.transition).toBe('');
+        expect(elA.style.transform).toBe('');
+        const children = [...container.children];
+        expect(children[0].textContent).toBe('B');
+        expect(children[1].textContent).toBe('A');
+    });
+
+    it('should resolve via transitionend event', async () => {
+        const promise = animateSwap(elA, elB);
+
+        // Fire transitionend instead of waiting for timeout
+        elA.dispatchEvent(new Event('transitionend'));
+        await promise;
+
+        const children = [...container.children];
+        expect(children[0].textContent).toBe('B');
+        expect(children[1].textContent).toBe('A');
+    });
+
+    it('should swap when B is before A with layout (B→A DOM order, called as A,B)', async () => {
+        // DOM order: B, A — but we call animateSwap(elA, elB)
+        container.innerHTML = '';
+        container.appendChild(elB);
+        container.appendChild(elA);
+        elA.getBoundingClientRect = () => ({ top: 50, left: 0, width: 100, height: 50, right: 100, bottom: 100 });
+        elB.getBoundingClientRect = () => ({ top: 0, left: 0, width: 100, height: 50, right: 100, bottom: 50 });
+
+        const promise = animateSwap(elA, elB);
+        vi.advanceTimersByTime(250);
+        await promise;
+
+        // A and B should have swapped — A now first
+        const children = [...container.children];
+        expect(children[0].textContent).toBe('A');
+        expect(children[1].textContent).toBe('B');
+    });
+
+    it('should only finish once even if both transitionend and timeout fire', async () => {
+        const promise = animateSwap(elA, elB);
+
+        // Fire transitionend first
+        elA.dispatchEvent(new Event('transitionend'));
+        // Then fire timeout
+        vi.advanceTimersByTime(250);
+        await promise;
+
+        // Should still be correctly swapped (not double-swapped)
+        const children = [...container.children];
+        expect(children[0].textContent).toBe('B');
+        expect(children[1].textContent).toBe('A');
     });
 });
 
