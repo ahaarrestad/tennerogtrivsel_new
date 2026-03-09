@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Bedre linjebrekk-kontroll for sentralbord-tekst under telefon (kontakt)**
+    - Sentralbord-teksten satt til `text-xs` for å unngå uheldige linjebrekk
+    - `text-wrap: pretty` lagt til på `.card-text` for bedre brekk-valg generelt
+    - Fjernet `md:grid-cols-2` fra kontakt-grid — kort går nå rett fra 1 til 3 kolonner (ingen 2+1 layout)
+
 - [x] **Seksjons-titler på framsiden bommer ved aktiv melding** ([plan](docs/plans/archive/2026-03-09-seksjons-titler-scroll-offset.md))
     - Erstattet statiske `scroll-mt` verdier med dynamisk `scroll-margin-top: var(--nav-total-height)` i `.section-container`
     - Fjernet `scroll-mt-16 lg:scroll-mt-20` overrides fra Forside.astro
