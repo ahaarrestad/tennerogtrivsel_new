@@ -2,9 +2,10 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { createMockAutoSaver, mockAdminDialog, setupModuleDOM } from './test-helpers.js';
 
-vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
-vi.mock('marked', () => ({ marked: { parse: vi.fn(text => `<p>${text}</p>`) } }));
+vi.mock('dompurify');
+vi.mock('marked');
 
 vi.mock('../admin-client.js', () => ({
     deleteFile: vi.fn(),
@@ -16,10 +17,7 @@ vi.mock('../admin-client.js', () => ({
     silentLogin: vi.fn(),
 }));
 
-vi.mock('../admin-dialog.js', () => ({
-    showToast: vi.fn(),
-    showConfirm: vi.fn().mockResolvedValue(false),
-}));
+vi.mock('../admin-dialog.js', () => mockAdminDialog());
 
 vi.mock('../textFormatter.js', () => ({
     formatDate: vi.fn(d => d || ''),
@@ -38,7 +36,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
     })),
     showDeletionToast: vi.fn(),
     initEditors: vi.fn(() => ({ easyMDE: null, flatpickrInstances: [] })),
-    createAutoSaver: vi.fn((saveFn) => ({ trigger: vi.fn(), cancel: vi.fn(), _saveFn: saveFn })),
+    createAutoSaver: createMockAutoSaver(),
     showSaveBar: vi.fn(),
 }));
 
@@ -54,16 +52,8 @@ import { loadMeldingerModule } from '../admin-dashboard.js';
 import { showDeletionToast, initEditors, showSaveBar, createAutoSaver } from '../admin-editor-helpers.js';
 import { initMeldingerModule, reloadMeldinger } from '../admin-module-meldinger.js';
 
-function setupDOM() {
-    document.body.innerHTML = `
-        <div id="admin-config" data-meldinger-folder="mf"></div>
-        <div id="module-inner"></div>
-        <div id="module-actions"></div>
-    `;
-}
-
 beforeEach(() => {
-    setupDOM();
+    setupModuleDOM({ configAttrs: 'data-meldinger-folder="mf"' });
     vi.clearAllMocks();
     vi.useFakeTimers();
 });
