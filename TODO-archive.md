@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Seksjons-titler på framsiden bommer ved aktiv melding** ([plan](docs/plans/archive/2026-03-09-seksjons-titler-scroll-offset.md))
+    - Erstattet statiske `scroll-mt` verdier med dynamisk `scroll-margin-top: var(--nav-total-height)` i `.section-container`
+    - Fjernet `scroll-mt-16 lg:scroll-mt-20` overrides fra Forside.astro
+    - Ankerlenker scroller nå korrekt uavhengig av om InfoBanner er aktiv
+
 - [x] **Pen formatering av åpningstider i kontakt og footer**
     - Parset "Dag: Tid"-format til strukturert to-kolonne grid (`<dl>` med CSS grid)
     - `tabular-nums` for jevn sifferbredde på klokkeslett
