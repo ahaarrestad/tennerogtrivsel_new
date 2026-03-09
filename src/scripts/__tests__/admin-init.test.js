@@ -2,9 +2,10 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mockAdminDialog } from './test-helpers.js';
 
-vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
-vi.mock('marked', () => ({ marked: { parse: vi.fn(text => `<p>${text}</p>`) } }));
+vi.mock('dompurify');
+vi.mock('marked');
 
 vi.mock('../admin-client.js', () => ({
     initGapi: vi.fn().mockResolvedValue(true),
@@ -30,10 +31,7 @@ vi.mock('../admin-client.js', () => ({
     updateSettings: vi.fn(),
 }));
 
-vi.mock('../admin-dialog.js', () => ({
-    showToast: vi.fn(),
-    showConfirm: vi.fn().mockResolvedValue(false),
-}));
+vi.mock('../admin-dialog.js', () => mockAdminDialog());
 
 vi.mock('../pwa-prompt.js', () => ({
     initPwaPrompt: vi.fn(),
