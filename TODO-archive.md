@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Admin-lenke på framsiden for innlogget bruker**
+    - Tannhjul-ikon i navbaren (desktop + mobil) som vises når bruker er innlogget
+    - Client-side sjekk via `getStoredUser()` fra admin-auth.js
+    - Kun `Navbar.astro` endret
+
 - [x] **Test-review og forenkling** ([design](docs/plans/archive/2026-03-09-test-review-design.md), [plan](docs/plans/archive/2026-03-09-test-review.md))
     - Auto-mocks (`__mocks__/dompurify.js`, `__mocks__/marked.js`) erstatter 14+ inline mocks
     - Delt test-helpers (`test-helpers.js`) med `mockAdminDialog()`, `createMockAutoSaver()`, `setupModuleDOM()`
