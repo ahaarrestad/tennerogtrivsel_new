@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Optimalisere responstid i admin-moduler** ([plan](docs/plans/archive/2026-03-09-optimistisk-reorder.md)) ([design](docs/plans/archive/2026-03-09-optimistisk-reorder-design.md))
+    - Optimistisk DOM-swap med animasjon, API i bakgrunn, revert ved feil
+    - Ny felles `admin-reorder.js`-modul med `animateSwap()`, `disableReorderButtons()`, `enableReorderButtons()`, `updateReorderButtonVisibility()`
+    - Berørte moduler: Prisliste (rader + kategorier), Galleri, Tjenester, Settings
+
 - [x] **Redirect fra gamle sider til nye** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md#fase-5-redirects-fra-gammel-side))
     - Oppgaven er dekket som fase 5 i CloudFront-planen
     - URL-kartlegging, CloudFront Function-kode og verifiseringssteg dokumentert der
