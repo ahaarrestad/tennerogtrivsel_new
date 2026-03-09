@@ -129,14 +129,17 @@ async function editPrisRad(rowIndex, data = null) {
             <div class="space-y-4">
                 <div class="admin-field-container">
                     <label class="admin-label">Kategori</label>
+                    <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Gruppeoverskrift i prislisten</p>
                     <input type="text" id="edit-pris-kategori" value="" class="admin-input" placeholder="Velg eller skriv ny kategori" autocomplete="off">
                 </div>
                 <div class="admin-field-container">
                     <label class="admin-label">Behandling</label>
+                    <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Rad i prislisten</p>
                     <input type="text" id="edit-pris-behandling" value="" class="admin-input" placeholder="F.eks. Vanlig undersokelse">
                 </div>
                 <div class="admin-field-container">
                     <label class="admin-label">Pris</label>
+                    <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Rad i prislisten</p>
                     <input type="text" id="edit-pris-pris" value="" class="admin-input" placeholder="F.eks. 850 eller Fra 500,-">
                 </div>
             </div>

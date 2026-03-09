@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Legg til hjelpetekst på alle innstillinger i admin** ([plan](docs/plans/archive/2026-03-09-admin-hjelpetekst.md))
+    - Hjelpetekst lagt til i alle 6 admin-moduler: settings, tjenester, meldinger, tannleger, bilder, prisliste
+    - businessHours3–5 lagt til i SETTING_HINTS (manglet fra Google Sheets-data)
+    - Alle hints følger eksisterende mønster: `<p class="text-xs text-admin-muted-light">Vises på: ...</p>`
+
 - [x] **Begrens workflow-kjøring for fork-PRer**
     - Lagt til `github.event.pull_request.head.repo.fork != true` på `unit-tests` og `e2e-tests` jobbene
     - Fork-PRer kjører ingen CI — sparer CI-minutter og unngår feilende kjøringer uten secrets

@@ -68,6 +68,7 @@ async function editTannlege(rowIndex, data = null) {
                 <div class="space-y-4">
                     <div class="admin-field-container">
                         <label class="admin-label">Profilbilde</label>
+                        <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Tannlegekort og detaljside</p>
                         <div class="flex items-center gap-3">
                             <input type="text" id="edit-t-image" value="" class="admin-input flex-grow text-xs text-admin-muted font-mono" placeholder="Ingen bilde valgt" readonly>
                             <button id="btn-open-gallery" class="btn-primary py-3 px-4 text-xs shrink-0 whitespace-nowrap">Velg bilde</button>
@@ -77,14 +78,17 @@ async function editTannlege(rowIndex, data = null) {
 
                     <div class="admin-field-container">
                         <label class="admin-label">Fullt navn</label>
+                        <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Tannlegekort og detaljside</p>
                         <input type="text" id="edit-t-name" value="" class="admin-input" placeholder="Navn Navnesen">
                     </div>
                     <div class="admin-field-container">
                         <label class="admin-label">Tittel / Rolle</label>
+                        <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Tannlegekort, under navnet</p>
                         <input type="text" id="edit-t-title" value="" class="admin-input" placeholder="Tannlege / Spesialist">
                     </div>
                     <div class="admin-field-container">
                         <label class="admin-label">Kort beskrivelse</label>
+                        <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Tannlegekort og detaljside</p>
                         <textarea id="edit-t-desc" rows="4" class="admin-input resize-none"></textarea>
                     </div>
                 </div>
