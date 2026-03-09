@@ -27,7 +27,7 @@ env:
 
 jobs:
   unit-tests:
-    if: github.event_name != 'repository_dispatch'
+    if: github.event_name != 'repository_dispatch' && github.event.pull_request.head.repo.fork != true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
         run: npm test
 
   e2e-tests:
-    if: github.event_name != 'repository_dispatch'
+    if: github.event_name != 'repository_dispatch' && github.event.pull_request.head.repo.fork != true
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.58.2-noble
