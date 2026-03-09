@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Fiks layout-hopp på admin-sider** ([plan](docs/plans/archive/2026-03-09-fiks-layout-hopp-admin.md))
+    - Dashboard-korttellere: reservert plass med `min-height: 1lh` og opacity-fade i stedet for hidden-toggle
+    - Modul-innlasting: ny `smoothReplaceContent()`-funksjon animerer høyde ved skeleton → innhold-bytte
+    - Brødsmuleteller: samme opacity-fix som korttellere
+
 - [x] **Flytt secrets fra workflow-nivå til jobb-nivå i deploy.yml**
     - Fjernet workflow-level `env`-blokk med Google-secrets
     - Lagt til secrets som jobb-level `env` på `e2e-tests` og `build` (de eneste som trenger dem)
