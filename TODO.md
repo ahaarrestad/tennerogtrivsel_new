@@ -29,9 +29,6 @@
 - [ ] **Flytt secrets fra workflow-nivå til jobb-nivå i deploy.yml** — kun `e2e-tests` og `deploy` trenger dem, unngår at secrets eksponeres til andre jobber (f.eks. ved collaborator-tilgang)
 
 
-- [ ] **Oppdater defaults-innstillinger fra Google Sheet**
-
-
 ## Fullført
 
 Se [TODO-archive.md](TODO-archive.md) for alle fullførte oppgaver.

@@ -14,7 +14,8 @@ const HARD_DEFAULT_KEYS = [
     'phone1', 'phone2', 'email', 'showEmail', 'adresse1', 'adresse2',
     'velkomstTittel1', 'velkomstTittel2', 'sentralbordTekst', 'latitude', 'longitude',
     'siteTitle', 'siteDescription', 'velkomstTekst', 'kontaktTekst',
-    'tannlegerTekst', 'tjenesteTekst', 'businessHours1', 'businessHours2', 'galleriTekst',
+    'tannlegerTekst', 'tjenesteTekst', 'businessHours1', 'businessHours2',
+    'businessHours3', 'businessHours4', 'businessHours5', 'galleriTekst',
     'kontaktTittel', 'galleriTittel', 'tjenesterTittel', 'tannlegerTittel',
     'kontaktBeskrivelse', 'galleriBeskrivelse', 'tjenesterBeskrivelse', 'tannlegerBeskrivelse',
 ];

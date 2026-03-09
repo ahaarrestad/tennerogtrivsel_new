@@ -80,9 +80,9 @@ describe('getSiteSettings', () => {
 
     it('should include section title keys in HARD_DEFAULTS', () => {
         expect(HARD_DEFAULTS).toHaveProperty('kontaktTittel', 'Kontakt oss');
-        expect(HARD_DEFAULTS).toHaveProperty('galleriTittel', 'Klinikken vår');
+        expect(HARD_DEFAULTS).toHaveProperty('galleriTittel', 'Klinikken');
         expect(HARD_DEFAULTS).toHaveProperty('tjenesterTittel', 'Våre Tjenester');
-        expect(HARD_DEFAULTS).toHaveProperty('tannlegerTittel', 'Våre Tannleger');
+        expect(HARD_DEFAULTS).toHaveProperty('tannlegerTittel', 'Tannlegene');
     });
 
 });
