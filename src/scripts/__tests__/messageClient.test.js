@@ -6,10 +6,7 @@ vi.mock('marked', () => ({
     marked: { parse: vi.fn((markdown) => `<html>${markdown}</html>`) }
 }));
 
-// Mock dompurify – tester kjører i node-miljø uten DOM
-vi.mock('dompurify', () => ({
-    default: { sanitize: vi.fn((html) => html) }
-}));
+vi.mock('dompurify');
 
 // Mock global fetch
 const mockFetch = vi.fn();

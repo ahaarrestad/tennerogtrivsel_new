@@ -2,55 +2,52 @@ import { describe, it, expect } from 'vitest';
 import { formatPris } from '../format-pris.js';
 
 describe('formatPris', () => {
-    it('formaterer heltall med kr-prefiks og tusen-mellomrom', () => {
-        expect(formatPris(830)).toBe('kr 830');
-        expect(formatPris(8370)).toBe('kr 8 370');
-        expect(formatPris(17170)).toBe('kr 17 170');
-        expect(formatPris(70)).toBe('kr 70');
+    it.each([
+        [830, 'kr 830'],
+        [8370, 'kr 8 370'],
+        [17170, 'kr 17 170'],
+        [70, 'kr 70'],
+        ['1234', 'kr 1 234'],
+        ['830', 'kr 830'],
+        ['17170', 'kr 17 170'],
+        ['  1234  ', 'kr 1 234'],
+    ])('should format number/numeric-string %s → "%s"', (input, expected) => {
+        expect(formatPris(input)).toBe(expected);
     });
 
-    it('returnerer tom streng for null/undefined', () => {
-        expect(formatPris(null)).toBe('');
-        expect(formatPris(undefined)).toBe('');
+    it.each([
+        [null, ''],
+        [undefined, ''],
+    ])('should return empty string for %s', (input, expected) => {
+        expect(formatPris(input)).toBe(expected);
     });
 
-    it('formaterer prisområde med kr-prefiks, tusen-mellomrom og tankestrek', () => {
-        expect(formatPris('1050 - 1350')).toBe('kr 1 050 – 1 350');
-        expect(formatPris('500 - 1200')).toBe('kr 500 – 1 200');
-        expect(formatPris('7500 - 9500')).toBe('kr 7 500 – 9 500');
-        expect(formatPris('330 - 410')).toBe('kr 330 – 410');
+    it.each([
+        ['1050 - 1350', 'kr 1 050 – 1 350'],
+        ['500 - 1200', 'kr 500 – 1 200'],
+        ['7500 - 9500', 'kr 7 500 – 9 500'],
+        ['330 - 410', 'kr 330 – 410'],
+        [' 1050 - 1350 ', 'kr 1 050 – 1 350'],
+    ])('should format range "%s" → "%s"', (input, expected) => {
+        expect(formatPris(input)).toBe(expected);
     });
 
-    it('formaterer pris med suffiks "pr time"', () => {
-        expect(formatPris('2700 pr time')).toBe('kr 2 700 pr time');
-        expect(formatPris('3380 pr time')).toBe('kr 3 380 pr time');
+    it.each([
+        ['2700 pr time', 'kr 2 700 pr time'],
+        ['3380 pr time', 'kr 3 380 pr time'],
+        ['  2700 pr time  ', 'kr 2 700 pr time'],
+        ['5950 + tekn.', 'kr 5 950 + tekn.'],
+        ['1730 + tekn', 'kr 1 730 + tekn'],
+        ['2980 m/tannteknikk', 'kr 2 980 m/tannteknikk'],
+        ['4500 m/tannteknikk', 'kr 4 500 m/tannteknikk'],
+    ])('should format price with suffix "%s" → "%s"', (input, expected) => {
+        expect(formatPris(input)).toBe(expected);
     });
 
-    it('formaterer pris med suffiks "+ tekn." (med og uten punktum)', () => {
-        expect(formatPris('5950 + tekn.')).toBe('kr 5 950 + tekn.');
-        expect(formatPris('1730 + tekn')).toBe('kr 1 730 + tekn');
-        expect(formatPris('9720 + tekn.')).toBe('kr 9 720 + tekn.');
-    });
-
-    it('formaterer pris med suffiks "m/tannteknikk"', () => {
-        expect(formatPris('2980 m/tannteknikk')).toBe('kr 2 980 m/tannteknikk');
-        expect(formatPris('4500 m/tannteknikk')).toBe('kr 4 500 m/tannteknikk');
-    });
-
-    it('returnerer string-input uendret', () => {
-        expect(formatPris('Fra 830')).toBe('Fra 830');
-        expect(formatPris('Inkludert')).toBe('Inkludert');
-    });
-
-    it('håndterer numeriske strenger fra Google Sheets', () => {
-        expect(formatPris('1234')).toBe('kr 1 234');
-        expect(formatPris('830')).toBe('kr 830');
-        expect(formatPris('17170')).toBe('kr 17 170');
-    });
-
-    it('trimmer whitespace på string-input', () => {
-        expect(formatPris('  1234  ')).toBe('kr 1 234');
-        expect(formatPris(' 1050 - 1350 ')).toBe('kr 1 050 – 1 350');
-        expect(formatPris('  2700 pr time  ')).toBe('kr 2 700 pr time');
+    it.each([
+        ['Fra 830', 'Fra 830'],
+        ['Inkludert', 'Inkludert'],
+    ])('should return non-numeric string "%s" unchanged', (input, expected) => {
+        expect(formatPris(input)).toBe(expected);
     });
 });
