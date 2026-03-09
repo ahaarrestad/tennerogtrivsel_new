@@ -2,8 +2,9 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { createMockAutoSaver, mockAdminDialog, setupModuleDOM } from './test-helpers.js';
 
-vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
+vi.mock('dompurify');
 
 vi.mock('../admin-client.js', () => ({
     getPrislisteRaw: vi.fn(),
@@ -15,10 +16,7 @@ vi.mock('../admin-client.js', () => ({
     addKategoriRekkefølge: vi.fn().mockResolvedValue(true),
 }));
 
-vi.mock('../admin-dialog.js', () => ({
-    showToast: vi.fn(),
-    showConfirm: vi.fn().mockResolvedValue(false),
-}));
+vi.mock('../admin-dialog.js', () => mockAdminDialog());
 
 vi.mock('../admin-dashboard.js', () => ({
     formatTimestamp: vi.fn(() => '7. mar kl. 10:00'),
@@ -34,7 +32,7 @@ vi.mock('../admin-dashboard.js', () => ({
 vi.mock('../admin-editor-helpers.js', () => ({
     getAdminConfig: vi.fn(() => ({ SHEET_ID: 'test-sheet' })),
     escapeHtml: vi.fn(s => String(s ?? '')),
-    createAutoSaver: vi.fn((saveFn) => ({ trigger: vi.fn(), cancel: vi.fn(), _saveFn: saveFn })),
+    createAutoSaver: createMockAutoSaver(),
     verifySave: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -48,17 +46,8 @@ import { createAutoSaver, verifySave } from '../admin-editor-helpers.js';
 import { reorderPrislisteItem } from '../admin-dashboard.js';
 import { initPrislisteModule, reloadPrisliste } from '../admin-module-prisliste.js';
 
-function setupDOM() {
-    document.body.innerHTML = `
-        <div id="admin-config" data-sheet-id="test-sheet"></div>
-        <div id="module-inner"></div>
-        <div id="module-actions"></div>
-        <span id="breadcrumb-count" class="hidden"></span>
-    `;
-}
-
 beforeEach(() => {
-    setupDOM();
+    setupModuleDOM({ configAttrs: 'data-sheet-id="test-sheet"', extraHTML: '<span id="breadcrumb-count" class="hidden"></span>' });
     vi.clearAllMocks();
 });
 
