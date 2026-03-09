@@ -31,9 +31,7 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
-
-
-- [ ] **Bedre linjebrekk-kontroll for sentralbord-tekst under telefon (kontakt)**
+- [ ] **Bedre linjebrekk-kontroll for sentralbord-tekst under telefon (kontakt)** ([plan](docs/plans/2026-03-09-linjebrekk-sentralbord.md))
     - Teksten under «Telefon» på kontaktsiden bryter uheldig
     - Undersøk hvordan vi kan styre linjebrekk bedre
 
