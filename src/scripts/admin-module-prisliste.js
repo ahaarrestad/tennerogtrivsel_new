@@ -5,6 +5,7 @@ import {
     deletePrislisteRowPermanently, backupToSlettetSheet,
     getKategoriRekkefølge, addKategoriRekkefølge,
 } from './admin-client.js';
+import { animateSwap, disableReorderButtons, enableReorderButtons } from './admin-reorder.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { getAdminConfig, escapeHtml, createAutoSaver, verifySave } from './admin-editor-helpers.js';
 import { formatTimestamp, ICON_ADD, ICON_UP, ICON_DOWN, ICON_EDIT, ICON_DELETE, reorderPrislisteItem, reorderPrislisteKategori } from './admin-dashboard.js';
@@ -389,12 +390,29 @@ async function loadPrislisteList(sheetId) {
                     e.stopPropagation();
                     const rowIndex = parseInt(btn.dataset.row);
                     const direction = parseInt(btn.dataset.dir);
-                    // Find the category rows for this item
                     const item = items.find(i => i.rowIndex === rowIndex);
                     if (!item) return;
                     const categoryRows = grouped.get(item.kategori) || [];
-                    await reorderPrislisteItem(sheetId, categoryRows, rowIndex, direction);
-                    reloadPrisliste();
+
+                    // Finn DOM-elementene for current og neighbor
+                    const currentEl = btn.closest('.group');
+                    const allRows = [...currentEl.parentNode.children].filter(el => el.classList.contains('group'));
+                    const currentIdx = allRows.indexOf(currentEl);
+                    const neighborIdx = currentIdx + direction;
+                    if (neighborIdx < 0 || neighborIdx >= allRows.length) return;
+                    const neighborEl = allRows[neighborIdx];
+
+                    disableReorderButtons(inner, '.reorder-pris-btn');
+                    await animateSwap(currentEl, neighborEl);
+
+                    try {
+                        await reorderPrislisteItem(sheetId, categoryRows, rowIndex, direction);
+                        enableReorderButtons(inner, '.reorder-pris-btn');
+                    } catch (err) {
+                        await animateSwap(neighborEl, currentEl);
+                        enableReorderButtons(inner, '.reorder-pris-btn');
+                        showToast('Kunne ikke endre rekkefølge.', 'error');
+                    }
                 };
             });
             inner.querySelectorAll('.reorder-kategori-btn').forEach(btn => {
@@ -402,8 +420,25 @@ async function loadPrislisteList(sheetId) {
                     e.stopPropagation();
                     const kategori = btn.dataset.kategori;
                     const direction = parseInt(btn.dataset.dir);
-                    await reorderPrislisteKategori(sheetId, kategoriOrder, kategori, direction);
-                    reloadPrisliste();
+
+                    const currentSection = btn.closest('.bg-white');
+                    const allSections = [...inner.querySelectorAll('.space-y-6 > .bg-white')];
+                    const currentSectionIdx = allSections.indexOf(currentSection);
+                    const neighborSectionIdx = currentSectionIdx + direction;
+                    if (neighborSectionIdx < 0 || neighborSectionIdx >= allSections.length) return;
+                    const neighborSection = allSections[neighborSectionIdx];
+
+                    disableReorderButtons(inner, '.reorder-kategori-btn');
+                    await animateSwap(currentSection, neighborSection);
+
+                    try {
+                        await reorderPrislisteKategori(sheetId, kategoriOrder, kategori, direction);
+                        enableReorderButtons(inner, '.reorder-kategori-btn');
+                    } catch (err) {
+                        await animateSwap(neighborSection, currentSection);
+                        enableReorderButtons(inner, '.reorder-kategori-btn');
+                        showToast('Kunne ikke endre rekkefølge.', 'error');
+                    }
                 };
             });
         }
