@@ -11,6 +11,7 @@ import { withRetry, createAuthRefresher, classifyError } from './admin-api-retry
 import { showAuthExpired } from './admin-dialog.js';
 import { formatDate, sortMessages } from './textFormatter.js';
 import DOMPurify from 'dompurify';
+import { smoothReplaceContent } from './admin-transition.js';
 
 // --- SVG-IKONER (gjenbrukes i templates) ---
 export const ICON_EDIT = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
@@ -344,7 +345,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
         const nowUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
 
         if (files.length === 0) {
-            inner.innerHTML = `<div class="text-center py-12 text-admin-muted-light italic">Ingen oppslag funnet.</div>`;
+            smoothReplaceContent(inner, `<div class="text-center py-12 text-admin-muted-light italic">Ingen oppslag funnet.</div>`);
         } else {
             const messages = await Promise.all(files.map(async (f) => {
                 const raw = await getFileContent(f.id);
@@ -430,7 +431,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                         <div class="self-end sm:self-auto">${renderActionButtons('edit-btn', 'delete-btn', `data-id="${msg.driveId}" data-name="${msg.name}"`)}</div>
                     </div>`;
             });
-            inner.innerHTML = DOMPurify.sanitize(html + `</div>`);
+            smoothReplaceContent(inner, DOMPurify.sanitize(html + `</div>`));
 
             inner.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.onclick = () => onEdit(btn.dataset.id, btn.dataset.name);
@@ -463,7 +464,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
         const files = await withRetry(() => listFiles(folderId), { refreshAuth: getRefreshAuth() });
         updateBreadcrumbCount(files.length);
         if (files.length === 0) {
-            inner.innerHTML = `<div class="text-center py-12 text-admin-muted-light italic">Ingen behandlinger funnet.</div>`;
+            smoothReplaceContent(inner, `<div class="text-center py-12 text-admin-muted-light italic">Ingen behandlinger funnet.</div>`);
         } else {
             const services = await Promise.all(files.map(async (f) => {
                 const raw = await getFileContent(f.id);
@@ -498,7 +499,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
                         </div>
                     </div>`;
             });
-            inner.innerHTML = DOMPurify.sanitize(html + `</div>`);
+            smoothReplaceContent(inner, DOMPurify.sanitize(html + `</div>`));
 
             inner.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.onclick = () => onEdit(btn.dataset.id, btn.dataset.name);
@@ -546,7 +547,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
         updateBreadcrumbCount(dentists.length);
 
         if (dentists.length === 0) {
-            inner.innerHTML = `<div class="text-center py-12 text-admin-muted-light italic">Ingen team-medlemmer funnet.</div>`;
+            smoothReplaceContent(inner, `<div class="text-center py-12 text-admin-muted-light italic">Ingen team-medlemmer funnet.</div>`);
         } else {
             dentists.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'nb'));
 
@@ -570,7 +571,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
                         <div class="self-end sm:self-auto">${renderActionButtons('edit-tannlege-btn', 'delete-tannlege-btn', `data-row="${t.rowIndex}" data-name="${t.name}"`)}</div>
                     </div>`;
             });
-            inner.innerHTML = DOMPurify.sanitize(html + `</div>`);
+            smoothReplaceContent(inner, DOMPurify.sanitize(html + `</div>`));
 
             inner.querySelectorAll('.edit-tannlege-btn').forEach(btn => {
                 btn.onclick = () => onEdit(parseInt(btn.dataset.row), dentists.find(d => d.rowIndex === parseInt(btn.dataset.row)));
@@ -726,7 +727,7 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
         updateBreadcrumbCount(images.length);
 
         if (images.length === 0) {
-            container.innerHTML = `<div class="text-center py-8 text-admin-muted-light italic">Ingen galleribilder funnet.</div>`;
+            smoothReplaceContent(container, `<div class="text-center py-8 text-admin-muted-light italic">Ingen galleribilder funnet.</div>`);
         } else {
             // Forsidebilde/fellesbilde først, deretter sortert på order
             images.sort((a, b) => {
@@ -780,7 +781,7 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                         </div>
                     </div>`;
             });
-            container.innerHTML = DOMPurify.sanitize(html + `</div>`);
+            smoothReplaceContent(container, DOMPurify.sanitize(html + `</div>`));
 
             container.querySelectorAll('.edit-galleri-btn').forEach(btn => {
                 btn.onclick = () => onEdit(parseInt(btn.dataset.row), images.find(i => i.rowIndex === parseInt(btn.dataset.row)));
