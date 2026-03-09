@@ -32,6 +32,10 @@ Alle `sheets.values.get`-kall med numeriske felter **SKAL** bruke `valueRenderOp
 | `build` | `sync-data.js && astro build` | Lokalt |
 | `build:ci` | `astro build` | CI/CD (sync kjøres som eget steg før) |
 
+## Test-guide
+
+Retningslinjer for testskriving finnes i [`docs/guides/test-guide.md`](docs/guides/test-guide.md). Dekker Test Desiderata-prinsipper, auto-mocks, test-helpers, `it.each`-konvensjoner og coverage-policy.
+
 ## Dato-avhengige tester
 
 Alle tester som sammenligner datoer mot "nå" **SKAL** bruke `vi.useFakeTimers()`. Aldri bruk hardkodede fremtidsdatoer som antar at testen kjøres før en viss dato.
