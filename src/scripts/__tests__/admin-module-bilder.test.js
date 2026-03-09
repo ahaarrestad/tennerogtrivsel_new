@@ -405,20 +405,35 @@ describe('consistency check (galleri)', () => {
 });
 
 describe('handleReorder (via loadBilderModule callback)', () => {
+    function createReorderCards() {
+        const container = document.getElementById('galleri-liste-container');
+        const card1 = document.createElement('div');
+        card1.className = 'admin-card-interactive';
+        card1.innerHTML = '<button class="reorder-btn" data-row="2"></button>';
+        const card2 = document.createElement('div');
+        card2.className = 'admin-card-interactive';
+        card2.innerHTML = '<button class="reorder-btn" data-row="3"></button>';
+        container.append(card1, card2);
+        return { container, card1, card2 };
+    }
+
     it('should optimistically swap DOM and call reorderGalleriItem', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
 
+        const { container, card1, card2 } = createReorderCards();
+
         getGalleriRaw.mockResolvedValue([
             { rowIndex: 2, type: 'galleri', order: 2 },
             { rowIndex: 3, type: 'forsidebilde', order: 1 },
         ]);
-        reorderGalleriItem.mockResolvedValue();
+        reorderGalleriItem.mockResolvedValue(true);
 
         const handleReorder = loadGalleriListeModule.mock.calls[0][3];
         await handleReorder(2, 1);
 
+        expect(animateSwap).toHaveBeenCalledWith(card1, card2);
         expect(disableReorderButtons).toHaveBeenCalled();
         expect(getGalleriRaw).toHaveBeenCalledWith('test-sheet');
         expect(reorderGalleriItem).toHaveBeenCalledWith('test-sheet', expect.any(Array), 2, 1);
@@ -427,10 +442,34 @@ describe('handleReorder (via loadBilderModule callback)', () => {
         expect(sortedItems[0].type).toBe('forsidebilde');
     });
 
+    it('should update galleri-last-fetched timestamp on successful reorder', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        const timestampEl = document.createElement('span');
+        timestampEl.id = 'galleri-last-fetched';
+        timestampEl.textContent = 'gammel tid';
+        document.body.appendChild(timestampEl);
+
+        getGalleriRaw.mockResolvedValue([
+            { rowIndex: 2, type: 'galleri', order: 2 },
+        ]);
+        reorderGalleriItem.mockResolvedValue(true);
+
+        const handleReorder = loadGalleriListeModule.mock.calls[0][3];
+        await handleReorder(2, 1);
+
+        expect(timestampEl.textContent).not.toBe('gammel tid');
+        timestampEl.remove();
+    });
+
     it('should reverse swap when reorderGalleriItem returns false', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
+
+        const { container, card1, card2 } = createReorderCards();
 
         getGalleriRaw.mockResolvedValue([
             { rowIndex: 2, type: 'galleri', order: 2 },
@@ -441,11 +480,10 @@ describe('handleReorder (via loadBilderModule callback)', () => {
         const handleReorder = loadGalleriListeModule.mock.calls[0][3];
         await handleReorder(2, 1);
 
+        expect(animateSwap).toHaveBeenCalledWith(card1, card2);
+        expect(animateSwap).toHaveBeenCalledWith(card2, card1);
         expect(reorderGalleriItem).toHaveBeenCalled();
-        // No DOM cards in test, so animateSwap not called for reverse either
-        // But enableReorderButtons should always be called via finally
         expect(enableReorderButtons).toHaveBeenCalled();
-        // updateReorderButtonVisibility should NOT be called on false
         const { updateReorderButtonVisibility } = await import('../admin-reorder.js');
         expect(updateReorderButtonVisibility).not.toHaveBeenCalled();
     });
@@ -455,11 +493,15 @@ describe('handleReorder (via loadBilderModule callback)', () => {
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
 
+        const { container, card1, card2 } = createReorderCards();
+
         getGalleriRaw.mockRejectedValueOnce(new Error('fail'));
 
         const handleReorder = loadGalleriListeModule.mock.calls[0][3];
         await handleReorder(2, 1);
 
+        expect(animateSwap).toHaveBeenCalledWith(card1, card2);
+        expect(animateSwap).toHaveBeenCalledWith(card2, card1);
         expect(showToast).toHaveBeenCalledWith('Kunne ikke endre rekkefølge.', 'error');
         expect(enableReorderButtons).toHaveBeenCalled();
     });
