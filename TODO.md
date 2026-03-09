@@ -26,6 +26,16 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
+- [ ] **Pen formatering av åpningstider i kontakt og footer**
+    - 5 rader med åpningstid-properties er allerede lagt til
+    - Rendringen i både «kontakt»-seksjonen og footer ser rotete ut
+    - Gjør en antagelse på formatteringen og fiks så det ser pent ut
+
+- [ ] **Seksjons-titler på framsiden bommer ved aktiv melding**
+    - Når «oppslagstavla» har en aktiv melding, kommer titler for langt opp
+    - Gjelder kun ankerlenkene på framsiden (`#kontakt`, `#tjenester` etc.)
+    - Gjelder IKKE separate sider (`/kontakt`, `/tjenester`)
+
 
 
 ## Fullført
