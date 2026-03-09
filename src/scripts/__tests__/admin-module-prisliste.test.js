@@ -6,6 +6,12 @@ import { createMockAutoSaver, mockAdminDialog, setupModuleDOM } from './test-hel
 
 vi.mock('dompurify');
 
+vi.mock('../admin-reorder.js', () => ({
+    animateSwap: vi.fn().mockResolvedValue(undefined),
+    disableReorderButtons: vi.fn(),
+    enableReorderButtons: vi.fn(),
+}));
+
 vi.mock('../admin-client.js', () => ({
     getPrislisteRaw: vi.fn(),
     addPrislisteRow: vi.fn(),
@@ -43,7 +49,8 @@ import {
 } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { createAutoSaver, verifySave } from '../admin-editor-helpers.js';
-import { reorderPrislisteItem } from '../admin-dashboard.js';
+import { reorderPrislisteItem, reorderPrislisteKategori } from '../admin-dashboard.js';
+import { animateSwap, disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
 import { initPrislisteModule, reloadPrisliste } from '../admin-module-prisliste.js';
 
 beforeEach(() => {
@@ -862,8 +869,7 @@ describe('loadPrislisteList - sorting and reorder buttons', () => {
         expect(downBtns[1].classList.contains('invisible')).toBe(true);
     });
 
-    it('should call reorderPrislisteItem and reload when reorder button is clicked', async () => {
-        window.clearBreadcrumbEditor = vi.fn();
+    it('should optimistically swap DOM elements on reorder click without full reload', async () => {
         const items = [
             { rowIndex: 2, kategori: 'Test', behandling: 'A', pris: 100, order: 1 },
             { rowIndex: 3, kategori: 'Test', behandling: 'B', pris: 200, order: 2 },
@@ -872,15 +878,36 @@ describe('loadPrislisteList - sorting and reorder buttons', () => {
         reloadPrisliste();
         await new Promise(r => setTimeout(r, 0));
 
-        // Click the down button on the first item (rowIndex=2, dir=1)
         const downBtn = document.querySelector('.reorder-pris-btn[data-row="2"][data-dir="1"]');
-        expect(downBtn).not.toBeNull();
         const event = new Event('click', { bubbles: true });
         event.stopPropagation = vi.fn();
         await downBtn.onclick(event);
 
+        expect(disableReorderButtons).toHaveBeenCalled();
+        expect(animateSwap).toHaveBeenCalled();
         expect(reorderPrislisteItem).toHaveBeenCalledWith('test-sheet', expect.any(Array), 2, 1);
-        expect(window.clearBreadcrumbEditor).toHaveBeenCalled();
+        expect(enableReorderButtons).toHaveBeenCalled();
+    });
+
+    it('should revert DOM swap and show toast on reorder API error', async () => {
+        reorderPrislisteItem.mockRejectedValueOnce(new Error('API fail'));
+        const items = [
+            { rowIndex: 2, kategori: 'Test', behandling: 'A', pris: 100, order: 1 },
+            { rowIndex: 3, kategori: 'Test', behandling: 'B', pris: 200, order: 2 },
+        ];
+        getPrislisteRaw.mockResolvedValue(items);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const downBtn = document.querySelector('.reorder-pris-btn[data-row="2"][data-dir="1"]');
+        const event = new Event('click', { bubbles: true });
+        event.stopPropagation = vi.fn();
+        await downBtn.onclick(event);
+
+        // animateSwap called twice: once for swap, once for revert
+        expect(animateSwap).toHaveBeenCalledTimes(2);
+        expect(showToast).toHaveBeenCalledWith('Kunne ikke endre rekkefølge.', 'error');
+        expect(enableReorderButtons).toHaveBeenCalled();
     });
 
     it('should not crash when reorder button row is not found in items', async () => {
@@ -1022,5 +1049,54 @@ describe('editPrisRad - order computation', () => {
             kategori: 'BrandNewCategory',
             order: 1,
         }));
+    });
+});
+
+describe('loadPrislisteList - optimistic kategori reorder', () => {
+    it('should optimistically swap kategori sections on reorder click', async () => {
+        getKategoriRekkefølge.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', order: 1 },
+            { rowIndex: 3, kategori: 'Kirurgi', order: 2 },
+        ]);
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100, order: 1 },
+            { rowIndex: 3, kategori: 'Kirurgi', behandling: 'B', pris: 200, order: 1 },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        vi.clearAllMocks();
+        const downBtn = document.querySelector('.reorder-kategori-btn[data-dir="1"]');
+        const event = new Event('click', { bubbles: true });
+        event.stopPropagation = vi.fn();
+        await downBtn.onclick(event);
+
+        expect(disableReorderButtons).toHaveBeenCalled();
+        expect(animateSwap).toHaveBeenCalled();
+        expect(reorderPrislisteKategori).toHaveBeenCalled();
+        expect(enableReorderButtons).toHaveBeenCalled();
+    });
+
+    it('should revert kategori swap on API error', async () => {
+        reorderPrislisteKategori.mockRejectedValueOnce(new Error('fail'));
+        getKategoriRekkefølge.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', order: 1 },
+            { rowIndex: 3, kategori: 'Kirurgi', order: 2 },
+        ]);
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Undersokelser', behandling: 'A', pris: 100, order: 1 },
+            { rowIndex: 3, kategori: 'Kirurgi', behandling: 'B', pris: 200, order: 1 },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        vi.clearAllMocks();
+        const downBtn = document.querySelector('.reorder-kategori-btn[data-dir="1"]');
+        const event = new Event('click', { bubbles: true });
+        event.stopPropagation = vi.fn();
+        await downBtn.onclick(event);
+
+        expect(animateSwap).toHaveBeenCalledTimes(2);
+        expect(showToast).toHaveBeenCalledWith('Kunne ikke endre rekkefølge.', 'error');
     });
 });
