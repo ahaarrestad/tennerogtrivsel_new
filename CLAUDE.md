@@ -38,18 +38,7 @@ Retningslinjer for testskriving finnes i [`docs/guides/test-guide.md`](docs/guid
 
 ## Dato-avhengige tester
 
-Alle tester som sammenligner datoer mot "nå" **SKAL** bruke `vi.useFakeTimers()`. Aldri bruk hardkodede fremtidsdatoer som antar at testen kjøres før en viss dato.
-
-```js
-beforeEach(() => {
-    vi.useFakeTimers({ now: new Date('2026-02-15T12:00:00') });
-});
-afterEach(() => {
-    vi.useRealTimers();
-});
-```
-
-Hvis én test trenger en annen tid enn resten av describe-blokken: bruk `vi.setSystemTime(new Date('...'))` inne i den testen (ikke `vi.useFakeTimers` på nytt).
+Tester som sammenligner datoer mot "nå" **SKAL** bruke `vi.useFakeTimers({ now: ... })` i `beforeEach` + `vi.useRealTimers()` i `afterEach`. Aldri hardkodede fremtidsdatoer. For enkelt-tester som trenger annen tid: `vi.setSystemTime()` (ikke `vi.useFakeTimers` på nytt).
 
 ## Arkitekturdokumentasjon
 
