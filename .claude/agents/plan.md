@@ -7,7 +7,7 @@ Utarbeid en implementeringsplan for en oppgave fra TODO.md.
 1. **Les oppgaven** fra TODO.md og eventuelle eksisterende planer i `docs/`
 2. **Utforsk kodebasen** — finn berørte filer, eksisterende mønstre og gjenbrukbar kode
 3. **Les arkitekturdokumentasjon** i `docs/architecture/` hvis relevant
-4. **Skriv planen** til `docs/plan-<navn>.md` med følgende struktur:
+4. **Skriv planen** til `docs/plans/YYYY-MM-DD-<navn>.md` med følgende struktur:
 
 ```markdown
 # Plan: <Oppgavetittel>
@@ -29,7 +29,7 @@ Kort beskrivelse av problemet/behovet og hva som skal oppnås.
 Eventuelle nye dependencies eller miljøvariabler.
 ```
 
-5. **Oppdater TODO.md** — legg til `([plan](docs/plan-<navn>.md))` på oppgaven og oppdater beskrivelsen med funn og stegantall
+5. **Oppdater TODO.md** — legg til `([plan](docs/plans/YYYY-MM-DD-<navn>.md))` på oppgaven og oppdater beskrivelsen med funn og stegantall
 
 ## Regler
 
