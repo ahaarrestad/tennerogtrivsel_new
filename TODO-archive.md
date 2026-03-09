@@ -2,6 +2,10 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Oppdater hjelpetekst for åpningstider i admin**
+    - Lagt til formatveiledning «Dag(er): HH:MM - HH:MM» i SETTING_HINTS for businessHours1 og businessHours2
+    - Admin ser nå «Vises på: Kontakt, footer — format: «Dag(er): HH:MM - HH:MM»» under feltet
+
 - [x] **Bedre linjebrekk-kontroll for sentralbord-tekst under telefon (kontakt)**
     - Sentralbord-teksten satt til `text-xs` for å unngå uheldige linjebrekk
     - `text-wrap: pretty` lagt til på `.card-text` for bedre brekk-valg generelt
