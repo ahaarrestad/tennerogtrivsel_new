@@ -2,6 +2,14 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Test-review og forenkling** ([design](docs/plans/archive/2026-03-09-test-review-design.md), [plan](docs/plans/archive/2026-03-09-test-review.md))
+    - Auto-mocks (`__mocks__/dompurify.js`, `__mocks__/marked.js`) erstatter 14+ inline mocks
+    - Delt test-helpers (`test-helpers.js`) med `mockAdminDialog()`, `createMockAutoSaver()`, `setupModuleDOM()`
+    - `it.each`-konsolidering i 8+ testfiler (toggle-tester, feilhåndtering, slugify, format-pris)
+    - Test-guide (`docs/guides/test-guide.md`) basert på Kent Beck's Test Desiderata
+    - CLAUDE.md oppdatert med test-guide referanse
+    - Netto: ~400 linjer fjernet, 1163 tester bestått, alle filer ≥80% branch coverage
+
 - [x] **Oppdater hjelpetekst for åpningstider i admin**
     - Lagt til formatveiledning «Dag(er): HH:MM - HH:MM» i SETTING_HINTS for businessHours1 og businessHours2
     - Admin ser nå «Vises på: Kontakt, footer — format: «Dag(er): HH:MM - HH:MM»» under feltet
