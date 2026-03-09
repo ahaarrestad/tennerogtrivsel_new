@@ -3,7 +3,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node', // or 'jsdom' if you need browser APIs
-    include: ['src/**/__tests__/**/*.{ts,js}'], // or wherever your tests are
+    include: ['src/**/__tests__/**/*.{ts,js}'],
+    exclude: ['src/**/__tests__/test-helpers.js'],
     // workaround for astro:content
     alias: {
       'astro:content': new URL('./src/__mocks__/astroContent.ts', import.meta.url).pathname,
