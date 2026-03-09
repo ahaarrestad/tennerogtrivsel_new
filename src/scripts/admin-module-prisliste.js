@@ -328,17 +328,17 @@ async function loadPrislisteList(sheetId) {
                 const rows = grouped.get(kategori);
                 const isFirstKat = ki === 0;
                 const isLastKat = ki === sortedKategoriKeys.length - 1;
-                html += `<div class="bg-white rounded-2xl border border-brand-border/60 shadow-sm overflow-hidden">
+                html += `<div class="kategori-section bg-white rounded-2xl border border-brand-border/60 shadow-sm overflow-hidden">
                     <div class="kategori-header px-6 py-4 border-b border-brand-border/60 flex items-center justify-between cursor-pointer select-none">
                         <div class="flex items-center gap-2">
-                            <div class="flex flex-col gap-1" onclick="event.stopPropagation()">
+                            <div class="flex flex-col gap-1">
                                 <button data-kategori="${escapeHtml(kategori)}" data-dir="-1" class="reorder-kategori-btn admin-icon-btn-reorder ${isFirstKat ? 'invisible' : ''}" title="Flytt kategori opp">${ICON_UP}</button>
                                 <button data-kategori="${escapeHtml(kategori)}" data-dir="1" class="reorder-kategori-btn admin-icon-btn-reorder ${isLastKat ? 'invisible' : ''}" title="Flytt kategori ned">${ICON_DOWN}</button>
                             </div>
                             ${ICON_CHEVRON_DOWN}
                             <h3 class="font-heading font-bold text-xl text-brand">${escapeHtml(kategori)}</h3>
                         </div>
-                        <div class="flex items-center gap-2" onclick="event.stopPropagation()">
+                        <div class="flex items-center gap-2">
                             <button class="add-pris-kategori-btn btn-primary p-1.5 rounded-lg min-w-[32px] min-h-[32px] flex items-center justify-center" data-kategori="${escapeHtml(kategori)}" title="Ny prisrad i ${escapeHtml(kategori)}" aria-label="Ny prisrad i ${escapeHtml(kategori)}">${ICON_ADD}</button>
                         </div>
                     </div>
@@ -376,12 +376,17 @@ async function loadPrislisteList(sheetId) {
             // Kollaps/ekspander kategori-headers
             inner.querySelectorAll('.kategori-header').forEach(header => {
                 header.addEventListener('click', () => {
-                    const section = header.closest('.bg-white');
+                    const section = header.closest('.kategori-section');
                     const content = section?.querySelector('.kategori-content');
                     const chevron = header.querySelector('.kategori-chevron');
                     if (content) content.classList.toggle('hidden');
                     if (chevron) chevron.classList.toggle('-rotate-90');
                 });
+            });
+
+            // Forhindre at klikk på reorder/add-knapper trigger kategori-kollaps
+            inner.querySelectorAll('.reorder-kategori-btn, .add-pris-kategori-btn').forEach(btn => {
+                btn.addEventListener('click', e => e.stopPropagation());
             });
 
             inner.querySelectorAll('.add-pris-kategori-btn').forEach(btn => {
