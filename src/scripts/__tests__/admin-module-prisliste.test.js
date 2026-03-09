@@ -10,6 +10,7 @@ vi.mock('../admin-reorder.js', () => ({
     animateSwap: vi.fn().mockResolvedValue(undefined),
     disableReorderButtons: vi.fn(),
     enableReorderButtons: vi.fn(),
+    updateReorderButtonVisibility: vi.fn(),
 }));
 
 vi.mock('../admin-client.js', () => ({
@@ -50,7 +51,7 @@ import {
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { createAutoSaver, verifySave } from '../admin-editor-helpers.js';
 import { reorderPrislisteItem, reorderPrislisteKategori } from '../admin-dashboard.js';
-import { animateSwap, disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
+import { animateSwap, disableReorderButtons, enableReorderButtons, updateReorderButtonVisibility } from '../admin-reorder.js';
 import { initPrislisteModule, reloadPrisliste } from '../admin-module-prisliste.js';
 
 beforeEach(() => {

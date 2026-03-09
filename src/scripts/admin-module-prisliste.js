@@ -5,7 +5,7 @@ import {
     deletePrislisteRowPermanently, backupToSlettetSheet,
     getKategoriRekkefølge, addKategoriRekkefølge,
 } from './admin-client.js';
-import { animateSwap, disableReorderButtons, enableReorderButtons } from './admin-reorder.js';
+import { animateSwap, disableReorderButtons, enableReorderButtons, updateReorderButtonVisibility } from './admin-reorder.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { getAdminConfig, escapeHtml, createAutoSaver, verifySave } from './admin-editor-helpers.js';
 import { formatTimestamp, ICON_ADD, ICON_UP, ICON_DOWN, ICON_EDIT, ICON_DELETE, reorderPrislisteItem, reorderPrislisteKategori } from './admin-dashboard.js';
@@ -408,6 +408,8 @@ async function loadPrislisteList(sheetId) {
                     try {
                         await reorderPrislisteItem(sheetId, categoryRows, rowIndex, direction);
                         enableReorderButtons(inner, '.reorder-pris-btn');
+                        const updatedRows = [...currentEl.parentNode.children].filter(el => el.classList.contains('group'));
+                        updateReorderButtonVisibility(updatedRows, '.reorder-pris-btn');
                     } catch (err) {
                         await animateSwap(neighborEl, currentEl);
                         enableReorderButtons(inner, '.reorder-pris-btn');
@@ -434,6 +436,8 @@ async function loadPrislisteList(sheetId) {
                     try {
                         await reorderPrislisteKategori(sheetId, kategoriOrder, kategori, direction);
                         enableReorderButtons(inner, '.reorder-kategori-btn');
+                        const updatedSections = [...inner.querySelectorAll('.space-y-6 > .bg-white')];
+                        updateReorderButtonVisibility(updatedSections, '.reorder-kategori-btn');
                     } catch (err) {
                         await animateSwap(neighborSection, currentSection);
                         enableReorderButtons(inner, '.reorder-kategori-btn');

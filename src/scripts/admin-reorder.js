@@ -68,3 +68,17 @@ export function disableReorderButtons(container, selector) {
 export function enableReorderButtons(container, selector) {
     container.querySelectorAll(selector).forEach(btn => { btn.disabled = false; });
 }
+
+/**
+ * Oppdaterer synligheten av opp/ned-knapper basert på posisjon i listen.
+ * Første element: skjul opp. Siste element: skjul ned. Resten: vis begge.
+ */
+export function updateReorderButtonVisibility(items, buttonSelector) {
+    const arr = [...items];
+    arr.forEach((item, idx) => {
+        const upBtn = item.querySelector(`${buttonSelector}[data-dir="-1"]`);
+        const downBtn = item.querySelector(`${buttonSelector}[data-dir="1"]`);
+        if (upBtn) upBtn.classList.toggle('invisible', idx === 0);
+        if (downBtn) downBtn.classList.toggle('invisible', idx === arr.length - 1);
+    });
+}
