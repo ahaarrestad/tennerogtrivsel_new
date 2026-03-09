@@ -71,14 +71,17 @@ async function editTjeneste(id, name) {
                     ${renderToggleHtml('edit-active-toggle', isActive)}
                     <div class="flex flex-col gap-2">
                         <label class="admin-label">Tittel</label>
+                        <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Tjenestesiden, navigasjon</p>
                         <input type="text" id="edit-title" value="" placeholder="Navn på tjenesten..." class="admin-input">
                     </div>
                     <div class="flex flex-col gap-2">
                         <label class="admin-label">Ingress (kort sammendrag)</label>
+                        <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Tjenestekort på forsiden og tjenestesiden</p>
                         <textarea id="edit-ingress" rows="3" class="admin-input resize-none"></textarea>
                     </div>
                     <div class="flex flex-col gap-2 editor-container">
                         <label class="admin-label">Beskrivelse (Innhold)</label>
+                        <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Tjenestens detaljside</p>
                         <textarea id="edit-content" placeholder="Full beskrivelse her..."></textarea>
                     </div>
                 </div>

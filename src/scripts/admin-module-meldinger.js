@@ -70,6 +70,7 @@ async function editMelding(id, name) {
                 <div class="grid grid-cols-1 gap-6">
                     <div class="flex flex-col gap-2">
                         <label class="admin-label">Tittel</label>
+                        <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Infobanner øverst på siden</p>
                         <input type="text" id="edit-title" value="" placeholder="Skriv en tittel..." class="admin-input">
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -78,6 +79,7 @@ async function editMelding(id, name) {
                                 <label class="admin-label">Fra og med</label>
                                 <span id="preview-start" class="text-[10px] text-admin-muted-light font-bold">${formatDate(msgData.startDate)}</span>
                             </div>
+                            <p class="text-xs text-admin-muted-light -mt-0.5">Styrer når meldingen vises</p>
                             <input type="text" id="edit-start" value="" placeholder="Velg dato..." class="admin-input cursor-pointer bg-white">
                         </div>
                         <div class="flex flex-col gap-2">
@@ -85,11 +87,13 @@ async function editMelding(id, name) {
                                 <label class="admin-label">Til og med</label>
                                 <span id="preview-end" class="text-[10px] text-admin-muted-light font-bold">${formatDate(msgData.endDate)}</span>
                             </div>
+                            <p class="text-xs text-admin-muted-light -mt-0.5">Styrer når meldingen skjules</p>
                             <input type="text" id="edit-end" value="" placeholder="Velg dato..." class="admin-input cursor-pointer bg-white">
                         </div>
                     </div>
                     <div class="flex flex-col gap-2 editor-container">
                         <label class="admin-label">Innhold</label>
+                        <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Infobanner, under tittelen</p>
                         <textarea id="edit-content" placeholder="Skriv meldingen her..."></textarea>
                     </div>
 

@@ -71,14 +71,17 @@ export async function loadBilderModule() {
                             </div>
                             <div class="admin-field-container">
                                 <label class="admin-label">Tittel</label>
+                                <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Bildetekst i galleriet</p>
                                 <input type="text" id="galleri-edit-title" value="" class="admin-input" placeholder="F.eks. Venterom">
                             </div>
                             <div class="admin-field-container">
                                 <label class="admin-label">Alt-tekst</label>
+                                <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Skjermlesere og søkemotorer</p>
                                 <input type="text" id="galleri-edit-alt" value="" class="admin-input" placeholder="Beskrivelse for tilgjengelighet">
                             </div>
                             <div class="admin-field-container">
                                 <label class="admin-label">Bildefil</label>
+                                <p class="text-xs text-admin-muted-light -mt-0.5">Vises på: Galleri og forsidebilde</p>
                                 <div class="flex items-center gap-3">
                                     <input type="text" id="galleri-edit-image" value="" class="admin-input flex-grow text-xs text-admin-muted font-mono" placeholder="Ingen bilde valgt" readonly>
                                     <button id="btn-galleri-pick-image" class="btn-primary py-3 px-4 text-xs shrink-0 whitespace-nowrap">Velg bilde</button>
