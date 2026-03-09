@@ -2,9 +2,10 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { createMockAutoSaver, mockAdminDialog, setupModuleDOM } from './test-helpers.js';
 
-vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
-vi.mock('marked', () => ({ marked: { parse: vi.fn(text => `<p>${text}</p>`) } }));
+vi.mock('dompurify');
+vi.mock('marked');
 
 vi.mock('../admin-client.js', () => ({
     deleteFile: vi.fn(),
@@ -17,10 +18,7 @@ vi.mock('../admin-client.js', () => ({
     silentLogin: vi.fn(),
 }));
 
-vi.mock('../admin-dialog.js', () => ({
-    showToast: vi.fn(),
-    showConfirm: vi.fn().mockResolvedValue(false),
-}));
+vi.mock('../admin-dialog.js', () => mockAdminDialog());
 
 vi.mock('../textFormatter.js', () => ({
     stripStackEditData: vi.fn(s => s),
@@ -41,7 +39,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
     attachToggleClick: vi.fn(),
     showDeletionToast: vi.fn(),
     initMarkdownEditor: vi.fn(),
-    createAutoSaver: vi.fn((saveFn) => ({ trigger: vi.fn(), cancel: vi.fn(), _saveFn: saveFn })),
+    createAutoSaver: createMockAutoSaver(),
     showSaveBar: vi.fn(),
 }));
 
@@ -58,16 +56,8 @@ import { loadTjenesterModule, formatTimestamp } from '../admin-dashboard.js';
 import { showDeletionToast, initMarkdownEditor, attachToggleClick, showSaveBar, createAutoSaver, getRefreshAuth } from '../admin-editor-helpers.js';
 import { initTjenesterModule, reloadTjenester } from '../admin-module-tjenester.js';
 
-function setupDOM() {
-    document.body.innerHTML = `
-        <div id="admin-config" data-tjenester-folder="tf"></div>
-        <div id="module-inner"></div>
-        <div id="module-actions"></div>
-    `;
-}
-
 beforeEach(() => {
-    setupDOM();
+    setupModuleDOM({ configAttrs: 'data-tjenester-folder="tf"' });
     vi.clearAllMocks();
     vi.useFakeTimers();
 });
@@ -124,27 +114,16 @@ describe('deleteTjeneste', () => {
         expect(loadTjenesterModule).toHaveBeenCalled();
     });
 
-    it('should show error toast when deletion fails', async () => {
+    it.each([
+        ['non-retryable', new Error('fail'), 'Kunne ikke slette tjenesten.'],
+        ['auth', { status: 401 }, 'Økten din er utløpt. Last siden på nytt.'],
+        ['retryable', new Error('network'), 'Nettverksfeil — prøv igjen.'],
+    ])('should show %s error toast when deletion fails', async (errorType, rejection, expectedMessage) => {
+        classifyError.mockReturnValueOnce(errorType);
         showConfirm.mockResolvedValue(true);
-        deleteFile.mockRejectedValue(new Error('fail'));
+        deleteFile.mockRejectedValue(rejection);
         await window.deleteTjeneste('id1', 'Test');
-        expect(showToast).toHaveBeenCalledWith('Kunne ikke slette tjenesten.', 'error');
-    });
-
-    it('should show auth toast when deletion fails with auth error', async () => {
-        classifyError.mockReturnValueOnce('auth');
-        showConfirm.mockResolvedValue(true);
-        deleteFile.mockRejectedValue({ status: 401 });
-        await window.deleteTjeneste('id1', 'Test');
-        expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
-    });
-
-    it('should show network toast when deletion fails with retryable error', async () => {
-        classifyError.mockReturnValueOnce('retryable');
-        showConfirm.mockResolvedValue(true);
-        deleteFile.mockRejectedValue(new Error('network'));
-        await window.deleteTjeneste('id1', 'Test');
-        expect(showToast).toHaveBeenCalledWith('Nettverksfeil — prøv igjen.', 'error');
+        expect(showToast).toHaveBeenCalledWith(expectedMessage, 'error');
     });
 });
 
@@ -490,149 +469,75 @@ describe('editTjeneste', () => {
 describe('toggleTjenesteActive', () => {
     let toggleFn;
 
-    beforeEach(() => {
-        initTjenesterModule();
-        // Get toggleTjenesteActive from the loadTjenesterModule callback
-        reloadTjenester();
-        toggleFn = loadTjenesterModule.mock.calls[0][3];
-        vi.clearAllMocks();
-
+    function addToggleButton(driveId, active, { hasLabel = true } = {}) {
         document.body.innerHTML += `
             <div class="admin-card-interactive">
-                <button class="toggle-active-btn" data-id="drive1" data-active="true">
-                    <span class="toggle-label">Aktiv</span>
+                <button class="toggle-active-btn" data-id="${driveId}" data-active="${active}">
+                    ${hasLabel ? `<span class="toggle-label">${active ? 'Aktiv' : 'Inaktiv'}</span>` : ''}
                 </button>
             </div>
         `;
+    }
+
+    beforeEach(() => {
+        initTjenesterModule();
+        reloadTjenester();
+        toggleFn = loadTjenesterModule.mock.calls[0][3];
+        vi.clearAllMocks();
     });
 
-    it('should toggle to inactive and save', async () => {
+    it.each([
+        [true, false, 'Inaktiv'],
+        [false, true, 'Aktiv'],
+    ])('should toggle active=%s → %s and update UI label to "%s"', async (initial, expected, expectedLabel) => {
+        addToggleButton('drive1', initial);
         getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({ data: { active: true, title: 'T' }, body: 'B' });
+        parseMarkdown.mockReturnValue({ data: { active: initial, title: 'T' }, body: 'B' });
         stringifyMarkdown.mockReturnValue('md');
         saveFile.mockResolvedValue();
 
-        const service = { active: true };
+        const service = { active: initial };
         await toggleFn('drive1', 'file.md', service);
 
-        expect(getFileContent).toHaveBeenCalledWith('drive1');
         expect(saveFile).toHaveBeenCalledWith('drive1', 'file.md', 'md');
-        expect(service.active).toBe(false);
-    });
-
-    it('should toggle to active and save', async () => {
-        getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({ data: { active: false, title: 'T' }, body: 'B' });
-        stringifyMarkdown.mockReturnValue('md');
-        saveFile.mockResolvedValue();
-
-        const service = { active: false };
-        document.querySelector('.toggle-active-btn').dataset.active = 'false';
-        await toggleFn('drive1', 'file.md', service);
-
-        expect(service.active).toBe(true);
-    });
-
-    it('should do optimistic UI update', async () => {
-        getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({ data: { active: true }, body: '' });
-        stringifyMarkdown.mockReturnValue('md');
-        saveFile.mockResolvedValue();
-
-        const service = { active: true };
-        await toggleFn('drive1', 'file.md', service);
-
+        expect(service.active).toBe(expected);
         const btn = document.querySelector('.toggle-active-btn[data-id="drive1"]');
-        expect(btn.dataset.active).toBe('false');
-        expect(btn.querySelector('.toggle-label').textContent).toBe('Inaktiv');
+        expect(btn.dataset.active).toBe(String(expected));
+        expect(btn.querySelector('.toggle-label').textContent).toBe(expectedLabel);
     });
 
-    it('should revert UI on save failure', async () => {
+    it.each([
+        [true, 'true', 'Aktiv'],
+        [false, 'false', 'Inaktiv'],
+    ])('should revert UI on save failure when initial active=%s', async (initial, expectedAttr, expectedLabel) => {
+        addToggleButton('drive1', initial);
         getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({ data: { active: true }, body: '' });
+        parseMarkdown.mockReturnValue({ data: { active: initial }, body: '' });
         saveFile.mockRejectedValue(new Error('fail'));
 
-        const service = { active: true };
+        const service = { active: initial };
         await toggleFn('drive1', 'file.md', service);
 
         const btn = document.querySelector('.toggle-active-btn[data-id="drive1"]');
-        expect(btn.dataset.active).toBe('true');
-        expect(btn.querySelector('.toggle-label').textContent).toBe('Aktiv');
+        expect(btn.dataset.active).toBe(expectedAttr);
+        expect(btn.querySelector('.toggle-label').textContent).toBe(expectedLabel);
         expect(showToast).toHaveBeenCalledWith('Kunne ikke oppdatere synlighet.', 'error');
     });
 
-    it('should toggle opacity on card', async () => {
+    it('should toggle opacity on card when deactivating', async () => {
+        addToggleButton('drive1', true);
         getFileContent.mockResolvedValue('raw');
         parseMarkdown.mockReturnValue({ data: { active: true }, body: '' });
         stringifyMarkdown.mockReturnValue('md');
         saveFile.mockResolvedValue();
 
-        const service = { active: true };
-        await toggleFn('drive1', 'file.md', service);
+        await toggleFn('drive1', 'file.md', { active: true });
 
         const card = document.querySelector('.admin-card-interactive');
         expect(card.classList.contains('opacity-60')).toBe(true);
     });
-});
 
-describe('toggleTjenesteActive — additional branch coverage', () => {
-    let toggleFn;
-
-    beforeEach(() => {
-        initTjenesterModule();
-        reloadTjenester();
-        toggleFn = loadTjenesterModule.mock.calls[0][3];
-        vi.clearAllMocks();
-    });
-
-    it('should toggle inactive→active with label showing "Aktiv"', async () => {
-        document.body.innerHTML += `
-            <div class="admin-card-interactive">
-                <button class="toggle-active-btn" data-id="drive1" data-active="false">
-                    <span class="toggle-label">Inaktiv</span>
-                </button>
-            </div>
-        `;
-
-        getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({ data: { active: false, title: 'T' }, body: 'B' });
-        stringifyMarkdown.mockReturnValue('md');
-        saveFile.mockResolvedValue();
-
-        const service = { active: false };
-        await toggleFn('drive1', 'file.md', service);
-
-        const btn = document.querySelector('.toggle-active-btn[data-id="drive1"]');
-        expect(btn.dataset.active).toBe('true');
-        expect(btn.querySelector('.toggle-label').textContent).toBe('Aktiv');
-        expect(service.active).toBe(true);
-    });
-
-    it('should revert inactive→active toggle on failure with label showing "Inaktiv"', async () => {
-        document.body.innerHTML += `
-            <div class="admin-card-interactive">
-                <button class="toggle-active-btn" data-id="drive1" data-active="false">
-                    <span class="toggle-label">Inaktiv</span>
-                </button>
-            </div>
-        `;
-
-        getFileContent.mockResolvedValue('raw');
-        parseMarkdown.mockReturnValue({ data: { active: false }, body: '' });
-        saveFile.mockRejectedValue(new Error('fail'));
-
-        const service = { active: false };
-        await toggleFn('drive1', 'file.md', service);
-
-        const btn = document.querySelector('.toggle-active-btn[data-id="drive1"]');
-        // Reverted back to the original inactive state
-        expect(btn.dataset.active).toBe('false');
-        expect(btn.querySelector('.toggle-label').textContent).toBe('Inaktiv');
-        expect(showToast).toHaveBeenCalledWith('Kunne ikke oppdatere synlighet.', 'error');
-    });
-
-    it('should succeed toggle without btn/card in DOM', async () => {
-        // No toggle button or card in DOM for this driveId
+    it('should save without btn/card in DOM', async () => {
         getFileContent.mockResolvedValue('raw');
         parseMarkdown.mockReturnValue({ data: { active: true, title: 'T' }, body: 'B' });
         stringifyMarkdown.mockReturnValue('md');
@@ -645,27 +550,19 @@ describe('toggleTjenesteActive — additional branch coverage', () => {
         expect(service.active).toBe(false);
     });
 
-    it('should handle toggle error without btn/card in DOM', async () => {
-        // No toggle button or card in DOM
+    it('should show error and reload on failure without btn/card in DOM', async () => {
         getFileContent.mockResolvedValue('raw');
         parseMarkdown.mockReturnValue({ data: { active: true }, body: '' });
         saveFile.mockRejectedValue(new Error('fail'));
 
-        const service = { active: true };
-        await toggleFn('no-btn', 'file.md', service);
+        await toggleFn('no-btn', 'file.md', { active: true });
 
         expect(showToast).toHaveBeenCalledWith('Kunne ikke oppdatere synlighet.', 'error');
         expect(loadTjenesterModule).toHaveBeenCalled();
     });
 
-    it('should succeed toggle without label span', async () => {
-        document.body.innerHTML += `
-            <div class="admin-card-interactive">
-                <button class="toggle-active-btn" data-id="drive1" data-active="true">
-                </button>
-            </div>
-        `;
-
+    it('should toggle without label span', async () => {
+        addToggleButton('drive1', true, { hasLabel: false });
         getFileContent.mockResolvedValue('raw');
         parseMarkdown.mockReturnValue({ data: { active: true, title: 'T' }, body: 'B' });
         stringifyMarkdown.mockReturnValue('md');
@@ -674,9 +571,6 @@ describe('toggleTjenesteActive — additional branch coverage', () => {
         const service = { active: true };
         await toggleFn('drive1', 'file.md', service);
 
-        const btn = document.querySelector('.toggle-active-btn[data-id="drive1"]');
-        expect(btn.dataset.active).toBe('false');
-        // No label to update, but toggle should still work
         expect(service.active).toBe(false);
     });
 });

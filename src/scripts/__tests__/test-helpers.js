@@ -4,6 +4,7 @@
  * Bruk:
  *   import { createMockAutoSaver, mockAdminDialog, setupModuleDOM } from './test-helpers.js';
  */
+import { vi } from 'vitest';
 
 /**
  * Lag en mock createAutoSaver-factory.
