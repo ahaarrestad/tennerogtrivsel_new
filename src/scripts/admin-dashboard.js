@@ -240,7 +240,7 @@ export function updateBreadcrumbCount(count) {
     const el = document.getElementById('breadcrumb-count');
     if (!el) return;
     el.textContent = `(${count})`;
-    el.classList.remove('hidden');
+    el.classList.add('visible');
 }
 
 /**

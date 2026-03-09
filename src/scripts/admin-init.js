@@ -26,7 +26,7 @@ function openModule(id, title) {
     const breadcrumbModule = document.getElementById('breadcrumb-module');
     if (breadcrumbModule) breadcrumbModule.textContent = title;
     const breadcrumbCount = document.getElementById('breadcrumb-count');
-    if (breadcrumbCount) { breadcrumbCount.textContent = ''; breadcrumbCount.classList.add('hidden'); }
+    if (breadcrumbCount) { breadcrumbCount.textContent = ''; breadcrumbCount.classList.remove('visible'); }
     clearBreadcrumbEditor();
 
     if (id === 'settings') loadSettingsModule();
