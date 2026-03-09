@@ -27,6 +27,10 @@
     - Opprett GitHub Environment (f.eks. `production`) med protection rules for deploy-jobben — begrenser hvem/hva som kan trigge deploy og sikrer at secrets kun er tilgjengelige i riktig miljø
 
 
+- [ ] **Fiks layout-hopp på admin-sider**
+    - Admin-framsiden og modulene "hopper" visuelt ved lasting
+    - Undersøk årsak (CLS) og fiks for jevnere innlasting
+
 ## Fullført
 
 Se [TODO-archive.md](TODO-archive.md) for alle fullførte oppgaver.
