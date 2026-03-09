@@ -2,9 +2,10 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { setupModuleDOM } from './test-helpers.js';
 
-vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
-vi.mock('marked', () => ({ marked: { parse: vi.fn(text => `<p>${text}</p>`) } }));
+vi.mock('dompurify');
+vi.mock('marked');
 
 vi.mock('../admin-client.js', () => ({
     getSettingsWithNotes: vi.fn(),
@@ -41,17 +42,8 @@ vi.mock('../admin-editor-helpers.js', () => ({
 import { getSettingsWithNotes, updateSettingByKey, updateSettingOrder } from '../admin-client.js';
 import { mergeSettingsWithDefaults, reorderSettingItem, updateLastFetchedTime, updateBreadcrumbCount, handleModuleError } from '../admin-dashboard.js';
 
-function setupDOM() {
-    document.body.innerHTML = `
-        <div id="admin-config" data-sheet-id="sid" data-defaults='{}'>
-        </div>
-        <div id="module-inner"></div>
-        <span id="breadcrumb-count" class="hidden"></span>
-    `;
-}
-
 beforeEach(() => {
-    setupDOM();
+    setupModuleDOM({ configAttrs: 'data-sheet-id="sid" data-defaults=\'{}\'', extraHTML: '<span id="breadcrumb-count" class="hidden"></span>' });
     vi.clearAllMocks();
     vi.resetModules();
 });
