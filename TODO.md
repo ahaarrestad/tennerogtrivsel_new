@@ -13,10 +13,7 @@
 
 ## Pågående
 
-- [ ] **Seksjons-titler på framsiden bommer ved aktiv melding** ([plan](docs/plans/2026-03-09-seksjons-titler-scroll-offset.md))
-    - Når «oppslagstavla» har en aktiv melding, kommer titler for langt opp
-    - Gjelder kun ankerlenkene på framsiden (`#kontakt`, `#tjenester` etc.)
-    - Gjelder IKKE separate sider (`/kontakt`, `/tjenester`)
+(Ingen oppgaver pågår)
 
 
 ## Backlog
