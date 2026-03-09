@@ -36,6 +36,10 @@
     - Gjelder kun ankerlenkene på framsiden (`#kontakt`, `#tjenester` etc.)
     - Gjelder IKKE separate sider (`/kontakt`, `/tjenester`)
 
+- [ ] **Bedre linjebrekk-kontroll for sentralbord-tekst under telefon (kontakt)**
+    - Teksten under «Telefon» på kontaktsiden bryter uheldig
+    - Undersøk hvordan vi kan styre linjebrekk bedre
+
 
 
 ## Fullført
