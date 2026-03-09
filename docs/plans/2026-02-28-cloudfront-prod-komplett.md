@@ -234,6 +234,73 @@ Skann alle tre www-domener — forventet minimum karakter **B**.
 
 ---
 
+## Fase 5: Redirects fra gammel side
+
+Den gamle nettsiden (`tennerogtrivsel.no`) bruker jQuery SPA med query-parameter-routing (`/index.html?page=X`). Disse URL-ene finnes i Google-indeks, bokmerker osv. og må redirectes til riktig ny side.
+
+### URL-kartlegging
+
+| Gammel URL | Ny URL |
+|---|---|
+| `/index.html?page=kontakt` | `/kontakt` |
+| `/index.html?page=behandlingstilbud` | `/tjenester` |
+| `/index.html?page=trygdeordninger` | `/tjenester` |
+| `/index.html?page=omoss` | `/tannleger` |
+| `/index.html` (uten `?page`) | `/` |
+
+### Steg 5.1: Utvid CloudFront Function `url-rewrite-index`
+
+Legg til redirect-logikk **før** den eksisterende URL-rewrite-logikken. Funksjonen sjekker `querystring.page`-parameteren og returnerer 301-redirect til riktig ny path.
+
+```javascript
+function handler(event) {
+    var request = event.request;
+    var uri = request.uri;
+    var qs = request.querystring;
+
+    // Redirect gamle ?page= URL-er til nye paths (301 Permanent)
+    if (qs && qs.page) {
+        var pageMap = {
+            'kontakt': '/kontakt',
+            'behandlingstilbud': '/tjenester',
+            'trygdeordninger': '/tjenester',
+            'omoss': '/tannleger'
+        };
+        var newPath = pageMap[qs.page.value];
+        if (newPath) {
+            return {
+                statusCode: 301,
+                statusDescription: 'Moved Permanently',
+                headers: { 'location': { value: newPath } }
+            };
+        }
+    }
+
+    // Eksisterende URL-rewrite for Astro-undersider
+    if (uri.endsWith('/')) {
+        request.uri += 'index.html';
+    } else if (!uri.includes('.')) {
+        request.uri += '/index.html';
+    }
+    return request;
+}
+```
+
+### Steg 5.2: Verifisering
+
+```bash
+# Test alle gamle URL-er — forventet 301 til riktig ny side
+for page in kontakt behandlingstilbud trygdeordninger omoss; do
+  echo "=== ?page=$page ==="
+  curl -sI "https://www.tennerogtrivsel.no/index.html?page=$page" | grep -iE '(HTTP|location)'
+done
+# Sjekk at vanlige sider fortsatt fungerer
+curl -sI https://www.tennerogtrivsel.no/kontakt | head -1
+curl -sI https://www.tennerogtrivsel.no/tjenester | head -1
+```
+
+---
+
 ## Kostnader
 
 | Ressurs | Kostnad |
