@@ -276,6 +276,15 @@ function handler(event) {
         }
     }
 
+    // Redirect bare /index.html til forsiden
+    if (uri === '/index.html' && (!qs || !qs.page)) {
+        return {
+            statusCode: 301,
+            statusDescription: 'Moved Permanently',
+            headers: { 'location': { value: '/' } }
+        };
+    }
+
     // Eksisterende URL-rewrite for Astro-undersider
     if (uri.endsWith('/')) {
         request.uri += 'index.html';
@@ -294,6 +303,8 @@ for page in kontakt behandlingstilbud trygdeordninger omoss; do
   echo "=== ?page=$page ==="
   curl -sI "https://www.tennerogtrivsel.no/index.html?page=$page" | grep -iE '(HTTP|location)'
 done
+# Test bare /index.html — forventet 301 til /
+curl -sI "https://www.tennerogtrivsel.no/index.html" | grep -iE '(HTTP|location)'
 # Sjekk at vanlige sider fortsatt fungerer
 curl -sI https://www.tennerogtrivsel.no/kontakt | head -1
 curl -sI https://www.tennerogtrivsel.no/tjenester | head -1
