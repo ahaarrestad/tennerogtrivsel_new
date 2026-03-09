@@ -16,6 +16,7 @@
     - Lagt til `github.event.pull_request.head.repo.fork != true` på `unit-tests` og `e2e-tests` jobbene
     - Fork-PRer kjører ingen CI — sparer CI-minutter og unngår feilende kjøringer uten secrets
 
+
 - [x] **Admin-lenke på framsiden for innlogget bruker**
     - Tannhjul-ikon i navbaren (desktop + mobil) som vises når bruker er innlogget
     - Client-side sjekk via `getStoredUser()` fra admin-auth.js
