@@ -4,6 +4,7 @@ import {
     deleteGalleriRowPermanently, setForsideBildeInGalleri, setFellesBildeInGalleri, migrateForsideBildeToGalleri,
     findFileByName, deleteFile, listImages
 } from './admin-client.js';
+import { animateSwap, disableReorderButtons, enableReorderButtons, updateReorderButtonVisibility } from './admin-reorder.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { loadGallery, setupUploadHandler } from './admin-gallery.js';
 import { loadGalleriListeModule, reorderGalleriItem, formatTimestamp, ICON_ADD } from './admin-dashboard.js';
@@ -389,19 +390,42 @@ export async function loadBilderModule() {
         };
 
         const handleReorder = async (rowIndex, direction) => {
-            const items = await getGalleriRaw(SHEET_ID);
-            // Sort same way as list: forsidebilde/fellesbilde first, then by order
-            items.sort((a, b) => {
-                const aSpecial = a.type === 'forsidebilde' || a.type === 'fellesbilde';
-                const bSpecial = b.type === 'forsidebilde' || b.type === 'fellesbilde';
-                if (aSpecial && !bSpecial) return -1;
-                if (!aSpecial && bSpecial) return 1;
-                if (a.type === 'forsidebilde' && b.type === 'fellesbilde') return -1;
-                if (a.type === 'fellesbilde' && b.type === 'forsidebilde') return 1;
-                return (a.order ?? 99) - (b.order ?? 99);
-            });
-            await reorderGalleriItem(SHEET_ID, items, rowIndex, direction);
-            reloadGalleriListe();
+            const container = document.getElementById('galleri-liste-container');
+            const allCards = container ? [...container.querySelectorAll('.admin-card-interactive')] : [];
+            const currentCard = allCards.find(c => c.querySelector(`.reorder-btn[data-row="${rowIndex}"]`));
+            const currentCardIdx = allCards.indexOf(currentCard);
+            const neighborCard = allCards[currentCardIdx + direction];
+
+            if (container) disableReorderButtons(container, '.reorder-btn');
+
+            if (currentCard && neighborCard) {
+                await animateSwap(currentCard, neighborCard);
+            }
+
+            try {
+                const items = await getGalleriRaw(SHEET_ID);
+                items.sort((a, b) => {
+                    const aSpecial = a.type === 'forsidebilde' || a.type === 'fellesbilde';
+                    const bSpecial = b.type === 'forsidebilde' || b.type === 'fellesbilde';
+                    if (aSpecial && !bSpecial) return -1;
+                    if (!aSpecial && bSpecial) return 1;
+                    if (a.type === 'forsidebilde' && b.type === 'fellesbilde') return -1;
+                    if (a.type === 'fellesbilde' && b.type === 'forsidebilde') return 1;
+                    return (a.order ?? 99) - (b.order ?? 99);
+                });
+                await reorderGalleriItem(SHEET_ID, items, rowIndex, direction);
+                if (container) {
+                    enableReorderButtons(container, '.reorder-btn');
+                    const updatedCards = [...container.querySelectorAll('.admin-card-interactive')];
+                    updateReorderButtonVisibility(updatedCards, '.reorder-btn');
+                }
+            } catch (err) {
+                if (currentCard && neighborCard) {
+                    await animateSwap(neighborCard, currentCard);
+                }
+                if (container) enableReorderButtons(container, '.reorder-btn');
+                showToast('Kunne ikke endre rekkefølge.', 'error');
+            }
         };
 
         const toggleGalleriActive = async (rowIndex, img) => {
