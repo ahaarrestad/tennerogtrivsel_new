@@ -629,6 +629,12 @@
     }
     .admin-card-count {
         @apply block text-xs text-admin-muted-light mt-1;
+        min-height: 1lh;
+        opacity: 0;
+        transition: opacity 200ms ease-out;
+    }
+    .admin-card-count.visible {
+        opacity: 1;
     }
     .admin-view-enter {
         animation: admin-fade-in 200ms ease-out;

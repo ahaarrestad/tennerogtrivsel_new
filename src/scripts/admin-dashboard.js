@@ -823,7 +823,7 @@ export async function loadDashboardCounts(config) {
         const el = document.getElementById(id);
         if (!el) return;
         el.textContent = text;
-        el.classList.remove('hidden');
+        el.classList.add('visible');
     };
 
     const fetchTjenesterCount = async () => {
