@@ -7,6 +7,7 @@ import {
 } from './admin-dashboard.js';
 import { animateSwap, disableReorderButtons, enableReorderButtons, updateReorderButtonVisibility } from './admin-reorder.js';
 import { getAdminConfig, getRefreshAuth, escapeHtml } from './admin-editor-helpers.js';
+import { showToast } from './admin-dialog.js';
 
 const SETTING_HINTS = {
     // Forside (hero)
@@ -171,12 +172,15 @@ export async function loadSettingsModule() {
                             neighborEl.querySelectorAll('.settings-reorder-btn').forEach(b => {
                                 b.dataset.idx = String(idx);
                             });
+                            const containers = [...inner.querySelectorAll('[id^="setting-container-"]')];
+                            updateReorderButtonVisibility(containers, '.settings-reorder-btn');
+                        } else {
+                            await animateSwap(neighborEl, currentEl);
                         }
-                        enableReorderButtons(inner, '.settings-reorder-btn');
-                        const containers = [...inner.querySelectorAll('[id^="setting-container-"]')];
-                        updateReorderButtonVisibility(containers, '.settings-reorder-btn');
                     } catch (err) {
                         await animateSwap(neighborEl, currentEl);
+                        showToast('Kunne ikke endre rekkefølge.', 'error');
+                    } finally {
                         enableReorderButtons(inner, '.settings-reorder-btn');
                     }
                 });

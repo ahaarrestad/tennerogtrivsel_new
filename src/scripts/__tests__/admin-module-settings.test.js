@@ -46,9 +46,14 @@ vi.mock('../admin-editor-helpers.js', () => ({
     escapeHtml: vi.fn(s => String(s ?? '')),
 }));
 
+vi.mock('../admin-dialog.js', () => ({
+    showToast: vi.fn(),
+}));
+
 import { getSettingsWithNotes, updateSettingByKey, updateSettingOrder } from '../admin-client.js';
 import { mergeSettingsWithDefaults, reorderSettingItem, updateLastFetchedTime, updateBreadcrumbCount, handleModuleError } from '../admin-dashboard.js';
 import { animateSwap, disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
+import { showToast } from '../admin-dialog.js';
 
 beforeEach(() => {
     setupModuleDOM({ configAttrs: 'data-sheet-id="sid" data-defaults=\'{}\'', extraHTML: '<span id="breadcrumb-count" class="hidden"></span>' });
@@ -334,6 +339,74 @@ describe('loadSettingsModule', () => {
 
         // Should have been called with idx=1 (A's new position), not idx=0 (stale)
         expect(reorderSettingItem).toHaveBeenLastCalledWith('test-sheet', expect.any(Array), 1, 1);
+    });
+
+    it('should reverse swap when reorderSettingItem returns false', async () => {
+        const mockSettings = [
+            { id: 'a', value: '', description: 'A', order: 1, row: 2 },
+            { id: 'b', value: '', description: 'B', order: 2, row: 3 },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue([...mockSettings]);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        // Enter reorder mode
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue([...mockSettings]);
+        document.getElementById('settings-reorder-toggle').click();
+
+        await vi.waitFor(() => {
+            expect(document.querySelectorAll('.settings-reorder-btn').length).toBeGreaterThan(0);
+        });
+
+        reorderSettingItem.mockResolvedValue(false);
+
+        const reorderBtn = document.querySelector('.settings-reorder-btn:not(.invisible)');
+        reorderBtn.click();
+        await vi.waitFor(() => {
+            expect(reorderSettingItem).toHaveBeenCalled();
+        });
+
+        // animateSwap called twice: once for optimistic swap, once to reverse
+        expect(animateSwap).toHaveBeenCalledTimes(2);
+        expect(enableReorderButtons).toHaveBeenCalled();
+        expect(updateLastFetchedTime).not.toHaveBeenCalled();
+    });
+
+    it('should reverse swap and show toast on reorder API error', async () => {
+        const mockSettings = [
+            { id: 'a', value: '', description: 'A', order: 1, row: 2 },
+            { id: 'b', value: '', description: 'B', order: 2, row: 3 },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue([...mockSettings]);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        // Enter reorder mode
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue([...mockSettings]);
+        document.getElementById('settings-reorder-toggle').click();
+
+        await vi.waitFor(() => {
+            expect(document.querySelectorAll('.settings-reorder-btn').length).toBeGreaterThan(0);
+        });
+
+        reorderSettingItem.mockRejectedValue(new Error('network error'));
+
+        const reorderBtn = document.querySelector('.settings-reorder-btn:not(.invisible)');
+        reorderBtn.click();
+        await vi.waitFor(() => {
+            expect(reorderSettingItem).toHaveBeenCalled();
+        });
+
+        // animateSwap called twice: once for optimistic swap, once to reverse
+        expect(animateSwap).toHaveBeenCalledTimes(2);
+        expect(enableReorderButtons).toHaveBeenCalled();
+        expect(showToast).toHaveBeenCalledWith('Kunne ikke endre rekkefølge.', 'error');
     });
 
     it('should handle updateSettingByKey failure for virtual settings', async () => {

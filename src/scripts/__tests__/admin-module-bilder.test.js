@@ -427,6 +427,29 @@ describe('handleReorder (via loadBilderModule callback)', () => {
         expect(sortedItems[0].type).toBe('forsidebilde');
     });
 
+    it('should reverse swap when reorderGalleriItem returns false', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        getGalleriRaw.mockResolvedValue([
+            { rowIndex: 2, type: 'galleri', order: 2 },
+            { rowIndex: 3, type: 'forsidebilde', order: 1 },
+        ]);
+        reorderGalleriItem.mockResolvedValue(false);
+
+        const handleReorder = loadGalleriListeModule.mock.calls[0][3];
+        await handleReorder(2, 1);
+
+        expect(reorderGalleriItem).toHaveBeenCalled();
+        // No DOM cards in test, so animateSwap not called for reverse either
+        // But enableReorderButtons should always be called via finally
+        expect(enableReorderButtons).toHaveBeenCalled();
+        // updateReorderButtonVisibility should NOT be called on false
+        const { updateReorderButtonVisibility } = await import('../admin-reorder.js');
+        expect(updateReorderButtonVisibility).not.toHaveBeenCalled();
+    });
+
     it('should revert and show toast on API error', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
