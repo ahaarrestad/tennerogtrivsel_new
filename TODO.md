@@ -26,6 +26,15 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
+- [ ] **Oppdater hjelpetekst for åpningstider i admin**
+    - Forklar forventet format på teksten (f.eks. «Dag: HH:MM - HH:MM»)
+
+- [ ] **Test-review og forenkling** ([design](docs/plans/2026-03-09-test-review-design.md), [plan](docs/plans/2026-03-09-test-review.md))
+    - Gjennomgå alle tester: gir de mening, eller sikrer de bare dekning?
+    - Vurder forenkling (simplify) og gjenbrukbarhet
+    - Fjern/omskriv tester som bare jager coverage uten reell verdi
+    - Skriv test-guide (docs/guides/test-guide.md)
+
 
 
 
