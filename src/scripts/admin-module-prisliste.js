@@ -384,11 +384,6 @@ async function loadPrislisteList(sheetId) {
                 });
             });
 
-            // Forhindre at klikk på reorder/add-knapper trigger kategori-kollaps
-            inner.querySelectorAll('.reorder-kategori-btn, .add-pris-kategori-btn').forEach(btn => {
-                btn.addEventListener('click', e => e.stopPropagation());
-            });
-
             inner.querySelectorAll('.add-pris-kategori-btn').forEach(btn => {
                 btn.onclick = (e) => {
                     e.stopPropagation();
