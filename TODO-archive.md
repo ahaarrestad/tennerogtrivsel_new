@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Flytt secrets fra workflow-nivå til jobb-nivå i deploy.yml**
+    - Fjernet workflow-level `env`-blokk med Google-secrets
+    - Lagt til secrets som jobb-level `env` på `e2e-tests` og `build` (de eneste som trenger dem)
+    - `unit-tests` og `deploy` har nå ingen unødvendige secrets
+
 - [x] **Oppdater defaults-innstillinger fra Google Sheet**
     - HARD_DEFAULTS i getSettings.ts oppdatert med verdier fra Google Sheets
     - Koordinater, åpningstider (splittet til 5 dager), og forenklede titler synkronisert

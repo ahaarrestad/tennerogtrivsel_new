@@ -14,17 +14,6 @@ permissions:
   pages: write
   id-token: write
 
-env:
-  GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-  GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
-  PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.PUBLIC_GOOGLE_CLIENT_ID }}
-  PUBLIC_GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-  PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TJENESTER_FOLDER_ID }}
-  PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_MELDINGER_FOLDER_ID }}
-  PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TANNLEGER_FOLDER_ID }}
-  PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_BILDER_FOLDER_ID }}
-  PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
-
 jobs:
   unit-tests:
     if: github.event_name != 'repository_dispatch' && github.event.pull_request.head.repo.fork != true
@@ -42,6 +31,16 @@ jobs:
   e2e-tests:
     if: github.event_name != 'repository_dispatch' && github.event.pull_request.head.repo.fork != true
     runs-on: ubuntu-latest
+    env:
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+      GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+      PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.PUBLIC_GOOGLE_CLIENT_ID }}
+      PUBLIC_GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+      PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TJENESTER_FOLDER_ID }}
+      PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_MELDINGER_FOLDER_ID }}
+      PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TANNLEGER_FOLDER_ID }}
+      PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_BILDER_FOLDER_ID }}
+      PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
     container:
       image: mcr.microsoft.com/playwright:v1.58.2-noble
     steps:
@@ -76,6 +75,16 @@ jobs:
       (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped') &&
       (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped')
     runs-on: ubuntu-latest
+    env:
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+      GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+      PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.PUBLIC_GOOGLE_CLIENT_ID }}
+      PUBLIC_GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+      PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TJENESTER_FOLDER_ID }}
+      PUBLIC_GOOGLE_DRIVE_MELDINGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_MELDINGER_FOLDER_ID }}
+      PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TANNLEGER_FOLDER_ID }}
+      PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_BILDER_FOLDER_ID }}
+      PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
     steps:
       # For repository_dispatch: full build (tests skipped)
       - uses: actions/checkout@v4

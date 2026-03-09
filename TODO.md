@@ -26,8 +26,6 @@
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
     - Opprett GitHub Environment (f.eks. `production`) med protection rules for deploy-jobben — begrenser hvem/hva som kan trigge deploy og sikrer at secrets kun er tilgjengelige i riktig miljø
 
-- [ ] **Flytt secrets fra workflow-nivå til jobb-nivå i deploy.yml** — kun `e2e-tests` og `deploy` trenger dem, unngår at secrets eksponeres til andre jobber (f.eks. ved collaborator-tilgang)
-
 
 ## Fullført
 
