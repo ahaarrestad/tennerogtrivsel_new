@@ -626,6 +626,11 @@
     }
     .admin-item-count {
         @apply text-admin-muted-light;
+        opacity: 0;
+        transition: opacity 200ms ease-out;
+    }
+    .admin-item-count.visible {
+        opacity: 1;
     }
     .admin-card-count {
         @apply block text-xs text-admin-muted-light mt-1;

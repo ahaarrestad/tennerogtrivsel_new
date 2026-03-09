@@ -135,7 +135,7 @@ function setupDOM() {
         <div id="dashboard" class="hidden"></div>
         <div id="module-container" class="hidden">
             <button id="breadcrumb-module"></button>
-            <span id="breadcrumb-count" class="hidden"></span>
+            <span id="breadcrumb-count"></span>
             <span id="breadcrumb-editor-sep" class="admin-breadcrumb-sep hidden"></span>
             <span id="breadcrumb-editor" class="admin-breadcrumb-current hidden"></span>
             <div id="module-title"></div>
@@ -238,7 +238,7 @@ describe('admin-init', () => {
         expect(document.getElementById('module-container').classList.contains('admin-view-enter')).toBe(true);
         expect(document.getElementById('module-title').textContent).toBe('Rutinesjekken');
         expect(document.getElementById('breadcrumb-module').textContent).toBe('Rutinesjekken');
-        expect(document.getElementById('breadcrumb-count').classList.contains('hidden')).toBe(true);
+        expect(document.getElementById('breadcrumb-count').classList.contains('visible')).toBe(false);
     });
 
     it('should update breadcrumb when switching modules', async () => {

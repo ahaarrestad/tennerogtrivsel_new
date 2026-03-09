@@ -85,7 +85,7 @@ describe('admin-dashboard.js', () => {
             <div id="nav-user-info"></div>
             <div id="module-inner"></div>
             <div id="module-actions"></div>
-            <span id="breadcrumb-count" class="hidden"></span>
+            <span id="breadcrumb-count"></span>
             <div id="card-settings" class="admin-card-interactive"></div>
             <div id="card-tjenester" class="admin-card-interactive">
                 <span id="card-tjenester-count" class="admin-card-count"></span>
@@ -147,14 +147,14 @@ describe('admin-dashboard.js', () => {
             updateBreadcrumbCount(5);
             const el = document.getElementById('breadcrumb-count');
             expect(el.textContent).toBe('(5)');
-            expect(el.classList.contains('hidden')).toBe(false);
+            expect(el.classList.contains('visible')).toBe(true);
         });
 
         it('should show (0) when count is zero', () => {
             updateBreadcrumbCount(0);
             const el = document.getElementById('breadcrumb-count');
             expect(el.textContent).toBe('(0)');
-            expect(el.classList.contains('hidden')).toBe(false);
+            expect(el.classList.contains('visible')).toBe(true);
         });
 
         it('should do nothing when element is missing', () => {
@@ -306,7 +306,7 @@ describe('admin-dashboard.js', () => {
             await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
             const el = document.getElementById('breadcrumb-count');
             expect(el.textContent).toBe('(2)');
-            expect(el.classList.contains('hidden')).toBe(false);
+            expect(el.classList.contains('visible')).toBe(true);
             expect(document.getElementById('module-inner').classList.contains('admin-view-enter')).toBe(true);
         });
 
@@ -452,7 +452,7 @@ describe('admin-dashboard.js', () => {
             await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), vi.fn());
             const el = document.getElementById('breadcrumb-count');
             expect(el.textContent).toBe('(3)');
-            expect(el.classList.contains('hidden')).toBe(false);
+            expect(el.classList.contains('visible')).toBe(true);
             expect(document.getElementById('module-inner').classList.contains('admin-view-enter')).toBe(true);
         });
 
@@ -766,7 +766,7 @@ describe('admin-dashboard.js', () => {
             await loadTannlegerModule('sheet-id', vi.fn(), vi.fn(), null, vi.fn());
             const el = document.getElementById('breadcrumb-count');
             expect(el.textContent).toBe('(2)');
-            expect(el.classList.contains('hidden')).toBe(false);
+            expect(el.classList.contains('visible')).toBe(true);
             expect(document.getElementById('module-inner').classList.contains('admin-view-enter')).toBe(true);
         });
 
@@ -1020,7 +1020,7 @@ describe('admin-dashboard.js', () => {
             await loadGalleriListeModule('sheet-id', vi.fn(), vi.fn(), vi.fn(), null, vi.fn());
             const el = document.getElementById('breadcrumb-count');
             expect(el.textContent).toBe('(2)');
-            expect(el.classList.contains('hidden')).toBe(false);
+            expect(el.classList.contains('visible')).toBe(true);
             expect(document.getElementById('galleri-liste-container').classList.contains('admin-view-enter')).toBe(true);
         });
 
