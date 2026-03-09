@@ -2,9 +2,10 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { createMockAutoSaver, mockAdminDialog, setupModuleDOM } from './test-helpers.js';
 
-vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
-vi.mock('marked', () => ({ marked: { parse: vi.fn(text => `<p>${text}</p>`) } }));
+vi.mock('dompurify');
+vi.mock('marked');
 
 vi.mock('../admin-client.js', () => ({
     updateTannlegeRow: vi.fn(),
@@ -19,10 +20,7 @@ vi.mock('../admin-client.js', () => ({
     silentLogin: vi.fn(),
 }));
 
-vi.mock('../admin-dialog.js', () => ({
-    showToast: vi.fn(),
-    showConfirm: vi.fn().mockResolvedValue(false),
-}));
+vi.mock('../admin-dialog.js', () => mockAdminDialog());
 
 vi.mock('../admin-gallery.js', () => ({
     loadGallery: vi.fn(),
@@ -46,7 +44,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
     showDeletionToast: vi.fn(),
     renderImageCropSliders: vi.fn(({ prefix, valPrefix, scale = 1, posX = 50, posY = 50 }) =>
         `<div><input type="range" id="${prefix}-scale" value="${scale}"><span id="${valPrefix}-scale">${scale}x</span><input type="range" id="${prefix}-x" value="${posX}"><span id="${valPrefix}-x">${posX}%</span><input type="range" id="${prefix}-y" value="${posY}"><span id="${valPrefix}-y">${posY}%</span></div>`),
-    createAutoSaver: vi.fn((saveFn) => ({ trigger: vi.fn(), cancel: vi.fn(), _saveFn: saveFn })),
+    createAutoSaver: createMockAutoSaver(),
     bindSliderStepButtons: vi.fn(),
     bindWheelPrevent: vi.fn(),
     showSaveBar: vi.fn(),
@@ -70,17 +68,8 @@ import { loadTannlegerModule } from '../admin-dashboard.js';
 import { showDeletionToast, attachToggleClick, bindSliderStepButtons, bindWheelPrevent, showSaveBar, hideSaveBar, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave } from '../admin-editor-helpers.js';
 import { initTannlegerModule, reloadTannleger } from '../admin-module-tannleger.js';
 
-function setupDOM() {
-    document.body.innerHTML = `
-        <div id="admin-config" data-sheet-id="sid" data-tannleger-folder="taf"></div>
-        <div id="module-inner"></div>
-        <div id="module-actions"></div>
-        <dialog id="image-picker-modal"></dialog>
-    `;
-}
-
 beforeEach(() => {
-    setupDOM();
+    setupModuleDOM({ configAttrs: 'data-sheet-id="sid" data-tannleger-folder="taf"', extraHTML: '<dialog id="image-picker-modal"></dialog>' });
     vi.clearAllMocks();
     resolveImagePreview.mockResolvedValue({ src: '', imageId: null });
 });
@@ -696,172 +685,84 @@ describe('editTannlege', () => {
 });
 
 describe('toggleTannlegeActive', () => {
-    it('should optimistically update UI and revert on error', async () => {
-        initTannlegerModule();
+    let toggleFn;
 
-        document.body.innerHTML += `
-            <div class="admin-card-interactive">
-                <button class="toggle-active-btn" data-row="2" data-active="true">
-                    <span class="toggle-label">Aktiv</span>
-                </button>
-            </div>
-        `;
-
-        // toggleTannlegeActive is passed as callback via loadTannlegerModule
-        // We can get it from the mock call
-        reloadTannleger();
-        const toggleFn = loadTannlegerModule.mock.calls[0][4];
-
-        updateTannlegeRow.mockRejectedValue(new Error('fail'));
-        const t = { active: true };
-        await toggleFn(2, t);
-
-        // Should have been reverted on error
-        const btn = document.querySelector('.toggle-active-btn[data-row="2"]');
-        expect(btn.dataset.active).toBe('true');
-        expect(loadTannlegerModule).toHaveBeenCalledTimes(2); // reload + error reload
-    });
-
-    it('should update data on success', async () => {
-        initTannlegerModule();
-        reloadTannleger();
-        const toggleFn = loadTannlegerModule.mock.calls[0][4];
-
-        updateTannlegeRow.mockResolvedValue();
-        const t = { active: true };
-        await toggleFn(2, t);
-
-        expect(t.active).toBe(false);
-        expect(updateTannlegeRow).toHaveBeenCalledWith('test-sheet', 2, expect.objectContaining({ active: false }));
-    });
-
-    it('should update label text on successful toggle with label', async () => {
-        initTannlegerModule();
-
-        // Add toggle button with label BEFORE calling reloadTannleger
+    function addToggleButton(row, active, { hasLabel = true } = {}) {
         const wrapper = document.createElement('div');
-        wrapper.className = 'admin-card-interactive';
-        wrapper.innerHTML = '<button class="toggle-active-btn" data-row="5" data-active="true"><span class="toggle-label">Aktiv</span></button>';
+        wrapper.className = `admin-card-interactive${active ? '' : ' opacity-60'}`;
+        wrapper.innerHTML = `<button class="toggle-active-btn" data-row="${row}" data-active="${active}">${hasLabel ? `<span class="toggle-label">${active ? 'Aktiv' : 'Inaktiv'}</span>` : ''}</button>`;
         document.body.appendChild(wrapper);
+    }
 
-        reloadTannleger();
-        const toggleFn = loadTannlegerModule.mock.calls[0][4];
-
-        updateTannlegeRow.mockResolvedValue();
-        const t = { active: true };
-        await toggleFn(5, t);
-
-        const btn = document.querySelector('.toggle-active-btn[data-row="5"]');
-        expect(btn.querySelector('.toggle-label').textContent).toBe('Inaktiv');
-        expect(btn.dataset.active).toBe('false');
-    });
-
-    it('should handle toggle without btn/card in DOM', async () => {
+    beforeEach(() => {
         initTannlegerModule();
         reloadTannleger();
-        const toggleFn = loadTannlegerModule.mock.calls[0][4];
+        toggleFn = loadTannlegerModule.mock.calls[0][4];
+        vi.clearAllMocks();
+    });
 
-        // No toggle button in DOM for this row
+    it.each([
+        [true, false, 'Inaktiv'],
+        [false, true, 'Aktiv'],
+    ])('should toggle active=%s → %s with label "%s"', async (initial, expected, expectedLabel) => {
+        addToggleButton(2, initial);
+        updateTannlegeRow.mockResolvedValue();
+
+        const t = { active: initial };
+        await toggleFn(2, t);
+
+        expect(t.active).toBe(expected);
+        expect(updateTannlegeRow).toHaveBeenCalledWith('test-sheet', 2, expect.objectContaining({ active: expected }));
+        const btn = document.querySelector('.toggle-active-btn[data-row="2"]');
+        expect(btn.dataset.active).toBe(String(expected));
+        expect(btn.querySelector('.toggle-label').textContent).toBe(expectedLabel);
+    });
+
+    it.each([
+        [true, 'true', 'Aktiv'],
+        [false, 'false', 'Inaktiv'],
+    ])('should revert UI on error when initial active=%s', async (initial, expectedAttr, expectedLabel) => {
+        addToggleButton(2, initial);
+        updateTannlegeRow.mockRejectedValue(new Error('fail'));
+
+        const t = { active: initial };
+        await toggleFn(2, t);
+
+        const btn = document.querySelector('.toggle-active-btn[data-row="2"]');
+        expect(btn.dataset.active).toBe(expectedAttr);
+        expect(btn.querySelector('.toggle-label').textContent).toBe(expectedLabel);
+    });
+
+    it('should save without btn/card in DOM', async () => {
         updateTannlegeRow.mockResolvedValue();
         const t = { active: true };
         await toggleFn(999, t);
-
         expect(t.active).toBe(false);
     });
 
-    it('should handle toggle error without btn/card in DOM', async () => {
-        initTannlegerModule();
-        reloadTannleger();
-        const toggleFn = loadTannlegerModule.mock.calls[0][4];
-
-        // No toggle button in DOM
+    it('should reload on error without btn/card in DOM', async () => {
         updateTannlegeRow.mockRejectedValue(new Error('fail'));
-        const t = { active: true };
-        await toggleFn(999, t);
-
-        // Should not crash and should reload
-        expect(loadTannlegerModule).toHaveBeenCalledTimes(2);
+        await toggleFn(999, { active: true });
+        expect(loadTannlegerModule).toHaveBeenCalled();
     });
 
-    it('should handle toggle without label span', async () => {
-        initTannlegerModule();
-
-        document.body.innerHTML += `
-            <div class="admin-card-interactive">
-                <button class="toggle-active-btn" data-row="3" data-active="true"></button>
-            </div>
-        `;
-
-        reloadTannleger();
-        const toggleFn = loadTannlegerModule.mock.calls[0][4];
-
+    it('should toggle without label span', async () => {
+        addToggleButton(3, true, { hasLabel: false });
         updateTannlegeRow.mockResolvedValue();
+
         const t = { active: true };
         await toggleFn(3, t);
 
-        const btn = document.querySelector('.toggle-active-btn[data-row="3"]');
-        expect(btn.dataset.active).toBe('false');
         expect(t.active).toBe(false);
+        expect(document.querySelector('.toggle-active-btn[data-row="3"]').dataset.active).toBe('false');
     });
 
-    it('should handle toggle error revert without label span', async () => {
-        initTannlegerModule();
-
-        document.body.innerHTML += `
-            <div class="admin-card-interactive">
-                <button class="toggle-active-btn" data-row="4" data-active="true"></button>
-            </div>
-        `;
-
-        reloadTannleger();
-        const toggleFn = loadTannlegerModule.mock.calls[0][4];
-
+    it('should revert without label span on error', async () => {
+        addToggleButton(4, true, { hasLabel: false });
         updateTannlegeRow.mockRejectedValue(new Error('fail'));
-        const t = { active: true };
-        await toggleFn(4, t);
 
-        const btn = document.querySelector('.toggle-active-btn[data-row="4"]');
-        expect(btn.dataset.active).toBe('true'); // reverted
-    });
+        await toggleFn(4, { active: true });
 
-    it('should set label to Aktiv when toggling inactive→active', async () => {
-        initTannlegerModule();
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'admin-card-interactive opacity-60';
-        wrapper.innerHTML = '<button class="toggle-active-btn" data-row="10" data-active="false"><span class="toggle-label">Inaktiv</span></button>';
-        document.body.appendChild(wrapper);
-
-        reloadTannleger();
-        const toggleFn = loadTannlegerModule.mock.calls[0][4];
-
-        updateTannlegeRow.mockResolvedValue();
-        const t = { active: false };
-        await toggleFn(10, t);
-
-        const btn = document.querySelector('.toggle-active-btn[data-row="10"]');
-        expect(btn.querySelector('.toggle-label').textContent).toBe('Aktiv');
-        expect(t.active).toBe(true);
-    });
-
-    it('should revert label to Inaktiv on failed toggle from inactive→active', async () => {
-        initTannlegerModule();
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'admin-card-interactive opacity-60';
-        wrapper.innerHTML = '<button class="toggle-active-btn" data-row="11" data-active="false"><span class="toggle-label">Inaktiv</span></button>';
-        document.body.appendChild(wrapper);
-
-        reloadTannleger();
-        const toggleFn = loadTannlegerModule.mock.calls[0][4];
-
-        updateTannlegeRow.mockRejectedValue(new Error('fail'));
-        const t = { active: false };
-        await toggleFn(11, t);
-
-        // Should revert: label back to Inaktiv, active stays false
-        const btn = document.querySelector('.toggle-active-btn[data-row="11"]');
-        expect(btn.querySelector('.toggle-label').textContent).toBe('Inaktiv');
-        expect(btn.dataset.active).toBe('false');
+        expect(document.querySelector('.toggle-active-btn[data-row="4"]').dataset.active).toBe('true');
     });
 });
