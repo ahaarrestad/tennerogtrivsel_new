@@ -88,19 +88,19 @@ describe('admin-dashboard.js', () => {
             <span id="breadcrumb-count" class="hidden"></span>
             <div id="card-settings" class="admin-card-interactive"></div>
             <div id="card-tjenester" class="admin-card-interactive">
-                <span id="card-tjenester-count" class="admin-card-count hidden"></span>
+                <span id="card-tjenester-count" class="admin-card-count"></span>
             </div>
             <div id="card-meldinger" class="admin-card-interactive">
-                <span id="card-meldinger-count" class="admin-card-count hidden"></span>
+                <span id="card-meldinger-count" class="admin-card-count"></span>
             </div>
             <div id="card-tannleger" class="admin-card-interactive">
-                <span id="card-tannleger-count" class="admin-card-count hidden"></span>
+                <span id="card-tannleger-count" class="admin-card-count"></span>
             </div>
             <div id="card-bilder" class="admin-card-interactive">
-                <span id="card-bilder-count" class="admin-card-count hidden"></span>
+                <span id="card-bilder-count" class="admin-card-count"></span>
             </div>
             <div id="card-prisliste" class="admin-card-interactive">
-                <span id="card-prisliste-count" class="admin-card-count hidden"></span>
+                <span id="card-prisliste-count" class="admin-card-count"></span>
             </div>
         `;
         vi.clearAllMocks();
@@ -1992,7 +1992,7 @@ describe('admin-dashboard.js', () => {
 
             const el = document.getElementById('card-tjenester-count');
             expect(el.textContent).toBe('3 behandlinger, 2 aktive');
-            expect(el.classList.contains('hidden')).toBe(false);
+            expect(el.classList.contains('visible')).toBe(true);
         });
 
         it('should show singular form for 1 behandling', async () => {
@@ -2169,11 +2169,11 @@ describe('admin-dashboard.js', () => {
         it('should not update DOM when config has no folder IDs', async () => {
             await loadDashboardCounts({});
 
-            expect(document.getElementById('card-tjenester-count').classList.contains('hidden')).toBe(true);
-            expect(document.getElementById('card-meldinger-count').classList.contains('hidden')).toBe(true);
-            expect(document.getElementById('card-tannleger-count').classList.contains('hidden')).toBe(true);
-            expect(document.getElementById('card-bilder-count').classList.contains('hidden')).toBe(true);
-            expect(document.getElementById('card-prisliste-count').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('card-tjenester-count').classList.contains('visible')).toBe(false);
+            expect(document.getElementById('card-meldinger-count').classList.contains('visible')).toBe(false);
+            expect(document.getElementById('card-tannleger-count').classList.contains('visible')).toBe(false);
+            expect(document.getElementById('card-bilder-count').classList.contains('visible')).toBe(false);
+            expect(document.getElementById('card-prisliste-count').classList.contains('visible')).toBe(false);
         });
 
         it('should not throw when count elements are missing from DOM', async () => {
