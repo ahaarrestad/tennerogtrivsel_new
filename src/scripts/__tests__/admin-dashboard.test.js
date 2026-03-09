@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mockAdminDialog } from './test-helpers.js';
 import * as adminDashboard from '../admin-dashboard.js';
 import * as adminClient from '../admin-client.js';
 
@@ -52,13 +53,7 @@ vi.mock('../admin-api-retry.js', () => ({
     classifyError: vi.fn(() => 'non-retryable')
 }));
 
-// Mock admin-dialog
-vi.mock('../admin-dialog.js', () => ({
-    showAuthExpired: vi.fn(),
-    showToast: vi.fn(),
-    showConfirm: vi.fn(),
-    showBanner: vi.fn(),
-}));
+vi.mock('../admin-dialog.js', () => mockAdminDialog());
 
 // Mock textFormatter
 vi.mock('../textFormatter.js', () => ({
