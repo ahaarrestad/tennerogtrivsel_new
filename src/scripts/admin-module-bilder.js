@@ -413,18 +413,24 @@ export async function loadBilderModule() {
                     if (a.type === 'fellesbilde' && b.type === 'forsidebilde') return 1;
                     return (a.order ?? 99) - (b.order ?? 99);
                 });
-                await reorderGalleriItem(SHEET_ID, items, rowIndex, direction);
-                if (container) {
-                    enableReorderButtons(container, '.reorder-btn');
-                    const updatedCards = [...container.querySelectorAll('.admin-card-interactive')];
-                    updateReorderButtonVisibility(updatedCards, '.reorder-btn');
+                const ok = await reorderGalleriItem(SHEET_ID, items, rowIndex, direction);
+                if (ok) {
+                    if (container) {
+                        const updatedCards = [...container.querySelectorAll('.admin-card-interactive')];
+                        updateReorderButtonVisibility(updatedCards, '.reorder-btn');
+                    }
+                } else {
+                    if (currentCard && neighborCard) {
+                        await animateSwap(neighborCard, currentCard);
+                    }
                 }
             } catch (err) {
                 if (currentCard && neighborCard) {
                     await animateSwap(neighborCard, currentCard);
                 }
-                if (container) enableReorderButtons(container, '.reorder-btn');
                 showToast('Kunne ikke endre rekkefølge.', 'error');
+            } finally {
+                if (container) enableReorderButtons(container, '.reorder-btn');
             }
         };
 
