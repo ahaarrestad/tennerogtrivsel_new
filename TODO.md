@@ -18,6 +18,11 @@
 
 ## Backlog
 
+- [ ] **Seksjons-titler på framsiden bommer ved aktiv melding** ([plan](docs/plans/2026-03-09-seksjons-titler-scroll-offset.md))
+    - Når «oppslagstavla» har en aktiv melding, kommer titler for langt opp
+    - Gjelder kun ankerlenkene på framsiden (`#kontakt`, `#tjenester` etc.)
+    - Gjelder IKKE separate sider (`/kontakt`, `/tjenester`)
+
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
@@ -26,15 +31,7 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
 
-- [ ] **Pen formatering av åpningstider i kontakt og footer**
-    - 5 rader med åpningstid-properties er allerede lagt til
-    - Rendringen i både «kontakt»-seksjonen og footer ser rotete ut
-    - Gjør en antagelse på formatteringen og fiks så det ser pent ut
 
-- [ ] **Seksjons-titler på framsiden bommer ved aktiv melding**
-    - Når «oppslagstavla» har en aktiv melding, kommer titler for langt opp
-    - Gjelder kun ankerlenkene på framsiden (`#kontakt`, `#tjenester` etc.)
-    - Gjelder IKKE separate sider (`/kontakt`, `/tjenester`)
 
 - [ ] **Bedre linjebrekk-kontroll for sentralbord-tekst under telefon (kontakt)**
     - Teksten under «Telefon» på kontaktsiden bryter uheldig

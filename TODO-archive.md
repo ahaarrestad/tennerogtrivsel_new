@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Pen formatering av åpningstider i kontakt og footer**
+    - Parset "Dag: Tid"-format til strukturert to-kolonne grid (`<dl>` med CSS grid)
+    - `tabular-nums` for jevn sifferbredde på klokkeslett
+    - Kontakt-kort: sentrert grid med `justify-center` og `gap-x-6`
+    - Footer: kompakt grid med `w-fit` og `gap-x-2`
+
 - [x] **Gjennomgang av admin-seksjonsnavn** ([plan](docs/plans/archive/2026-03-08-admin-seksjonsnavn.md))
     - Oppdatert alle 6 seksjonskort med nye kortnavn og beskrivelser (tannklinikk-metafor)
     - Oppdatert modultittel-mapping i admin-init.js
