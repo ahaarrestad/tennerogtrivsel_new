@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Redirect fra gamle sider til nye** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md#fase-5-redirects-fra-gammel-side))
+    - Oppgaven er dekket som fase 5 i CloudFront-planen
+    - URL-kartlegging, CloudFront Function-kode og verifiseringssteg dokumentert der
+    - Redirects: `?page=kontakt` → `/kontakt`, `?page=behandlingstilbud` → `/tjenester`, `?page=trygdeordninger` → `/tjenester`, `?page=omoss` → `/tannleger`, `/index.html` → `/`
+
 - [x] **Fiks layout-hopp på admin-sider** ([plan](docs/plans/archive/2026-03-09-fiks-layout-hopp-admin.md))
     - Dashboard-korttellere: reservert plass med `min-height: 1lh` og opacity-fade i stedet for hidden-toggle
     - Modul-innlasting: ny `smoothReplaceContent()`-funksjon animerer høyde ved skeleton → innhold-bytte

@@ -19,10 +19,6 @@
 
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
 
-- [ ] **Redirect fra gamle sider til nye** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md#fase-5-redirects-fra-gammel-side))
-    - Utvid CloudFront Function `url-rewrite-index` med 301-redirects for gamle `?page=`-URL-er
-    - `?page=kontakt` → `/kontakt`, `?page=behandlingstilbud` → `/tjenester`, `?page=trygdeordninger` → `/tjenester`, `?page=omoss` → `/tannleger`
-
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
