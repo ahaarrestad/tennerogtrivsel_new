@@ -7,6 +7,13 @@ import { createMockAutoSaver, mockAdminDialog, setupModuleDOM } from './test-hel
 vi.mock('dompurify');
 vi.mock('marked');
 
+vi.mock('../admin-reorder.js', () => ({
+    animateSwap: vi.fn().mockResolvedValue(undefined),
+    disableReorderButtons: vi.fn(),
+    enableReorderButtons: vi.fn(),
+    updateReorderButtonVisibility: vi.fn(),
+}));
+
 vi.mock('../admin-client.js', () => ({
     getSheetParentFolder: vi.fn(),
     getGalleriRaw: vi.fn(),
@@ -69,6 +76,7 @@ import {
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadGallery, setupUploadHandler } from '../admin-gallery.js';
 import { loadGalleriListeModule, reorderGalleriItem } from '../admin-dashboard.js';
+import { animateSwap, disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
 import { getAdminConfig, showDeletionToast, bindSliderStepButtons, bindWheelPrevent, showSaveBar, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave } from '../admin-editor-helpers.js';
 import { loadBilderModule } from '../admin-module-bilder.js';
 
@@ -397,7 +405,7 @@ describe('consistency check (galleri)', () => {
 });
 
 describe('handleReorder (via loadBilderModule callback)', () => {
-    it('should fetch items, sort, and call reorderGalleriItem', async () => {
+    it('should optimistically swap DOM and call reorderGalleriItem', async () => {
         getSheetParentFolder.mockResolvedValue('folder-123');
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
@@ -411,11 +419,26 @@ describe('handleReorder (via loadBilderModule callback)', () => {
         const handleReorder = loadGalleriListeModule.mock.calls[0][3];
         await handleReorder(2, 1);
 
+        expect(disableReorderButtons).toHaveBeenCalled();
         expect(getGalleriRaw).toHaveBeenCalledWith('test-sheet');
         expect(reorderGalleriItem).toHaveBeenCalledWith('test-sheet', expect.any(Array), 2, 1);
-        // Verify forsidebilde sorts first
+        expect(enableReorderButtons).toHaveBeenCalled();
         const sortedItems = reorderGalleriItem.mock.calls[0][1];
         expect(sortedItems[0].type).toBe('forsidebilde');
+    });
+
+    it('should revert and show toast on API error', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        getGalleriRaw.mockRejectedValueOnce(new Error('fail'));
+
+        const handleReorder = loadGalleriListeModule.mock.calls[0][3];
+        await handleReorder(2, 1);
+
+        expect(showToast).toHaveBeenCalledWith('Kunne ikke endre rekkefølge.', 'error');
+        expect(enableReorderButtons).toHaveBeenCalled();
     });
 });
 
