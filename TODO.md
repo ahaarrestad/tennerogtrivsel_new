@@ -26,10 +26,10 @@
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
     - Opprett GitHub Environment (f.eks. `production`) med protection rules for deploy-jobben — begrenser hvem/hva som kan trigge deploy og sikrer at secrets kun er tilgjengelige i riktig miljø
 
-- [ ] **Optimalisere responstid i admin-moduler**
+- [ ] **Optimalisere responstid i admin-moduler** ([plan](docs/plans/2026-03-09-optimistisk-reorder.md)) ([design](docs/plans/2026-03-09-optimistisk-reorder-design.md))
     - Sorterings-knapper og andre interaksjoner på admin-sidene oppleves som trege
-    - Undersøk flaskehalser: unødvendige API-kall, manglende optimistic UI, tung DOM-oppdatering
-    - Mål: merkbar forbedring i responstid ved sortering, redigering og andre vanlige handlinger
+    - Løsning: optimistisk DOM-swap med animasjon, API i bakgrunn, revert ved feil
+    - Berørte moduler: Tjenester, Prisliste, Galleri, Settings
 
 
 
