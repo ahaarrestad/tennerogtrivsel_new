@@ -10,7 +10,5 @@ const settings = await getSiteSettings();
     title={`${settings.tjenesterTittel} | Tenner og Trivsel`}
     description={settings.tjenesterBeskrivelse}
 >
-    <main class="min-h-[50vh]">
-        <TjenesteSide variant="white" />
-    </main>
+    <TjenesteSide variant="white" />
 </Layout>

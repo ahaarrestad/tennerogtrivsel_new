@@ -23,3 +23,21 @@ export function parseImageConfig(scaleVal, posXVal, posYVal) {
 
     return { scale, positionX, positionY };
 }
+
+/**
+ * Builds inline style object for image positioning (objectPosition, transform, transformOrigin).
+ * Shared by Astro components that render configured images.
+ *
+ * @param {{ scale?: number, positionX?: number, positionY?: number } | undefined} config
+ * @returns {{ objectPosition: string, transform: string, transformOrigin: string }}
+ */
+export function buildImageStyle(config) {
+    const posX = config?.positionX ?? 50;
+    const posY = config?.positionY ?? 50;
+    const scale = config?.scale ?? 1;
+    return {
+        objectPosition: `${posX}% ${posY}%`,
+        transform: `scale(${scale})`,
+        transformOrigin: `${posX}% ${posY}%`,
+    };
+}

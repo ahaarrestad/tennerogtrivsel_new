@@ -566,6 +566,8 @@
     .admin-gallery-error { @apply text-red-400 italic; }
     .admin-gallery-no-access { @apply text-amber-500 font-bold italic; }
     .admin-overlay { @apply bg-black/50; }
+    .image-overlay-gradient { @apply bg-gradient-to-t from-black/60 to-transparent; }
+    .image-overlay-gradient-full { @apply bg-gradient-to-t from-black/60 via-black/20 to-transparent; }
     .admin-btn-install { @apply text-xs font-bold text-green-700 bg-green-100 hover:bg-green-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer; }
     .admin-btn-dismiss { @apply text-xs text-admin-muted hover:text-brand px-3 py-1.5 rounded-lg transition-colors cursor-pointer; }
 

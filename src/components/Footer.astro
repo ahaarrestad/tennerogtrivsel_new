@@ -1,17 +1,11 @@
 ---
 import {getSiteSettings} from '../scripts/getSettings';
+import {getBusinessHours} from '../scripts/getBusinessHours';
 import {Image} from 'astro:assets';
 import logoImage from '../assets/tt-logo-2026.png';
 
 const settings = await getSiteSettings();
-
-const businessHours = settings
-    ? Object.keys(settings)
-        .filter(key => key.startsWith('businessHours'))
-        .sort()
-        .map(key => settings[key])
-        .filter(val => val && val.trim().length > 0)
-    : [];
+const businessHours = getBusinessHours(settings);
 
 const currentYear = new Date().getFullYear();
 ---

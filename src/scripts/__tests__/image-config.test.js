@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseImageConfig } from '../image-config.js';
+import { parseImageConfig, buildImageStyle } from '../image-config.js';
 
 describe('parseImageConfig', () => {
     it('returnerer defaults for undefined-verdier', () => {
@@ -69,5 +69,39 @@ describe('parseImageConfig', () => {
         const result = parseImageConfig(1, 30.7, 70.9);
         expect(result.positionX).toBe(30);
         expect(result.positionY).toBe(70);
+    });
+});
+
+describe('buildImageStyle', () => {
+    it('returns default style when config is undefined', () => {
+        expect(buildImageStyle(undefined)).toEqual({
+            objectPosition: '50% 50%',
+            transform: 'scale(1)',
+            transformOrigin: '50% 50%',
+        });
+    });
+
+    it('returns default style when config is null', () => {
+        expect(buildImageStyle(null)).toEqual({
+            objectPosition: '50% 50%',
+            transform: 'scale(1)',
+            transformOrigin: '50% 50%',
+        });
+    });
+
+    it('builds style from config values', () => {
+        expect(buildImageStyle({ positionX: 30, positionY: 70, scale: 1.5 })).toEqual({
+            objectPosition: '30% 70%',
+            transform: 'scale(1.5)',
+            transformOrigin: '30% 70%',
+        });
+    });
+
+    it('uses defaults for missing config properties', () => {
+        expect(buildImageStyle({ scale: 2 })).toEqual({
+            objectPosition: '50% 50%',
+            transform: 'scale(2)',
+            transformOrigin: '50% 50%',
+        });
     });
 });

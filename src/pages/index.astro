@@ -19,11 +19,9 @@ const tjenesterVariant = galleriSynlig ? 'brand' : 'white';
 const tannlegerVariant = galleriSynlig ? 'white' : 'brand';
 ---
 <Layout>
-    <main>
-        <Forside/>
-        <Kontakt variant="brand" />
-        <Galleri variant="white" />
-        <Tjenester variant={tjenesterVariant} limit={6} />
-        <Tannleger variant={tannlegerVariant} />
-    </main>
+    <Forside/>
+    <Kontakt variant="brand" />
+    <Galleri variant="white" />
+    <Tjenester variant={tjenesterVariant} limit={6} />
+    <Tannleger variant={tannlegerVariant} />
 </Layout>

@@ -13,21 +13,19 @@
 <script>
     import { getActiveMessage } from '../scripts/messageClient.js';
 
-        async function initBanner() {
-            const active = await getActiveMessage();
-            const root = document.getElementById('banner-root');
-            const titleEl = document.getElementById('banner-title');
-            const navWrapper = document.getElementById('navbar-sticky-wrapper');
+    async function initBanner() {
+        const active = await getActiveMessage();
+        const root = document.getElementById('banner-root');
+        const titleEl = document.getElementById('banner-title');
 
-            if (active && root && titleEl) {
-                // Sett tittel og vis
-                titleEl.textContent = active.title;
-                root.classList.remove('hidden');
-                } else {
-                if (root) root.classList.add('hidden');
-                }
-            }
+        if (active && root && titleEl) {
+            titleEl.textContent = active.title;
+            root.classList.remove('hidden');
+        } else if (root) {
+            root.classList.add('hidden');
+        }
+    }
 
-        document.addEventListener('astro:page-load', initBanner);
-        initBanner();
+    document.addEventListener('astro:page-load', initBanner);
+    initBanner();
 </script>

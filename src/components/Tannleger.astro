@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import { getSiteSettings } from '../scripts/getSettings';
 import { getSectionClasses, type SectionVariant } from '../scripts/sectionVariant';
+import { buildImageStyle } from '../scripts/image-config.js';
 import SectionHeader from './SectionHeader.astro';
 
 const settings = await getSiteSettings();
@@ -15,10 +16,7 @@ const fellesbildePath = fellesbildeEntry?.data.image
     : null;
 const hasFellesbilde = fellesbildePath && images[fellesbildePath];
 
-const fellesbildeConfig = fellesbildeEntry?.data.imageConfig;
-const posX = fellesbildeConfig?.positionX ?? 50;
-const posY = fellesbildeConfig?.positionY ?? 50;
-const scale = fellesbildeConfig?.scale ?? 1;
+const fellesbildeStyle = buildImageStyle(fellesbildeEntry?.data.imageConfig);
 
 interface Props { variant?: SectionVariant }
 const { variant = 'brand' } = Astro.props;
@@ -35,18 +33,14 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                         src={images[fellesbildePath]()}
                         alt={fellesbildeEntry?.data.altText || 'Gruppebilde av teamet hos Tenner og Trivsel'}
                         class="absolute inset-0 w-full h-full object-cover"
-                        style={{
-                            objectPosition: `${posX}% ${posY}%`,
-                            transform: `scale(${scale})`,
-                            transformOrigin: `${posX}% ${posY}%`
-                        }}
+                        style={fellesbildeStyle}
                     />
                 ) : (
                     <div class="absolute inset-0 w-full h-full bg-brand-light flex items-center justify-center">
                         <span class="text-brand-hover text-sm italic">Fellesbilde kommer</span>
                     </div>
                 )}
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                <div class="absolute inset-0 image-overlay-gradient-full" />
                 <div class="absolute bottom-0 left-0 right-0 p-6 md:p-8">
                     <h3 class="font-heading font-extrabold text-2xl md:text-3xl text-white">
                         {settings.tannlegerTittel || 'Våre tannleger'}
