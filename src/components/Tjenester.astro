@@ -12,7 +12,7 @@ const allServices = await getCollection('tjenester');
 // 2. Filtrer ut inaktive og sorter etter prioritet (lavest først), deretter alfabetisk
 const sortedServices = allServices
     .filter(s => s.data.active !== false)
-    .sort((a, b) => (a.data.priority ?? 99) - (b.data.priority ?? 99) || a.data.title.localeCompare(b.data.title, 'nb'));
+    .toSorted((a, b) => (a.data.priority ?? 99) - (b.data.priority ?? 99) || a.data.title.localeCompare(b.data.title, 'nb'));
 const settings = await getSiteSettings();
 
 interface Props { variant?: SectionVariant; limit?: number }

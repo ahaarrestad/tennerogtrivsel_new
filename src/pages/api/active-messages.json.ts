@@ -7,7 +7,7 @@ export const GET = async () => {
         // Datofiltrering skjer på klienten (messageClient.js) — ikke ved byggetid.
         // Statisk bygg fryser JSON-filen, så filtrering her gir utdaterte resultater.
         const data = alleMeldinger
-            .sort((a, b) => {
+            .toSorted((a, b) => {
                 const dateA = new Date(a.data.startDate).getTime();
                 const dateB = new Date(b.data.startDate).getTime();
                 return dateB - dateA;
