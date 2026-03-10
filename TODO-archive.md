@@ -2,6 +2,15 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Kjør simplify på hele prosjektet** ([plan](docs/plans/archive/2026-03-09-simplify-hele-prosjektet.md))
+    - 6 batches gjennomført: admin-moduler, admin-infra, admin UI-hjelpere, frontend-scripts, Astro+CSS, build/config
+    - CSS-konsistens: ~30 nye CSS-token-klasser, fjernet hardkodede Tailwind-farger
+    - Kodekvalitet: ensureSheet, swapOrder, getBusinessHours, buildImageStyle, cleanupUnusedFiles, getImageFolderId, getOptionalSheetValues
+    - HTML: fjernet nestede `<main>`-tags, SectionHeader med as-prop
+    - Ytelse: decorated array sort, rAF-debouncing, hoistet DOM-queries, parallellisert API-kall
+    - parseInt radix 10 på alle steder, .find() erstatter .filter()[0]
+    - 1203 tester bestått, 100% coverage på nye utilities
+
 - [x] **Kollapserbare kategorier i prisliste-admin** ([plan](docs/plans/archive/2026-03-09-kollapserbare-kategorier.md)) ([design](docs/plans/archive/2026-03-09-kollapserbare-kategorier-design.md))
     - Chevron-ikon i kategori-headers med klikk for kollaps/ekspander
     - Global "Kollaps/Ekspander alle"-knapp i topplinjen
