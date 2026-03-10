@@ -76,10 +76,18 @@ export function loadThumbnails(container, items, parentFolderId) {
             if (file) {
                 const blobUrl = await getDriveImageBlob(file.id);
                 if (blobUrl) {
-                    const pX = item.positionX ?? 50;
-                    const pY = item.positionY ?? 50;
-                    const sc = item.scale ?? 1.0;
-                    thumbContainer.innerHTML = `<img src="${blobUrl}" class="w-full h-full object-cover" alt="" style="object-position:${pX}% ${pY}%;transform:scale(${sc});transform-origin:${pX}% ${pY}%">`;
+                    const safe = (v, def) => { const n = Number(v); return Number.isFinite(n) ? n : def; };
+                    const pX = safe(item.positionX, 50);
+                    const pY = safe(item.positionY, 50);
+                    const sc = safe(item.scale, 1.0);
+                    const img = document.createElement('img');
+                    img.src = blobUrl;
+                    img.className = 'w-full h-full object-cover';
+                    img.alt = '';
+                    img.style.objectPosition = `${pX}% ${pY}%`;
+                    img.style.transform = `scale(${sc})`;
+                    img.style.transformOrigin = `${pX}% ${pY}%`;
+                    thumbContainer.replaceChildren(img);
                 }
             }
         } catch (e) { console.error('[Dashboard] Kunne ikke laste thumbnail:', e); }
