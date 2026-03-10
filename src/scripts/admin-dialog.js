@@ -4,21 +4,23 @@
 let toastContainer = null;
 let confirmDialog = null;
 
+export const ICON_CLOSE = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
 const TOAST_COLORS = {
     error: {
-        bg: 'bg-red-50 border-red-200',
-        icon: 'text-red-500',
-        text: 'text-red-800',
+        bg: 'admin-toast-error',
+        icon: 'admin-toast-error-icon',
+        text: 'admin-toast-error-text',
     },
     success: {
-        bg: 'bg-green-50 border-green-200',
-        icon: 'text-green-500',
-        text: 'text-green-800',
+        bg: 'admin-toast-success',
+        icon: 'admin-toast-success-icon',
+        text: 'admin-toast-success-text',
     },
     info: {
-        bg: 'bg-amber-50 border-amber-200',
-        icon: 'text-amber-500',
-        text: 'text-amber-800',
+        bg: 'admin-toast-info',
+        icon: 'admin-toast-info-icon',
+        text: 'admin-toast-info-text',
     },
 };
 
@@ -65,7 +67,7 @@ export function showToast(message, type = 'info', options = {}) {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'shrink-0 p-1 rounded-lg opacity-60 hover:opacity-100 transition-opacity cursor-pointer';
     closeBtn.setAttribute('aria-label', 'Lukk');
-    closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    closeBtn.innerHTML = ICON_CLOSE;
     closeBtn.addEventListener('click', () => toast.remove());
 
     toast.appendChild(iconSpan);
@@ -88,7 +90,7 @@ function getConfirmDialog() {
 
     confirmDialog = document.createElement('dialog');
     confirmDialog.id = 'admin-confirm-dialog';
-    confirmDialog.className = 'p-0 rounded-2xl shadow-2xl backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm max-w-md w-[90vw]';
+    confirmDialog.className = 'p-0 rounded-2xl shadow-2xl backdrop:admin-overlay backdrop:backdrop-blur-sm max-w-md w-[90vw]';
 
     confirmDialog.innerHTML = [
         '<div class="p-6 space-y-6">',
@@ -128,7 +130,7 @@ export function showConfirm(message, options = {}) {
     if (okBtn) {
         okBtn.textContent = options.confirmLabel || 'Bekreft';
         if (options.destructive) {
-            okBtn.className = 'py-3 px-6 text-sm cursor-pointer rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition-colors';
+            okBtn.className = 'admin-btn-destructive py-3 px-6 text-sm cursor-pointer';
         } else {
             okBtn.className = 'btn-primary py-3 px-6 text-sm cursor-pointer';
         }
@@ -185,16 +187,16 @@ export function showAuthExpired(container, onLogin) {
     const ICON_LOCK = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
 
     const banner = document.createElement('div');
-    banner.className = 'flex items-start gap-4 p-5 rounded-xl border border-amber-200 bg-amber-50 mb-4';
+    banner.className = 'flex items-start gap-4 p-5 rounded-xl border admin-banner-warning mb-4';
     banner.setAttribute('role', 'alert');
 
     const iconSpan = document.createElement('span');
-    iconSpan.className = 'shrink-0 text-amber-600 mt-0.5';
+    iconSpan.className = 'shrink-0 admin-banner-warning-icon mt-0.5';
     iconSpan.innerHTML = ICON_LOCK;
 
     const textDiv = document.createElement('div');
     textDiv.className = 'flex-1 min-w-0';
-    textDiv.innerHTML = '<p class="font-semibold text-amber-800 text-sm">Økten din er utløpt</p><p class="text-amber-700 text-xs mt-1">Logg inn på nytt for å fortsette å redigere.</p>';
+    textDiv.innerHTML = '<p class="admin-banner-warning-title">Økten din er utløpt</p><p class="admin-banner-warning-text">Logg inn på nytt for å fortsette å redigere.</p>';
 
     const loginBtn = document.createElement('button');
     loginBtn.className = 'auth-expired-login-btn btn-primary text-xs py-2 px-4 shrink-0';
@@ -241,7 +243,7 @@ export function showBanner(containerId, message, type = 'info', options = {}) {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'shrink-0 p-1 rounded-lg opacity-60 hover:opacity-100 transition-opacity cursor-pointer';
     closeBtn.setAttribute('aria-label', 'Lukk');
-    closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    closeBtn.innerHTML = ICON_CLOSE;
     closeBtn.addEventListener('click', () => banner.remove());
 
     banner.appendChild(iconSpan);

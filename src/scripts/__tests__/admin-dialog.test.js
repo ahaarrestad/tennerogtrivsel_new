@@ -54,22 +54,22 @@ describe('admin-dialog.js', () => {
 
         it('skal bruke rød farge for error-type', () => {
             const toast = showToast('Feil', 'error');
-            expect(toast.className).toContain('bg-red-50');
+            expect(toast.className).toContain('admin-toast-error');
         });
 
         it('skal bruke grønn farge for success-type', () => {
             const toast = showToast('OK', 'success');
-            expect(toast.className).toContain('bg-green-50');
+            expect(toast.className).toContain('admin-toast-success');
         });
 
         it('skal bruke gul farge for info-type', () => {
             const toast = showToast('Info', 'info');
-            expect(toast.className).toContain('bg-amber-50');
+            expect(toast.className).toContain('admin-toast-info');
         });
 
         it('skal falle tilbake til info-farge for ukjent type', () => {
             const toast = showToast('Ukjent', 'unknown');
-            expect(toast.className).toContain('bg-amber-50');
+            expect(toast.className).toContain('admin-toast-info');
         });
 
         it('skal fjernes automatisk etter varighet', () => {
@@ -149,7 +149,7 @@ describe('admin-dialog.js', () => {
             const promise = showConfirm('Slett?', { destructive: true });
             const dialog = document.getElementById('admin-confirm-dialog');
             const okBtn = dialog.querySelector('#admin-confirm-ok');
-            expect(okBtn.className).toContain('bg-red-600');
+            expect(okBtn.className).toContain('admin-btn-destructive');
             okBtn.click();
             await promise;
         });
@@ -269,7 +269,7 @@ describe('admin-dialog.js', () => {
 
         it('skal bruke error-farge for error-type', () => {
             const banner = showBanner('test-container', 'Feil', 'error');
-            expect(banner.className).toContain('bg-red-50');
+            expect(banner.className).toContain('admin-toast-error');
         });
     });
 
@@ -397,15 +397,14 @@ describe('admin-dialog.js — additional branch coverage', () => {
         it('should fall back to info colors for unknown type', () => {
             const banner = showBanner('test-container', 'Unknown type', 'nonexistent');
             // Falls back to TOAST_COLORS.info (amber) and TOAST_ICONS.info
-            expect(banner.className).toContain('bg-amber-50');
-            expect(banner.className).toContain('border-amber-200');
+            expect(banner.className).toContain('admin-toast-info');
         });
 
         it('should fall back to info icon for unknown type', () => {
             const banner = showBanner('test-container', 'Unknown type', 'nonexistent');
             // The icon span should contain the info icon SVG (circle with line)
             const iconSpan = banner.querySelector('span');
-            expect(iconSpan.className).toContain('text-amber-500');
+            expect(iconSpan.className).toContain('admin-toast-info-icon');
             expect(iconSpan.innerHTML).toContain('svg');
         });
     });
