@@ -116,6 +116,7 @@ const setup = async () => {
             await handleAuth(user);
         } else if (hadRememberMe) {
             // Token fantes i localStorage men er utløpt → prøv stille fornyelse
+            setRememberMe(true);
             silentLogin();
         }
         // Ellers: vis innloggingsskjema, ingen automatisk forsøk

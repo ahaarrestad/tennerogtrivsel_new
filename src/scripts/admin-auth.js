@@ -111,7 +111,9 @@ export function initGis(callback) {
 }
 
 /**
- * Henter lagret brukerinfo fra localStorage eller sessionStorage uten å røre GAPI
+ * Henter lagret brukerinfo fra localStorage eller sessionStorage uten å røre GAPI.
+ * Setter også _rememberMe basert på hvor tokenet ble funnet, slik at
+ * silent-refresh bevarer brukerens valg.
  */
 export function getStoredUser() {
     for (const storage of [localStorage, sessionStorage]) {
@@ -119,7 +121,10 @@ export function getStoredUser() {
         if (!stored) continue;
         try {
             const { expiry, user } = JSON.parse(stored);
-            if (Date.now() < expiry - 60000) return user;
+            if (Date.now() < expiry - 60000) {
+                _rememberMe = (storage === localStorage);
+                return user;
+            }
         } catch { /* fall through */ }
         storage.removeItem('admin_google_token');
     }
@@ -127,7 +132,8 @@ export function getStoredUser() {
 }
 
 /**
- * Prøver å gjenopprette pålogging fra localStorage eller sessionStorage inn i GAPI
+ * Prøver å gjenopprette pålogging fra localStorage eller sessionStorage inn i GAPI.
+ * Setter også _rememberMe basert på hvor tokenet ble funnet.
  */
 export function tryRestoreSession() {
     for (const storage of [localStorage, sessionStorage]) {
@@ -140,7 +146,8 @@ export function tryRestoreSession() {
                     console.warn("[Admin] gapi.client ikke klar for setToken");
                     return false;
                 }
-                console.log("[Admin] Gjenoppretter sesjon i GAPI");
+                _rememberMe = (storage === localStorage);
+                console.log("[Admin] Gjenoppretter sesjon i GAPI (rememberMe=%s)", _rememberMe);
                 gapi.client.setToken({ access_token });
                 return true;
             }
