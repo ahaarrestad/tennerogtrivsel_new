@@ -56,43 +56,47 @@ export function showInstallPromptIfEligible() {
     }
 }
 
+function addToastActions(toast, buttons) {
+    const actions = document.createElement('div');
+    actions.className = 'flex gap-2 mt-2';
+    buttons.forEach(({ label, className, onClick }) => {
+        const btn = document.createElement('button');
+        btn.className = className;
+        btn.textContent = label;
+        btn.addEventListener('click', onClick);
+        actions.appendChild(btn);
+    });
+    const msgSpan = toast.querySelector('span.flex-1');
+    if (msgSpan) msgSpan.appendChild(actions);
+}
+
+function dismissAndRemove(toast) {
+    localStorage.setItem(STORAGE_KEY, 'dismissed');
+    toast.remove();
+}
+
 function showAndroidInstallToast() {
     const toast = showToast('Legg til Admin på hjemskjermen for rask tilgang', 'info', { duration: 0 });
     if (!toast) return;
 
-    const actions = document.createElement('div');
-    actions.className = 'flex gap-2 mt-2';
-
-    const installBtn = document.createElement('button');
-    installBtn.className = 'text-xs font-bold text-teal-700 bg-teal-100 hover:bg-teal-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer';
-    installBtn.textContent = 'Installer';
-    installBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const result = await deferredPrompt.userChoice;
-            if (result.outcome === 'accepted') {
-                localStorage.setItem(STORAGE_KEY, 'installed');
+    addToastActions(toast, [
+        {
+            label: 'Installer',
+            className: 'admin-btn-install',
+            onClick: async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const result = await deferredPrompt.userChoice;
+                    if (result.outcome === 'accepted') {
+                        localStorage.setItem(STORAGE_KEY, 'installed');
+                    }
+                    deferredPrompt = null;
+                }
+                toast.remove();
             }
-            deferredPrompt = null;
-        }
-        toast.remove();
-    });
-
-    const dismissBtn = document.createElement('button');
-    dismissBtn.className = 'text-xs text-admin-muted hover:text-brand px-3 py-1.5 rounded-lg transition-colors cursor-pointer';
-    dismissBtn.textContent = 'Ikke nå';
-    dismissBtn.addEventListener('click', () => {
-        localStorage.setItem(STORAGE_KEY, 'dismissed');
-        toast.remove();
-    });
-
-    actions.appendChild(installBtn);
-    actions.appendChild(dismissBtn);
-
-    const msgSpan = toast.querySelector('span.flex-1');
-    if (msgSpan) {
-        msgSpan.appendChild(actions);
-    }
+        },
+        { label: 'Ikke nå', className: 'admin-btn-dismiss', onClick: () => dismissAndRemove(toast) }
+    ]);
 }
 
 function showIOSInstallToast() {
@@ -103,23 +107,9 @@ function showIOSInstallToast() {
     );
     if (!toast) return;
 
-    const actions = document.createElement('div');
-    actions.className = 'flex gap-2 mt-2';
-
-    const dismissBtn = document.createElement('button');
-    dismissBtn.className = 'text-xs text-admin-muted hover:text-brand px-3 py-1.5 rounded-lg transition-colors cursor-pointer';
-    dismissBtn.textContent = 'Ikke vis igjen';
-    dismissBtn.addEventListener('click', () => {
-        localStorage.setItem(STORAGE_KEY, 'dismissed');
-        toast.remove();
-    });
-
-    actions.appendChild(dismissBtn);
-
-    const msgSpan = toast.querySelector('span.flex-1');
-    if (msgSpan) {
-        msgSpan.appendChild(actions);
-    }
+    addToastActions(toast, [
+        { label: 'Ikke vis igjen', className: 'admin-btn-dismiss', onClick: () => dismissAndRemove(toast) }
+    ]);
 }
 
 /** Reset module state for testing. */

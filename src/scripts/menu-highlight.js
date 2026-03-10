@@ -27,33 +27,34 @@ export function initMenuHighlight() {
         threshold: 0
     };
 
-    const observerCallback = (entries) => {
-        const navLinks = document.querySelectorAll('[data-nav-link]');
-        const path = window.location.pathname;
+    const navLinks = document.querySelectorAll('[data-nav-link]');
+    const path = window.location.pathname;
 
-        const setLinkState = (link, active) => {
-            if (active) {
-                link.classList.add('text-brand', 'font-bold');
-                link.classList.remove('text-brand-hover');
-            } else {
-                link.classList.remove('text-brand', 'font-bold');
-                link.classList.add('text-brand-hover');
-            }
+    const setLinkState = (link, active) => {
+        if (active) {
+            link.classList.add('text-brand', 'font-bold');
+            link.classList.remove('text-brand-hover');
+        } else {
+            link.classList.remove('text-brand', 'font-bold');
+            link.classList.add('text-brand-hover');
         }
+    };
 
+    const observerCallback = (entries) => {
         // Håndter undersider umiddelbart hvis vi er der
         if (path.includes('/tjenester')) {
             navLinks.forEach(link => setLinkState(link, shouldHighlight(link.getAttribute('href'), path)));
             return;
         }
 
-        // Håndter seksjoner på forsiden via observer
+        // Håndter seksjoner på forsiden via observer — bruk siste synlige seksjon
+        let lastVisibleId = null;
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const visibleId = entry.target.id;
-                navLinks.forEach(link => setLinkState(link, shouldHighlight(link.getAttribute('href'), path, visibleId)));
-            }
+            if (entry.isIntersecting) lastVisibleId = entry.target.id;
         });
+        if (lastVisibleId) {
+            navLinks.forEach(link => setLinkState(link, shouldHighlight(link.getAttribute('href'), path, lastVisibleId)));
+        }
     };
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);

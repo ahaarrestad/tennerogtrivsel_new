@@ -15,10 +15,10 @@ export function parseImageConfig(scaleVal, posXVal, posYVal) {
         scale = 3.0;
     }
 
-    const parsedX = parseInt(posXVal);
+    const parsedX = parseInt(posXVal, 10);
     const positionX = (!isNaN(parsedX) && parsedX >= 0 && parsedX <= 100) ? parsedX : 50;
 
-    const parsedY = parseInt(posYVal);
+    const parsedY = parseInt(posYVal, 10);
     const positionY = (!isNaN(parsedY) && parsedY >= 0 && parsedY <= 100) ? parsedY : 50;
 
     return { scale, positionX, positionY };
