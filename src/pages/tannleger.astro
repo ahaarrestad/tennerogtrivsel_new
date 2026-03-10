@@ -3,6 +3,8 @@ import Layout from '../layouts/Layout.astro';
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import { getSiteSettings } from '../scripts/getSettings';
+import { buildImageStyle } from '../scripts/image-config.js';
+import SectionHeader from '../components/SectionHeader.astro';
 
 const settings = await getSiteSettings();
 const tannleger = await getCollection('tannleger');
@@ -13,23 +15,16 @@ const sorterteTannleger = tannleger.sort((a, b) => a.data.name.localeCompare(b.d
     title={`${settings.tannlegerTittel} | Tenner og Trivsel`}
     description={settings.tannlegerBeskrivelse}
 >
-    <main>
-        <section class="section-container bg-white">
+    <section class="section-container bg-white">
         <div class="section-content">
-            <div class="section-header section-header-centered">
-                <h1 class="h2">{settings.tannlegerTittel}</h1>
-                {settings.tannlegerTekst && <p class="section-intro">{settings.tannlegerTekst}</p>}
-                <div class="heading-accent"></div>
-            </div>
+            <SectionHeader title={settings.tannlegerTittel} intro={settings.tannlegerTekst} as="h1" />
 
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
                 {sorterteTannleger.map((t) => {
                     const d = t.data;
                     const imagePath = `/src/assets/tannleger/${d.image}`;
                     const hasImage = d.image && images[imagePath];
-                    const posX = d.imageConfig?.positionX ?? 50;
-                    const posY = d.imageConfig?.positionY ?? 50;
-                    const scale = d.imageConfig?.scale ?? 1;
+                    const imgStyle = buildImageStyle(d.imageConfig);
 
                     return (
                         <div class="tannlege-card">
@@ -40,11 +35,7 @@ const sorterteTannleger = tannleger.sort((a, b) => a.data.name.localeCompare(b.d
                                         src={images[imagePath]()}
                                         alt={d.name}
                                         class="absolute inset-0 w-full h-full object-cover"
-                                        style={{
-                                            objectPosition: `${posX}% ${posY}%`,
-                                            transform: `scale(${scale})`,
-                                            transformOrigin: `${posX}% ${posY}%`
-                                        }}
+                                        style={imgStyle}
                                     />
                                 ) : (
                                     <div class="absolute inset-0 flex items-center justify-center text-brand-hover text-sm italic">
@@ -74,6 +65,5 @@ const sorterteTannleger = tannleger.sort((a, b) => a.data.name.localeCompare(b.d
                 })}
             </div>
         </div>
-        </section>
-    </main>
+    </section>
 </Layout>

@@ -5,24 +5,18 @@ import { getSectionClasses, type SectionVariant } from '../scripts/sectionVarian
 import SectionHeader from './SectionHeader.astro';
 import Card from "./Card.astro";
 
+import {getBusinessHours} from '../scripts/getBusinessHours';
+
 const settings = await getSiteSettings();
 
-// Nøyaktige koordinater fra din lenke
 const lat = settings.latitude;
 const lng = settings.longitude;
 
 const minHeight = "250px";
 
-// Brukes til klikkbar lenke på adressen og veibeskrivelse-knapp
 const googleMapsDirectionUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 
-const businessHours = settings
-    ? Object.keys(settings)
-        .filter(key => key.startsWith('businessHours'))
-        .sort()
-        .map(key => settings[key])
-        .filter(val => val && val.trim().length > 0)
-    : ["Ta kontakt for åpningstider"]
+const businessHours = getBusinessHours(settings, ["Ta kontakt for åpningstider"]);
 
 interface Props { variant?: SectionVariant }
 const { variant = 'brand' } = Astro.props;

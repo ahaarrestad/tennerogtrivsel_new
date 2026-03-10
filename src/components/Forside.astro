@@ -7,15 +7,13 @@ import KontaktKnapp from "./KontaktKnapp.astro";
 import {Image} from 'astro:assets';
 import {getCollection} from 'astro:content';
 import hovedBilde from '../assets/hovedbilde.png';
+import {buildImageStyle} from '../scripts/image-config.js';
 
 const settings = await getSiteSettings();
 
-// Les utsnitt fra galleri-collectionen (forsidebilde-raden er autoritativ kilde)
 const galleri = await getCollection('galleri');
 const forsideEntry = galleri.find(item => item.data.type === 'forsidebilde');
-const forsideScale = forsideEntry?.data.imageConfig?.scale ?? 1;
-const forsidePosX = forsideEntry?.data.imageConfig?.positionX ?? 50;
-const forsidePosY = forsideEntry?.data.imageConfig?.positionY ?? 50;
+const forsideStyle = buildImageStyle(forsideEntry?.data.imageConfig);
 ---
 <section id="forside" class="section-container bg-white">
     <div class="section-content">
@@ -44,11 +42,7 @@ const forsidePosY = forsideEntry?.data.imageConfig?.positionY ?? 50;
                             src={hovedBilde}
                             alt="Tenner og Trivsel"
                             class="w-full h-full object-cover"
-                            style={{
-                                objectPosition: `${forsidePosX}% ${forsidePosY}%`,
-                                transform: `scale(${forsideScale})`,
-                                transformOrigin: `${forsidePosX}% ${forsidePosY}%`
-                            }}
+                            style={forsideStyle}
                             loading="eager"
                             fetchpriority="high"
                     />

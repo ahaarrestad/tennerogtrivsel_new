@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import { getSiteSettings } from '../scripts/getSettings';
 import { getSectionClasses, type SectionVariant } from '../scripts/sectionVariant';
+import { buildImageStyle } from '../scripts/image-config.js';
 import SectionHeader from './SectionHeader.astro';
 
 const galleri = await getCollection('galleri');
@@ -30,9 +31,7 @@ const hasMore = !standalone && sortert.length > MAX_PREVIEW;
             {visibleImages.map((item, index) => {
                 const imgPath = `/src/assets/galleri/${item.data.image}`;
                 const hasImage = item.data.image && images[imgPath];
-                const pX = item.data.imageConfig?.positionX ?? 50;
-                const pY = item.data.imageConfig?.positionY ?? 50;
-                const sc = item.data.imageConfig?.scale ?? 1.0;
+                const imgStyle = buildImageStyle(item.data.imageConfig);
 
                 return (
                     <div class="rounded-xl overflow-hidden shadow-sm aspect-[4/3] bg-brand-active relative group transition-all duration-300 hover:shadow-md">
@@ -41,11 +40,7 @@ const hasMore = !standalone && sortert.length > MAX_PREVIEW;
                                 src={images[imgPath]()}
                                 alt={item.data.altText || item.data.title}
                                 class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                                style={{
-                                    objectPosition: `${pX}% ${pY}%`,
-                                    transform: `scale(${sc})`,
-                                    transformOrigin: `${pX}% ${pY}%`
-                                }}
+                                style={imgStyle}
                                 loading="lazy"
                             />
                         ) : (
@@ -54,7 +49,7 @@ const hasMore = !standalone && sortert.length > MAX_PREVIEW;
                             </div>
                         )}
                         {item.data.title && (
-                            <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-3 md:p-4">
+                            <div class="absolute bottom-0 inset-x-0 image-overlay-gradient p-3 md:p-4">
                                 <p class="text-white text-xs md:text-sm font-bold">{item.data.title}</p>
                             </div>
                         )}

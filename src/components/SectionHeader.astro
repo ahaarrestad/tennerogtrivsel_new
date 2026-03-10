@@ -4,12 +4,13 @@ interface Props {
   intro?: string;
   headerBg?: string;
   sticky?: boolean;
+  as?: 'h1' | 'h2';
 }
 
-const { title, intro, headerBg = '', sticky = false } = Astro.props;
+const { title, intro, headerBg = '', sticky = false, as: Tag = 'h2' } = Astro.props;
 ---
 <div class:list={["section-header section-header-centered", { "section-header-sticky": sticky }, headerBg]}>
-  <h2 class="h2">{title}</h2>
+  <Tag class="h2">{title}</Tag>
   {intro && <p class="section-intro">{intro}</p>}
   <div class="heading-accent"></div>
 </div>
