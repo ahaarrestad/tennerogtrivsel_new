@@ -258,8 +258,8 @@ describe('admin-client.js', () => {
             expect(result).toBeNull();
         });
 
-        it('skal returnere null når gapi.client.drive.files.get kaster feil', async () => {
-            gapi.client.drive.files.get.mockRejectedValueOnce(new Error('Drive API feil'));
+        it('skal returnere null når getToken kaster feil', async () => {
+            gapi.client.getToken.mockImplementationOnce(() => { throw new Error('Ingen token'); });
             const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
             const result = await getDriveImageBlob('img-456');
             expect(result).toBeNull();
