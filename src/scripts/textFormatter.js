@@ -1,31 +1,29 @@
 // Formaterer tekst fra JSON for sikker visning i HTML.
 // Håndterer norske spesialtegn, e-post og telefonnummer.
+
+const emailRegex = /\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/gi;
+
+// Combined regex for all Norwegian phone number formats
+// Prioritize specific prefixed numbers first to avoid partial matches and nested links.
+const combinedPhoneRegex = new RegExp(
+    `(` +
+    `\\+47(?:\\s*\\d{2}){4}\\b` +
+    `|` +
+    `0047(?:\\s*\\d{2}){4}\\b` +
+    `|` +
+    `\\b[2-9]\\d{1}(?:\\s*\\d{2}){3}\\b` +
+    `)`, 'g');
+
+const dateFormatter = new Intl.DateTimeFormat('no-NO', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+});
+
+const FALLBACK_END_DATE = '2099-12-31';
+
 export function formatInfoText(rawText) {
     if (!rawText) return "";
-
-    const emailRegex = /\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/gi;
-
-    // Combined regex for all Norwegian phone number formats
-    // Prioritize specific prefixed numbers first to avoid partial matches and nested links.
-    const combinedPhoneRegex = new RegExp(
-        `(` + // Start main capturing group (will be p1)
-
-        // Pattern for +47 prefixed number (e.g., +47 23 45 67 89)
-        // No leading \b here, match '+' directly as it's a non-word character
-        `\\+47(?:\\s*\\d{2}){4}\\b` +
-        `|` + // OR
-
-        // Pattern for 0047 prefixed number (e.g., 0047 23 45 67 89)
-        // No leading \b here, match '0047' directly
-        `0047(?:\\s*\\d{2}){4}\\b` +
-        `|` + // OR
-
-        // Pattern for 8-digit number (2-9 followed by 7 digits, with optional spaces)
-        // Requires word boundaries as it has no specific prefix characters
-        `\\b[2-9]\\d{1}(?:\\s*\\d{2}){3}\\b` +
-        `)` + // End main capturing group (p1)
-        `` // No final \b, it's already inside each pattern
-        , 'g');
 
     let formattedText = rawText
         .replace(emailRegex, '<a href="mailto:$1" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap">$1</a>');
@@ -48,11 +46,7 @@ export function formatDate(dateInput) {
     const date = new Date(dateInput);
     if (isNaN(date.getTime())) return String(dateInput);
     
-    return new Intl.DateTimeFormat('no-NO', { 
-        day: 'numeric', 
-        month: 'short', 
-        year: 'numeric' 
-    }).format(date);
+    return dateFormatter.format(date);
 }
 
 /**
@@ -90,42 +84,27 @@ export function sortMessages(messages) {
         return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
     };
 
-    const getStatus = (msg) => {
+    // Pre-compute parsed dates and status for each message to avoid redundant parsing during sort
+    const decorated = messages.map(msg => {
         const start = parseToUTC(msg.startDate);
-        const end = parseToUTC(msg.endDate || '2099-12-31');
-        
-        if (start === null || end === null) return 3; // Ukjent/Feil -> nederst
-        
-        if (nowUTC >= start && nowUTC <= end) return 0; // Aktiv
-        if (nowUTC < start) return 1; // Planlagt
-        return 2; // Utløpt
-    };
+        const end = parseToUTC(msg.endDate || FALLBACK_END_DATE);
+        let status;
+        if (start === null || end === null) status = 3;
+        else if (nowUTC >= start && nowUTC <= end) status = 0;
+        else if (nowUTC < start) status = 1;
+        else status = 2;
+        return { msg, start: start || 0, end: end || 0, status };
+    });
 
-    return [...messages].sort((a, b) => {
-        const statusA = getStatus(a);
-        const statusB = getStatus(b);
-
-        if (statusA !== statusB) {
-            return statusA - statusB;
-        }
-
-        // Samme status, sorter på dato
-        const startA = parseToUTC(a.startDate) || 0;
-        const startB = parseToUTC(b.startDate) || 0;
-        const endA = parseToUTC(a.endDate || '2099-12-31') || 0;
-        const endB = parseToUTC(b.endDate || '2099-12-31') || 0;
-
-        if (statusA === 0) { // Aktiv: Sorter etter sluttdato (den som går ut først øverst)
-            return endA - endB;
-        }
-        if (statusA === 1) { // Planlagt: Sorter etter startdato (den som starter først øverst)
-            return startA - startB;
-        }
-        if (statusA === 2) { // Utløpt: Sorter etter sluttdato (den som utløp sist øverst)
-            return endB - endA;
-        }
+    decorated.sort((a, b) => {
+        if (a.status !== b.status) return a.status - b.status;
+        if (a.status === 0) return a.end - b.end;
+        if (a.status === 1) return a.start - b.start;
+        if (a.status === 2) return b.end - a.end;
         return 0;
     });
+
+    return decorated.map(d => d.msg);
 }
 
 /**
