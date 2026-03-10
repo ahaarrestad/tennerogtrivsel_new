@@ -110,7 +110,7 @@ async function editTannlege(rowIndex, data = null) {
                                 <span class="text-[10px] font-black uppercase tracking-widest">Velg bilde</span>
                             </div>
                             <img id="preview-img"
-                                 src="${escapeHtml(previewSrc)}"
+                                 src=""
                                  class="absolute inset-0 w-full h-full object-cover transition-all duration-75 ${previewSrc ? '' : 'hidden'}"
                                  style="object-position: ${t.positionX}% ${t.positionY}%; transform: scale(${t.scale}); transform-origin: ${t.positionX}% ${t.positionY}%;"
                             >
@@ -135,7 +135,7 @@ async function editTannlege(rowIndex, data = null) {
         </div>
     `);
 
-    // Sett form-verdier programmatisk (sikkert — ingen HTML-parsing)
+    // Sett form-verdier og bilde-src programmatisk (sikkert — ingen HTML-parsing)
     const imageInput = document.getElementById('edit-t-image');
     const nameInput = document.getElementById('edit-t-name');
     const titleInput = document.getElementById('edit-t-title');
@@ -144,6 +144,12 @@ async function editTannlege(rowIndex, data = null) {
     if (nameInput) nameInput.value = t.name || '';
     if (titleInput) titleInput.value = t.title || '';
     if (descInput) descInput.value = t.description || '';
+
+    // Sett bilde-src etter DOMPurify — blob: URLs strippes av sanitizer
+    if (previewSrc) {
+        const previewImg = document.getElementById('preview-img');
+        if (previewImg) previewImg.src = previewSrc;
+    }
 
     // --- IMAGE GALLERY LOGIC ---
     const btnGallery = document.getElementById('btn-open-gallery');
