@@ -76,7 +76,7 @@ export function loadThumbnails(container, items, parentFolderId) {
             if (file) {
                 const blobUrl = await getDriveImageBlob(file.id);
                 if (blobUrl) {
-                    const safe = (v, def) => { const n = Number(v); return Number.isFinite(n) ? n : def; };
+                    const safe = (v, def) => { const n = parseFloat(v); return Number.isFinite(n) ? n : def; };
                     const pX = safe(item.positionX, 50);
                     const pY = safe(item.positionY, 50);
                     const sc = safe(item.scale, 1.0);
