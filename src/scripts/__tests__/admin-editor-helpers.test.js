@@ -16,6 +16,7 @@ vi.mock('../admin-client.js', () => ({
 }));
 vi.mock('../admin-dialog.js', () => ({
     showToast: vi.fn(),
+    ICON_CLOSE: '<svg>X</svg>',
 }));
 vi.mock('../admin-dashboard.js', () => ({
     formatTimestamp: vi.fn((date) => '27. feb kl. 23:00')

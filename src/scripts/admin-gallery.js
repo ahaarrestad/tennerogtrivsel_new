@@ -17,13 +17,14 @@ export async function loadGallery(folderId, onSelect) {
     try {
         if (!folderId) throw new Error("Mappe-ID mangler");
 
-        const hasAccess = await checkAccess(folderId);
+        const [hasAccess, images] = await Promise.all([
+            checkAccess(folderId),
+            listImages(folderId)
+        ]);
         if (!hasAccess) {
-            grid.innerHTML = '<div class="col-span-full text-center py-12 text-amber-500 font-bold italic">⚠️ Du har ikke lesetilgang til denne mappen på Google Drive.</div>';
+            grid.innerHTML = '<div class="col-span-full text-center py-12 admin-gallery-no-access">⚠️ Du har ikke lesetilgang til denne mappen på Google Drive.</div>';
             return;
         }
-
-        const images = await listImages(folderId);
 
         if (images.length === 0) {
             grid.innerHTML = '<div class="col-span-full text-center py-12 text-admin-muted-light italic">Ingen bilder funnet i mappen.</div>';
@@ -38,7 +39,7 @@ export async function loadGallery(folderId, onSelect) {
             if (img.thumbnailLink) {
                 el.innerHTML = `
                     <img src="${img.thumbnailLink}" referrerpolicy="no-referrer" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
-                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2 text-center">
+                    <div class="absolute inset-0 admin-overlay opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2 text-center">
                         <span class="text-white text-[10px] font-bold break-all line-clamp-2">${escapeHtml(img.name)}</span>
                     </div>
                 `;
@@ -55,7 +56,7 @@ export async function loadGallery(folderId, onSelect) {
         });
     } catch (e) {
         console.error("[Admin] Galleri feilet:", e);
-        grid.innerHTML = `<div class="col-span-full text-center py-12 text-red-400 italic">Kunne ikke laste bilder.</div>`;
+        grid.innerHTML = `<div class="col-span-full text-center py-12 admin-gallery-error">Kunne ikke laste bilder.</div>`;
     }
 }
 

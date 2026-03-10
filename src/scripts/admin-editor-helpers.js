@@ -2,7 +2,7 @@ import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { classifyError, createAuthRefresher } from './admin-api-retry.js';
 import { silentLogin, findFileByName, getDriveImageBlob } from './admin-client.js';
-import { showToast } from './admin-dialog.js';
+import { showToast, ICON_CLOSE } from './admin-dialog.js';
 import { formatTimestamp } from './admin-dashboard.js';
 
 /**
@@ -88,10 +88,10 @@ export function showDeletionToast(deletedName, recoveryText) {
     const toast = document.createElement('div');
     toast.id = 'deletion-toast';
     toast.className = 'fixed bottom-6 right-6 z-50 max-w-sm w-full';
-    toast.innerHTML = DOMPurify.sanitize(`
+    toast.innerHTML = `
         <div class="bg-white rounded-2xl shadow-2xl border border-admin-hover p-5 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div class="flex items-start gap-3">
-                <div class="shrink-0 w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500">
+                <div class="shrink-0 w-9 h-9 admin-toast-info rounded-xl flex items-center justify-center admin-toast-info-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
                 </div>
                 <div class="flex-1 min-w-0">
@@ -99,11 +99,11 @@ export function showDeletionToast(deletedName, recoveryText) {
                     <p id="toast-recovery-text" class="text-xs text-admin-muted mt-1 leading-relaxed"></p>
                 </div>
                 <button class="toast-close shrink-0 p-1 -mr-1 -mt-1 text-admin-muted-light hover:text-admin-muted transition-colors cursor-pointer" aria-label="Lukk">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    ${ICON_CLOSE}
                 </button>
             </div>
         </div>
-    `);
+    `;
     const nameEl = toast.querySelector('#toast-deleted-name');
     const recoveryEl = toast.querySelector('#toast-recovery-text');
     if (nameEl) nameEl.textContent = `«${deletedName}» ble slettet`;
@@ -113,41 +113,28 @@ export function showDeletionToast(deletedName, recoveryText) {
     setTimeout(() => { if (toast.parentNode) toast.remove(); }, 30000);
 }
 
-export function initMarkdownEditor() {
-    let easyMDE = null;
+function createEasyMDE(minHeight = "250px") {
     const EasyMDEGlobal = window['EasyMDE'];
-    if (typeof EasyMDEGlobal !== 'undefined') {
-        easyMDE = new EasyMDEGlobal({
-            element: document.getElementById('edit-content'),
-            spellChecker: false,
-            status: false,
-            minHeight: "350px",
-            placeholder: "Skriv innholdet her...",
-            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
-            previewRender: (plainText) => {
-                return `<div class="markdown-content prose">${DOMPurify.sanitize(marked.parse(plainText))}</div>`;
-            }
-        });
-    }
-    return easyMDE;
+    if (typeof EasyMDEGlobal === 'undefined') return null;
+    return new EasyMDEGlobal({
+        element: document.getElementById('edit-content'),
+        spellChecker: false,
+        status: false,
+        minHeight,
+        placeholder: "Skriv innholdet her...",
+        toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
+        previewRender: (plainText) => {
+            return `<div class="markdown-content prose">${DOMPurify.sanitize(marked.parse(plainText))}</div>`;
+        }
+    });
+}
+
+export function initMarkdownEditor() {
+    return createEasyMDE("350px");
 }
 
 export function initEditors(onDateChange) {
-    let easyMDE = null;
-    const EasyMDEGlobal = window['EasyMDE'];
-    if (typeof EasyMDEGlobal !== 'undefined') {
-        easyMDE = new EasyMDEGlobal({
-            element: document.getElementById('edit-content'),
-            spellChecker: false,
-            status: false,
-            minHeight: "250px",
-            placeholder: "Skriv innholdet her...",
-            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
-            previewRender: (plainText) => {
-                return `<div class="markdown-content prose">${DOMPurify.sanitize(marked.parse(plainText))}</div>`;
-            }
-        });
-    }
+    const easyMDE = createEasyMDE("250px");
 
     let flatpickrInstances = [];
     const flatpickrGlobal = window['flatpickr'];

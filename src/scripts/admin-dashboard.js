@@ -4,11 +4,12 @@ import {
     parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
     checkMultipleAccess, login, logout, getTannlegerRaw, updateTannlegeRow,
     addTannlegeRow, getGalleriRaw, updateGalleriRow, findFileByName, getDriveImageBlob, getPrislisteRaw,
-    updatePrislisteRow, updateSettingByKey, updateSettingOrder, silentLogin,
+    updatePrislisteRow, updateSettingByKey, updateSettingOrder,
     getKategoriRekkefølge, updateKategoriOrder, addKategoriRekkefølge
 } from './admin-client.js';
-import { withRetry, createAuthRefresher, classifyError } from './admin-api-retry.js';
+import { withRetry, classifyError } from './admin-api-retry.js';
 import { showAuthExpired } from './admin-dialog.js';
+import { getRefreshAuth } from './admin-editor-helpers.js';
 import { formatDate, sortMessages } from './textFormatter.js';
 import DOMPurify from 'dompurify';
 import { smoothReplaceContent } from './admin-transition.js';
@@ -44,12 +45,6 @@ export function renderActionButtons(editClass, deleteClass, dataAttrs) {
         <button ${dataAttrs} class="${editClass} admin-icon-btn group/btn" title="Rediger">${ICON_EDIT}</button>
         <button ${dataAttrs} class="${deleteClass} admin-icon-btn-danger group/btn" title="Slett">${ICON_DELETE}</button>
     </div>`;
-}
-
-let _refreshAuth = null;
-function getRefreshAuth() {
-    if (!_refreshAuth) _refreshAuth = createAuthRefresher(silentLogin);
-    return _refreshAuth;
 }
 
 /**
