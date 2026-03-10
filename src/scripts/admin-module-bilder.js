@@ -273,8 +273,8 @@ export async function loadBilderModule() {
                 altText: altInput?.value || item.altText,
                 active: activeToggle?.dataset.active === 'true',
                 scale: parseFloat(scaleInput?.value || '1'),
-                positionX: parseInt(xInput?.value || '50'),
-                positionY: parseInt(yInput?.value || '50'),
+                positionX: parseInt(xInput?.value || '50', 10),
+                positionY: parseInt(yInput?.value || '50', 10),
                 type: typeOverride ?? (forsideCheckbox?.checked ? 'forsidebilde' : fellesbildeCheckbox?.checked ? 'fellesbilde' : 'galleri')
             });
 
