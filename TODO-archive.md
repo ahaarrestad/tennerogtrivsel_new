@@ -2,6 +2,10 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Sorter "Våre tjenester"-lenker på tjenestesider**
+    - Endret sortering i `/tjenester/[id]` fra alfabetisk til priority-basert (samme som hovedsiden og forsiden)
+    - Én linje endret i `src/pages/tjenester/[id].astro`
+
 - [x] **Kjør simplify på hele prosjektet** ([plan](docs/plans/archive/2026-03-09-simplify-hele-prosjektet.md))
     - 6 batches gjennomført: admin-moduler, admin-infra, admin UI-hjelpere, frontend-scripts, Astro+CSS, build/config
     - CSS-konsistens: ~30 nye CSS-token-klasser, fjernet hardkodede Tailwind-farger
