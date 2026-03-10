@@ -552,7 +552,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
                 html += `
                     <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!t.active ? 'opacity-60' : ''}" onclick="this.querySelector('.edit-tannlege-btn').click()">
                         <div class="flex items-center gap-3 flex-grow min-w-0 w-full">
-                            <div class="shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-admin-hover flex items-center justify-center" data-thumb-row="${t.rowIndex}">
+                            <div class="shrink-0 w-12 sm:w-14 aspect-[3/4] rounded-lg overflow-hidden bg-admin-hover flex items-center justify-center" data-thumb-row="${t.rowIndex}">
                                 ${ICON_PERSON}
                             </div>
                             <div class="min-w-0 flex-grow">

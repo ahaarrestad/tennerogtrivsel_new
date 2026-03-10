@@ -94,11 +94,9 @@ async function editTannlege(rowIndex, data = null) {
                     </div>
                 </div>
 
-                ${renderImageCropSliders({ prefix: 'edit-t', valPrefix: 'val', scale: t.scale, posX: t.positionX, posY: t.positionY })}
-
             </div>
 
-            <!-- HØYRE: Preview -->
+            <!-- HØYRE: Preview + bildeutsnitt -->
             <div class="space-y-6">
                 <h3 class="text-brand font-black uppercase tracking-tighter text-center lg:text-left">Forhåndsvisning</h3>
                 <div class="flex justify-center lg:justify-start">
@@ -131,6 +129,7 @@ async function editTannlege(rowIndex, data = null) {
                         </div>
                     </div>
                 </div>
+                ${renderImageCropSliders({ prefix: 'edit-t', valPrefix: 'val', scale: t.scale, posX: t.positionX, posY: t.positionY })}
             </div>
         </div>
     `);
