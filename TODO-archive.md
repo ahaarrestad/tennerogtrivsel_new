@@ -2,6 +2,9 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Bildejustering for tannleger — bedre layout på desktop**
+    - Flyttet bildeutsnitt-slidere fra venstre kolonne til høyre, rett under forhåndsvisningen
+
 - [x] **Oppgrader til Astro 6** ([plan](docs/plans/archive/2026-03-10-astro-6-oppgradering.md))
 
 - [x] **Sorter "Våre tjenester"-lenker på tjenestesider**
