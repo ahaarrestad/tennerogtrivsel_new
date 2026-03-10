@@ -2,6 +2,8 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Oppgrader til Astro 6** ([plan](docs/plans/archive/2026-03-10-astro-6-oppgradering.md))
+
 - [x] **Sorter "Våre tjenester"-lenker på tjenestesider**
     - Endret sortering i `/tjenester/[id]` fra alfabetisk til priority-basert (samme som hovedsiden og forsiden)
     - Én linje endret i `src/pages/tjenester/[id].astro`
