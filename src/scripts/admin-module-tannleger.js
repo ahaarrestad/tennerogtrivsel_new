@@ -11,7 +11,8 @@ import {
     getAdminConfig, renderToggleHtml, attachToggleClick,
     showDeletionToast, renderImageCropSliders, createAutoSaver,
     bindSliderStepButtons, bindWheelPrevent,
-    escapeHtml, resolveImagePreview, handleImageSelected, verifySave
+    escapeHtml, resolveImagePreview, handleImageSelected, verifySave,
+    checkDriveConsistency
 } from './admin-editor-helpers.js';
 
 async function deleteTannlege(rowIndex, name) {
@@ -322,20 +323,10 @@ function reloadTannleger() {
                     getTannlegerRaw(SHEET_ID),
                     listImages(TANNLEGER_FOLDER)
                 ]);
-                const driveFileNames = new Set(driveFiles.map(f => f.name));
-                const sheetFileNames = new Set(sheetItems.map(item => item.image).filter(Boolean));
-
-                const orphanedInDrive = driveFiles.filter(f => !sheetFileNames.has(f.name));
-                const missingFromDrive = sheetItems.filter(item => item.image && !driveFileNames.has(item.image));
-
-                if (missingFromDrive.length > 0) {
-                    const names = missingFromDrive.map(item => `«${item.name || 'Uten navn'}» → ${item.image}`).join(', ');
-                    showToast(`⚠ ${missingFromDrive.length} profil(er) refererer bilder som ikke finnes i Drive: ${names}`, 'warning');
-                }
-                if (orphanedInDrive.length > 0) {
-                    const names = orphanedInDrive.map(f => f.name).join(', ');
-                    showToast(`ℹ ${orphanedInDrive.length} bilde(r) i Drive-mappen er ikke koblet til noen profil: ${names}`, 'info');
-                }
+                await checkDriveConsistency(sheetItems, driveFiles, {
+                    getDisplayName: item => item.name || 'Uten navn',
+                    itemLabel: 'profil'
+                });
             } catch {
                 // Best-effort — feiler den, vises ingen advarsel
             }

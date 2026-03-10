@@ -4,12 +4,13 @@ import {
 } from './admin-client.js';
 import { animateSwap, disableReorderButtons, enableReorderButtons, updateReorderButtonVisibility } from './admin-reorder.js';
 import { showToast, showConfirm } from './admin-dialog.js';
-import { classifyError, withRetry } from './admin-api-retry.js';
+import { withRetry } from './admin-api-retry.js';
 import { stripStackEditData, slugify } from './textFormatter.js';
 import { loadTjenesterModule } from './admin-dashboard.js';
 import {
     getAdminConfig, getRefreshAuth, renderToggleHtml, attachToggleClick,
-    showDeletionToast, initMarkdownEditor, createAutoSaver, showSaveBar
+    showDeletionToast, initMarkdownEditor, createAutoSaver, showSaveBar,
+    handleSaveError, handleDeleteError
 } from './admin-editor-helpers.js';
 
 async function deleteTjeneste(id, name) {
@@ -21,13 +22,7 @@ async function deleteTjeneste(id, name) {
                 'Filen er lagt i Google Drive-papirkurven og kan gjenopprettes derfra innen 30 dager. ' +
                 'Gå til drive.google.com → Papirkurv for å gjenopprette.');
         } catch (e) {
-            const kind = classifyError(e);
-            showToast(
-                kind === 'auth' ? 'Økten din er utløpt. Last siden på nytt.'
-                : kind === 'retryable' ? 'Nettverksfeil — prøv igjen.'
-                : 'Kunne ikke slette tjenesten.',
-                'error'
-            );
+            handleDeleteError(e, 'tjenesten');
         }
     }
 }
@@ -118,17 +113,6 @@ async function editTjeneste(id, name) {
             };
             const content = easyMDE ? easyMDE.value() : document.getElementById('edit-content').value;
             return { newFileName, frontmatter, content };
-        };
-
-        const handleSaveError = (e) => {
-            console.error("Lagring feilet:", e);
-            const kind = classifyError(e);
-            showToast(
-                kind === 'auth' ? 'Økten din er utløpt. Last siden på nytt.'
-                : kind === 'retryable' ? 'Nettverksfeil — prøv igjen.'
-                : 'Kunne ikke lagre endringene.',
-                'error'
-            );
         };
 
         if (id) {

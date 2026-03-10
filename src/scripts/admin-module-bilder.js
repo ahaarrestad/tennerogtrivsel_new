@@ -12,7 +12,8 @@ import {
     getAdminConfig, renderToggleHtml, setToggleState, attachToggleClick,
     showDeletionToast, renderImageCropSliders, createAutoSaver,
     bindSliderStepButtons, bindWheelPrevent,
-    showSaveBar, hideSaveBar, resolveImagePreview, handleImageSelected, verifySave
+    showSaveBar, hideSaveBar, resolveImagePreview, handleImageSelected, verifySave,
+    checkDriveConsistency
 } from './admin-editor-helpers.js';
 
 export async function loadBilderModule() {
@@ -212,17 +213,7 @@ export async function loadBilderModule() {
                         }
                     } else {
                         try {
-                            await updateGalleriRow(SHEET_ID, rowIndex, {
-                                ...item,
-                                title: titleInput?.value || item.title,
-                                image: imageInput?.value || item.image,
-                                altText: altInput?.value || item.altText,
-                                active: activeToggle?.dataset.active === 'true',
-                                scale: parseFloat(scaleInput?.value || '1'),
-                                positionX: parseInt(xInput?.value || '50'),
-                                positionY: parseInt(yInput?.value || '50'),
-                                type: 'galleri'
-                            });
+                            await updateGalleriRow(SHEET_ID, rowIndex, getGalleriFormData('galleri'));
                             if (previewContainer) {
                                 previewContainer.classList.remove('aspect-[16/10]');
                                 previewContainer.classList.add('aspect-[4/3]');
@@ -260,17 +251,7 @@ export async function loadBilderModule() {
                     } else {
                         if (forsideCheckbox) forsideCheckbox.closest('.admin-field-container')?.classList.remove('hidden');
                         try {
-                            await updateGalleriRow(SHEET_ID, rowIndex, {
-                                ...item,
-                                title: titleInput?.value || item.title,
-                                image: imageInput?.value || item.image,
-                                altText: altInput?.value || item.altText,
-                                active: activeToggle?.dataset.active === 'true',
-                                scale: parseFloat(scaleInput?.value || '1'),
-                                positionX: parseInt(xInput?.value || '50'),
-                                positionY: parseInt(yInput?.value || '50'),
-                                type: 'galleri'
-                            });
+                            await updateGalleriRow(SHEET_ID, rowIndex, getGalleriFormData('galleri'));
                             if (previewContainer) {
                                 previewContainer.classList.remove('aspect-[16/9]');
                                 previewContainer.classList.add('aspect-[4/3]');
@@ -284,6 +265,18 @@ export async function loadBilderModule() {
                     }
                 });
             }
+
+            const getGalleriFormData = (typeOverride) => ({
+                ...item,
+                title: titleInput?.value || item.title,
+                image: imageInput?.value || item.image,
+                altText: altInput?.value || item.altText,
+                active: activeToggle?.dataset.active === 'true',
+                scale: parseFloat(scaleInput?.value || '1'),
+                positionX: parseInt(xInput?.value || '50'),
+                positionY: parseInt(yInput?.value || '50'),
+                type: typeOverride ?? (forsideCheckbox?.checked ? 'forsidebilde' : fellesbildeCheckbox?.checked ? 'fellesbilde' : 'galleri')
+            });
 
             // Image picker for gallery item
             const btnPickImage = document.getElementById('btn-galleri-pick-image');
@@ -308,17 +301,7 @@ export async function loadBilderModule() {
 
             // Auto-save for gallery item
             const saveGalleri = async () => {
-                const saveData = {
-                    title: titleInput?.value || '',
-                    image: imageInput?.value || '',
-                    altText: altInput?.value || '',
-                    active: activeToggle?.dataset.active === 'true',
-                    order: item.order,
-                    scale: parseFloat(scaleInput?.value || '1'),
-                    positionX: parseInt(xInput?.value || '50'),
-                    positionY: parseInt(yInput?.value || '50'),
-                    type: forsideCheckbox?.checked ? 'forsidebilde' : fellesbildeCheckbox?.checked ? 'fellesbilde' : 'galleri'
-                };
+                const saveData = { ...getGalleriFormData(), order: item.order };
                 await updateGalleriRow(SHEET_ID, rowIndex, saveData);
                 await verifySave({
                     fetchFn: () => getGalleriRaw(SHEET_ID),
@@ -476,82 +459,47 @@ export async function loadBilderModule() {
                     getGalleriRaw(SHEET_ID),
                     listImages(parentFolderId)
                 ]);
-                const driveFileNames = new Set(driveFiles.map(f => f.name));
-                const sheetFileNames = new Set(sheetItems.map(item => item.image).filter(Boolean));
-
-                const orphanedInDrive = driveFiles.filter(f => !sheetFileNames.has(f.name));
-                const missingFromDrive = sheetItems.filter(item => item.image && !driveFileNames.has(item.image));
-
-                const container = document.getElementById('galleri-liste-container');
-                if (!container) return;
-
-                if (missingFromDrive.length > 0) {
-                    const names = missingFromDrive.map(item => `«${item.title || 'Uten tittel'}» → ${item.image}`).join(', ');
-                    showToast(`⚠ ${missingFromDrive.length} rad(er) refererer bilder som ikke finnes i Drive: ${names}`, 'warning');
-                }
-                if (orphanedInDrive.length > 0) {
-                    const names = orphanedInDrive.map(f => f.name).join(', ');
-                    showToast(`ℹ ${orphanedInDrive.length} bilde(r) i Drive-mappen er ikke koblet til noen rad: ${names}`, 'info');
-                }
+                await checkDriveConsistency(sheetItems, driveFiles, {
+                    getDisplayName: item => item.title || 'Uten tittel',
+                    itemLabel: 'rad'
+                });
             } catch {
                 // Best-effort — feiler den, vises ingen advarsel
             }
         })();
 
         // "Legg til bilde" – open image picker directly
+        const addNewGalleriBilde = async (imageName, modal) => {
+            try {
+                await addGalleriRow(SHEET_ID, {
+                    title: '',
+                    image: imageName,
+                    altText: '',
+                    active: true,
+                    order: 99,
+                    scale: 1.0,
+                    positionX: 50,
+                    positionY: 50,
+                    type: 'galleri'
+                });
+                modal.close();
+                const updated = await getGalleriRaw(SHEET_ID);
+                const newest = updated.find(r => r.image === imageName) || updated[updated.length - 1];
+                if (newest) editGalleriBilde(newest.rowIndex);
+                else reloadGalleriListe();
+            } catch (e) {
+                showToast('Kunne ikke legge til galleribilde: ' + e.message, 'error');
+                modal.close();
+            }
+        };
+
         document.getElementById('btn-new-galleribilde')?.addEventListener('click', async () => {
             const modal = document.getElementById('image-picker-modal');
             if (!modal) return;
             modal.showModal();
-            loadGallery(parentFolderId, async (fileId, fileName) => {
-                try {
-                    await addGalleriRow(SHEET_ID, {
-                        title: '',
-                        image: fileName,
-                        altText: '',
-                        active: true,
-                        order: 99,
-                        scale: 1.0,
-                        positionX: 50,
-                        positionY: 50,
-                        type: 'galleri'
-                    });
-                    modal.close();
-                    // Re-fetch to get the new rowIndex, then open editor
-                    const updated = await getGalleriRaw(SHEET_ID);
-                    const newest = updated.find(r => r.image === fileName) || updated[updated.length - 1];
-                    if (newest) editGalleriBilde(newest.rowIndex);
-                    else reloadGalleriListe();
-                } catch (e) {
-                    showToast('Kunne ikke legge til galleribilde: ' + e.message, 'error');
-                    modal.close();
-                }
-            });
-
+            loadGallery(parentFolderId, async (fileId, fileName) => addNewGalleriBilde(fileName, modal));
             setupUploadHandler(parentFolderId, async (newFile) => {
-                if (newFile) {
-                    try {
-                        await addGalleriRow(SHEET_ID, {
-                            title: '',
-                            image: newFile.name,
-                            altText: '',
-                            active: true,
-                            order: 99,
-                            scale: 1.0,
-                            positionX: 50,
-                            positionY: 50,
-                            type: 'galleri'
-                        });
-                        modal.close();
-                        const updated = await getGalleriRaw(SHEET_ID);
-                        const newest = updated.find(r => r.image === newFile.name) || updated[updated.length - 1];
-                        if (newest) editGalleriBilde(newest.rowIndex);
-                        else reloadGalleriListe();
-                    } catch (e) {
-                        showToast('Kunne ikke legge til galleribilde: ' + e.message, 'error');
-                        modal.close();
-                    }
-                }
+                if (newFile) await addNewGalleriBilde(newFile.name, modal);
             });
         });
 

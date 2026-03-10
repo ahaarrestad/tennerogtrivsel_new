@@ -13,7 +13,10 @@
 
 ## Pågående
 
-(Ingen oppgaver pågår)
+- [ ] **Kjør simplify på hele prosjektet** ([plan](docs/plans/2026-03-09-simplify-hele-prosjektet.md))
+    - Gjennomgå hele kodebasen med `/simplify` for å rydde opp, forenkle og forbedre kodekvalitet
+    - 6 batches: admin-moduler, admin-infra, admin UI-hjelpere, frontend-scripts, Astro+CSS, build/config
+    - Fokus: CSS-konsistens (global.css-variabler), kodekvalitet, testkvalitet
 
 ## Backlog
 
@@ -25,11 +28,6 @@
     - `repository_dispatch` alltid til prod, push til main alltid til test
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
     - Opprett GitHub Environment (f.eks. `production`) med protection rules for deploy-jobben — begrenser hvem/hva som kan trigge deploy og sikrer at secrets kun er tilgjengelige i riktig miljø
-
-- [ ] **Kjør simplify på hele prosjektet** ([plan](docs/plans/2026-03-09-simplify-hele-prosjektet.md))
-    - Gjennomgå hele kodebasen med `/simplify` for å rydde opp, forenkle og forbedre kodekvalitet
-    - 6 batches: admin-moduler, admin-infra, admin UI-hjelpere, frontend-scripts, Astro+CSS, build/config
-    - Fokus: CSS-konsistens (global.css-variabler), kodekvalitet, testkvalitet
 
 
 ## Fullført

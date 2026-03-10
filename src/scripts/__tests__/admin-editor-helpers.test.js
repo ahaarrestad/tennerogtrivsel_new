@@ -6,12 +6,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 vi.mock('dompurify');
 vi.mock('marked');
 vi.mock('../admin-api-retry.js', () => ({
-    createAuthRefresher: vi.fn(() => 'mock-refresher')
+    createAuthRefresher: vi.fn(() => 'mock-refresher'),
+    classifyError: vi.fn(() => 'non-retryable'),
 }));
 vi.mock('../admin-client.js', () => ({
     silentLogin: vi.fn(),
     findFileByName: vi.fn(),
     getDriveImageBlob: vi.fn(),
+}));
+vi.mock('../admin-dialog.js', () => ({
+    showToast: vi.fn(),
 }));
 vi.mock('../admin-dashboard.js', () => ({
     formatTimestamp: vi.fn((date) => '27. feb kl. 23:00')
@@ -22,10 +26,11 @@ import {
     attachToggleClick, showDeletionToast, initMarkdownEditor, initEditors,
     renderImageCropSliders, createAutoSaver, bindSliderStepButtons, bindWheelPrevent,
     showSaveBar, hideSaveBar, resolveImagePreview, handleImageSelected, verifySave,
-    escapeHtml, validateSheetInput
+    escapeHtml, validateSheetInput, handleSaveError, handleDeleteError, checkDriveConsistency
 } from '../admin-editor-helpers.js';
 import { findFileByName, getDriveImageBlob } from '../admin-client.js';
-import { createAuthRefresher } from '../admin-api-retry.js';
+import { classifyError, createAuthRefresher } from '../admin-api-retry.js';
+import { showToast } from '../admin-dialog.js';
 
 beforeEach(() => {
     document.body.innerHTML = '';
@@ -906,5 +911,121 @@ describe('verifySave', () => {
             fetchFn, rowIndex: 2, compareField: 'name',
             expectedValue: 'OK', timestampElId: 'nonexistent', reloadFn: vi.fn()
         })).resolves.toBeUndefined();
+    });
+});
+
+describe('handleSaveError', () => {
+    it('should log error and show toast via classifyError', () => {
+        const err = new Error('save fail');
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+
+        handleSaveError(err);
+
+        expect(consoleSpy).toHaveBeenCalledWith('Lagring feilet:', err);
+        expect(classifyError).toHaveBeenCalledWith(err);
+        expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
+        consoleSpy.mockRestore();
+    });
+
+    it('should show auth message for auth errors', () => {
+        classifyError.mockReturnValueOnce('auth');
+
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        handleSaveError({ status: 401 });
+
+        expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
+        consoleSpy.mockRestore();
+    });
+
+    it('should show retryable message for network errors', () => {
+        classifyError.mockReturnValueOnce('retryable');
+
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        handleSaveError(new Error('network'));
+
+        expect(showToast).toHaveBeenCalledWith('Nettverksfeil — prøv igjen.', 'error');
+        consoleSpy.mockRestore();
+    });
+});
+
+describe('handleDeleteError', () => {
+    it('should show error toast with item type', () => {
+        const err = new Error('fail');
+
+
+        handleDeleteError(err, 'oppslaget');
+
+        expect(classifyError).toHaveBeenCalledWith(err);
+        expect(showToast).toHaveBeenCalledWith('Kunne ikke slette oppslaget.', 'error');
+    });
+
+    it('should show auth message for auth errors', () => {
+        classifyError.mockReturnValueOnce('auth');
+
+
+        handleDeleteError({ status: 401 });
+
+        expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
+    });
+});
+
+describe('checkDriveConsistency', () => {
+    it('should show warning for missing-from-drive items', async () => {
+
+        const sheetItems = [{ image: 'missing.jpg', title: 'Missing' }];
+        const driveFiles = [];
+
+        await checkDriveConsistency(sheetItems, driveFiles);
+
+        expect(showToast).toHaveBeenCalledWith(
+            expect.stringContaining('1 rad(er) refererer bilder som ikke finnes i Drive'),
+            'warning'
+        );
+    });
+
+    it('should show info for orphaned drive files', async () => {
+
+        const sheetItems = [];
+        const driveFiles = [{ name: 'orphan.jpg' }];
+
+        await checkDriveConsistency(sheetItems, driveFiles);
+
+        expect(showToast).toHaveBeenCalledWith(
+            expect.stringContaining('1 bilde(r) i Drive-mappen er ikke koblet'),
+            'info'
+        );
+    });
+
+    it('should use custom getDisplayName and itemLabel', async () => {
+
+        const sheetItems = [{ image: 'missing.jpg', name: 'Dr. A' }];
+        const driveFiles = [];
+
+        await checkDriveConsistency(sheetItems, driveFiles, {
+            getDisplayName: item => item.name,
+            itemLabel: 'profil'
+        });
+
+        expect(showToast).toHaveBeenCalledWith(
+            expect.stringContaining('profil(er)'),
+            'warning'
+        );
+        expect(showToast).toHaveBeenCalledWith(
+            expect.stringContaining('Dr. A'),
+            'warning'
+        );
+    });
+
+    it('should not show any toast when everything is consistent', async () => {
+
+        const sheetItems = [{ image: 'a.jpg' }];
+        const driveFiles = [{ name: 'a.jpg' }];
+
+        await checkDriveConsistency(sheetItems, driveFiles);
+
+        expect(showToast).not.toHaveBeenCalled();
     });
 });

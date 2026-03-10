@@ -48,6 +48,8 @@ vi.mock('../admin-editor-helpers.js', () => ({
     initMarkdownEditor: vi.fn(),
     createAutoSaver: createMockAutoSaver(),
     showSaveBar: vi.fn(),
+    handleSaveError: vi.fn(),
+    handleDeleteError: vi.fn(),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({
@@ -58,10 +60,10 @@ vi.mock('../admin-api-retry.js', () => ({
 
 import { deleteFile, getFileContent, parseMarkdown, saveFile, createFile, stringifyMarkdown, listFiles } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
-import { classifyError, withRetry } from '../admin-api-retry.js';
+import { withRetry } from '../admin-api-retry.js';
 import { loadTjenesterModule, formatTimestamp } from '../admin-dashboard.js';
 import { animateSwap, disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
-import { showDeletionToast, initMarkdownEditor, attachToggleClick, showSaveBar, createAutoSaver, getRefreshAuth } from '../admin-editor-helpers.js';
+import { showDeletionToast, initMarkdownEditor, attachToggleClick, showSaveBar, createAutoSaver, getRefreshAuth, handleSaveError, handleDeleteError } from '../admin-editor-helpers.js';
 import { initTjenesterModule, reloadTjenester } from '../admin-module-tjenester.js';
 
 beforeEach(() => {
@@ -122,16 +124,12 @@ describe('deleteTjeneste', () => {
         expect(loadTjenesterModule).toHaveBeenCalled();
     });
 
-    it.each([
-        ['non-retryable', new Error('fail'), 'Kunne ikke slette tjenesten.'],
-        ['auth', { status: 401 }, 'Økten din er utløpt. Last siden på nytt.'],
-        ['retryable', new Error('network'), 'Nettverksfeil — prøv igjen.'],
-    ])('should show %s error toast when deletion fails', async (errorType, rejection, expectedMessage) => {
-        classifyError.mockReturnValueOnce(errorType);
+    it('should call handleDeleteError on failure', async () => {
+        const err = new Error('fail');
         showConfirm.mockResolvedValue(true);
-        deleteFile.mockRejectedValue(rejection);
+        deleteFile.mockRejectedValue(err);
         await window.deleteTjeneste('id1', 'Test');
-        expect(showToast).toHaveBeenCalledWith(expectedMessage, 'error');
+        expect(handleDeleteError).toHaveBeenCalledWith(err, 'tjenesten');
     });
 });
 
@@ -316,28 +314,16 @@ describe('editTjeneste', () => {
             expect(saveFile).toHaveBeenCalledWith('id1', expect.any(String), expect.any(String));
         });
 
-        it('should show auth toast when saveFn fails with auth error', async () => {
-            classifyError.mockReturnValueOnce('auth');
-            saveFile.mockRejectedValue({ status: 401 });
+        it('should call handleSaveError and rethrow when save fails', async () => {
+            const err = new Error('save fail');
+            saveFile.mockRejectedValue(err);
 
             await window.editTjeneste('id1', 'Old');
 
             const saveFn = createAutoSaver.mock.calls[0][0];
-            await expect(saveFn()).rejects.toEqual({ status: 401 });
+            await expect(saveFn()).rejects.toThrow('save fail');
 
-            expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
-        });
-
-        it('should show network toast when saveFn fails with retryable error', async () => {
-            classifyError.mockReturnValueOnce('retryable');
-            saveFile.mockRejectedValue(new Error('network'));
-
-            await window.editTjeneste('id1', 'Old');
-
-            const saveFn = createAutoSaver.mock.calls[0][0];
-            await expect(saveFn()).rejects.toThrow('network');
-
-            expect(showToast).toHaveBeenCalledWith('Nettverksfeil — prøv igjen.', 'error');
+            expect(handleSaveError).toHaveBeenCalledWith(err);
         });
     });
 
@@ -443,7 +429,8 @@ describe('editTjeneste', () => {
         });
 
         it('should re-enable button on create failure', async () => {
-            createFile.mockRejectedValue(new Error('fail'));
+            const err = new Error('fail');
+            createFile.mockRejectedValue(err);
 
             await window.editTjeneste(null, null);
 
@@ -452,7 +439,7 @@ describe('editTjeneste', () => {
 
             expect(saveBtn.disabled).toBe(false);
             expect(saveBtn.textContent).toBe('Opprett tjeneste');
-            expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
+            expect(handleSaveError).toHaveBeenCalledWith(err);
         });
 
         it('should not trigger auto-save on input for new tjeneste', async () => {
@@ -763,7 +750,7 @@ describe('editTjeneste — saveBtn null-check branches', () => {
         await saveBtn.onclick();
 
         // Should not throw even though btn was removed — the null-check protects it
-        expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
+        expect(handleSaveError).toHaveBeenCalled();
         // Button should no longer be in DOM
         expect(document.getElementById('btn-save-tjeneste')).toBeNull();
     });

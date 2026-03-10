@@ -2,13 +2,12 @@ import {
     deleteFile, getFileContent, parseMarkdown, stringifyMarkdown,
     saveFile, createFile
 } from './admin-client.js';
-import { showToast, showConfirm } from './admin-dialog.js';
-import { classifyError } from './admin-api-retry.js';
+import { showConfirm } from './admin-dialog.js';
 import { formatDate, stripStackEditData, slugify } from './textFormatter.js';
 import { loadMeldingerModule } from './admin-dashboard.js';
 import {
     getAdminConfig, showDeletionToast, initEditors,
-    createAutoSaver, showSaveBar
+    createAutoSaver, showSaveBar, handleSaveError, handleDeleteError
 } from './admin-editor-helpers.js';
 
 async function deleteMelding(id, name) {
@@ -20,26 +19,9 @@ async function deleteMelding(id, name) {
                 'Filen er lagt i Google Drive-papirkurven og kan gjenopprettes derfra innen 30 dager. ' +
                 'Gå til drive.google.com → Papirkurv for å gjenopprette.');
         } catch (e) {
-            const kind = classifyError(e);
-            showToast(
-                kind === 'auth' ? 'Økten din er utløpt. Last siden på nytt.'
-                : kind === 'retryable' ? 'Nettverksfeil — prøv igjen.'
-                : 'Kunne ikke slette oppslaget.',
-                'error'
-            );
+            handleDeleteError(e, 'oppslaget');
         }
     }
-}
-
-function areDatesValid() {
-    const startInp = document.getElementById('edit-start');
-    const endInp = document.getElementById('edit-end');
-    const startVal = startInp?.value;
-    const endVal = endInp?.value;
-    if (startVal && endVal && new Date(endVal) < new Date(startVal)) {
-        return false;
-    }
-    return true;
 }
 
 async function editMelding(id, name) {
@@ -166,17 +148,6 @@ async function editMelding(id, name) {
             return { newFileName, data, body };
         };
 
-        const handleSaveError = (e) => {
-            console.error("Lagring feilet:", e);
-            const kind = classifyError(e);
-            showToast(
-                kind === 'auth' ? 'Økten din er utløpt. Last siden på nytt.'
-                : kind === 'retryable' ? 'Nettverksfeil — prøv igjen.'
-                : 'Kunne ikke lagre endringene.',
-                'error'
-            );
-        };
-
         if (id) {
             // Auto-save for existing meldinger
             const saveMelding = async () => {
@@ -191,22 +162,15 @@ async function editMelding(id, name) {
             const autoSaver = createAutoSaver(saveMelding);
 
             const triggerAutoSave = () => {
-                if (!areDatesValid()) return;
+                if (!onDateChange()) return;
                 autoSaver.trigger();
             };
 
             document.getElementById('edit-title')?.addEventListener('input', triggerAutoSave);
             if (easyMDE) easyMDE.codemirror.on('change', triggerAutoSave);
 
-            // Override onDateChange for existing to also trigger auto-save
-            const originalOnDateChange = onDateChange;
-            const onDateChangeWithAutoSave = () => {
-                const valid = originalOnDateChange();
-                if (valid) triggerAutoSave();
-            };
-
-            document.getElementById('edit-start')?.addEventListener('change', onDateChangeWithAutoSave);
-            document.getElementById('edit-end')?.addEventListener('change', onDateChangeWithAutoSave);
+            document.getElementById('edit-start')?.addEventListener('change', triggerAutoSave);
+            document.getElementById('edit-end')?.addEventListener('change', triggerAutoSave);
         } else {
             // Manual create for new meldinger
             const saveBtn = document.getElementById('btn-save-melding');
