@@ -377,7 +377,7 @@ describe('admin-dashboard.js', () => {
 
             await loadMeldingerModule('folder-id', vi.fn(), vi.fn());
             const html = document.getElementById('module-inner').innerHTML;
-            expect(html).toContain('border-amber-300');
+            expect(html).toContain('admin-status-warning');
         });
 
         it('should use file name when message has no title', async () => {
@@ -1052,7 +1052,7 @@ describe('admin-dashboard.js', () => {
 
             const container = document.getElementById('galleri-liste-container');
             expect(container.innerHTML).toContain('Forsidebilde');
-            expect(container.innerHTML).toContain('bg-amber-100');
+            expect(container.innerHTML).toContain('admin-status-forsidebilde');
         });
 
         it('should render inactive image with opacity', async () => {

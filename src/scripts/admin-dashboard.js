@@ -310,7 +310,7 @@ export async function saveSingleSetting(index, inputEl, currentSettings, sheetId
             const freshSetting = freshSettings.find(s => s.id === setting.id);
             if (freshSetting && freshSetting.value !== newValue) {
                 console.warn(`[Admin] Mismatch etter lagring av "${setting.id}": forventet "${newValue}", fikk "${freshSetting.value}"`);
-                statusEl.innerHTML = '<span class="text-amber-600 text-xs font-bold">⚠️ Laster på nytt…</span>';
+                statusEl.innerHTML = '<span class="admin-save-warning">⚠️ Laster på nytt…</span>';
                 if (onReload) onReload();
                 return;
             }
@@ -319,11 +319,11 @@ export async function saveSingleSetting(index, inputEl, currentSettings, sheetId
         }
 
         const ts = formatTimestamp(savedTime);
-        statusEl.innerHTML = `<span class="text-green-600 text-xs font-bold" title="Publiseres automatisk om noen minutter">✅ ${ts}</span>`;
+        statusEl.innerHTML = `<span class="admin-save-ok" title="Publiseres automatisk om noen minutter">✅ ${ts}</span>`;
         setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 5000);
     } catch (e) {
         console.error("Save failed", e);
-        if (statusEl) statusEl.innerHTML = '<span class="text-red-500 text-xs font-bold">❌ Lagring feilet</span>';
+        if (statusEl) statusEl.innerHTML = '<span class="admin-save-error">❌ Lagring feilet</span>';
     }
 }
 
@@ -414,7 +414,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                 );
 
                 html += `
-                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${hasOverlap ? 'border-amber-300 bg-amber-50/30' : ''}" onclick="this.querySelector('.edit-btn').click()">
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${hasOverlap ? 'admin-status-warning' : ''}" onclick="this.querySelector('.edit-btn').click()">
                         <div class="min-w-0 flex-grow w-full">
                             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 mb-1.5">
                                 <span class="admin-status-pill ${statusClass} shrink-0">
@@ -599,118 +599,59 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
 }
 
 /**
- * Bytter rekkefølge (order) mellom to galleri-rader.
- * direction: -1 = opp, +1 = ned
+ * Generisk reorder-hjelpefunksjon. Bytter order mellom to naboelementer.
+ * @param {Array} items - sortert liste med elementer
+ * @param {number} currentIdx - indeks for elementet som skal flyttes
+ * @param {number} direction - -1 = opp, +1 = ned
+ * @param {function} persistFn - (item) => Promise — lagrer oppdatert order for ett element
+ * @returns {boolean} true hvis reorder ble utført
  */
+async function swapOrder(items, currentIdx, direction, persistFn) {
+    const neighborIdx = currentIdx + direction;
+    if (currentIdx < 0 || neighborIdx < 0 || neighborIdx >= items.length) return false;
+
+    const current = items[currentIdx];
+    const neighbor = items[neighborIdx];
+
+    const tmpOrder = current.order;
+    current.order = neighbor.order;
+    neighbor.order = tmpOrder;
+
+    if (current.order === neighbor.order) {
+        current.order = currentIdx + direction;
+        neighbor.order = currentIdx;
+    }
+
+    await Promise.all([persistFn(current), persistFn(neighbor)]);
+    return true;
+}
+
 export async function reorderGalleriItem(sheetId, items, rowIndex, direction) {
     const currentIdx = items.findIndex(i => i.rowIndex === rowIndex);
-    const neighborIdx = currentIdx + direction;
-    if (neighborIdx < 0 || neighborIdx >= items.length) return false;
-
-    const current = items[currentIdx];
-    const neighbor = items[neighborIdx];
-
-    const tmpOrder = current.order;
-    current.order = neighbor.order;
-    neighbor.order = tmpOrder;
-
-    // Hvis begge har samme order, tving ulik
-    if (current.order === neighbor.order) {
-        current.order = currentIdx + direction;
-        neighbor.order = currentIdx;
-    }
-
-    await Promise.all([
-        withRetry(() => updateGalleriRow(sheetId, current.rowIndex, current), { refreshAuth: getRefreshAuth() }),
-        withRetry(() => updateGalleriRow(sheetId, neighbor.rowIndex, neighbor), { refreshAuth: getRefreshAuth() })
-    ]);
-    return true;
+    return swapOrder(items, currentIdx, direction, (item) =>
+        withRetry(() => updateGalleriRow(sheetId, item.rowIndex, item), { refreshAuth: getRefreshAuth() })
+    );
 }
 
-/**
- * Bytter rekkefølge (order) mellom to innstillinger.
- * direction: -1 = opp, +1 = ned
- */
 export async function reorderSettingItem(sheetId, items, index, direction) {
-    const neighborIdx = index + direction;
-    if (neighborIdx < 0 || neighborIdx >= items.length) return false;
-
-    const current = items[index];
-    const neighbor = items[neighborIdx];
-
-    const tmpOrder = current.order;
-    current.order = neighbor.order;
-    neighbor.order = tmpOrder;
-
-    // Hvis begge har samme order, tving ulik
-    if (current.order === neighbor.order) {
-        current.order = index + direction;
-        neighbor.order = index;
-    }
-
-    await Promise.all([
-        withRetry(() => updateSettingOrder(sheetId, current.row, current.order), { refreshAuth: getRefreshAuth() }),
-        withRetry(() => updateSettingOrder(sheetId, neighbor.row, neighbor.order), { refreshAuth: getRefreshAuth() })
-    ]);
-    return true;
+    return swapOrder(items, index, direction, (item) =>
+        withRetry(() => updateSettingOrder(sheetId, item.row, item.order), { refreshAuth: getRefreshAuth() })
+    );
 }
 
-/**
- * Bytter rekkefølge (order) mellom to prisliste-rader.
- * direction: -1 = opp, +1 = ned
- */
 export async function reorderPrislisteItem(sheetId, items, rowIndex, direction) {
     const currentIdx = items.findIndex(i => i.rowIndex === rowIndex);
-    const neighborIdx = currentIdx + direction;
-    if (neighborIdx < 0 || neighborIdx >= items.length) return false;
-
-    const current = items[currentIdx];
-    const neighbor = items[neighborIdx];
-
-    const tmpOrder = current.order;
-    current.order = neighbor.order;
-    neighbor.order = tmpOrder;
-
-    // Hvis begge har samme order, tving ulik
-    if (current.order === neighbor.order) {
-        current.order = currentIdx + direction;
-        neighbor.order = currentIdx;
-    }
-
-    await Promise.all([
-        withRetry(() => updatePrislisteRow(sheetId, current.rowIndex, current), { refreshAuth: getRefreshAuth() }),
-        withRetry(() => updatePrislisteRow(sheetId, neighbor.rowIndex, neighbor), { refreshAuth: getRefreshAuth() })
-    ]);
-    return true;
+    return swapOrder(items, currentIdx, direction, (item) =>
+        withRetry(() => updatePrislisteRow(sheetId, item.rowIndex, item), { refreshAuth: getRefreshAuth() })
+    );
 }
 
-/**
- * Bytter rekkefølge (order) mellom to prisliste-kategorier.
- * direction: -1 = opp, +1 = ned
- */
 export async function reorderPrislisteKategori(sheetId, kategoriOrder, kategori, direction) {
     const sorted = [...kategoriOrder].sort((a, b) => a.order - b.order || a.kategori.localeCompare(b.kategori, 'nb'));
     const currentIdx = sorted.findIndex(k => k.kategori === kategori);
-    const neighborIdx = currentIdx + direction;
-    if (currentIdx < 0 || neighborIdx < 0 || neighborIdx >= sorted.length) return false;
-
-    const current = sorted[currentIdx];
-    const neighbor = sorted[neighborIdx];
-
-    const tmpOrder = current.order;
-    current.order = neighbor.order;
-    neighbor.order = tmpOrder;
-
-    if (current.order === neighbor.order) {
-        current.order = currentIdx + direction;
-        neighbor.order = currentIdx;
-    }
-
-    await Promise.all([
-        withRetry(() => updateKategoriOrder(sheetId, current.rowIndex, current.order), { refreshAuth: getRefreshAuth() }),
-        withRetry(() => updateKategoriOrder(sheetId, neighbor.rowIndex, neighbor.order), { refreshAuth: getRefreshAuth() })
-    ]);
-    return true;
+    return swapOrder(sorted, currentIdx, direction, (item) =>
+        withRetry(() => updateKategoriOrder(sheetId, item.rowIndex, item.order), { refreshAuth: getRefreshAuth() })
+    );
 }
 
 /**
@@ -747,9 +688,9 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                 const isFellesbilde = img.type === 'fellesbilde';
                 const isSpecial = isForsidebilde || isFellesbilde;
                 const badgeHtml = isForsidebilde
-                    ? `<span class="admin-status-pill bg-amber-100 text-amber-700 border-amber-300 text-[8px] shrink-0 font-black">Forsidebilde</span>`
+                    ? `<span class="admin-status-pill admin-status-forsidebilde">Forsidebilde</span>`
                     : isFellesbilde
-                    ? `<span class="admin-status-pill bg-sky-100 text-sky-700 border-sky-300 text-[8px] shrink-0 font-black">Fellesbilde</span>`
+                    ? `<span class="admin-status-pill admin-status-fellesbilde">Fellesbilde</span>`
                     : '';
                 const toggleHtml = isSpecial ? '' : renderToggleSwitch('row', img.rowIndex, img.active);
                 const isFirst = idx === 0 || (idx === 1 && (images[0].type === 'forsidebilde' || images[0].type === 'fellesbilde'));
@@ -757,7 +698,7 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                 const thumbAspect = isForsidebilde ? 'aspect-[16/10]' : isFellesbilde ? 'aspect-[16/9]' : 'aspect-[4/3]';
 
                 html += `
-                    <div class="admin-card-interactive group flex flex-col sm:flex-row sm:items-center gap-4 ${!img.active ? 'opacity-60' : ''} ${isForsidebilde ? 'border-amber-200 bg-amber-50/30' : isFellesbilde ? 'border-sky-200 bg-sky-50/30' : ''}">
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row sm:items-center gap-4 ${!img.active ? 'opacity-60' : ''} ${isForsidebilde ? 'admin-card-forsidebilde' : isFellesbilde ? 'admin-card-fellesbilde' : ''}">
                         <div class="flex items-center gap-3 flex-grow min-w-0">
                             <div class="shrink-0 w-20 sm:w-24 ${thumbAspect} rounded-lg overflow-hidden bg-admin-hover flex items-center justify-center" data-thumb-row="${img.rowIndex}">
                                 ${ICON_IMAGE}
