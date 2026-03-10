@@ -105,12 +105,12 @@ const setup = async () => {
 
         initPwaPrompt();
 
+        const hadRememberMe = !!localStorage.getItem('admin_google_token');
+
         const gapiSuccess = await initGapi();
         if (gapiSuccess) tryRestoreSession();
 
         initGis(handleAuth);
-
-        const hadRememberMe = !!localStorage.getItem('admin_google_token');
         const user = getStoredUser();
         if (user) {
             await handleAuth(user);
