@@ -62,6 +62,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
     resolveImagePreview: vi.fn().mockResolvedValue({ src: '', imageId: null }),
     handleImageSelected: vi.fn().mockResolvedValue(undefined),
     verifySave: vi.fn().mockResolvedValue(undefined),
+    checkDriveConsistency: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({
@@ -77,7 +78,7 @@ import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadGallery, setupUploadHandler } from '../admin-gallery.js';
 import { loadGalleriListeModule, reorderGalleriItem } from '../admin-dashboard.js';
 import { animateSwap, disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
-import { getAdminConfig, showDeletionToast, bindSliderStepButtons, bindWheelPrevent, showSaveBar, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave } from '../admin-editor-helpers.js';
+import { getAdminConfig, showDeletionToast, bindSliderStepButtons, bindWheelPrevent, showSaveBar, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave, checkDriveConsistency } from '../admin-editor-helpers.js';
 import { loadBilderModule } from '../admin-module-bilder.js';
 
 beforeEach(() => {
@@ -328,69 +329,22 @@ describe('consistency check (galleri)', () => {
         migrateForsideBildeToGalleri.mockResolvedValue();
     });
 
-    it('should show warning when Sheet references missing Drive files', async () => {
-        getGalleriRaw.mockResolvedValue([
+    it('should call checkDriveConsistency with sheet items and drive files', async () => {
+        const sheetItems = [
             { rowIndex: 2, image: 'venterom.jpg', title: 'Venterom' },
             { rowIndex: 3, image: 'mangler.jpg', title: 'Mangler' }
-        ]);
-        listImages.mockResolvedValue([
-            { name: 'venterom.jpg' }
-        ]);
+        ];
+        const driveFiles = [{ name: 'venterom.jpg' }];
+        getGalleriRaw.mockResolvedValue(sheetItems);
+        listImages.mockResolvedValue(driveFiles);
 
         await loadBilderModule();
-        await new Promise(r => setTimeout(r, 0)); // let async IIFE run
+        await new Promise(r => setTimeout(r, 0));
 
-        expect(showToast).toHaveBeenCalledWith(
-            expect.stringContaining('1 rad(er) refererer bilder som ikke finnes i Drive'),
-            'warning'
+        expect(checkDriveConsistency).toHaveBeenCalledWith(
+            sheetItems, driveFiles,
+            expect.objectContaining({ itemLabel: 'rad' })
         );
-    });
-
-    it('should show info when Drive has orphaned files', async () => {
-        getGalleriRaw.mockResolvedValue([
-            { rowIndex: 2, image: 'venterom.jpg', title: 'Venterom' }
-        ]);
-        listImages.mockResolvedValue([
-            { name: 'venterom.jpg' },
-            { name: 'orphan.jpg' }
-        ]);
-
-        await loadBilderModule();
-        await new Promise(r => setTimeout(r, 0));
-
-        expect(showToast).toHaveBeenCalledWith(
-            expect.stringContaining('1 bilde(r) i Drive-mappen er ikke koblet'),
-            'info'
-        );
-    });
-
-    it('should show no warnings when everything is consistent', async () => {
-        getGalleriRaw.mockResolvedValue([
-            { rowIndex: 2, image: 'venterom.jpg', title: 'Venterom' }
-        ]);
-        listImages.mockResolvedValue([
-            { name: 'venterom.jpg' }
-        ]);
-
-        await loadBilderModule();
-        await new Promise(r => setTimeout(r, 0));
-
-        expect(showToast).not.toHaveBeenCalled();
-    });
-
-    it('should show both warnings when both issues exist', async () => {
-        getGalleriRaw.mockResolvedValue([
-            { rowIndex: 2, image: 'mangler.jpg', title: 'Mangler' }
-        ]);
-        listImages.mockResolvedValue([
-            { name: 'orphan.jpg' }
-        ]);
-
-        await loadBilderModule();
-        await new Promise(r => setTimeout(r, 0));
-
-        expect(showToast).toHaveBeenCalledWith(expect.stringContaining('refererer bilder'), 'warning');
-        expect(showToast).toHaveBeenCalledWith(expect.stringContaining('ikke koblet'), 'info');
     });
 
     it('should not crash when listImages fails (best-effort)', async () => {
@@ -400,7 +354,7 @@ describe('consistency check (galleri)', () => {
         await loadBilderModule();
         await new Promise(r => setTimeout(r, 0));
 
-        expect(showToast).not.toHaveBeenCalled();
+        expect(checkDriveConsistency).not.toHaveBeenCalled();
     });
 });
 

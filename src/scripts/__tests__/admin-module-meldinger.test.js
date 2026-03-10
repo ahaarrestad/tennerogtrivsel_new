@@ -38,6 +38,8 @@ vi.mock('../admin-editor-helpers.js', () => ({
     initEditors: vi.fn(() => ({ easyMDE: null, flatpickrInstances: [] })),
     createAutoSaver: createMockAutoSaver(),
     showSaveBar: vi.fn(),
+    handleSaveError: vi.fn(),
+    handleDeleteError: vi.fn(),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({
@@ -47,9 +49,8 @@ vi.mock('../admin-api-retry.js', () => ({
 
 import { deleteFile, getFileContent, parseMarkdown, saveFile, createFile, stringifyMarkdown } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
-import { classifyError } from '../admin-api-retry.js';
 import { loadMeldingerModule } from '../admin-dashboard.js';
-import { showDeletionToast, initEditors, showSaveBar, createAutoSaver } from '../admin-editor-helpers.js';
+import { showDeletionToast, initEditors, showSaveBar, createAutoSaver, handleSaveError, handleDeleteError } from '../admin-editor-helpers.js';
 import { initMeldingerModule, reloadMeldinger } from '../admin-module-meldinger.js';
 
 beforeEach(() => {
@@ -108,27 +109,12 @@ describe('deleteMelding', () => {
         expect(loadMeldingerModule).toHaveBeenCalled();
     });
 
-    it('should show error on failure', async () => {
+    it('should call handleDeleteError on failure', async () => {
         showConfirm.mockResolvedValue(true);
-        deleteFile.mockRejectedValue(new Error('fail'));
+        const err = new Error('fail');
+        deleteFile.mockRejectedValue(err);
         await window.deleteMelding('id1', 'Test');
-        expect(showToast).toHaveBeenCalledWith('Kunne ikke slette oppslaget.', 'error');
-    });
-
-    it('should show auth toast when deletion fails with auth error', async () => {
-        classifyError.mockReturnValueOnce('auth');
-        showConfirm.mockResolvedValue(true);
-        deleteFile.mockRejectedValue({ status: 401 });
-        await window.deleteMelding('id1', 'Test');
-        expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
-    });
-
-    it('should show network toast when deletion fails with retryable error', async () => {
-        classifyError.mockReturnValueOnce('retryable');
-        showConfirm.mockResolvedValue(true);
-        deleteFile.mockRejectedValue(new Error('network'));
-        await window.deleteMelding('id1', 'Test');
-        expect(showToast).toHaveBeenCalledWith('Nettverksfeil — prøv igjen.', 'error');
+        expect(handleDeleteError).toHaveBeenCalledWith(err, 'oppslaget');
     });
 });
 
@@ -282,39 +268,16 @@ describe('editMelding', () => {
             expect(saveFile).toHaveBeenCalledWith('id1', expect.any(String), 'md');
         });
 
-        it('should show error save bar when save fails', async () => {
-            saveFile.mockRejectedValue(new Error('save fail'));
+        it('should call handleSaveError and rethrow when save fails', async () => {
+            const err = new Error('save fail');
+            saveFile.mockRejectedValue(err);
 
             await window.editMelding('id1', 'Melding');
 
             const saveFn = createAutoSaver.mock.calls[0][0];
             await expect(saveFn()).rejects.toThrow('save fail');
 
-            expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
-        });
-
-        it('should show auth toast when save fails with auth error', async () => {
-            classifyError.mockReturnValueOnce('auth');
-            saveFile.mockRejectedValue({ status: 401 });
-
-            await window.editMelding('id1', 'Melding');
-
-            const saveFn = createAutoSaver.mock.calls[0][0];
-            await expect(saveFn()).rejects.toEqual({ status: 401 });
-
-            expect(showToast).toHaveBeenCalledWith('Økten din er utløpt. Last siden på nytt.', 'error');
-        });
-
-        it('should show network toast when save fails with retryable error', async () => {
-            classifyError.mockReturnValueOnce('retryable');
-            saveFile.mockRejectedValue(new Error('network'));
-
-            await window.editMelding('id1', 'Melding');
-
-            const saveFn = createAutoSaver.mock.calls[0][0];
-            await expect(saveFn()).rejects.toThrow('network');
-
-            expect(showToast).toHaveBeenCalledWith('Nettverksfeil — prøv igjen.', 'error');
+            expect(handleSaveError).toHaveBeenCalledWith(err);
         });
     });
 
@@ -352,7 +315,8 @@ describe('editMelding', () => {
         });
 
         it('should re-enable button on create failure', async () => {
-            createFile.mockRejectedValue(new Error('fail'));
+            const err = new Error('fail');
+            createFile.mockRejectedValue(err);
 
             await window.editMelding(null, null);
 
@@ -361,7 +325,7 @@ describe('editMelding', () => {
 
             expect(saveBtn.disabled).toBe(false);
             expect(saveBtn.textContent).toBe('Opprett melding');
-            expect(showToast).toHaveBeenCalledWith('Kunne ikke lagre endringene.', 'error');
+            expect(handleSaveError).toHaveBeenCalledWith(err);
         });
 
         it('should not trigger auto-save on input for new melding', async () => {

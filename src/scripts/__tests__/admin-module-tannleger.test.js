@@ -53,6 +53,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
     resolveImagePreview: vi.fn().mockResolvedValue({ src: '', imageId: null }),
     handleImageSelected: vi.fn().mockResolvedValue(undefined),
     verifySave: vi.fn().mockResolvedValue(undefined),
+    checkDriveConsistency: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../admin-api-retry.js', () => ({
@@ -65,7 +66,7 @@ import {
 } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadTannlegerModule } from '../admin-dashboard.js';
-import { showDeletionToast, attachToggleClick, bindSliderStepButtons, bindWheelPrevent, showSaveBar, hideSaveBar, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave } from '../admin-editor-helpers.js';
+import { showDeletionToast, attachToggleClick, bindSliderStepButtons, bindWheelPrevent, showSaveBar, hideSaveBar, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave, checkDriveConsistency } from '../admin-editor-helpers.js';
 import { initTannlegerModule, reloadTannleger } from '../admin-module-tannleger.js';
 
 beforeEach(() => {
@@ -103,53 +104,23 @@ describe('reloadTannleger', () => {
 });
 
 describe('consistency check (tannleger)', () => {
-    it('should show warning when Sheet references missing Drive files', async () => {
-        getTannlegerRaw.mockResolvedValue([
+    it('should call checkDriveConsistency with sheet items and drive files', async () => {
+        const sheetItems = [
             { rowIndex: 2, name: 'Dr. A', image: 'a.jpg' },
             { rowIndex: 3, name: 'Dr. B', image: 'mangler.jpg' }
-        ]);
+        ];
+        const driveFiles = [{ name: 'a.jpg' }];
+        getTannlegerRaw.mockResolvedValue(sheetItems);
         const { listImages } = await import('../admin-client.js');
-        listImages.mockResolvedValue([{ name: 'a.jpg' }]);
+        listImages.mockResolvedValue(driveFiles);
 
         reloadTannleger();
         await new Promise(r => setTimeout(r, 0));
 
-        expect(showToast).toHaveBeenCalledWith(
-            expect.stringContaining('1 profil(er) refererer bilder som ikke finnes i Drive'),
-            'warning'
+        expect(checkDriveConsistency).toHaveBeenCalledWith(
+            sheetItems, driveFiles,
+            expect.objectContaining({ itemLabel: 'profil' })
         );
-    });
-
-    it('should show info when Drive has orphaned files', async () => {
-        getTannlegerRaw.mockResolvedValue([
-            { rowIndex: 2, name: 'Dr. A', image: 'a.jpg' }
-        ]);
-        const { listImages } = await import('../admin-client.js');
-        listImages.mockResolvedValue([
-            { name: 'a.jpg' },
-            { name: 'orphan.jpg' }
-        ]);
-
-        reloadTannleger();
-        await new Promise(r => setTimeout(r, 0));
-
-        expect(showToast).toHaveBeenCalledWith(
-            expect.stringContaining('1 bilde(r) i Drive-mappen er ikke koblet'),
-            'info'
-        );
-    });
-
-    it('should show no warnings when everything is consistent', async () => {
-        getTannlegerRaw.mockResolvedValue([
-            { rowIndex: 2, name: 'Dr. A', image: 'a.jpg' }
-        ]);
-        const { listImages } = await import('../admin-client.js');
-        listImages.mockResolvedValue([{ name: 'a.jpg' }]);
-
-        reloadTannleger();
-        await new Promise(r => setTimeout(r, 0));
-
-        expect(showToast).not.toHaveBeenCalled();
     });
 
     it('should not crash when listImages fails (best-effort)', async () => {
@@ -160,7 +131,7 @@ describe('consistency check (tannleger)', () => {
         reloadTannleger();
         await new Promise(r => setTimeout(r, 0));
 
-        expect(showToast).not.toHaveBeenCalled();
+        expect(checkDriveConsistency).not.toHaveBeenCalled();
     });
 });
 

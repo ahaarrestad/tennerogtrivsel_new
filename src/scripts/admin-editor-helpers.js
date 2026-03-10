@@ -1,7 +1,8 @@
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
-import { createAuthRefresher } from './admin-api-retry.js';
+import { classifyError, createAuthRefresher } from './admin-api-retry.js';
 import { silentLogin, findFileByName, getDriveImageBlob } from './admin-client.js';
+import { showToast } from './admin-dialog.js';
 import { formatTimestamp } from './admin-dashboard.js';
 
 /**
@@ -339,5 +340,43 @@ export function hideSaveBar(delay = 0) {
         }, delay);
     } else {
         document.getElementById('admin-save-bar')?.remove();
+    }
+}
+
+export function handleSaveError(e) {
+    console.error("Lagring feilet:", e);
+    const kind = classifyError(e);
+    showToast(
+        kind === 'auth' ? 'Økten din er utløpt. Last siden på nytt.'
+        : kind === 'retryable' ? 'Nettverksfeil — prøv igjen.'
+        : 'Kunne ikke lagre endringene.',
+        'error'
+    );
+}
+
+export function handleDeleteError(e, itemType = 'elementet') {
+    const kind = classifyError(e);
+    showToast(
+        kind === 'auth' ? 'Økten din er utløpt. Last siden på nytt.'
+        : kind === 'retryable' ? 'Nettverksfeil — prøv igjen.'
+        : `Kunne ikke slette ${itemType}.`,
+        'error'
+    );
+}
+
+export async function checkDriveConsistency(sheetItems, driveFiles, { getDisplayName = (item) => item.title || 'Uten tittel', itemLabel = 'rad' } = {}) {
+    const driveFileNames = new Set(driveFiles.map(f => f.name));
+    const sheetFileNames = new Set(sheetItems.map(item => item.image).filter(Boolean));
+
+    const orphanedInDrive = driveFiles.filter(f => !sheetFileNames.has(f.name));
+    const missingFromDrive = sheetItems.filter(item => item.image && !driveFileNames.has(item.image));
+
+    if (missingFromDrive.length > 0) {
+        const names = missingFromDrive.map(item => `«${getDisplayName(item)}» → ${item.image}`).join(', ');
+        showToast(`⚠ ${missingFromDrive.length} ${itemLabel}(er) refererer bilder som ikke finnes i Drive: ${names}`, 'warning');
+    }
+    if (orphanedInDrive.length > 0) {
+        const names = orphanedInDrive.map(f => f.name).join(', ');
+        showToast(`ℹ ${orphanedInDrive.length} bilde(r) i Drive-mappen er ikke koblet til noen ${itemLabel}: ${names}`, 'info');
     }
 }
