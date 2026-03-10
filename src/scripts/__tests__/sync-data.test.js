@@ -482,14 +482,12 @@ describe('sync-data.js', () => {
             expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Forsidebilde ikke funnet'));
         });
 
-        it('bør kaste feil hvis Innstillinger Sheets API feiler', async () => {
+        it('bør kaste feil hvis galleri Sheets API feiler med uventet feil', async () => {
             mockDrive.files.get.mockResolvedValueOnce({ data: { parents: ['parent-folder-id'] } }); // parent lookup
-            // Galleri-ark: feiler → fallback
+            // Galleri-ark: feiler med uventet feil → kastes videre
             mockSheets.spreadsheets.values.get.mockRejectedValueOnce(new Error('Galleri feil'));
-            // Innstillinger fallback: feiler også → kastes videre
-            mockSheets.spreadsheets.values.get.mockRejectedValueOnce(new Error('Sheets API-feil'));
 
-            await expect(syncForsideBilde()).rejects.toThrow('Sheets API-feil');
+            await expect(syncForsideBilde()).rejects.toThrow('Galleri feil');
         });
 
         it('bør lese forsidebilde fra galleri-arket når type=forsidebilde finnes', async () => {

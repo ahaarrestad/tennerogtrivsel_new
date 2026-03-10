@@ -141,6 +141,55 @@ async function downloadImageIfNeeded(fileName, folderId, destinationPath, label)
     return true;
 }
 
+/**
+ * Sletter lokale filer som ikke lenger er i bruk.
+ * Beholder .gitkeep og filer som matcher filterFn (default: alle).
+ */
+function cleanupUnusedFiles(dirPath, activeNames, label) {
+    const localFiles = fs.readdirSync(dirPath);
+    localFiles.forEach(file => {
+        if (file !== '.gitkeep' && !activeNames.has(file)) {
+            console.log(`  🗑️ Sletter ubrukt ${label}: ${file}`);
+            fs.unlinkSync(path.join(dirPath, file));
+        }
+    });
+}
+
+/**
+ * Henter bilder-mappe-ID, med fallback til regnearkets foreldre-mappe.
+ */
+async function getImageFolderId(config) {
+    if (config.bilderFolderId) return config.bilderFolderId;
+    const drive = getDrive();
+    const sheetMeta = await drive.files.get({
+        fileId: config.spreadsheetId,
+        fields: 'parents',
+        supportsAllDrives: true,
+        includeItemsFromAllDrives: true
+    });
+    return sheetMeta.data.parents?.[0] || null;
+}
+
+/**
+ * Henter verdier fra et valgfritt Sheets-ark.
+ * Returnerer null hvis arket ikke finnes (400 / "Unable to parse range").
+ */
+async function getOptionalSheetValues(sheets, spreadsheetId, range) {
+    try {
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range,
+            valueRenderOption: 'UNFORMATTED_VALUE',
+        });
+        return res.data.values || [];
+    } catch (err) {
+        if (err.code === 400 || err.message?.includes('Unable to parse range')) {
+            return null;
+        }
+        throw err;
+    }
+}
+
 function escapeDriveQuery(value) {
     return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
@@ -212,16 +261,11 @@ async function syncTannleger() {
         }));
 
         // Rydding: Slett bilder som ikke lenger er i bruk
-        const localAssets = fs.readdirSync(config.paths.tannlegerAssets);
-        const activeImages = new Set(tannlegeData.map(t => t.image).filter(Boolean));
-
-        localAssets.forEach(file => {
-            if (file !== '.gitkeep' && !activeImages.has(file)) {
-                const pathToDelete = path.join(config.paths.tannlegerAssets, file);
-                console.log(`  🗑️ Sletter ubrukt bilde: ${file}`);
-                fs.unlinkSync(pathToDelete);
-            }
-        });
+        cleanupUnusedFiles(
+            config.paths.tannlegerAssets,
+            new Set(tannlegeData.map(t => t.image).filter(Boolean)),
+            'bilde'
+        );
 
         fs.writeFileSync(config.paths.tannlegerData, JSON.stringify(tannlegeData, null, 2));
         console.log(`  ✅ Synkroniserte ${tannlegeData.length} tannleger.`);
@@ -247,15 +291,13 @@ async function syncMarkdownCollection(collection) {
 
     const files = (res.data.files || []).filter(f => f.name.endsWith('.md'));
 
-    // Rydding: Slett lokale filer som ikke lenger finnes i Drive
+    // Rydding: Slett lokale .md-filer som ikke lenger finnes i Drive
     const localFiles = fs.readdirSync(collection.dest);
     const remoteFileNames = new Set(files.map(f => f.name));
-
     localFiles.forEach(localFile => {
         if (localFile.endsWith('.md') && !remoteFileNames.has(localFile)) {
-            const pathToDelete = path.join(collection.dest, localFile);
             console.log(`  🗑️ Sletter utgått fil: ${collection.name}/${localFile}`);
-            fs.unlinkSync(pathToDelete);
+            fs.unlinkSync(path.join(collection.dest, localFile));
         }
     });
 
@@ -315,24 +357,12 @@ export async function cropToOG(sourcePath, outputPath, scale = 1, posX = 50, pos
 // Prøver først galleri-arket (type=forsidebilde), deretter fallback til Innstillinger.
 async function syncForsideBilde() {
     const config = getConfig();
-    const drive = getDrive();
     const sheets = getSheets();
 
     console.log('🚀 Synkroniserer forsidebilde...');
 
     try {
-        // Bruk dedikert bilder-mappe, eller fall tilbake til foreldre-mappen til regnearket
-        let forsideFolderId = config.bilderFolderId;
-        if (!forsideFolderId) {
-            const sheetMeta = await drive.files.get({
-                fileId: config.spreadsheetId,
-                fields: 'parents',
-                supportsAllDrives: true,
-                includeItemsFromAllDrives: true
-            });
-            forsideFolderId = sheetMeta.data.parents?.[0];
-        }
-
+        const forsideFolderId = await getImageFolderId(config);
         if (!forsideFolderId) {
             logWarning('Missing Parent', 'Kunne ikke bestemme foreldre-mappe for regnearket. Hopper over forsidebilde-synkronisering.');
             return;
@@ -345,13 +375,8 @@ async function syncForsideBilde() {
 
         // Prøv galleri-arket først
         let foundInGalleri = false;
-        try {
-            const galleriRes = await sheets.spreadsheets.values.get({
-                spreadsheetId: config.spreadsheetId,
-                range: 'galleri!A2:I',
-                valueRenderOption: 'UNFORMATTED_VALUE',
-            });
-            const galleriRows = galleriRes.data.values || [];
+        const galleriRows = await getOptionalSheetValues(sheets, config.spreadsheetId, 'galleri!A2:I');
+        if (galleriRows) {
             const forsideRow = galleriRows.find(row =>
                 (row[8] || '').toLowerCase() === 'forsidebilde' &&
                 (row[3] || '').toLowerCase() === 'ja'
@@ -365,8 +390,7 @@ async function syncForsideBilde() {
                 foundInGalleri = true;
                 console.log('  📋 Forsidebilde funnet i galleri-arket.');
             }
-        } catch (galleriErr) {
-            // Galleri-arket finnes ikke ennå – fall through til Innstillinger
+        } else {
             console.log('  ℹ️ Galleri-ark ikke tilgjengelig, faller tilbake til Innstillinger.');
         }
 
@@ -411,49 +435,25 @@ async function syncForsideBilde() {
 // Synkroniserer galleribilder fra Google Drive + Sheets
 async function syncGalleri() {
     const config = getConfig();
-    const drive = getDrive();
     const sheets = getSheets();
 
     console.log('🚀 Synkroniserer galleri...');
     if (!fs.existsSync(config.paths.galleriAssets)) fs.mkdirSync(config.paths.galleriAssets, { recursive: true });
 
     try {
-        // Bruk dedikert bilder-mappe, eller fall tilbake til foreldre-mappen til regnearket
-        let folderId = config.bilderFolderId;
-        if (!folderId) {
-            const sheetMeta = await drive.files.get({
-                fileId: config.spreadsheetId,
-                fields: 'parents',
-                supportsAllDrives: true,
-                includeItemsFromAllDrives: true
-            });
-            folderId = sheetMeta.data.parents?.[0];
-        }
-
+        const folderId = await getImageFolderId(config);
         if (!folderId) {
             logWarning('Missing Parent', 'Kunne ikke bestemme foreldre-mappe for regnearket. Hopper over galleri-synkronisering.');
             return;
         }
 
-        let res;
-        try {
-            res = await sheets.spreadsheets.values.get({
-                spreadsheetId: config.spreadsheetId,
-                range: 'galleri!A2:I',
-                valueRenderOption: 'UNFORMATTED_VALUE',
-            });
-        } catch (sheetErr) {
-            if (sheetErr.code === 400 || sheetErr.message?.includes('Unable to parse range')) {
-                console.log('  ℹ️ Fane "galleri" finnes ikke ennå. Opprett den via admin-panelet.');
-                fs.writeFileSync(config.paths.galleriData, JSON.stringify([]));
-                console.log('  ✅ Tom galleri.json skrevet.');
-                return;
-            } else {
-                throw sheetErr;
-            }
+        const rows = await getOptionalSheetValues(sheets, config.spreadsheetId, 'galleri!A2:I');
+        if (rows === null) {
+            console.log('  ℹ️ Fane "galleri" finnes ikke ennå. Opprett den via admin-panelet.');
+            fs.writeFileSync(config.paths.galleriData, JSON.stringify([]));
+            console.log('  ✅ Tom galleri.json skrevet.');
+            return;
         }
-
-        const rows = res.data.values || [];
         // Kun aktive rader – forsidebilde inkluderes for metadata (utsnitt), men bildet lastes av syncForsideBilde
         const activeRows = rows.filter(([tittel, bildeFil, altTekst, aktiv]) =>
             aktiv?.toLowerCase() === 'ja'
@@ -466,7 +466,7 @@ async function syncGalleri() {
 
             const { scale, positionX, positionY } = parseImageConfig(skala, posX, posY);
 
-            const parsedOrder = parseInt(rekkefølge);
+            const parsedOrder = parseInt(rekkefølge, 10);
             const order = (!isNaN(parsedOrder)) ? parsedOrder : 99;
 
             // Forsidebilde-filen lastes ned av syncForsideBilde(), ikke her
@@ -498,16 +498,11 @@ async function syncGalleri() {
         }));
 
         // Rydding: Slett bilder som ikke lenger er i bruk
-        const localAssets = fs.readdirSync(config.paths.galleriAssets);
-        const activeImages = new Set(galleriData.map(g => g.image).filter(Boolean));
-
-        localAssets.forEach(file => {
-            if (file !== '.gitkeep' && !activeImages.has(file)) {
-                const pathToDelete = path.join(config.paths.galleriAssets, file);
-                console.log(`  🗑️ Sletter ubrukt galleribilde: ${file}`);
-                fs.unlinkSync(pathToDelete);
-            }
-        });
+        cleanupUnusedFiles(
+            config.paths.galleriAssets,
+            new Set(galleriData.map(g => g.image).filter(Boolean)),
+            'galleribilde'
+        );
 
         fs.writeFileSync(config.paths.galleriData, JSON.stringify(galleriData, null, 2));
         console.log(`  ✅ Synkroniserte ${galleriData.length} galleribilder.`);
@@ -569,27 +564,16 @@ async function syncPrisliste() {
     console.log('Synkroniserer prisliste...');
 
     try {
-        let res;
-        try {
-            res = await sheets.spreadsheets.values.get({
-                spreadsheetId: config.spreadsheetId,
-                range: 'Prisliste!A2:E',
-                valueRenderOption: 'UNFORMATTED_VALUE',
-            });
-        } catch (sheetErr) {
-            if (sheetErr.code === 400 || sheetErr.message?.includes('Unable to parse range')) {
-                console.log('  Fane "Prisliste" finnes ikke enda. Skriver tom fil.');
-                fs.writeFileSync(config.paths.prislisteData, JSON.stringify([]));
-                return;
-            }
-            throw sheetErr;
+        const rows = await getOptionalSheetValues(sheets, config.spreadsheetId, 'Prisliste!A2:E');
+        if (rows === null) {
+            console.log('  Fane "Prisliste" finnes ikke enda. Skriver tom fil.');
+            fs.writeFileSync(config.paths.prislisteData, JSON.stringify([]));
+            return;
         }
-
-        const rows = res.data.values || [];
         const prislisteData = rows
             .filter(row => row[0] && row[1])
             .map(([kategori, behandling, pris, sistOppdatert, orderRaw]) => {
-                const orderParsed = parseInt(orderRaw);
+                const orderParsed = parseInt(orderRaw, 10);
                 return {
                     kategori: String(kategori).trim(),
                     behandling: String(behandling).trim(),
@@ -601,23 +585,14 @@ async function syncPrisliste() {
 
         // Hent kategori-rekkefølge fra eget ark
         let kategoriOrder = [];
-        try {
-            const katRes = await sheets.spreadsheets.values.get({
-                spreadsheetId: config.spreadsheetId,
-                range: 'KategoriRekkefølge!A2:B',
-                valueRenderOption: 'UNFORMATTED_VALUE',
-            });
-            const katRows = katRes.data.values || [];
+        const katRows = await getOptionalSheetValues(sheets, config.spreadsheetId, 'KategoriRekkefølge!A2:B');
+        if (katRows) {
             kategoriOrder = katRows.map(([kategori, order]) => ({
                 kategori: String(kategori).trim(),
-                order: parseInt(order) || 0,
+                order: parseInt(order, 10) || 0,
             }));
-        } catch (katErr) {
-            if (katErr.code === 400 || katErr.message?.includes('Unable to parse range')) {
-                console.log('  Fane "KategoriRekkefølge" finnes ikke enda. Bruker alfabetisk sortering.');
-            } else {
-                throw katErr;
-            }
+        } else {
+            console.log('  Fane "KategoriRekkefølge" finnes ikke enda. Bruker alfabetisk sortering.');
         }
 
         // Finn nyeste sistOppdatert-dato blant alle rader
@@ -717,4 +692,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 /* v8 ignore stop */
 
-export { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, syncPrisliste, syncInnstillinger, runSync, getConfig, getLocalHash, shouldDownload, downloadImageIfNeeded, HARD_DEFAULT_KEYS, escapeDriveQuery, assertSafePath };
+export { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, syncPrisliste, syncInnstillinger, runSync, getConfig, getLocalHash, shouldDownload, downloadImageIfNeeded, HARD_DEFAULT_KEYS, escapeDriveQuery, assertSafePath, cleanupUnusedFiles, getImageFolderId, getOptionalSheetValues };
