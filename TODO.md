@@ -13,14 +13,14 @@
 
 ## Pågående
 
-- [ ] **Kjør simplify på hele prosjektet** ([plan](docs/plans/2026-03-09-simplify-hele-prosjektet.md))
-    - Gjennomgå hele kodebasen med `/simplify` for å rydde opp, forenkle og forbedre kodekvalitet
-    - 6 batches: admin-moduler, admin-infra, admin UI-hjelpere, frontend-scripts, Astro+CSS, build/config
-    - Fokus: CSS-konsistens (global.css-variabler), kodekvalitet, testkvalitet
+(ingen)
 
 ## Backlog
 
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
+
+- [ ] **Sorter "Våre tjenester"-lenker på tjenestesider**
+    - Lenkene nederst på `/tjenester/[id]` må sorteres i samme rekkefølge som tjenestene ellers vises i
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
