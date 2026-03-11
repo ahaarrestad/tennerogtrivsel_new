@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Prisliste mobil-layout — bedre lesbarhet** ([plan](docs/plans/archive/2026-03-10-prisliste-mobil-spacing.md))
+    - Lagt til dot-leader (prikket linje) mellom behandlingsnavn og pris i web-layouten
+    - Garantert minimum-avstand (1.5rem) mellom tekst og pris via flex gap + min-width
+    - Prisen brytes aldri (`flex-shrink: 0`, `whitespace-nowrap`)
+    - Print-layout uendret
+
 - [x] **Bildejustering for tannleger — bedre layout på desktop**
     - Flyttet bildeutsnitt-slidere fra venstre kolonne til høyre, rett under forhåndsvisningen
 

@@ -108,11 +108,12 @@ if (sistOppdatert) {
                         <div class="px-6 py-2">
                             {items.map((item, i) => (
                                 <div class:list={[
-                                    "flex justify-between items-baseline py-3",
+                                    "prisliste-rad",
                                     i < items.length - 1 && "border-b border-brand-border/60"
                                 ]}>
-                                    <span class="text-sm">{item.behandling}</span>
-                                    <span class="text-sm whitespace-nowrap">{formatPris(item.pris)}</span>
+                                    <span class="prisliste-behandling text-sm">{item.behandling}</span>
+                                    <span class="prisliste-leader" aria-hidden="true"></span>
+                                    <span class="prisliste-pris text-sm whitespace-nowrap">{formatPris(item.pris)}</span>
                                 </div>
                             ))}
                         </div>
@@ -160,6 +161,29 @@ if (sistOppdatert) {
 <style is:global>
     .not-print { display: none; }
     .prisliste-print { display: none; }
+
+    .prisliste-rad {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        padding: 0.75rem 0;
+    }
+
+    .prisliste-behandling {
+        flex-shrink: 1;
+    }
+
+    .prisliste-leader {
+        flex: 1;
+        border-bottom: 1px dotted var(--color-brand-border);
+        min-width: 1.5rem;
+        position: relative;
+        top: -0.25em;
+    }
+
+    .prisliste-pris {
+        flex-shrink: 0;
+    }
 
     @page {
         size: landscape;
