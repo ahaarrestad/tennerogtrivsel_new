@@ -39,6 +39,16 @@ describe('buildSchema – toppnivå', () => {
         const schema = buildSchema(baseSettings, [], '');
         expect(schema['telephone']).toBe('51 84 34 40');
     });
+
+    it('inkluderer url når siteUrl er satt', () => {
+        const schema = buildSchema(baseSettings, [], 'https://tennerogtrivsel.no');
+        expect(schema['url']).toBe('https://tennerogtrivsel.no');
+    });
+
+    it('utelater url når siteUrl er tom', () => {
+        const schema = buildSchema(baseSettings, [], '');
+        expect(schema).not.toHaveProperty('url');
+    });
 });
 
 describe('buildSchema – email', () => {

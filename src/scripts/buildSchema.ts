@@ -39,7 +39,6 @@ export function buildSchema(
         '@type': 'Dentist',
         name: settings.siteTitle,
         description: settings.siteDescription,
-        url: siteUrl || undefined,
         telephone: settings.phone1,
         address: parseAddress(settings.adresse1 ?? '', settings.adresse2 ?? ''),
         geo: {
@@ -55,6 +54,10 @@ export function buildSchema(
 
     if (settings.showEmail === 'ja') {
         schema.email = settings.email;
+    }
+
+    if (siteUrl) {
+        schema.url = siteUrl;
     }
 
     if (siteUrl) {
