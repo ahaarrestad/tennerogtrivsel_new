@@ -58,9 +58,6 @@ export function buildSchema(
 
     if (siteUrl) {
         schema.url = siteUrl;
-    }
-
-    if (siteUrl) {
         schema.image = {
             '@type': 'ImageObject',
             url: new URL('/hovedbilde.png', siteUrl).href,

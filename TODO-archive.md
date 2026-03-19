@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Schema.org strukturerte data (JSON-LD)** ([plan](docs/superpowers/plans/2026-03-18-schema-org.md)) ([design](docs/superpowers/specs/2026-03-18-schema-org-design.md))
+    - Ny `buildSchema`-utility med full TDD (24 tester, 83% branch coverage)
+    - Datadriven: navn, adresse, åpningstider, geo, tjenester hentes fra settings og content-collection
+    - `SchemaOrg.astro` forenklet til ren rendering, `Layout.astro` kaller `buildSchema`
+
 - [x] **Prisliste mobil-layout — bedre lesbarhet** ([plan](docs/plans/archive/2026-03-10-prisliste-mobil-spacing.md))
     - Lagt til dot-leader (prikket linje) mellom behandlingsnavn og pris i web-layouten
     - Garantert minimum-avstand (1.5rem) mellom tekst og pris via flex gap + min-width

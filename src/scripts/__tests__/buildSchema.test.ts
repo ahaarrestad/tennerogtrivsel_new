@@ -116,8 +116,9 @@ describe('buildSchema – åpningstider', () => {
         expect(schema['openingHoursSpecification']).toHaveLength(5);
     });
 
-    it('hopper over ukjent dagsnavn uten feil', () => {
-        const schema = buildSchema({ ...baseSettings, businessHours1: 'Lørdag: 10:00 - 14:00', businessHours2: '', businessHours3: '', businessHours4: '', businessHours5: '' }, [], '');
+    it('hopper over dagsnavn som ikke er i DAG_MAP (regex matcher, men mapping mangler)', () => {
+        // 'Sunday' matcher regex (\w+) men er ikke i DAG_MAP — treffer linje 15 i buildSchema
+        const schema = buildSchema({ ...baseSettings, businessHours1: 'Sunday: 08:00 - 16:00', businessHours2: '', businessHours3: '', businessHours4: '', businessHours5: '' }, [], '');
         expect(schema['openingHoursSpecification']).toHaveLength(0);
     });
 

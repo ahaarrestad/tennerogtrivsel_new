@@ -19,10 +19,6 @@
 
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
 
-- [ ] **Schema.org strukturerte data (JSON-LD)**
-    - DentistBusiness-markup med navn, adresse, åpningstider, telefon
-    - Legges inn i `<head>` på relevante sider
-
 - [ ] **llms.txt — AI-lesbar nettstedsbeskrivelse**
     - Generer `/llms.txt` (kortfattet indeks) og `/llms-full.txt` (komplett innhold) automatisk ved bygg
     - Astro-endepunkter som henter fra innstillinger.json, prisliste.json, tjenester og tannleger.json
