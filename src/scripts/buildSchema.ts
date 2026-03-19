@@ -8,7 +8,7 @@ const DAG_MAP: Record<string, string> = {
 
 function parseOpeningHours(value: string): object | null {
     if (!value) return null;
-    const match = value.match(/^(\w+):\s*(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})$/);
+    const match = value.match(/^([\p{L}]+):\s*(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})$/u);
     if (!match) return null;
     const [, dagNavn, opens, closes] = match;
     const dayOfWeek = DAG_MAP[dagNavn];
