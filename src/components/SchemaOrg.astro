@@ -1,44 +1,8 @@
 ---
 interface Props {
-    settings: Record<string, string>;
+    schema: object;
 }
 
-const { settings } = Astro.props;
-
-const schema = {
-    "@context": "https://schema.org",
-    "@type": "Dentist",
-    "name": "Tenner og Trivsel",
-    "description": settings.siteDescription,
-    "url": Astro.site?.toString(),
-    "telephone": settings.phone1,
-    "email": settings.email,
-    "address": {
-        "@type": "PostalAddress",
-        "streetAddress": settings.adresse1,
-        "addressLocality": "Stavanger",
-        "postalCode": "4011",
-        "addressCountry": "NO"
-    },
-    "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": settings.latitude,
-        "longitude": settings.longitude
-    },
-    "openingHoursSpecification": [
-        {
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": ["Monday", "Thursday", "Friday"],
-            "opens": "08:00",
-            "closes": "15:30"
-        },
-        {
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": ["Tuesday", "Wednesday"],
-            "opens": "08:00",
-            "closes": "20:00"
-        }
-    ]
-};
+const { schema } = Astro.props;
 ---
 <script type="application/ld+json" set:html={JSON.stringify(schema)} />
