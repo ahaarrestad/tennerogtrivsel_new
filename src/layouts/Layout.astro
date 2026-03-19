@@ -12,8 +12,11 @@ import Navbar from '../components/Navbar.astro';
 import SchemaOrg from '../components/SchemaOrg.astro';
 import { getSiteSettings } from '../scripts/getSettings';
 import { getCollection } from 'astro:content';
+import { buildSchema } from '../scripts/buildSchema';
 
 const settings = await getSiteSettings();
+const tjenester = await getCollection('tjenester');
+const schema = buildSchema(settings, tjenester, Astro.site?.toString() ?? '');
 const galleri = await getCollection('galleri');
 const showGalleri = galleri.some(item => (item.data.type ?? 'galleri') === 'galleri');
 
@@ -59,7 +62,7 @@ const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).href;
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={new URL('/hovedbilde.png', Astro.site).href} />
 
-    <SchemaOrg settings={settings} />
+    <SchemaOrg schema={schema} />
 </head>
 
 <body class="text-brand flex flex-col min-h-full">
