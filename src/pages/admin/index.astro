@@ -122,6 +122,29 @@ const BILDER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID;
             </p>
         </div>
 
+        <!-- LOADING CONTAINER -->
+        <div id="loading-container" class="hidden admin-login-box my-auto">
+            <div class="flex flex-col items-center gap-4">
+                <svg class="animate-spin h-10 w-10 text-brand" aria-hidden="true" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-admin-muted text-sm">Verifiserer tilgang...</p>
+            </div>
+        </div>
+
+        <!-- NO ACCESS CONTAINER -->
+        <div id="no-access-container" class="hidden admin-login-box my-auto">
+            <div class="space-y-4 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-admin-muted-light"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                <h1 class="admin-title">Ingen tilgang</h1>
+                <p class="text-admin-muted">Denne kontoen har ikke tilgang til admin-panelet, eller noe gikk galt. Prøv å logge inn med en annen konto.</p>
+            </div>
+            <button id="no-access-switch-btn" class="btn-primary w-full py-4">
+                Logg inn med annen konto
+            </button>
+        </div>
+
         <!-- DASHBOARD CONTAINER -->
         <div id="dashboard" class="hidden admin-dashboard-container">
             <header class="admin-card-header">
