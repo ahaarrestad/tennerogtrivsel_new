@@ -17,9 +17,6 @@
     - Lambda Function URL-proxy som verifiserer Google OAuth-token og kaller GitHub `repository_dispatch`
     - Knapp i admin-dashboard med spinner, statusmelding og siste vellykkede bygg-tidspunkt
 
-- [ ] **Admin-tilgangskontroll — vis «ingen tilgang» uten gyldig Google-token** ([plan](docs/superpowers/plans/2026-03-21-admin-tilgangskontroll.md)) ([spec](docs/superpowers/specs/2026-03-21-admin-tilgangskontroll-design.md))
-    - Admin-siden skal kun vises hvis brukeren har et gyldig Google OAuth-token
-    - Uten gyldig token: vis en tydelig «Ingen tilgang»-melding i stedet for admin-innhold
 
 ## Backlog
 
