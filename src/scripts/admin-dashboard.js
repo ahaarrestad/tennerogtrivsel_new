@@ -188,14 +188,9 @@ export async function enforceAccessControl(config) {
  */
 export function updateUIWithUser(user) {
     if (!user) return;
-    const loginContainer = document.getElementById('login-container');
-    const dashboard = document.getElementById('dashboard');
     const pill = document.getElementById('user-pill');
     const info = document.getElementById('nav-user-info');
 
-    if (loginContainer) loginContainer.classList.add('hidden');
-    if (dashboard) dashboard.classList.remove('hidden');
-    
     if (pill && info) {
         pill.style.display = 'flex';
         const fullName = user.name || user.email;

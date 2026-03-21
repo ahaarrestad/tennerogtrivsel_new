@@ -218,18 +218,28 @@ describe('admin-dashboard.js', () => {
     });
 
     describe('updateUIWithUser', () => {
-        it('should show dashboard and hide login when user is provided', () => {
+        it('should update nav-pill with user name and title, and not touch containers', () => {
+            // Gjør dashboard synlig og login-container skjult FØRST — bevis at updateUIWithUser ikke endrer dette
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('login-container').classList.add('hidden');
+
             updateUIWithUser({ name: 'Ola Nordmann', email: 'ola@test.no' });
-            expect(document.getElementById('login-container').classList.contains('hidden')).toBe(true);
-            expect(document.getElementById('dashboard').classList.contains('hidden')).toBe(false);
+
             expect(document.getElementById('nav-user-info').textContent).toBe('Ola');
             expect(document.getElementById('user-pill').title).toBe('Logg ut Ola Nordmann');
+            // Containere skal være uendret — showState er eneste som styrer disse
+            expect(document.getElementById('dashboard').classList.contains('hidden')).toBe(false);
+            expect(document.getElementById('login-container').classList.contains('hidden')).toBe(true);
         });
 
-        it('should use email as fallback and show first part as name', () => {
+        it('should use email as fallback and show full email as name', () => {
             updateUIWithUser({ name: '', email: 'ola@test.no' });
             expect(document.getElementById('nav-user-info').textContent).toBe('ola@test.no');
             expect(document.getElementById('user-pill').title).toBe('Logg ut ola@test.no');
+        });
+
+        it('should do nothing if user is null', () => {
+            expect(() => updateUIWithUser(null)).not.toThrow();
         });
     });
 
