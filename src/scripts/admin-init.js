@@ -83,8 +83,6 @@ async function handleAuth(userInfo = null) {
     const dashboardVisible = !document.getElementById('dashboard')?.classList.contains('hidden');
     if (!dashboardVisible) showState('loading');
 
-    updateUIWithUser(user);
-
     try {
         const result = await enforceAccessControl({
             SHEET_ID, TJENESTER_FOLDER, MELDINGER_FOLDER, TANNLEGER_FOLDER, BILDER_FOLDER
@@ -93,6 +91,8 @@ async function handleAuth(userInfo = null) {
             showState('no-access');
         } else {
             showState('dashboard');
+            window.scrollTo(0, 0);
+            updateUIWithUser(user);
             loadDashboardCounts({ SHEET_ID, TJENESTER_FOLDER, MELDINGER_FOLDER });
             showInstallPromptIfEligible();
         }
