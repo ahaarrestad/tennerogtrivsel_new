@@ -2,7 +2,7 @@
 import {
     listFiles, getFileContent, saveFile, createFile, deleteFile,
     parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
-    checkMultipleAccess, login, logout, getTannlegerRaw, updateTannlegeRow,
+    checkMultipleAccess, login, getTannlegerRaw, updateTannlegeRow,
     addTannlegeRow, getGalleriRaw, updateGalleriRow, findFileByName, getDriveImageBlob, getPrislisteRaw,
     updatePrislisteRow, updateSettingByKey, updateSettingOrder,
     getKategoriRekkefølge, updateKategoriOrder, addKategoriRekkefølge
@@ -176,9 +176,8 @@ export async function enforceAccessControl(config) {
     });
 
     if (!hasAnyAccess && ids.length > 0) {
-        console.warn("[Admin] Ingen tilgang funnet for noen moduler. Logger ut.");
-        logout();
-        window.location.href = '/?access_denied=true';
+        console.warn("[Admin] Ingen tilgang funnet for noen moduler.");
+        return false;
     }
 
     return accessMap;

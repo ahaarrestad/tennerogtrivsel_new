@@ -1786,16 +1786,18 @@ describe('admin-dashboard.js', () => {
             expect(cardTannleger.style.display).toBe('none');
         });
 
-        it('should logout and redirect if no access at all', async () => {
+        it('should return false and not call logout when no access at all', async () => {
             adminClient.checkMultipleAccess.mockResolvedValue({ 'id': false });
-            // Mock location
-            delete window.location;
-            window.location = { href: '' };
+            const result = await enforceAccessControl({ SHEET_ID: 'id' });
+            expect(result).toBe(false);
+            expect(adminClient.logout).not.toHaveBeenCalled();
+        });
 
-            await enforceAccessControl({ SHEET_ID: 'id' });
-
-            expect(adminClient.logout).toHaveBeenCalled();
-            expect(window.location.href).toContain('access_denied');
+        it('should return accessMap (truthy) when at least one resource is accessible', async () => {
+            const mockMap = { 's': true };
+            adminClient.checkMultipleAccess.mockResolvedValue(mockMap);
+            const result = await enforceAccessControl({ SHEET_ID: 's' });
+            expect(result).toEqual(mockMap);
         });
 
         it('should show bilder card when user has access to sheet (no BILDER_FOLDER configured)', async () => {
