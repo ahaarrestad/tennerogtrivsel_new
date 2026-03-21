@@ -42,6 +42,7 @@ vi.mock('../admin-dashboard.js', () => ({
     updateUIWithUser: vi.fn(),
     enforceAccessControl: vi.fn().mockResolvedValue(undefined),
     loadDashboardCounts: vi.fn().mockResolvedValue(undefined),
+    showState: vi.fn(),
     autoResizeTextarea: vi.fn(),
     saveSingleSetting: vi.fn(),
     loadMeldingerModule: vi.fn(),
@@ -118,7 +119,7 @@ import {
 } from '../admin-client.js';
 import { showConfirm } from '../admin-dialog.js';
 import { initPwaPrompt, showInstallPromptIfEligible } from '../pwa-prompt.js';
-import { updateUIWithUser, enforceAccessControl } from '../admin-dashboard.js';
+import { updateUIWithUser, enforceAccessControl, showState } from '../admin-dashboard.js';
 import { loadBilderModule } from '../admin-module-bilder.js';
 import { loadSettingsModule } from '../admin-module-settings.js';
 
@@ -132,6 +133,10 @@ function setupDOM() {
             data-defaults='{}'>
         </div>
         <div id="login-container"></div>
+        <div id="loading-container" class="hidden"></div>
+        <div id="no-access-container" class="hidden"></div>
+        <button id="no-access-switch-btn"></button>
+        <span id="nav-user-info"></span>
         <div id="dashboard" class="hidden"></div>
         <div id="module-container" class="hidden">
             <button id="breadcrumb-module"></button>
@@ -564,5 +569,143 @@ describe('admin-init openModule branches', () => {
         document.getElementById('card-tannleger').click();
 
         expect(mockReloadTannleger).toHaveBeenCalled();
+    });
+});
+
+describe('handleAuth', () => {
+    it('should show spinner and not show dashboard while enforceAccessControl is pending', async () => {
+        const mockUser = { email: 'test@test.com', name: 'Test' };
+        getStoredUser.mockReturnValue(mockUser);
+        // enforceAccessControl henger — aldri-resolvende promise
+        enforceAccessControl.mockReturnValue(new Promise(() => {}));
+
+        // Ikke await — vi vil sjekke tilstand mens det pågår
+        import('../admin-init.js');
+
+        await vi.waitFor(() => {
+            expect(showState).toHaveBeenCalledWith('loading');
+        });
+        expect(document.getElementById('dashboard').classList.contains('hidden')).toBe(true);
+    });
+
+    it('should show dashboard when enforceAccessControl returns accessMap', async () => {
+        const mockUser = { email: 'test@test.com', name: 'Test' };
+        getStoredUser.mockReturnValue(mockUser);
+        enforceAccessControl.mockResolvedValue({ 's': true });
+
+        await import('../admin-init.js');
+
+        await vi.waitFor(() => {
+            expect(showState).toHaveBeenCalledWith('dashboard');
+        });
+    });
+
+    it('should show no-access when enforceAccessControl returns false', async () => {
+        const mockUser = { email: 'test@test.com', name: 'Test' };
+        getStoredUser.mockReturnValue(mockUser);
+        enforceAccessControl.mockResolvedValue(false);
+
+        await import('../admin-init.js');
+
+        await vi.waitFor(() => {
+            expect(showState).toHaveBeenCalledWith('no-access');
+        });
+        expect(showState).not.toHaveBeenCalledWith('dashboard');
+    });
+
+    it('should show no-access when enforceAccessControl throws', async () => {
+        const mockUser = { email: 'test@test.com', name: 'Test' };
+        getStoredUser.mockReturnValue(mockUser);
+        enforceAccessControl.mockRejectedValue(new Error('network error'));
+
+        await import('../admin-init.js');
+
+        await vi.waitFor(() => {
+            expect(showState).toHaveBeenCalledWith('no-access');
+        });
+    });
+
+    it('should not call logout when enforceAccessControl returns false', async () => {
+        const mockUser = { email: 'test@test.com', name: 'Test' };
+        getStoredUser.mockReturnValue(mockUser);
+        enforceAccessControl.mockResolvedValue(false);
+
+        await import('../admin-init.js');
+
+        await vi.waitFor(() => {
+            expect(showState).toHaveBeenCalledWith('no-access');
+        });
+        expect(logout).not.toHaveBeenCalled();
+    });
+
+    it('should skip spinner if dashboard is already visible (mid-session refresh)', async () => {
+        const mockUser = { email: 'test@test.com', name: 'Test' };
+        getStoredUser.mockReturnValue(mockUser);
+        enforceAccessControl.mockResolvedValue({ 's': true });
+        // Gjør dashboard synlig
+        document.getElementById('dashboard').classList.remove('hidden');
+
+        await import('../admin-init.js');
+
+        await vi.waitFor(() => {
+            expect(showState).toHaveBeenCalledWith('dashboard');
+        });
+        // showState('loading') skal IKKE ha vært kalt
+        expect(showState).not.toHaveBeenCalledWith('loading');
+    });
+});
+
+describe('startup flow — ingen token', () => {
+    it('should show login state when no stored user and no hadRememberMe', async () => {
+        getStoredUser.mockReturnValue(null);
+        // Ingen token i localStorage
+
+        await import('../admin-init.js');
+
+        await vi.waitFor(() => {
+            expect(showState).toHaveBeenCalledWith('login');
+        });
+    });
+
+    it('should show spinner and call silentLogin when hadRememberMe', async () => {
+        localStorage.setItem('admin_google_token', 'old-token');
+        getStoredUser.mockReturnValue(null);
+
+        await import('../admin-init.js');
+
+        await vi.waitFor(() => {
+            expect(showState).toHaveBeenCalledWith('loading');
+            expect(silentLogin).toHaveBeenCalled();
+        });
+    });
+
+    it('should call logout and login when no-access-switch-btn is clicked', async () => {
+        const mockUser = { email: 'test@test.com', name: 'Test' };
+        getStoredUser.mockReturnValue(mockUser);
+        enforceAccessControl.mockResolvedValue(false);
+
+        await import('../admin-init.js');
+        await vi.waitFor(() => expect(showState).toHaveBeenCalledWith('no-access'));
+
+        document.getElementById('no-access-switch-btn').click();
+        expect(logout).toHaveBeenCalled();
+        expect(login).toHaveBeenCalled();
+    });
+
+    it('should show login when admin-auth-failed fires during silent login', async () => {
+        localStorage.setItem('admin_google_token', 'old-token');
+        getStoredUser.mockReturnValue(null);
+
+        await import('../admin-init.js');
+
+        await vi.waitFor(() => expect(silentLogin).toHaveBeenCalled());
+
+        // Simuler mislykket stille fornyelse
+        window.dispatchEvent(new Event('admin-auth-failed'));
+
+        await vi.waitFor(() => {
+            const calls = showState.mock.calls.map(c => c[0]);
+            expect(calls).toContain('login');
+        });
     });
 });
