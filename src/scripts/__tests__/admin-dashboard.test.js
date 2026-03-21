@@ -67,7 +67,7 @@ import { showAuthExpired } from '../admin-dialog.js';
 import { classifyError } from '../admin-api-retry.js';
 
 const {
-    enforceAccessControl, updateUIWithUser, autoResizeTextarea,
+    enforceAccessControl, updateUIWithUser, showState, autoResizeTextarea,
     saveSingleSetting, loadMeldingerModule, loadTjenesterModule,
     loadTannlegerModule, loadGalleriListeModule, reorderGalleriItem,
     reorderSettingItem, reorderPrislisteItem, reorderPrislisteKategori, mergeSettingsWithDefaults, formatTimestamp,
@@ -80,6 +80,8 @@ describe('admin-dashboard.js', () => {
         vi.useFakeTimers({ now: new Date('2026-02-15T12:00:00') });
         document.body.innerHTML = `
             <div id="login-container"></div>
+            <div id="loading-container" class="hidden"></div>
+            <div id="no-access-container" class="hidden"></div>
             <div id="dashboard" class="hidden"></div>
             <div id="user-pill" style="display:none"></div>
             <div id="nav-user-info"></div>
@@ -160,6 +162,58 @@ describe('admin-dashboard.js', () => {
         it('should do nothing when element is missing', () => {
             document.getElementById('breadcrumb-count').remove();
             expect(() => updateBreadcrumbCount(3)).not.toThrow();
+        });
+    });
+
+    describe('showState', () => {
+        // Sett alle fire containere synlige (ingen hidden) for å verifisere at ukjent navn ikke endrer noe
+        function setAllVisible() {
+            for (const id of ['login-container', 'loading-container', 'dashboard', 'no-access-container']) {
+                document.getElementById(id)?.classList.remove('hidden');
+            }
+        }
+
+        it('should show login-container and hide others, and reset user-pill', () => {
+            showState('login');
+            expect(document.getElementById('login-container').classList.contains('hidden')).toBe(false);
+            expect(document.getElementById('loading-container').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('dashboard').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('no-access-container').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('user-pill').style.display).toBe('none');
+        });
+
+        it('should show loading-container and hide others', () => {
+            showState('loading');
+            expect(document.getElementById('loading-container').classList.contains('hidden')).toBe(false);
+            expect(document.getElementById('login-container').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('dashboard').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('no-access-container').classList.contains('hidden')).toBe(true);
+        });
+
+        it('should show dashboard and hide others', () => {
+            showState('dashboard');
+            expect(document.getElementById('dashboard').classList.contains('hidden')).toBe(false);
+            expect(document.getElementById('login-container').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('loading-container').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('no-access-container').classList.contains('hidden')).toBe(true);
+        });
+
+        it('should show no-access-container and hide others', () => {
+            showState('no-access');
+            expect(document.getElementById('no-access-container').classList.contains('hidden')).toBe(false);
+            expect(document.getElementById('login-container').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('loading-container').classList.contains('hidden')).toBe(true);
+            expect(document.getElementById('dashboard').classList.contains('hidden')).toBe(true);
+        });
+
+        it('should do nothing for unknown state name', () => {
+            setAllVisible();
+            showState('ukjent');
+            // Ingen containere skal ha fått hidden-klassen
+            expect(document.getElementById('login-container').classList.contains('hidden')).toBe(false);
+            expect(document.getElementById('loading-container').classList.contains('hidden')).toBe(false);
+            expect(document.getElementById('dashboard').classList.contains('hidden')).toBe(false);
+            expect(document.getElementById('no-access-container').classList.contains('hidden')).toBe(false);
         });
     });
 
