@@ -135,6 +135,7 @@ function setupDOM() {
         <div id="login-container"></div>
         <div id="loading-container" class="hidden"></div>
         <div id="no-access-container" class="hidden"></div>
+        <p id="no-access-email"></p>
         <button id="no-access-switch-btn"></button>
         <span id="nav-user-info"></span>
         <div id="dashboard" class="hidden"></div>
@@ -649,6 +650,19 @@ describe('handleAuth', () => {
             expect(showState).toHaveBeenCalledWith('no-access');
         });
         expect(updateUIWithUser).not.toHaveBeenCalled();
+    });
+
+    it('should show user email in no-access-email element when enforceAccessControl returns false', async () => {
+        const mockUser = { email: 'test@test.com', name: 'Test' };
+        getStoredUser.mockReturnValue(mockUser);
+        enforceAccessControl.mockResolvedValue(false);
+
+        await import('../admin-init.js');
+
+        await vi.waitFor(() => {
+            expect(showState).toHaveBeenCalledWith('no-access');
+        });
+        expect(document.getElementById('no-access-email').textContent).toBe('test@test.com');
     });
 
     it('should skip spinner if dashboard is already visible (mid-session refresh)', async () => {
