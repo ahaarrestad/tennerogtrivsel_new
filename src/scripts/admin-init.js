@@ -88,6 +88,8 @@ async function handleAuth(userInfo = null) {
             SHEET_ID, TJENESTER_FOLDER, MELDINGER_FOLDER, TANNLEGER_FOLDER, BILDER_FOLDER
         });
         if (result === false) {
+            const emailEl = document.getElementById('no-access-email');
+            if (emailEl) emailEl.textContent = user.email || user.name || '';
             showState('no-access');
         } else {
             showState('dashboard');
