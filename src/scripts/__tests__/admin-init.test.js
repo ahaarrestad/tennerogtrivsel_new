@@ -638,6 +638,19 @@ describe('handleAuth', () => {
         expect(logout).not.toHaveBeenCalled();
     });
 
+    it('should not show user-pill when enforceAccessControl returns false', async () => {
+        const mockUser = { email: 'test@test.com', name: 'Test' };
+        getStoredUser.mockReturnValue(mockUser);
+        enforceAccessControl.mockResolvedValue(false);
+
+        await import('../admin-init.js');
+
+        await vi.waitFor(() => {
+            expect(showState).toHaveBeenCalledWith('no-access');
+        });
+        expect(updateUIWithUser).not.toHaveBeenCalled();
+    });
+
     it('should skip spinner if dashboard is already visible (mid-session refresh)', async () => {
         const mockUser = { email: 'test@test.com', name: 'Test' };
         getStoredUser.mockReturnValue(mockUser);
