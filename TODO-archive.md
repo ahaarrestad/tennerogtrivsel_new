@@ -2,6 +2,14 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Admin-tilgangskontroll — vis «ingen tilgang» uten gyldig Google-token** ([plan](docs/plans/archive/2026-03-21-admin-tilgangskontroll.md)) ([spec](docs/designs/archive/2026-03-21-admin-tilgangskontroll-design.md))
+    - `showState()` styrer fire eksklusive UI-tilstander (login/loading/dashboard/no-access)
+    - `handleAuth` viser spinner → verifiserer med `enforceAccessControl` → dashboard eller ingen-tilgang
+    - `enforceAccessControl` returnerer `false` i stedet for redirect ved ingen tilgang
+    - `updateUIWithUser` innsnevret til kun nav-pill — container-synlighet flyttes til `showState`
+    - `#loading-container` og `#no-access-container` lagt til i `admin/index.astro`
+    - 18 nye tester, 89.56%/83.07% branch coverage
+
 - [x] **Schema.org strukturerte data (JSON-LD)** ([plan](docs/superpowers/plans/2026-03-18-schema-org.md)) ([design](docs/superpowers/specs/2026-03-18-schema-org-design.md))
     - Ny `buildSchema`-utility med full TDD (24 tester, 83% branch coverage)
     - Datadriven: navn, adresse, åpningstider, geo, tjenester hentes fra settings og content-collection
