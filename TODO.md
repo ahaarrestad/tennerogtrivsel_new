@@ -33,6 +33,10 @@
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
     - Opprett GitHub Environment (f.eks. `production`) med protection rules for deploy-jobben — begrenser hvem/hva som kan trigge deploy og sikrer at secrets kun er tilgjengelige i riktig miljø
 
+- [ ] **Admin-tilgangskontroll — vis «ingen tilgang» uten gyldig Google-token**
+    - Admin-siden skal kun vises hvis brukeren har et gyldig Google OAuth-token
+    - Uten gyldig token: vis en tydelig «Ingen tilgang»-melding i stedet for admin-innhold
+
 
 ## Fullført
 
