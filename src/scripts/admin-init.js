@@ -4,7 +4,7 @@ import {
 } from './admin-client.js';
 import { showConfirm } from './admin-dialog.js';
 import { initPwaPrompt, showInstallPromptIfEligible } from './pwa-prompt.js';
-import { updateUIWithUser, enforceAccessControl, loadDashboardCounts } from './admin-dashboard.js';
+import { updateUIWithUser, enforceAccessControl, loadDashboardCounts, showState } from './admin-dashboard.js';
 import { getAdminConfig } from './admin-editor-helpers.js';
 import { loadSettingsModule } from './admin-module-settings.js';
 import { initTjenesterModule, reloadTjenester } from './admin-module-tjenester.js';
@@ -78,18 +78,27 @@ function closeModule() {
 async function handleAuth(userInfo = null) {
     const { SHEET_ID, TJENESTER_FOLDER, MELDINGER_FOLDER, TANNLEGER_FOLDER, BILDER_FOLDER } = getAdminConfig();
     const user = userInfo || getStoredUser();
-    if (user) {
-        window.scrollTo(0, 0);
-        updateUIWithUser(user);
-        await enforceAccessControl({
-            SHEET_ID,
-            TJENESTER_FOLDER,
-            MELDINGER_FOLDER,
-            TANNLEGER_FOLDER,
-            BILDER_FOLDER
+    if (!user) return;
+
+    const dashboardVisible = !document.getElementById('dashboard')?.classList.contains('hidden');
+    if (!dashboardVisible) showState('loading');
+
+    updateUIWithUser(user);
+
+    try {
+        const result = await enforceAccessControl({
+            SHEET_ID, TJENESTER_FOLDER, MELDINGER_FOLDER, TANNLEGER_FOLDER, BILDER_FOLDER
         });
-        loadDashboardCounts({ SHEET_ID, TJENESTER_FOLDER, MELDINGER_FOLDER });
-        showInstallPromptIfEligible();
+        if (result === false) {
+            showState('no-access');
+        } else {
+            showState('dashboard');
+            loadDashboardCounts({ SHEET_ID, TJENESTER_FOLDER, MELDINGER_FOLDER });
+            showInstallPromptIfEligible();
+        }
+    } catch (err) {
+        console.error("[Admin] Feil under tilgangskontroll:", err);
+        showState('no-access');
     }
 }
 
@@ -117,9 +126,12 @@ const setup = async () => {
         } else if (hadRememberMe) {
             // Token fantes i localStorage men er utløpt → prøv stille fornyelse
             setRememberMe(true);
+            showState('loading');
+            window.addEventListener('admin-auth-failed', () => showState('login'), { once: true });
             silentLogin();
+        } else {
+            showState('login');
         }
-        // Ellers: vis innloggingsskjema, ingen automatisk forsøk
 
         const loginBtn = document.getElementById('login-btn');
         if (loginBtn) loginBtn.onclick = () => {
@@ -129,6 +141,11 @@ const setup = async () => {
 
         const userPill = document.getElementById('user-pill');
         if (userPill) userPill.onclick = async () => { if (await showConfirm("Logge ut?")) { logout(); location.reload(); } };
+
+        document.getElementById('no-access-switch-btn')?.addEventListener('click', () => {
+            logout();
+            login();
+        });
 
         document.getElementById('back-to-dashboard')?.addEventListener('click', () => closeModule());
 
