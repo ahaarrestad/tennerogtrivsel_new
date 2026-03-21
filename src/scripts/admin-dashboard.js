@@ -18,20 +18,21 @@ import { smoothReplaceContent } from './admin-transition.js';
 export const ICON_EDIT = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
 export const ICON_DELETE = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
 
+const STATE_CONTAINERS = {
+    login: 'login-container',
+    loading: 'loading-container',
+    dashboard: 'dashboard',
+    'no-access': 'no-access-container',
+};
+
 /**
  * Viser én av fire eksklusive UI-tilstander og skjuler de andre.
  * Tilbakestiller user-pill ved overgang til login.
  */
 export function showState(name) {
-    const idMap = {
-        login: 'login-container',
-        loading: 'loading-container',
-        dashboard: 'dashboard',
-        'no-access': 'no-access-container',
-    };
-    const target = idMap[name];
+    const target = STATE_CONTAINERS[name];
     if (!target) return;
-    for (const id of Object.values(idMap)) {
+    for (const id of Object.values(STATE_CONTAINERS)) {
         document.getElementById(id)?.classList.toggle('hidden', id !== target);
     }
     if (name === 'login') {
