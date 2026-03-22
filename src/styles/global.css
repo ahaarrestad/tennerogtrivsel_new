@@ -167,7 +167,7 @@
         --section-py: var(--spacing-section-py);
         padding-top: var(--section-py);
         padding-bottom: var(--section-py);
-        scroll-margin-top: var(--nav-total-height, 1.5rem);
+        scroll-margin-top: var(--nav-total-height, 4rem);
         @apply relative;
     }
 
