@@ -56,4 +56,12 @@ export function initLayoutHelper() {
     }
 
     updateLayout();
+
+    // Re-scroll til hash-anker etter første layout-beregning
+    // (nettleseren kan ha scrollet til ankeret med feil scroll-margin-top)
+    const hash = window.location.hash;
+    if (hash) {
+        const target = document.querySelector(hash);
+        target?.scrollIntoView({ behavior: 'instant' });
+    }
 }

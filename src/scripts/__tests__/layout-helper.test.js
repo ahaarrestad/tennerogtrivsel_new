@@ -68,13 +68,16 @@ describe('initLayoutHelper', () => {
         expect(value).toBe('0px');
     });
 
-    it('skal kjøre recalc ved window resize', () => {
+    it('skal kjøre recalc ved window resize (via rAF)', () => {
         const main = document.createElement('main');
         document.body.appendChild(main);
 
+        // Make rAF synchronous so the scheduled updateLayout callback actually runs
+        vi.stubGlobal('requestAnimationFrame', (cb) => { cb(); return 0; });
+
         initLayoutHelper();
 
-        // Simulate a resize – updateLayout should run without throwing
+        // Simulate a resize – scheduleUpdate queues an rAF which now runs immediately
         window.dispatchEvent(new Event('resize'));
 
         const value = document.documentElement.style.getPropertyValue('--nav-total-height');
@@ -104,5 +107,86 @@ describe('initLayoutHelper', () => {
 
         const value = document.documentElement.style.getPropertyValue('--nav-total-height');
         expect(value).toBe('');
+    });
+});
+
+describe('re-scroll ved hash i URL', () => {
+    beforeEach(() => {
+        document.body.innerHTML = '';
+        document.documentElement.style.removeProperty('--nav-total-height');
+
+        // Reset location stub
+        vi.unstubAllGlobals();
+
+        // Mock MutationObserver
+        vi.stubGlobal('MutationObserver', class {
+            constructor() {}
+            observe() {}
+            disconnect() {}
+        });
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('skal scrolle til anker-element når hash matcher et element', () => {
+        vi.stubGlobal('location', { hash: '#tjenester' });
+
+        const section = document.createElement('section');
+        section.id = 'tjenester';
+        document.body.appendChild(section);
+
+        // jsdom does not implement scrollIntoView – define it so we can spy on it
+        Element.prototype.scrollIntoView = vi.fn();
+        const scrollIntoViewSpy = vi.spyOn(Element.prototype, 'scrollIntoView');
+
+        initLayoutHelper();
+
+        expect(scrollIntoViewSpy).toHaveBeenCalledOnce();
+        expect(scrollIntoViewSpy).toHaveBeenCalledWith({ behavior: 'instant' });
+
+        delete Element.prototype.scrollIntoView;
+    });
+
+    it('skal IKKE re-scrolle ved resize – kun én gang ved oppstart', async () => {
+        vi.stubGlobal('location', { hash: '#tjenester' });
+
+        const section = document.createElement('section');
+        section.id = 'tjenester';
+        document.body.appendChild(section);
+
+        Element.prototype.scrollIntoView = vi.fn();
+        const scrollIntoViewSpy = vi.spyOn(Element.prototype, 'scrollIntoView');
+
+        initLayoutHelper();
+
+        scrollIntoViewSpy.mockClear();
+
+        window.dispatchEvent(new Event('resize'));
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(scrollIntoViewSpy).not.toHaveBeenCalled();
+
+        delete Element.prototype.scrollIntoView;
+    });
+
+    it('skal ikke krasje når hash ikke matcher noe element', () => {
+        vi.stubGlobal('location', { hash: '#finnesikke' });
+
+        expect(() => initLayoutHelper()).not.toThrow();
+    });
+
+    it('skal ikke scrolle når URL ikke har hash', () => {
+        vi.stubGlobal('location', { hash: '' });
+
+        Element.prototype.scrollIntoView = vi.fn();
+        const scrollIntoViewSpy = vi.spyOn(Element.prototype, 'scrollIntoView');
+
+        initLayoutHelper();
+
+        expect(scrollIntoViewSpy).not.toHaveBeenCalled();
+
+        delete Element.prototype.scrollIntoView;
     });
 });
