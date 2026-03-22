@@ -61,7 +61,11 @@ export function initLayoutHelper() {
     // (nettleseren kan ha scrollet til ankeret med feil scroll-margin-top)
     const hash = window.location.hash;
     if (hash) {
-        const target = document.querySelector(hash);
-        target?.scrollIntoView({ behavior: 'instant' });
+        try {
+            const target = document.querySelector(hash);
+            target?.scrollIntoView({ behavior: 'instant' });
+        } catch {
+            // Ugyldig CSS-selektor i hash — ignorer
+        }
     }
 }

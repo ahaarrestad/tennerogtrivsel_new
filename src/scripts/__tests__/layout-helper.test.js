@@ -177,6 +177,11 @@ describe('re-scroll ved hash i URL', () => {
         expect(() => initLayoutHelper()).not.toThrow();
     });
 
+    it('skal ikke krasje ved ugyldig CSS-selektor i hash (f.eks. #123)', () => {
+        vi.stubGlobal('location', { hash: '#123invalid' });
+        expect(() => initLayoutHelper()).not.toThrow();
+    });
+
     it('skal ikke scrolle når URL ikke har hash', () => {
         vi.stubGlobal('location', { hash: '' });
 
