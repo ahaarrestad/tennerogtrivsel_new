@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Anker-scroll stopper for langt oppe ved navigasjon fra underside** ([plan](docs/plans/archive/2026-03-22-anker-scroll-fix.md))
+    - CSS-fallback `scroll-margin-top: var(--nav-total-height, 1.5rem)` → `4rem` i `.section-container`
+    - Re-scroll til hash-anker i `initLayoutHelper()` etter første `updateLayout()` — retter timing-race mot nettleserens native hash-scroll
+    - `try/catch` rundt `querySelector` for å håndtere ugyldig CSS-selektor i URL-fragment
+    - 5 nye tester, 100% branch coverage på `layout-helper.js`
+
 - [x] **Admin-tilgangskontroll — vis «ingen tilgang» uten gyldig Google-token** ([plan](docs/plans/archive/2026-03-21-admin-tilgangskontroll.md)) ([spec](docs/designs/archive/2026-03-21-admin-tilgangskontroll-design.md))
     - `showState()` styrer fire eksklusive UI-tilstander (login/loading/dashboard/no-access)
     - `handleAuth` viser spinner → verifiserer med `enforceAccessControl` → dashboard eller ingen-tilgang

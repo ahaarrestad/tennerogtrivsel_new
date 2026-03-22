@@ -27,11 +27,6 @@
     - Astro-endepunkter som henter fra innstillinger.json, prisliste.json, tjenester og tannleger.json
     - Samme mønster som eksisterende robots.txt.ts
 
-- [ ] **Anker-scroll stopper for langt oppe ved navigasjon fra underside** ([plan](docs/plans/2026-03-22-anker-scroll-fix.md))
-    - Navigerer man fra f.eks. tannlegersiden og klikker «Våre tjenester» eller «Kontakt oss» i menyen, scroller siden for langt opp — tittelen havner midt på skjermen i stedet for øverst
-    - Rotårsak: `--nav-total-height` ikke satt ennå når nettleseren gjør hash-scroll → fallback `1.5rem` brukes i stedet for ~80px navbar-høyde
-    - Fix: CSS-fallback `1.5rem` → `4rem` + re-scroll etter første `updateLayout()`
-
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
