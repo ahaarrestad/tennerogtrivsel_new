@@ -24,7 +24,7 @@ Endre fallback i `global.css` fra `1.5rem` til `4rem` (64px = mobil navbar-høyd
 
 I `layout-helper.js`, etter den *første* synkrone `updateLayout()`-kjøringen, sjekk om `window.location.hash` er satt. Hvis ja, scroll til elementet med `scrollIntoView({ behavior: 'instant' })`. Dette retter opp posisjonen etter at `--nav-total-height` er korrekt satt, uten synlig hopp for brukeren.
 
-Bruk et flagg (`initialScrollHandled`) for å sikre at re-scrollet kun skjer én gang ved sideoppstart — ikke ved resize eller MutationObserver-callbacks.
+Re-scroll-blokken plasseres på slutten av `initLayoutHelper()`-funksjonen og kjøres dermed kun én gang per kall. Siden `initLayoutHelper()` kalles én gang ved oppstart, er et eget flagg unødvendig. En `try/catch` rundt `querySelector` håndterer URL-fragmenter med ugyldig CSS-selektor-syntaks (f.eks. `#123`).
 
 ## Filer som endres
 
@@ -51,17 +51,17 @@ scroll-margin-top: var(--nav-total-height, 4rem);
 I `initLayoutHelper()` i `layout-helper.js`:
 
 ```js
-let initialScrollHandled = false;
-
 // Etter den synkrone updateLayout()-kallet på slutten av initLayoutHelper():
-if (!initialScrollHandled && window.location.hash) {
-    initialScrollHandled = true;
-    const target = document.querySelector(window.location.hash);
-    target?.scrollIntoView({ behavior: 'instant' });
+const hash = window.location.hash;
+if (hash) {
+    try {
+        const target = document.querySelector(hash);
+        target?.scrollIntoView({ behavior: 'instant' });
+    } catch {
+        // Ugyldig CSS-selektor i hash — ignorer
+    }
 }
 ```
-
-Flagget sikrer at logikken kun kjører ved oppstart, ikke ved resize eller MutationObserver-callbacks.
 
 ### Steg 3 — Tester
 
@@ -71,6 +71,7 @@ Nye tester i `layout-helper.test.js`:
 - Re-scroll skjer kun én gang — et kall til `scheduleUpdate()` (f.eks. resize) trigger ikke ny scroll
 - Uten hash i URL: ingen `scrollIntoView`-kall
 - Hash som ikke matcher noe element: ingen feil (null-guard)
+- Ugyldig CSS-selektor i hash (f.eks. `#123`): ingen feil (try/catch)
 
 ### Steg 4 — Manuell verifisering
 
