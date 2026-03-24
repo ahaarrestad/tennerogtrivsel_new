@@ -16,7 +16,6 @@ const SETTING_HINTS = {
     velkomstTekst: 'Forsiden — hero-avsnitt under tittel',
     // Kontakt
     phone1: 'Kontakt, footer, mobilknapp, schema.org',
-    phone2: 'Kontakt, footer',
     email: 'Kontakt, footer (kun synlig hvis showEmail = ja)',
     showEmail: 'Styrer om e-post vises i kontakt og footer',
     adresse1: 'Kontakt, footer',
