@@ -40,13 +40,6 @@ const currentYear = new Date().getFullYear();
                             {settings.phone1}
                         </a>
                     </p>
-                    {settings.phone2 && (
-                        <p>
-                            <a href={`tel:${settings.phone2?.replace(/\s+/g, '')}`} class="hover:text-white transition-colors">
-                                {settings.phone2}
-                            </a>
-                        </p>
-                    )}
 
                     {settings.showEmail === "ja" && settings.email && (
                         <p class="pt-2">
