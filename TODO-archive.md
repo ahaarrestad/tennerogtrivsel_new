@@ -2,6 +2,10 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Støtte for ett telefonnummer til klinikken** ([plan](docs/superpowers/plans/archive/2026-03-24-ett-telefonnummer.md)) ([spec](docs/superpowers/specs/archive/2026-03-24-ett-telefonnummer-design.md))
+    - Fjernet `phone2`-feltet fra hele kodebasen (innstillinger.json, getSettings.ts, sync-data.js, admin-module-settings.js, Kontakt.astro, Footer.astro)
+    - Kontakt-kort viser nå kun ett telefonnummer, footer likeså
+
 - [x] **Anker-scroll stopper for langt oppe ved navigasjon fra underside** ([plan](docs/plans/archive/2026-03-22-anker-scroll-fix.md))
     - CSS-fallback `scroll-margin-top: var(--nav-total-height, 1.5rem)` → `4rem` i `.section-container`
     - Re-scroll til hash-anker i `initLayoutHelper()` etter første `updateLayout()` — retter timing-race mot nettleserens native hash-scroll
