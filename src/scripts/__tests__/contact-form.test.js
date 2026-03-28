@@ -113,6 +113,15 @@ describe('initContactForm', () => {
         expect(HTMLDialogElement.prototype.close).not.toHaveBeenCalled();
     });
 
+    it('lukker modalen ved klikk på bakdrop (target === modal)', () => {
+        setupDOM();
+        const modal = document.getElementById('contact-modal');
+        const event = new MouseEvent('click', { bubbles: true });
+        Object.defineProperty(event, 'target', { value: modal });
+        modal.dispatchEvent(event);
+        expect(HTMLDialogElement.prototype.close).toHaveBeenCalledOnce();
+    });
+
     it('viser fallback-feilmelding når server returnerer feil uten error-felt', async () => {
         setupDOM();
         global.fetch.mockResolvedValue({
