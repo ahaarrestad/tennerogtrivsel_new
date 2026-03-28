@@ -192,7 +192,7 @@ Ny blokk i admin-dashboardet med to seksjoner:
 
 ## Seksjon 4 — Personvernerklæring
 
-`personvern.astro` får et nytt avsnitt:
+`personvern.astro` får et nytt avsnitt — **kun synlig når `kontaktskjema.json` har `aktiv: true`**:
 
 - **Hva samles inn:** navn, e-post, telefon, melding og tema
 - **Formål:** besvare henvendelser fra besøkende
@@ -200,6 +200,8 @@ Ny blokk i admin-dashboardet med to seksjoner:
 - **Lagringstid:** overføres på e-post og lagres i klinikkens e-postarkiv
 - **Databehandler:** AWS SES brukes for e-postutsending
 - **Rettigheter:** innsyn, retting, sletting og klage til Datatilsynet
+
+`personvern.astro` leser `kontaktskjema.json` ved bygg. Avsnittets eksistens i HTML er bundet til `aktiv`-feltet — ingen data vises i DOM for deaktivert skjema.
 
 ---
 
