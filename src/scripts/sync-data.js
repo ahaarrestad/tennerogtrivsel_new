@@ -628,7 +628,7 @@ export async function syncKontaktSkjema() {
             console.log('  Fane "KontaktSkjema" finnes ikke enda. Skriver tom fil.');
             fs.writeFileSync(
                 config.paths.kontaktskjemaData,
-                JSON.stringify({ aktiv: false, tittel: '', tekst: '', tema: [] })
+                JSON.stringify({ aktiv: false, tittel: '', tekst: '', tema: [] }, null, 2)
             );
             return { kontaktEpost: null };
         }
