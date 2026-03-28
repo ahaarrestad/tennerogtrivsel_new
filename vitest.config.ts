@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node', // or 'jsdom' if you need browser APIs
-    include: ['src/**/__tests__/**/*.{ts,js}'],
+    include: ['src/**/__tests__/**/*.{ts,js}', 'lambda/**/__tests__/**/*.mjs'],
     exclude: ['src/**/__tests__/test-helpers.js'],
     // workaround for astro:content
     alias: {
@@ -12,6 +12,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8', // or 'istanbul'
       reporter: ['text', 'json', 'html'],
+      exclude: ['lambda/**'],
       thresholds: {
         lines: 80, // Minimum coverage percentage for statements
         functions: 80, // Minimum coverage percentage for functions

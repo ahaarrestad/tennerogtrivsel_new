@@ -1,0 +1,11 @@
+{
+  "name": "kontakt-form-handler",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Lambda handler for kontaktskjema",
+  "main": "index.mjs",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/client-ses": "^3.0.0"
+  }
+}
