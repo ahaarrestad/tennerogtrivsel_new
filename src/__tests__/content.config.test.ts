@@ -168,6 +168,32 @@ describe('content.config.ts - Loaders', () => {
         });
     });
 
+    describe('kontaktskjema loader', () => {
+        it('returnerer standardverdier når filen ikke finnes', async () => {
+            (fs.existsSync as any).mockReturnValue(false);
+
+            const loader = (collections.kontaktskjema as any).loader;
+            const result = await loader();
+
+            expect(result).toEqual([{
+                id: 'kontaktskjema', aktiv: false, tittel: '', tekst: '', tema: []
+            }]);
+        });
+
+        it('leser data fra fil og beholder aktiv som boolsk', async () => {
+            const mockData = { aktiv: true, tittel: 'Ta kontakt', tekst: 'Svar raskt.', tema: ['Timebooking'] };
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockData));
+
+            const loader = (collections.kontaktskjema as any).loader;
+            const result = await loader();
+
+            expect(result[0]).toMatchObject({
+                id: 'kontaktskjema', aktiv: true, tittel: 'Ta kontakt', tema: ['Timebooking']
+            });
+        });
+    });
+
     describe('prisliste loader', () => {
         it('should read prisliste from new format (object with items)', async () => {
             const mockPrisliste = {
