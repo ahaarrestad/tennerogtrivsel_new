@@ -18,6 +18,10 @@ export function initContactForm() {
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
         submitBtn.disabled = true;
         submitBtn.textContent = 'Sender...';
         errorEl.hidden = true;
