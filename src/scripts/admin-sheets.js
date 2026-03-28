@@ -666,3 +666,108 @@ export async function addKategoriRekkefølge(spreadsheetId, kategori, order) {
         throw err;
     }
 }
+
+// --- KONTAKTSKJEMA ---
+
+export async function ensureKontaktSkjemaSheet(spreadsheetId) {
+    const sheetResp = await gapi.client.sheets.spreadsheets.get({
+        spreadsheetId,
+        fields: 'sheets.properties',
+    });
+    const exists = (sheetResp.result.sheets || [])
+        .some(s => s.properties.title === 'KontaktSkjema');
+    if (exists) return;
+
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        resource: { requests: [{ addSheet: { properties: { title: 'KontaktSkjema' } } }] },
+    });
+
+    await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: 'KontaktSkjema!A1:B9',
+        valueInputOption: 'RAW',
+        resource: {
+            values: [
+                ['Nøkkel', 'Verdi'],
+                ['aktiv', 'nei'],
+                ['tittel', 'Ta kontakt med oss'],
+                ['tekst', 'Vi svarer vanligvis innen én arbeidsdag.'],
+                ['kontaktEpost', ''],
+                ['tema', 'Timebooking'],
+                ['tema', 'Spørsmål om behandling'],
+                ['tema', 'Priser'],
+                ['tema', 'Annet'],
+            ],
+        },
+    });
+    console.log('[Admin] KontaktSkjema-ark opprettet med standarddata.');
+}
+
+export async function getKontaktSkjemaRaw(spreadsheetId) {
+    try {
+        const response = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'KontaktSkjema!A:B',
+            valueRenderOption: 'UNFORMATTED_VALUE',
+        });
+        const rows = response.result.values || [];
+        const dataRows = rows.slice(1);
+
+        const findField = (key) => {
+            const idx = dataRows.findIndex(r => r[0] === key);
+            return idx === -1
+                ? { rowIndex: null, value: '' }
+                : { rowIndex: idx + 2, value: String(dataRows[idx][1] ?? '') };
+        };
+
+        const tema = dataRows
+            .map((r, i) => r[0] === 'tema'
+                ? { rowIndex: i + 2, value: String(r[1] ?? '') }
+                : null)
+            .filter(Boolean);
+
+        return {
+            aktiv:        findField('aktiv'),
+            tittel:       findField('tittel'),
+            tekst:        findField('tekst'),
+            kontaktEpost: findField('kontaktEpost'),
+            tema,
+        };
+    } catch (err) {
+        console.error('[Admin] Kunne ikke hente KontaktSkjema:', err);
+        throw err;
+    }
+}
+
+export async function updateKontaktSkjemaField(spreadsheetId, rowIndex, value) {
+    try {
+        await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `KontaktSkjema!B${rowIndex}`,
+            valueInputOption: 'RAW',
+            resource: { values: [[String(value)]] },
+        });
+        console.log(`[Admin] KontaktSkjema rad ${rowIndex} oppdatert.`);
+        return true;
+    } catch (err) {
+        console.error('[Admin] Kunne ikke oppdatere KontaktSkjema-felt:', err);
+        throw err;
+    }
+}
+
+export async function addKontaktTemaRow(spreadsheetId, value) {
+    try {
+        await gapi.client.sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'KontaktSkjema!A:B',
+            valueInputOption: 'RAW',
+            resource: { values: [['tema', String(value)]] },
+        });
+        console.log('[Admin] Nytt kontaktskjema-tema lagt til.');
+        return true;
+    } catch (err) {
+        console.error('[Admin] Kunne ikke legge til tema:', err);
+        throw err;
+    }
+}

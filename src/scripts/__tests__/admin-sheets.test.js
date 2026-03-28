@@ -35,6 +35,10 @@ const {
     updatePrislisteRow,
     deletePrislisteRowPermanently,
     ensurePrislisteSheet,
+    getKontaktSkjemaRaw,
+    updateKontaktSkjemaField,
+    addKontaktTemaRow,
+    ensureKontaktSkjemaSheet,
 } = await import('../admin-sheets.js');
 
 const SHEET_ID = 'test-sheet-id';
@@ -297,6 +301,94 @@ describe('Prisliste CRUD', () => {
                     }
                 })
             );
+        });
+    });
+});
+
+describe('KontaktSkjema CRUD', () => {
+    const SHEET_ID = 'test-sheet-id';
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockSheets.spreadsheets.get.mockResolvedValue({
+            result: { sheets: [{ properties: { title: 'KontaktSkjema', sheetId: 42 } }] }
+        });
+    });
+
+    describe('getKontaktSkjemaRaw', () => {
+        it('returnerer strukturert objekt med rowIndex for hvert felt', async () => {
+            mockSheets.spreadsheets.values.get.mockResolvedValue({
+                result: {
+                    values: [
+                        ['Nøkkel', 'Verdi'],
+                        ['aktiv', 'ja'],
+                        ['tittel', 'Ta kontakt'],
+                        ['tekst', 'Svar raskt'],
+                        ['kontaktEpost', 'test@example.com'],
+                        ['tema', 'Timebooking'],
+                        ['tema', 'Priser'],
+                    ]
+                }
+            });
+            const result = await getKontaktSkjemaRaw(SHEET_ID);
+            expect(result.aktiv).toEqual({ rowIndex: 2, value: 'ja' });
+            expect(result.tittel).toEqual({ rowIndex: 3, value: 'Ta kontakt' });
+            expect(result.kontaktEpost).toEqual({ rowIndex: 5, value: 'test@example.com' });
+            expect(result.tema).toEqual([
+                { rowIndex: 6, value: 'Timebooking' },
+                { rowIndex: 7, value: 'Priser' },
+            ]);
+        });
+
+        it('returnerer tomme standardverdier ved tomt ark', async () => {
+            mockSheets.spreadsheets.values.get.mockResolvedValue({ result: { values: [] } });
+            const result = await getKontaktSkjemaRaw(SHEET_ID);
+            expect(result.aktiv).toEqual({ rowIndex: null, value: '' });
+            expect(result.tema).toEqual([]);
+        });
+    });
+
+    describe('updateKontaktSkjemaField', () => {
+        it('kaller values.update med riktig range og verdi', async () => {
+            mockSheets.spreadsheets.values.update.mockResolvedValue({});
+            await updateKontaktSkjemaField(SHEET_ID, 3, 'Ny tittel');
+            expect(mockSheets.spreadsheets.values.update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    spreadsheetId: SHEET_ID,
+                    range: 'KontaktSkjema!B3',
+                    resource: { values: [['Ny tittel']] },
+                })
+            );
+        });
+    });
+
+    describe('addKontaktTemaRow', () => {
+        it('kaller values.append med riktig tema-rad', async () => {
+            mockSheets.spreadsheets.values.append.mockResolvedValue({});
+            await addKontaktTemaRow(SHEET_ID, 'Spørsmål om priser');
+            expect(mockSheets.spreadsheets.values.append).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    spreadsheetId: SHEET_ID,
+                    range: 'KontaktSkjema!A:B',
+                    resource: { values: [['tema', 'Spørsmål om priser']] },
+                })
+            );
+        });
+    });
+
+    describe('ensureKontaktSkjemaSheet', () => {
+        it('gjør ingenting hvis arket allerede finnes', async () => {
+            await ensureKontaktSkjemaSheet(SHEET_ID);
+            expect(mockSheets.spreadsheets.batchUpdate).not.toHaveBeenCalled();
+        });
+
+        it('oppretter ark og fyller inn standarddata hvis arket mangler', async () => {
+            mockSheets.spreadsheets.get.mockResolvedValue({ result: { sheets: [] } });
+            mockSheets.spreadsheets.batchUpdate.mockResolvedValue({});
+            mockSheets.spreadsheets.values.update.mockResolvedValue({});
+            await ensureKontaktSkjemaSheet(SHEET_ID);
+            expect(mockSheets.spreadsheets.batchUpdate).toHaveBeenCalledOnce();
+            expect(mockSheets.spreadsheets.values.update).toHaveBeenCalledOnce();
         });
     });
 });
