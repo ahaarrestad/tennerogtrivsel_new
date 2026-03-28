@@ -181,6 +181,20 @@ describe('initContactForm', () => {
         expect(body.website).toBe('');
     });
 
+    it('avbryter innsending og kaller reportValidity ved ugyldig skjema', async () => {
+        setupDOM();
+        const form = document.getElementById('contact-form');
+        vi.spyOn(form, 'checkValidity').mockReturnValue(false);
+        const reportSpy = vi.spyOn(form, 'reportValidity').mockReturnValue(false);
+
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        await Promise.resolve();
+
+        expect(reportSpy).toHaveBeenCalledOnce();
+        expect(fetch).not.toHaveBeenCalled();
+        expect(document.getElementById('contact-submit-btn').disabled).toBe(false);
+    });
+
     it('gjør ingenting uten nødvendige DOM-elementer', () => {
         document.body.innerHTML = '';
         expect(() => initContactForm()).not.toThrow();
