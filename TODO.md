@@ -30,12 +30,12 @@
 - [ ] **«Husk meg» på admin-siden fungerer dårlig**
     - Innlogging huskes ikke som forventet — undersøk og fiks
 
-- [ ] **Kontaktskjema**
-    - Undersøk muligheten for et enkelt kontaktskjema med feltene: tema, navn, e-post, telefon og fritekst
-    - Tema-listen hentes fra Google Sheet (admin/properties)
-    - Mottaker-e-post konfigureres i Google Sheet (admin/properties)
-    - Sendes som e-post til konfigurert adresse
-    - Avklar: layout/plassering på siden, og backend-løsning med sikkerhetsfokus (f.eks. Lambda + SES, eller tredjepart)
+- [ ] **Kontaktskjema** ([spec](docs/superpowers/specs/2026-03-28-kontaktskjema-design.md))
+    - Modal fra kontaktsiden med feltene: tema, navn, telefon, e-post og melding
+    - Tema-liste, modal-tittel og -tekst administreres via Google Sheet + admin-blokk
+    - Mottaker-e-post i Sheets, aldri eksponert i frontend — Lambda-miljøvariabel oppdateres ved bygg
+    - AWS Lambda + SES for utsending, honeypot + rate limiting (DynamoDB) mot spam
+    - Sentrert modal (desktop) / bunnark (mobil), personvernerklæringen oppdateres
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
