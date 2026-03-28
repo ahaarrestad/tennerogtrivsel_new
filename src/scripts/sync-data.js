@@ -33,6 +33,7 @@ function getConfig() {
             galleriData: path.join(process.cwd(), 'src/content/galleri.json'),
             innstillingerData: path.join(process.cwd(), 'src/content/innstillinger.json'),
             prislisteData: path.join(process.cwd(), 'src/content/prisliste.json'),
+            kontaktskjemaData: path.join(process.cwd(), 'src/content/kontaktskjema.json'),
         },
         collections: [
             {
@@ -612,6 +613,51 @@ async function syncPrisliste() {
     }
 }
 
+export async function syncKontaktSkjema() {
+    const config = getConfig();
+    const sheets = getSheets();
+
+    console.log('Synkroniserer kontaktskjema...');
+
+    try {
+        const rows = await getOptionalSheetValues(
+            sheets, config.spreadsheetId, 'KontaktSkjema!A:B'
+        );
+
+        if (rows === null) {
+            console.log('  Fane "KontaktSkjema" finnes ikke enda. Skriver tom fil.');
+            fs.writeFileSync(
+                config.paths.kontaktskjemaData,
+                JSON.stringify({ aktiv: false, tittel: '', tekst: '', tema: [] })
+            );
+            return { kontaktEpost: null };
+        }
+
+        const dataRows = rows.slice(1);
+        const getValue = (key) =>
+            dataRows.find(r => r[0] === key)?.[1] ?? null;
+
+        const aktiv = (getValue('aktiv') || '').toLowerCase() === 'ja';
+        const tittel = String(getValue('tittel') || '');
+        const tekst  = String(getValue('tekst')  || '');
+        const kontaktEpost = String(getValue('kontaktEpost') || '');
+        const tema   = dataRows
+            .filter(r => r[0] === 'tema')
+            .map(r => String(r[1] || '').trim())
+            .filter(Boolean);
+
+        fs.writeFileSync(
+            config.paths.kontaktskjemaData,
+            JSON.stringify({ aktiv, tittel, tekst, tema }, null, 2)
+        );
+        console.log(`  Synkroniserte kontaktskjema (${tema.length} temaer, aktiv: ${aktiv}).`);
+        return { kontaktEpost: kontaktEpost || null };
+    } catch (err) {
+        console.error('Feil under synkronisering av kontaktskjema:', err.message);
+        throw err;
+    }
+}
+
 // --- KJØRER ALT ---
 
 async function runSync() {
@@ -650,6 +696,9 @@ async function runSync() {
 
         // 1b. Synkroniser prisliste fra Sheets
         await syncPrisliste();
+
+        // 1c. Synkroniser kontaktskjema fra Sheets
+        await syncKontaktSkjema();
 
         // 2. Synkroniser tannleger fra ark
         await syncTannleger();
