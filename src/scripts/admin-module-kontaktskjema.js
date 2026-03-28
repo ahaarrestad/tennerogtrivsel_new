@@ -9,7 +9,6 @@ import {
 } from './admin-editor-helpers.js';
 import {
     animateSwap, disableReorderButtons, enableReorderButtons,
-    updateReorderButtonVisibility,
 } from './admin-reorder.js';
 import { ICON_ADD, ICON_UP, ICON_DOWN, ICON_DELETE } from './admin-dashboard.js';
 import { createAuthRefresher } from './admin-api-retry.js';
