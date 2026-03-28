@@ -30,6 +30,13 @@
 - [ ] **«Husk meg» på admin-siden fungerer dårlig**
     - Innlogging huskes ikke som forventet — undersøk og fiks
 
+- [ ] **Kontaktskjema**
+    - Undersøk muligheten for et enkelt kontaktskjema med feltene: tema, navn, e-post, telefon og fritekst
+    - Tema-listen hentes fra Google Sheet (admin/properties)
+    - Mottaker-e-post konfigureres i Google Sheet (admin/properties)
+    - Sendes som e-post til konfigurert adresse
+    - Avklar: layout/plassering på siden, og backend-løsning med sikkerhetsfokus (f.eks. Lambda + SES, eller tredjepart)
+
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
