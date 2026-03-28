@@ -113,5 +113,23 @@ const prisliste = defineCollection({
     }),
 });
 
+const kontaktskjema = defineCollection({
+    loader: async () => {
+        const filePath = path.join(process.cwd(), 'src/content/kontaktskjema.json');
+        if (!fs.existsSync(filePath)) {
+            return [{ id: 'kontaktskjema', aktiv: false, tittel: '', tekst: '', tema: [] }];
+        }
+        const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        return [{ id: 'kontaktskjema', ...data }];
+    },
+    schema: z.object({
+        id: z.string(),
+        aktiv: z.boolean().default(false),
+        tittel: z.string().default(''),
+        tekst: z.string().default(''),
+        tema: z.array(z.string()).default([]),
+    }),
+});
+
 // --- 4. EKSPORT ---
-export const collections = {tjenester, meldinger, innstillinger, tannleger, galleri, prisliste};
+export const collections = {tjenester, meldinger, innstillinger, tannleger, galleri, prisliste, kontaktskjema};
