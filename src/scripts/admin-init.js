@@ -12,6 +12,7 @@ import { initMeldingerModule, reloadMeldinger } from './admin-module-meldinger.j
 import { initTannlegerModule, reloadTannleger } from './admin-module-tannleger.js';
 import { loadBilderModule } from './admin-module-bilder.js';
 import { initPrislisteModule, reloadPrisliste } from './admin-module-prisliste.js';
+import { initKontaktSkjemaModule, reloadKontaktSkjema } from './admin-module-kontaktskjema.js';
 
 function openModule(id, title) {
     window.scrollTo(0, 0);
@@ -35,6 +36,7 @@ function openModule(id, title) {
     else if (id === 'tannleger') reloadTannleger();
     else if (id === 'bilder') loadBilderModule();
     else if (id === 'prisliste') reloadPrisliste();
+    else if (id === 'kontaktskjema') reloadKontaktSkjema();
     else {
         const inner = document.getElementById('module-inner');
         if (inner) inner.innerHTML = `<p class="text-admin-muted italic">Denne modulen er under utvikling.</p>`;
@@ -113,6 +115,7 @@ const setup = async () => {
         initMeldingerModule();
         initTannlegerModule();
         initPrislisteModule();
+        initKontaktSkjemaModule();
 
         initPwaPrompt();
 
@@ -158,6 +161,7 @@ const setup = async () => {
             ['card-tannleger', 'tannleger', 'Tannlegekrakken'],
             ['card-bilder',    'bilder',    'Røntgenbildene'],
             ['card-prisliste', 'prisliste', 'Takstlista'],
+            ['card-kontaktskjema', 'kontaktskjema', 'Kontaktskjemaet'],
         ];
         for (const [cardId, moduleId, title] of cardModules) {
             const card = document.getElementById(cardId);
