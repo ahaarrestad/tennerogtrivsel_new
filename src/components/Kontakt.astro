@@ -4,6 +4,9 @@ import {getSiteSettings} from '../scripts/getSettings';
 import { getSectionClasses, type SectionVariant } from '../scripts/sectionVariant';
 import SectionHeader from './SectionHeader.astro';
 import Card from "./Card.astro";
+import { getEntry } from 'astro:content';
+import ContactButton from './ContactButton.astro';
+import ContactModal from './ContactModal.astro';
 
 import {getBusinessHours} from '../scripts/getBusinessHours';
 
@@ -17,6 +20,9 @@ const minHeight = "250px";
 const googleMapsDirectionUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 
 const businessHours = getBusinessHours(settings, ["Ta kontakt for åpningstider"]);
+
+const ksEntry = await getEntry('kontaktskjema', 'kontaktskjema');
+const ks = ksEntry?.data ?? { aktiv: false, tittel: '', tekst: '', tema: [] };
 
 interface Props { variant?: SectionVariant }
 const { variant = 'brand' } = Astro.props;
@@ -145,6 +151,13 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                 </a>
             </div>
         </div>
+
+        {ks.aktiv && (
+            <>
+                <ContactButton />
+                <ContactModal tittel={ks.tittel} tekst={ks.tekst} tema={ks.tema} />
+            </>
+        )}
 
     </div>
 </section>
