@@ -172,3 +172,46 @@ jobs:
 #          aws cloudfront create-invalidation \
 #            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }} \
 #            --paths "/*"
+
+  update-lambda:
+    needs: build
+    if: always() && needs.build.result == 'success' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+      GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+      PUBLIC_GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Read kontaktEpost from Sheets
+        id: kontakt-epost
+        run: |
+          EPOST=$(node scripts/read-kontakt-epost.mjs)
+          echo "::add-mask::$EPOST"
+          echo "value=$EPOST" >> $GITHUB_OUTPUT
+
+      - name: Update Lambda environment variables
+        run: |
+          aws lambda update-function-configuration \
+            --function-name ${{ secrets.LAMBDA_KONTAKT_ARN }} \
+            --environment "Variables={KONTAKT_MOTTAKER_EPOST=${{ steps.kontakt-epost.outputs.value }},ORIGIN_VERIFY_SECRET=${{ secrets.ORIGIN_VERIFY_SECRET }},RATE_LIMIT_TABLE=kontakt-rate-limit,AWS_NODEJS_CONNECTION_REUSE_ENABLED=1}" \
+            --region eu-west-1
+
+      - name: Wait for Lambda update to complete
+        run: |
+          aws lambda wait function-updated \
+            --function-name ${{ secrets.LAMBDA_KONTAKT_ARN }} \
+            --region eu-west-1
