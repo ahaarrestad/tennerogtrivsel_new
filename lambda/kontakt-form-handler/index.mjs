@@ -27,17 +27,6 @@ function sanitize(s, maxLen = 500) {
     return String(s || '').replace(/[\r\n]/g, ' ').substring(0, maxLen);
 }
 
-async function checkRateLimit(ip, now) {
-    const result = await dynamo.send(new GetItemCommand({
-        TableName: RATE_TABLE,
-        Key: { ip: { S: ip } },
-    }));
-    if (!result.Item) return false;
-    const count = parseInt(result.Item.count.N, 10);
-    const ttl   = parseInt(result.Item.ttl.N, 10);
-    return ttl > now && count >= MAX_PER_WINDOW;
-}
-
 async function incrementRateLimit(ip, now, existing) {
     const newCount = existing ? parseInt(existing.count.N, 10) + 1 : 1;
     await dynamo.send(new PutItemCommand({
