@@ -77,7 +77,7 @@ vi.mock('stream/promises', () => ({
 }));
 
 // Importer etter mocks
-const { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, syncPrisliste, runSync, cropToOG, escapeDriveQuery, assertSafePath } = await import('../sync-data.js');
+const { syncTannleger, syncMarkdownCollection, syncForsideBilde, syncGalleri, syncPrisliste, syncKontaktSkjema, runSync, cropToOG, escapeDriveQuery, assertSafePath } = await import('../sync-data.js');
 
 describe('sync-data.js', () => {
     let logSpy;
@@ -1285,6 +1285,77 @@ describe('sync-data.js', () => {
             const written = JSON.parse(writeCall[1]);
             expect(written.items[0].sistOppdatert).toBe('');
             expect(written.sistOppdatert).toBe('');
+        });
+    });
+
+    describe('syncKontaktSkjema', () => {
+        let writtenData;
+        const SHEET_ID = 'test-sheet-id';
+
+        beforeEach(() => {
+            writtenData = null;
+            process.env.PUBLIC_GOOGLE_SHEET_ID = SHEET_ID;
+            process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL = 'test@test.iam.gserviceaccount.com';
+            process.env.GOOGLE_PRIVATE_KEY = '-----BEGIN RSA PRIVATE KEY-----\nfake\n-----END RSA PRIVATE KEY-----';
+            vi.mocked(fs.writeFileSync).mockImplementation((_p, data) => { writtenData = JSON.parse(data); });
+        });
+
+        it('skriver korrekt JSON med aktiv=true og tema-liste', async () => {
+            mockSheets.spreadsheets.values.get.mockResolvedValue({
+                data: {
+                    values: [
+                        ['Nøkkel', 'Verdi'],
+                        ['aktiv', 'ja'],
+                        ['tittel', 'Ta kontakt'],
+                        ['tekst', 'Vi svarer raskt.'],
+                        ['kontaktEpost', 'test@example.com'],
+                        ['tema', 'Timebooking'],
+                        ['tema', 'Priser'],
+                    ]
+                }
+            });
+            const result = await syncKontaktSkjema();
+            expect(writtenData).toEqual({
+                aktiv: true,
+                tittel: 'Ta kontakt',
+                tekst: 'Vi svarer raskt.',
+                tema: ['Timebooking', 'Priser'],
+            });
+            expect(writtenData.kontaktEpost).toBeUndefined();
+            expect(result.kontaktEpost).toBe('test@example.com');
+        });
+
+        it('skriver aktiv=false når verdien er "nei"', async () => {
+            mockSheets.spreadsheets.values.get.mockResolvedValue({
+                data: { values: [['Nøkkel', 'Verdi'], ['aktiv', 'nei']] }
+            });
+            await syncKontaktSkjema();
+            expect(writtenData.aktiv).toBe(false);
+        });
+
+        it('skriver tom standardfil og returnerer null-epost når arket ikke finnes', async () => {
+            mockSheets.spreadsheets.values.get.mockRejectedValue(
+                Object.assign(new Error('Unable to parse range'), { code: 400 })
+            );
+            const result = await syncKontaktSkjema();
+            expect(writtenData).toEqual({ aktiv: false, tittel: '', tekst: '', tema: [] });
+            expect(result.kontaktEpost).toBeNull();
+        });
+
+        it('filtrerer bort tomme tema-verdier', async () => {
+            mockSheets.spreadsheets.values.get.mockResolvedValue({
+                data: {
+                    values: [
+                        ['Nøkkel', 'Verdi'],
+                        ['aktiv', 'ja'],
+                        ['tema', 'Timebooking'],
+                        ['tema', ''],
+                        ['tema', 'Priser'],
+                    ]
+                }
+            });
+            await syncKontaktSkjema();
+            expect(writtenData.tema).toEqual(['Timebooking', 'Priser']);
         });
     });
 
