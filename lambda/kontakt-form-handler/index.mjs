@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { DynamoDBClient, GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 
@@ -33,8 +34,16 @@ export function validatePayload({ tema, navn, telefon, epost, melding, website }
     return { ok: true };
 }
 
+// Fjerner alle ASCII-kontrollkarakterer (inkl. \r\n, null-bytes, DEL)
 function sanitize(s, maxLen = 500) {
-    return String(s || '').replace(/[\r\n]/g, ' ').substring(0, maxLen);
+    return String(s || '').replace(/[\x00-\x1f\x7f]/g, ' ').substring(0, maxLen);
+}
+
+// Konstant-tid sammenligning — forhindrer timing-angrep på origin-secret
+function safeCompare(a, b) {
+    const ha = createHash('sha256').update(String(a)).digest();
+    const hb = createHash('sha256').update(String(b)).digest();
+    return timingSafeEqual(ha, hb);
 }
 
 async function incrementRateLimit(ip, now, existing) {
@@ -56,10 +65,10 @@ export const handler = async (event) => {
         body: typeof body === 'string' ? body : JSON.stringify(body),
     });
 
-    // 1. Verifiser origin secret
+    // 1. Verifiser origin secret (konstant-tid for å unngå timing-angrep)
     const originHeader = event.headers?.['x-origin-verify'];
     const originSecret = process.env.ORIGIN_VERIFY_SECRET;
-    if (!originHeader || originHeader !== originSecret) {
+    if (!originHeader || !originSecret || !safeCompare(originHeader, originSecret)) {
         return { statusCode: 403, body: 'Forbidden' };
     }
 
@@ -110,7 +119,8 @@ export const handler = async (event) => {
     }
 
     // 5. Send e-post via SES
-    const { tema, navn, telefon, epost, melding } = payload;
+    const { tema, navn, telefon, melding } = payload;
+    const epost = String(payload.epost || '').trim(); // bruk trimmet versjon (validert ovenfor)
     const emailBody = [
         `Tema:    ${sanitize(tema, 200)}`,
         `Navn:    ${sanitize(navn, 100)}`,

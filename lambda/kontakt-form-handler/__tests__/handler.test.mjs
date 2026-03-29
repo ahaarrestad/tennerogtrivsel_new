@@ -18,6 +18,7 @@ vi.mock('@aws-sdk/client-ses', () => ({
 }));
 
 import { validatePayload, handler } from '../index.mjs';
+import { SendEmailCommand } from '@aws-sdk/client-ses';
 
 const validPayload = {
     tema: 'Timebooking', navn: 'Ola', telefon: '12345678',
@@ -164,5 +165,30 @@ describe('handler', () => {
         dynamoSend.mockRejectedValue(new Error('DynamoDB nede'));
         const result = await handler(makeEvent(validPayload));
         expect(result.statusCode).toBe(200);
+    });
+
+    it('fjerner kontrollkarakterer fra feltene i e-posten', async () => {
+        const payload = {
+            ...validPayload,
+            tema: 'Timebooking\x00\x1f',
+            navn: 'Ola\x0bNordmann',
+        };
+        await handler(makeEvent(payload));
+        const cmd = vi.mocked(SendEmailCommand).mock.calls[0][0];
+        // Subject skal aldri inneholde kontrollkarakterer
+        expect(cmd.Message.Subject.Data).not.toMatch(/[\x00-\x1f\x7f]/);
+        // Kroppen har gyldige \n-linjeskift, men null-bytes og andre kontrollkarakterer skal strippes
+        const body = cmd.Message.Body.Text.Data;
+        expect(body).not.toContain('\x00');
+        expect(body).not.toContain('\x0b');
+        expect(body).not.toContain('\x1f');
+    });
+
+    it('trimmer epost-adresse for og etter validering for SES-kallet', async () => {
+        const payload = { ...validPayload, epost: '  ola@example.com  ' };
+        const result = await handler(makeEvent(payload));
+        expect(result.statusCode).toBe(200);
+        const cmd = vi.mocked(SendEmailCommand).mock.calls[0][0];
+        expect(cmd.ReplyToAddresses[0]).toBe('ola@example.com');
     });
 });
