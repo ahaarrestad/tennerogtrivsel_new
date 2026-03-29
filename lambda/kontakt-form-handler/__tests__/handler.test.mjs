@@ -167,7 +167,7 @@ describe('handler', () => {
         expect(result.statusCode).toBe(200);
     });
 
-    it('fjerner kontrollkarakterer fra feltene i e-posten', async () => {
+    it('fjerner kontrollkarakterer fra enkeltlinje-felt i e-posten', async () => {
         const payload = {
             ...validPayload,
             tema: 'Timebooking\x00\x1f',
@@ -175,13 +175,26 @@ describe('handler', () => {
         };
         await handler(makeEvent(payload));
         const cmd = vi.mocked(SendEmailCommand).mock.calls[0][0];
-        // Subject skal aldri inneholde kontrollkarakterer
         expect(cmd.Message.Subject.Data).not.toMatch(/[\x00-\x1f\x7f]/);
-        // Kroppen har gyldige \n-linjeskift, men null-bytes og andre kontrollkarakterer skal strippes
         const body = cmd.Message.Body.Text.Data;
         expect(body).not.toContain('\x00');
         expect(body).not.toContain('\x0b');
         expect(body).not.toContain('\x1f');
+    });
+
+    it('saniterer melding: beholder linjeskift men fjerner farlige kontrollkarakterer', async () => {
+        const payload = {
+            ...validPayload,
+            melding: 'Linje 1\nLinje 2\r\nLinje 3\x00\x0b\x1fSluttlinje',
+        };
+        await handler(makeEvent(payload));
+        const cmd = vi.mocked(SendEmailCommand).mock.calls[0][0];
+        const body = cmd.Message.Body.Text.Data;
+        expect(body).toContain('Linje 1\nLinje 2\nLinje 3'); // \r\n normalisert, linjeskift bevart
+        expect(body).not.toContain('\x00');
+        expect(body).not.toContain('\x0b');
+        expect(body).not.toContain('\x1f');
+        expect(body).not.toContain('\r');
     });
 
     it('trimmer epost-adresse for og etter validering for SES-kallet', async () => {
