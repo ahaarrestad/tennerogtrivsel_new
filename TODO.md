@@ -36,6 +36,20 @@
     - Mottaker-e-post i Sheets, aldri eksponert i frontend — Lambda-miljøvariabel oppdateres ved bygg
     - AWS Lambda + SES for utsending, honeypot + rate limiting (DynamoDB) mot spam
     - Sentrert modal (desktop) / bunnark (mobil), personvernerklæringen oppdateres
+    - **Manuelt AWS-oppsett gjenstår** (se nedenfor) — må gjøres før feature kan merges og testes
+
+- [ ] **AWS-oppsett for kontaktskjema (manuelt — gjøres av deg)**
+    - [ ] **Lambda:** Opprett funksjon `kontakt-form-handler`, Node.js 22, reserved concurrency 5
+        - Første gangs opplasting av kode (kun nødvendig én gang — deretter håndteres dette automatisk av CI/CD):
+          `cd lambda/kontakt-form-handler && npm install --omit=dev && zip -r function.zip index.mjs node_modules/ && aws lambda update-function-code --function-name kontakt-form-handler --zip-file fileb://function.zip`
+        - Aktiver Function URL (Auth type: NONE) — kopier URL til bruk i CloudFront
+    - [ ] **IAM:** Gi Lambda-rollen tillatelse til `dynamodb:GetItem` + `dynamodb:PutItem` på `kontakt-rate-limit`-tabellen, og `ses:SendEmail`
+    - [ ] **DynamoDB:** Opprett tabell `kontakt-rate-limit`, partition key `ip` (String), TTL-attributt `ttl`, kapasitet On-demand
+    - [ ] **SES:** Verifiser domene `tennerogtrivsel.no` (DKIM-poster i DNS). Hvis kontoen er i sandbox: verifiser mottaker-e-post og søk om å gå ut av sandbox
+    - [ ] **CloudFront:** Legg til ny origin (Lambda Function URL), cache behaviour for `POST /api/kontakt` (CachingDisabled, AllViewerExceptHostHeader), og custom header `X-Origin-Verify: <secret>` på origin
+    - [ ] **GitHub Secrets:** Legg til `LAMBDA_KONTAKT_ARN` (ARN til funksjonen) og `ORIGIN_VERIFY_SECRET` (tilfeldig streng, `openssl rand -hex 32`)
+    - [ ] **Google Sheet:** Legg til fane `KontaktSkjema` med nøkler `aktiv`, `tittel`, `tekst`, `kontaktEpost` og minst én `tema`-rad
+    - [ ] **Valgfritt:** Opprett AWS Budget-varsel ved $1/mnd
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod

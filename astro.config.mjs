@@ -12,6 +12,10 @@ export default defineConfig({
                     changeOrigin: true,
                     rewrite: (path) => path.replace(/^\/tiles/, '/rastertiles/voyager'),
                 },
+                '/api/kontakt': {
+                    target: 'http://localhost:3001',
+                    changeOrigin: false,
+                },
             },
         },
     },

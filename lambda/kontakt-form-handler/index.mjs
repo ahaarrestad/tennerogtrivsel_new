@@ -4,22 +4,32 @@ import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 const dynamo = new DynamoDBClient({ region: process.env.AWS_REGION || 'eu-west-1' });
 const ses    = new SESClient({ region: process.env.SES_REGION || 'eu-west-1' });
 
-const ORIGIN_SECRET  = process.env.ORIGIN_VERIFY_SECRET;
-const MOTTAKER_EPOST = process.env.KONTAKT_MOTTAKER_EPOST;
-const SENDER_EPOST   = 'noreply@tennerogtrivsel.no';
-const RATE_TABLE     = process.env.RATE_LIMIT_TABLE || 'kontakt-rate-limit';
+const SENDER_EPOST = 'noreply@tennerogtrivsel.no';
+const RATE_TABLE   = process.env.RATE_LIMIT_TABLE || 'kontakt-rate-limit';
 const MAX_PER_WINDOW = 3;
 const WINDOW_SECONDS = 600;
 
 // Eksportert for testing
 export function validatePayload({ tema, navn, telefon, epost, melding, website } = {}) {
     if (website) return { ok: false, honeypot: true };
-    if (!String(navn || '').trim()) return { ok: false, error: 'Manglende navn' };
-    if (!String(epost || '').trim()) return { ok: false, error: 'Manglende e-post' };
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(epost))
+
+    const navnStr = String(navn || '').trim();
+    if (!navnStr) return { ok: false, error: 'Manglende navn' };
+    if (navnStr.length > 100) return { ok: false, error: 'Navn er for langt (maks 100 tegn)' };
+
+    const epostStr = String(epost || '').trim();
+    if (!epostStr) return { ok: false, error: 'Manglende e-post' };
+    if (epostStr.length > 254) return { ok: false, error: 'E-post er for lang' };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(epostStr))
         return { ok: false, error: 'Ugyldig e-postformat' };
+
+    if (telefon && String(telefon).length > 30)
+        return { ok: false, error: 'Telefonnummer er for langt' };
+    if (tema && String(tema).length > 200)
+        return { ok: false, error: 'Tema er for langt' };
     if (melding && String(melding).length > 5000)
         return { ok: false, error: 'Melding er for lang (maks 5000 tegn)' };
+
     return { ok: true };
 }
 
@@ -48,7 +58,8 @@ export const handler = async (event) => {
 
     // 1. Verifiser origin secret
     const originHeader = event.headers?.['x-origin-verify'];
-    if (!originHeader || originHeader !== ORIGIN_SECRET) {
+    const originSecret = process.env.ORIGIN_VERIFY_SECRET;
+    if (!originHeader || originHeader !== originSecret) {
         return { statusCode: 403, body: 'Forbidden' };
     }
 
@@ -65,6 +76,13 @@ export const handler = async (event) => {
     if (!validation.ok) {
         if (validation.honeypot) return json(200, { ok: true }); // stille avvisning
         return json(400, { error: validation.error });
+    }
+
+    // 3b. Sjekk at mottaker-e-post er konfigurert
+    const mottakerEpost = process.env.KONTAKT_MOTTAKER_EPOST;
+    if (!mottakerEpost) {
+        console.error('KONTAKT_MOTTAKER_EPOST er ikke konfigurert');
+        return json(500, { error: 'Tjenesten er ikke riktig konfigurert.' });
     }
 
     // 4. Rate limiting
@@ -94,10 +112,10 @@ export const handler = async (event) => {
     // 5. Send e-post via SES
     const { tema, navn, telefon, epost, melding } = payload;
     const emailBody = [
-        `Tema:    ${sanitize(tema)}`,
-        `Navn:    ${sanitize(navn)}`,
-        `Telefon: ${sanitize(telefon)}`,
-        `E-post:  ${sanitize(epost)}`,
+        `Tema:    ${sanitize(tema, 200)}`,
+        `Navn:    ${sanitize(navn, 100)}`,
+        `Telefon: ${sanitize(telefon, 30)}`,
+        `E-post:  ${sanitize(epost, 254)}`,
         '',
         String(melding || '').substring(0, 5000),
     ].join('\n');
@@ -105,10 +123,10 @@ export const handler = async (event) => {
     try {
         await ses.send(new SendEmailCommand({
             Source:           SENDER_EPOST,
-            Destination:      { ToAddresses: [MOTTAKER_EPOST] },
-            ReplyToAddresses: [sanitize(epost)],
+            Destination:      { ToAddresses: [mottakerEpost] },
+            ReplyToAddresses: [sanitize(epost, 254)],
             Message: {
-                Subject: { Data: `Kontaktskjema: ${sanitize(tema)}` },
+                Subject: { Data: `Kontaktskjema: ${sanitize(tema, 200)}` },
                 Body:    { Text: { Data: emailBody } },
             },
         }));
