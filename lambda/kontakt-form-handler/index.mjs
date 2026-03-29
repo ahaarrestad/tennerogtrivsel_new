@@ -34,9 +34,17 @@ export function validatePayload({ tema, navn, telefon, epost, melding, website }
     return { ok: true };
 }
 
-// Fjerner alle ASCII-kontrollkarakterer (inkl. \r\n, null-bytes, DEL)
+// Fjerner alle ASCII-kontrollkarakterer (inkl. \r\n, null-bytes, DEL) — for enkeltlinje-felt
 function sanitize(s, maxLen = 500) {
     return String(s || '').replace(/[\x00-\x1f\x7f]/g, ' ').substring(0, maxLen);
+}
+
+// For fritekstfeltet (melding): beholder \n (linjeskift), fjerner alt annet farlig
+function sanitizeBody(s, maxLen = 5000) {
+    return String(s || '')
+        .replace(/\r\n/g, '\n')                      // normaliser Windows-linjeskift
+        .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '') // fjern kontrollkarakterer unntatt \t og \n
+        .substring(0, maxLen);
 }
 
 // Konstant-tid sammenligning — forhindrer timing-angrep på origin-secret
@@ -127,7 +135,7 @@ export const handler = async (event) => {
         `Telefon: ${sanitize(telefon, 30)}`,
         `E-post:  ${sanitize(epost, 254)}`,
         '',
-        String(melding || '').substring(0, 5000),
+        sanitizeBody(melding),
     ].join('\n');
 
     try {
