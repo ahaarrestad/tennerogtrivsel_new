@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node src/scripts/sync-data.js && astro dev",
     "dev:nosync": "astro dev",
+    "dev:lambda": "node scripts/dev-lambda.mjs",
     "sync": "node src/scripts/sync-data.js",
     "build": "node src/scripts/sync-data.js && astro build",
     "build:ci": "astro build",
