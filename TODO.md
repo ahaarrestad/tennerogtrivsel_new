@@ -13,12 +13,21 @@
 
 ## Pågående
 
-- [ ] **«Bygg nå»-knapp i admin** ([plan](docs/superpowers/plans/2026-03-21-bygg-na-knapp.md)) ([spec](docs/superpowers/specs/2026-03-21-bygg-na-knapp-design.md))
-    - Lambda Function URL-proxy som verifiserer Google OAuth-token og kaller GitHub `repository_dispatch`
-    - Knapp i admin-dashboard med spinner, statusmelding og siste vellykkede bygg-tidspunkt
-
+- [ ] **Kontaktskjema** ([spec](docs/superpowers/specs/2026-03-28-kontaktskjema-design.md))
+  - Modal fra kontaktsiden med feltene: tema, navn, telefon, e-post og melding
+  - Tema-liste, modal-tittel og -tekst administreres via Google Sheet + admin-blokk
+  - Mottaker-e-post i Sheets, aldri eksponert i frontend — Lambda-miljøvariabel oppdateres ved bygg
+  - AWS Lambda + SES for utsending, honeypot + rate limiting (DynamoDB) mot spam
+  - Sentrert modal (desktop) / bunnark (mobil), personvernerklæringen oppdateres
+  - **Manuelt AWS-oppsett gjenstår** (se nedenfor) — må gjøres før feature kan merges og testes
 
 ## Backlog
+- [ ] **Price admin siden har dårlig layout på mobil**
+  - Når skjermen blir smal på admin siden havner tekstene oppå hverandre. Bør fikse på laoyout slik at dette ikke skjer.
+
+- [ ] **«Bygg nå»-knapp i admin** ([plan](docs/superpowers/plans/2026-03-21-bygg-na-knapp.md)) ([spec](docs/superpowers/specs/2026-03-21-bygg-na-knapp-design.md))
+  - Lambda Function URL-proxy som verifiserer Google OAuth-token og kaller GitHub `repository_dispatch`
+  - Knapp i admin-dashboard med spinner, statusmelding og siste vellykkede bygg-tidspunkt
 
 - [ ] **CloudFront produksjon — komplett oppsett med alle domener** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
 
@@ -29,14 +38,6 @@
 
 - [ ] **«Husk meg» på admin-siden fungerer dårlig**
     - Innlogging huskes ikke som forventet — undersøk og fiks
-
-- [ ] **Kontaktskjema** ([spec](docs/superpowers/specs/2026-03-28-kontaktskjema-design.md))
-    - Modal fra kontaktsiden med feltene: tema, navn, telefon, e-post og melding
-    - Tema-liste, modal-tittel og -tekst administreres via Google Sheet + admin-blokk
-    - Mottaker-e-post i Sheets, aldri eksponert i frontend — Lambda-miljøvariabel oppdateres ved bygg
-    - AWS Lambda + SES for utsending, honeypot + rate limiting (DynamoDB) mot spam
-    - Sentrert modal (desktop) / bunnark (mobil), personvernerklæringen oppdateres
-    - **Manuelt AWS-oppsett gjenstår** (se nedenfor) — må gjøres før feature kan merges og testes
 
 - [ ] **AWS-oppsett for kontaktskjema (manuelt — gjøres av deg)**
     - [ ] **Lambda:** Opprett funksjon `kontakt-form-handler`, Node.js 22, reserved concurrency 5
