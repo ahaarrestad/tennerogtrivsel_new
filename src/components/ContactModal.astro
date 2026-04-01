@@ -1,12 +1,10 @@
 ---
-// src/components/ContactModal.astro
-interface Props {
-    tittel: string;
-    tekst:  string;
-    tema:   string[];
-}
-const { tittel, tekst, tema } = Astro.props;
+import { getEntry } from 'astro:content';
+
+const ksEntry = await getEntry('kontaktskjema', 'kontaktskjema');
+const ks = ksEntry?.data ?? { aktiv: false, tittel: '', tekst: '', tema: [] };
 ---
+{ks.aktiv && (
 <dialog
     id="contact-modal"
     class="contact-modal backdrop:bg-black/50 backdrop:backdrop-blur-sm
@@ -21,8 +19,8 @@ const { tittel, tekst, tema } = Astro.props;
         <!-- Header -->
         <div class="flex items-start justify-between gap-4">
             <div>
-                <h2 class="font-heading text-xl font-black text-brand">{tittel}</h2>
-                {tekst && <p class="mt-1 text-sm text-brand-muted">{tekst}</p>}
+                <h2 class="font-heading text-xl font-black text-brand">{ks.tittel}</h2>
+                {ks.tekst && <p class="mt-1 text-sm text-brand-muted">{ks.tekst}</p>}
             </div>
             <button
                 id="close-contact-modal"
@@ -49,12 +47,12 @@ const { tittel, tekst, tema } = Astro.props;
                 aria-hidden="true"
             >
 
-            {tema.length > 0 && (
+            {ks.tema.length > 0 && (
                 <div class="flex flex-col gap-1.5">
                     <label for="contact-tema" class="text-sm font-semibold text-brand">Tema</label>
                     <select id="contact-tema" name="tema"
                             class="w-full rounded-xl border border-brand-muted/20 bg-white px-3 py-2.5 text-sm text-brand focus:outline-none focus:ring-2 focus:ring-brand/30">
-                        {tema.map(t => <option value={t}>{t}</option>)}
+                        {ks.tema.map(t => <option value={t}>{t}</option>)}
                     </select>
                 </div>
             )}
@@ -133,3 +131,5 @@ const { tittel, tekst, tema } = Astro.props;
 import { initContactForm } from '../scripts/contact-form.js';
 initContactForm();
 </script>
+
+)}

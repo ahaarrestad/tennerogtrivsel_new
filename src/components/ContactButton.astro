@@ -1,6 +1,8 @@
 ---
+import Button from "./Button.astro";
+const { class: className, variant = 'primary' } = Astro.props;
 // src/components/ContactButton.astro
 ---
-<button id="open-contact-modal" class="btn-accent px-8 py-4 text-sm font-black uppercase tracking-widest">
-    Ta kontakt
-</button>
+<Button id="open-contact-modal" variant={variant} class={`open-contact-modal ${className}`}>
+    Send melding
+</Button>

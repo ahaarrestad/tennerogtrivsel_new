@@ -14,6 +14,8 @@ import { getSiteSettings } from '../scripts/getSettings';
 import { getCollection } from 'astro:content';
 import { buildSchema } from '../scripts/buildSchema';
 
+import ContactModal from '../components/ContactModal.astro';
+
 const settings = await getSiteSettings();
 const tjenester = await getCollection('tjenester');
 const schema = buildSchema(settings, tjenester, Astro.site?.toString() ?? '');
@@ -75,6 +77,8 @@ const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).href;
 <div id="navbar-sticky-wrapper" class="sticky top-0 z-50 transition-all duration-300">
     <Navbar settings={settings} showGalleri={showGalleri} />
 </div>
+
+<ContactModal />
 
 <main id="main-content" class="flex-grow flex flex-col">
     <slot/>

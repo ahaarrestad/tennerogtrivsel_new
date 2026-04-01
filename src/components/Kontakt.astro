@@ -6,7 +6,6 @@ import SectionHeader from './SectionHeader.astro';
 import Card from "./Card.astro";
 import { getEntry } from 'astro:content';
 import ContactButton from './ContactButton.astro';
-import ContactModal from './ContactModal.astro';
 
 import {getBusinessHours} from '../scripts/getBusinessHours';
 
@@ -22,7 +21,7 @@ const googleMapsDirectionUrl = `https://www.google.com/maps/search/?api=1&query=
 const businessHours = getBusinessHours(settings, ["Ta kontakt for åpningstider"]);
 
 const ksEntry = await getEntry('kontaktskjema', 'kontaktskjema');
-const ks = ksEntry?.data ?? { aktiv: false, tittel: '', tekst: '', tema: [] };
+const kontaktskjema = ksEntry?.data ?? { aktiv: false,tittel: '', tekst: '' };
 
 interface Props { variant?: SectionVariant }
 const { variant = 'brand' } = Astro.props;
@@ -108,8 +107,8 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
             </Card>
 
             {/* E-post (hvis aktivert) */}
-            {settings.showEmail?.toLowerCase() === "ja" && (
-                    <Card index="6" title="E-post" minHeight={minHeight}>
+            {kontaktskjema.aktiv && (
+                    <Card index="6" title={kontaktskjema.tittel} minHeight={minHeight}>
                         <svg slot="icon"
                              xmlns="http://www.w3.org/2000/svg"
                              width="32"
@@ -124,7 +123,9 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                             <polyline points="22,6 12,13 2,6"></polyline>
                         </svg>
-                        <p><span set:html={formatInfoText(settings.email)}></span></p>
+                        {kontaktskjema.tekst}
+                        <p/>
+                        <ContactButton />
                     </Card>
             )}
 
@@ -151,14 +152,6 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                 </a>
             </div>
         </div>
-
-        {ks.aktiv && (
-            <>
-                <ContactButton />
-                <ContactModal tittel={ks.tittel} tekst={ks.tekst} tema={ks.tema} />
-            </>
-        )}
-
     </div>
 </section>
 
