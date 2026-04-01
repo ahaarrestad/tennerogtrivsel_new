@@ -34,6 +34,7 @@ src/content/tannleger.json
 src/content/galleri.json
 src/content/innstillinger.json
 src/content/prisliste.json
+src/content/kontaktskjema.json
 /src/content/tjenester/
 !/src/content/tjenester/.gitkeep
 /src/content/meldinger/
