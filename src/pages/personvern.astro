@@ -13,7 +13,7 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
     <section class={`section-container ${sectionBg}`}>
         <div class="section-content prose prose-brand max-w-3xl mx-auto">
             <h1 class="h2">Personvernerklæring</h1>
-            <p class="text-sm text-brand-muted">Sist oppdatert: mars 2026</p>
+            <p class="text-sm text-brand-muted">Sist oppdatert: april 2026</p>
             <p>
                 Denne personvernerklæringen gjelder for nettsiden til Tenner og Trivsel
                 (tennerogtrivsel.no, tennerogtrivsel.com og tennerogtrivsel.net) og beskriver
@@ -45,30 +45,28 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
             </p>
 
             {visKontaktPersonvern && (
-                <section aria-labelledby="kontaktskjema-personvern">
-                    <h2 id="kontaktskjema-personvern">Kontaktskjema</h2>
-                    <p>
-                        Kontaktsiden har et kontaktskjema der du kan sende oss en direkte henvendelse.
-                    </p>
-                    <table>
-                        <tbody>
-                            <tr><th scope="row">Hva samles inn</th><td>Navn, e-post, telefon, melding og tema</td></tr>
-                            <tr><th scope="row">Formål</th><td>Besvare henvendelser fra besøkende</td></tr>
-                            <tr><th scope="row">Rettslig grunnlag</th><td>Ditt samtykke (avkrysning i skjemaet)</td></tr>
-                            <tr><th scope="row">Lagringstid</th><td>Overføres på e-post og lagres i klinikkens e-postarkiv</td></tr>
-                            <tr><th scope="row">Databehandler</th><td>Amazon Web Services (SES) for e-postutsending</td></tr>
-                        </tbody>
-                    </table>
-                    <p>
-                        Du har rett til innsyn, retting og sletting av opplysningene, og du kan klage til
-                        <a
-                            href="https://www.datatilsynet.no/om-datatilsynet/kontakt-oss/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >Datatilsynet</a>.
-                        Ta kontakt med klinikken for å utøve dine rettigheter.
-                    </p>
-                </section>
+                <h2>Kontaktskjema</h2>
+                <p>
+                    Nettstedet har et kontaktskjema der du kan sende oss en direkte henvendelse.
+                </p>
+                <table>
+                    <tbody>
+                        <tr><th scope="row">Hva samles inn</th><td>Navn, e-post, telefon, melding og tema</td></tr>
+                        <tr><th scope="row">Formål</th><td>Besvare henvendelser fra besøkende</td></tr>
+                        <tr><th scope="row">Rettslig grunnlag</th><td>Ditt samtykke (avkrysning i skjemaet)</td></tr>
+                        <tr><th scope="row">Lagringstid</th><td>Overføres på e-post og lagres i klinikkens e-postarkiv</td></tr>
+                        <tr><th scope="row">Databehandler</th><td>Amazon Web Services (SES) for e-postutsending</td></tr>
+                    </tbody>
+                </table>
+                <p>
+                    Du har rett til innsyn, retting og sletting av opplysningene, og du kan klage til
+                    <a
+                        href="https://www.datatilsynet.no/om-datatilsynet/kontakt-oss/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >Datatilsynet</a>.
+                    Ta kontakt med klinikken for å utøve dine rettigheter.
+                </p>
             )}
 
             <h2>Eksterne lenker</h2>
