@@ -9,11 +9,17 @@ import {getCollection} from 'astro:content';
 import hovedBilde from '../assets/hovedbilde.png';
 import {buildImageStyle} from '../scripts/image-config.js';
 
+import ContactButton from './ContactButton.astro';
+import { getEntry } from 'astro:content';
+
 const settings = await getSiteSettings();
 
 const galleri = await getCollection('galleri');
 const forsideEntry = galleri.find(item => item.data.type === 'forsidebilde');
 const forsideStyle = buildImageStyle(forsideEntry?.data.imageConfig);
+
+const ksEntry = await getEntry('kontaktskjema', 'kontaktskjema');
+const kontaktskjema = ksEntry?.data ?? { aktiv: false };
 ---
 <section id="forside" class="section-container bg-white">
     <div class="section-content">
@@ -31,8 +37,10 @@ const forsideStyle = buildImageStyle(forsideEntry?.data.imageConfig);
 
                 <div class="hidden lg:flex flex-row flex-wrap gap-4 pt-4">
                     <TelefonKnapp variant="accent"/>
-                    <EpostKnapp variant="secondary"/>
-                    <KontaktKnapp variant="secondary"/>
+                   {kontaktskjema.aktiv && (
+                    <ContactButton />
+                   )}
+                   <KontaktKnapp />
                 </div>
             </div>
 
@@ -51,7 +59,9 @@ const forsideStyle = buildImageStyle(forsideEntry?.data.imageConfig);
 
             <div class="order-3 lg:hidden flex flex-wrap gap-4 justify-center md:justify-start w-full mt-4">
                 <TelefonKnapp/>
-                <EpostKnapp/>
+                {kontaktskjema.aktiv && (
+                    <ContactButton />
+                )}
                 <KontaktKnapp/>
             </div>
 

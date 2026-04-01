@@ -1,7 +1,7 @@
 export function initContactForm() {
     const modal     = document.getElementById('contact-modal');
     const form      = document.getElementById('contact-form');
-    const openBtn   = document.getElementById('open-contact-modal');
+    const openBtns  = document.querySelectorAll('.open-contact-modal');
     const closeBtn  = document.getElementById('close-contact-modal');
     const submitBtn = document.getElementById('contact-submit-btn');
     const successEl = document.getElementById('contact-success');
@@ -9,7 +9,9 @@ export function initContactForm() {
 
     if (!modal || !form) return;
 
-    openBtn?.addEventListener('click', () => modal.showModal());
+    openBtns.forEach(btn => {
+        btn.addEventListener('click', () => modal.showModal());
+    });
     closeBtn?.addEventListener('click', () => modal.close());
 
     modal.addEventListener('click', (e) => {
