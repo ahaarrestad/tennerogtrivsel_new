@@ -33,6 +33,10 @@
     - Astro-endepunkter som henter fra innstillinger.json, prisliste.json, tjenester og tannleger.json
     - Samme mønster som eksisterende robots.txt.ts
 
+- [ ] **Rydd opp «epost»-rester i kodebasen**
+    - Fjern alle spor etter epost-feltet som ikke lenger er aktuelt (felt, validering, tester, admin-kode, osv.)
+    - Frontend-kode er allerede ryddet — gjenstående er trolig i midtre lag (scripts, admin-moduler, Sheets-integrasjon)
+
 - [ ] **«Husk meg» på admin-siden fungerer dårlig**
     - Innlogging huskes ikke som forventet — undersøk og fiks
 
