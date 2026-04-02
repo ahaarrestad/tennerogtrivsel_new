@@ -22,6 +22,10 @@
   - **Manuelt AWS-oppsett gjenstår** (se nedenfor) — må gjøres før feature kan merges og testes
 
 ## Backlog
+- [ ] **ContactModal forbedringer**
+  - Reset modal når jeg lukker den. Nå beholder den teksten - greit nok hvis jeg ikke har sendt.... men den beholder også "har sendt" når jeg har lukket den og trykker på nytt. Det er litt rart.
+  - Plassering av modal på liten skjerm er rar. kommer alt for langt ned. Vil ha den litt lenger oppe på skjermen - luft under mao... ca sentrert mellom oppe og nede?
+
 - [ ] **«Bygg nå»-knapp i admin** ([plan](docs/superpowers/plans/2026-03-21-bygg-na-knapp.md)) ([spec](docs/superpowers/specs/2026-03-21-bygg-na-knapp-design.md))
   - Lambda Function URL-proxy som verifiserer Google OAuth-token og kaller GitHub `repository_dispatch`
   - Knapp i admin-dashboard med spinner, statusmelding og siste vellykkede bygg-tidspunkt
