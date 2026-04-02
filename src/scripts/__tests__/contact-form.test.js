@@ -6,7 +6,7 @@ import { initContactForm } from '../contact-form.js';
 
 function setupDOM({ tema = ['Timebooking', 'Priser'] } = {}) {
     document.body.innerHTML = `
-        <button id="open-contact-modal">Ta kontakt</button>
+        <button id="open-contact-modal" class="open-contact-modal">Ta kontakt</button>
         <dialog id="contact-modal">
             <button id="close-contact-modal">✕</button>
             <form id="contact-form">
@@ -155,7 +155,7 @@ describe('initContactForm', () => {
     it('sender POST med tomme felter når skjema mangler input-elementer', async () => {
         // Setter opp skjema uten felt — tvinger ?? '' -grenene i data-innsamlingen
         document.body.innerHTML = `
-            <button id="open-contact-modal">Ta kontakt</button>
+            <button id="open-contact-modal" class="open-contact-modal">Ta kontakt</button>
             <dialog id="contact-modal">
                 <button id="close-contact-modal">✕</button>
                 <form id="contact-form">
