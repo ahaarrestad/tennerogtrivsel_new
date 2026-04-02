@@ -4,7 +4,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createMockAutoSaver, mockAdminDialog, setupModuleDOM } from './test-helpers.js';
 
-vi.mock('../admin-client.js', () => ({ silentLogin: vi.fn() }));
 vi.mock('../admin-dialog.js', () => mockAdminDialog());
 vi.mock('../admin-reorder.js', () => ({
     animateSwap: vi.fn(),
@@ -21,6 +20,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
     attachToggleClick: vi.fn(),
     setToggleState: vi.fn(),
     handleSaveError: vi.fn(),
+    getRefreshAuth: vi.fn(() => () => Promise.resolve(true)),
 }));
 vi.mock('../admin-sheets.js', () => ({
     getKontaktSkjemaRaw: vi.fn(),
@@ -30,7 +30,7 @@ vi.mock('../admin-sheets.js', () => ({
     deleteSheetRow: vi.fn(),
 }));
 vi.mock('../admin-api-retry.js', () => ({
-    createAuthRefresher: vi.fn(() => () => Promise.resolve(true)),
+    withRetry: vi.fn((fn) => fn()),
 }));
 vi.mock('../admin-dashboard.js', () => ({
     ICON_ADD:    '<span>+</span>',
