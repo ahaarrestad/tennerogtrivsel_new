@@ -15,3 +15,14 @@ updates:
       dependencies:
         patterns:
           - "*" # Grupperer oppdateringer (valgfritt, men ryddig)
+
+  - package-ecosystem: "npm"
+    directory: "/lambda/kontakt-form-handler"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
+    rebase-strategy: "auto"
+    groups:
+      lambda-dependencies:
+        patterns:
+          - "*"
