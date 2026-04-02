@@ -6,15 +6,13 @@ import {
 import {
     getAdminConfig, escapeHtml, createAutoSaver,
     renderToggleHtml, attachToggleClick, setToggleState, handleSaveError,
+    getRefreshAuth,
 } from './admin-editor-helpers.js';
 import {
     animateSwap, disableReorderButtons, enableReorderButtons,
 } from './admin-reorder.js';
 import { ICON_ADD, ICON_UP, ICON_DOWN, ICON_DELETE } from './admin-dashboard.js';
-import { createAuthRefresher } from './admin-api-retry.js';
-import { silentLogin } from './admin-client.js';
-
-const refreshAuth = createAuthRefresher(silentLogin);
+import { withRetry } from './admin-api-retry.js';
 
 let _raw = null;
 
@@ -97,8 +95,7 @@ function attachEventListeners(SHEET_ID, raw) {
         const btn = document.getElementById('toggle-kontaktskjema-aktiv');
         const aktiv = btn.dataset.active === 'true';
         try {
-            await refreshAuth();
-            await updateKontaktSkjemaField(SHEET_ID, raw.aktiv.rowIndex, aktiv ? 'ja' : 'nei');
+            await withRetry(() => updateKontaktSkjemaField(SHEET_ID, raw.aktiv.rowIndex, aktiv ? 'ja' : 'nei'), { refreshAuth: getRefreshAuth() });
             showToast(aktiv ? 'Kontaktskjema aktivert' : 'Kontaktskjema deaktivert');
         } catch (err) {
             handleSaveError(err, 'aktiv');
@@ -116,8 +113,7 @@ function attachEventListeners(SHEET_ID, raw) {
         if (!el) continue;
         const saver = createAutoSaver(async () => {
             const rowIndex = parseInt(el.dataset.rowIndex, 10);
-            await refreshAuth();
-            await updateKontaktSkjemaField(SHEET_ID, rowIndex, el.value);
+            await withRetry(() => updateKontaktSkjemaField(SHEET_ID, rowIndex, el.value), { refreshAuth: getRefreshAuth() });
             showToast(`${field.label} lagret`);
         });
         el.addEventListener('input', () => saver.trigger());
@@ -128,8 +124,7 @@ function attachEventListeners(SHEET_ID, raw) {
     document.querySelectorAll('[data-tema-input]').forEach(input => {
         const saver = createAutoSaver(async () => {
             const rowIndex = parseInt(input.dataset.rowIndex, 10);
-            await refreshAuth();
-            await updateKontaktSkjemaField(SHEET_ID, rowIndex, input.value);
+            await withRetry(() => updateKontaktSkjemaField(SHEET_ID, rowIndex, input.value), { refreshAuth: getRefreshAuth() });
             showToast('Tema lagret');
         });
         input.addEventListener('input', () => saver.trigger());
@@ -145,8 +140,7 @@ function attachEventListeners(SHEET_ID, raw) {
             )?.value || 'dette temaet';
             if (await showConfirm(`Slett «${temaVerdi}»?`, { destructive: true })) {
                 try {
-                    await refreshAuth();
-                    await deleteSheetRow(SHEET_ID, 'KontaktSkjema', rowIndex);
+                    await withRetry(() => deleteSheetRow(SHEET_ID, 'KontaktSkjema', rowIndex), { refreshAuth: getRefreshAuth() });
                     showToast(`«${temaVerdi}» slettet`);
                     reloadKontaktSkjema();
                 } catch (err) {
@@ -176,10 +170,11 @@ function attachEventListeners(SHEET_ID, raw) {
 
                 disableReorderButtons(document.getElementById('tema-list'));
                 try {
-                    await refreshAuth();
                     await animateSwap(currentRow, neighborRow);
-                    await updateKontaktSkjemaField(SHEET_ID, currentRowIdx, neighborVal);
-                    await updateKontaktSkjemaField(SHEET_ID, neighborRowIdx, currentVal);
+                    await withRetry(async () => {
+                        await updateKontaktSkjemaField(SHEET_ID, currentRowIdx, neighborVal);
+                        await updateKontaktSkjemaField(SHEET_ID, neighborRowIdx, currentVal);
+                    }, { refreshAuth: getRefreshAuth() });
                     reloadKontaktSkjema();
                 } catch (err) {
                     handleSaveError(err, 'rekkefølge');
@@ -207,8 +202,7 @@ function attachEventListeners(SHEET_ID, raw) {
         const val = input.value.trim();
         if (!val) return;
         try {
-            await refreshAuth();
-            await addKontaktTemaRow(SHEET_ID, val);
+            await withRetry(() => addKontaktTemaRow(SHEET_ID, val), { refreshAuth: getRefreshAuth() });
             showToast(`«${val}» lagt til`);
             reloadKontaktSkjema();
         } catch (err) {
