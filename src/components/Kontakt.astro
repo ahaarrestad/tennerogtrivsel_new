@@ -32,7 +32,7 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
 
         <SectionHeader title={settings.kontaktTittel} intro={settings.kontaktTekst} headerBg={headerBg} sticky />
 
-        <div class={`grid grid-cols-1 ${settings.showEmail?.toLowerCase() === "ja" ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-8 mb-24 relative z-10`}>
+        <div class={`grid grid-cols-1 md:grid-cols-2 ${kontaktskjema.aktiv ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-8 mb-24 relative z-10`}>
             {/* Åpningstid-boks */}
             <Card index="0"
                   title="Åpningstider"
@@ -106,7 +106,7 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
 
             </Card>
 
-            {/* E-post (hvis aktivert) */}
+            {/* Kontaktskjema - hvis aktivert */}
             {kontaktskjema.aktiv && (
                     <Card index="6" title={kontaktskjema.tittel} minHeight={minHeight}>
                         <svg slot="icon"
@@ -123,9 +123,9 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                             <polyline points="22,6 12,13 2,6"></polyline>
                         </svg>
-                        {kontaktskjema.tekst}
-                        <p/>
-                        <ContactButton />
+                        <div slot="link" class="flex justify-center">
+                            <ContactButton />
+                        </div>
                     </Card>
             )}
 

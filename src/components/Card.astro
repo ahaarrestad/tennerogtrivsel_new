@@ -78,12 +78,14 @@ const cardStyles = {
             <slot />
         </div>
 
-        {href && (
+        {(href || Astro.slots.has('link')) && (
                 <div class="mt-6">
                     <slot name="link">
-                        <div class="card-link">
-                            Les mer <span class="ml-2 transition-transform group-hover:translate-x-1 inline-block">→</span>
-                        </div>
+                        {href && (
+                            <div class="card-link">
+                                Les mer <span class="ml-2 transition-transform group-hover:translate-x-1 inline-block">→</span>
+                            </div>
+                        )}
                     </slot>
                 </div>
         )}
