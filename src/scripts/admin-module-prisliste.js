@@ -351,13 +351,15 @@ async function loadPrislisteList(sheetId) {
                     const oppdatertTekst = formatSistOppdatert(item.sistOppdatert);
                     const borderClass = i < rows.length - 1 ? ' border-b border-brand-border/60' : '';
                     html += `
-                        <div class="group flex items-center gap-4 py-3 cursor-pointer hover:bg-brand-light/30 transition-colors -mx-2 px-2 rounded${borderClass}" onclick="this.querySelector('.edit-pris-btn').click()">
-                            <div class="flex-grow min-w-0">
-                                <span class="text-sm text-brand">${escapeHtml(item.behandling)}</span>
-                                ${oppdatertTekst ? `<span class="block text-xs text-admin-muted-light">Oppdatert: ${escapeHtml(oppdatertTekst)}</span>` : ''}
+                        <div class="group flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-3 cursor-pointer hover:bg-brand-light/30 transition-colors -mx-2 px-2 rounded${borderClass}" onclick="this.querySelector('.edit-pris-btn').click()">
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 flex-grow min-w-0">
+                                <div class="flex-grow min-w-0">
+                                    <span class="text-sm text-brand">${escapeHtml(item.behandling)}</span>
+                                    ${oppdatertTekst ? `<span class="block text-xs text-admin-muted-light">Oppdatert: ${escapeHtml(oppdatertTekst)}</span>` : ''}
+                                </div>
+                                <span class="text-sm whitespace-nowrap">${prisDisplay}</span>
                             </div>
-                            <span class="text-sm whitespace-nowrap">${prisDisplay}</span>
-                            <div class="flex items-center gap-2 shrink-0" onclick="event.stopPropagation()">
+                            <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
                                 <div class="flex flex-col gap-1">
                                     <button data-row="${item.rowIndex}" data-dir="-1" class="reorder-pris-btn admin-reorder-btn" ${isFirst ? 'hidden' : ''} title="Flytt opp">${ICON_UP}</button>
                                     <button data-row="${item.rowIndex}" data-dir="1" class="reorder-pris-btn admin-reorder-btn" ${isLast ? 'hidden' : ''} title="Flytt ned">${ICON_DOWN}</button>
