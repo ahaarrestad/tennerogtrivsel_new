@@ -1,8 +1,12 @@
 ---
 import Button from "./Button.astro";
+import { getEntry } from 'astro:content';
 const { class: className, variant = 'primary' } = Astro.props;
-// src/components/ContactButton.astro
+const ksEntry = await getEntry('kontaktskjema', 'kontaktskjema');
+const aktiv = ksEntry?.data?.aktiv ?? false;
 ---
-<Button id="open-contact-modal" variant={variant} class={`open-contact-modal ${className}`}>
+{aktiv && (
+<Button id="open-contact-modal" variant={variant} class={`open-contact-modal ${className ?? ''}`}>
     Send melding
 </Button>
+)}
