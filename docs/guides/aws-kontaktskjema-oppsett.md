@@ -70,6 +70,14 @@ Se [spec](../superpowers/specs/2026-03-28-kontaktskjema-design.md) for fullstend
    }
    ```
 
+### IAM-tillatelser for githubTestDeploy (CI/CD)
+
+CI/CD-brukeren `githubTestDeploy` trenger tilgang til å deploye Lambda-kode. Gå til **IAM → Users → githubTestDeploy → Add permissions → Attach policies** og legg til:
+
+- `AWSLambda_FullAccess`
+
+> **Merk:** En smalere inline policy (`UpdateFunctionCode`, `GetFunctionConfiguration` osv.) ble forsøkt, men `configure-aws-credentials@v6` i GitHub Actions blokkerte den konsekvent med AccessDeniedException selv med `Resource: *`. `AWSLambda_FullAccess` er samme nivå som `AmazonS3FullAccess` som allerede er i bruk for deploy. Se TODO for fremtidig opprydding.
+
 ---
 
 ## Steg 5 — CloudFront
