@@ -2,10 +2,10 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { DynamoDBClient, GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 
-const dynamo = new DynamoDBClient({ region: process.env.AWS_REGION || 'eu-west-1' });
-const ses    = new SESClient({ region: process.env.SES_REGION || 'eu-west-1' });
+const dynamo = new DynamoDBClient({ region: process.env.AWS_REGION || 'eu-north-1' });
+const ses    = new SESClient({ region: process.env.SES_REGION || 'eu-north-1' });
 
-const SENDER_EPOST = 'noreply@tennerogtrivsel.no';
+const SENDER_EPOST = 'noreply@aarrestad.com';
 const RATE_TABLE   = process.env.RATE_LIMIT_TABLE || 'kontakt-rate-limit';
 const MAX_PER_WINDOW = 3;
 const WINDOW_SECONDS = 600;
