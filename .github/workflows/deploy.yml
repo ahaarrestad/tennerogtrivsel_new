@@ -42,7 +42,7 @@ jobs:
       PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_BILDER_FOLDER_ID }}
       PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
     container:
-      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
