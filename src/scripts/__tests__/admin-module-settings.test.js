@@ -284,7 +284,7 @@ describe('loadSettingsModule', () => {
         // Click a reorder button
         reorderSettingItem.mockResolvedValue(true);
 
-        const reorderBtn = document.querySelector('.settings-reorder-btn:not(.invisible)');
+        const reorderBtn = document.querySelector('.settings-reorder-btn:not([hidden])');
         reorderBtn.click();
         await vi.waitFor(() => {
             expect(reorderSettingItem).toHaveBeenCalled();
@@ -363,7 +363,7 @@ describe('loadSettingsModule', () => {
 
         reorderSettingItem.mockResolvedValue(false);
 
-        const reorderBtn = document.querySelector('.settings-reorder-btn:not(.invisible)');
+        const reorderBtn = document.querySelector('.settings-reorder-btn:not([hidden])');
         reorderBtn.click();
         await vi.waitFor(() => {
             expect(reorderSettingItem).toHaveBeenCalled();
@@ -397,7 +397,7 @@ describe('loadSettingsModule', () => {
 
         reorderSettingItem.mockRejectedValue(new Error('network error'));
 
-        const reorderBtn = document.querySelector('.settings-reorder-btn:not(.invisible)');
+        const reorderBtn = document.querySelector('.settings-reorder-btn:not([hidden])');
         reorderBtn.click();
         await vi.waitFor(() => {
             expect(reorderSettingItem).toHaveBeenCalled();

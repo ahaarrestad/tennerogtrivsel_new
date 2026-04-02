@@ -774,16 +774,16 @@ describe('admin-dashboard.js', () => {
             await loadTjenesterModule('folder-id', vi.fn(), vi.fn(), vi.fn(), vi.fn());
 
             const reorderBtns = document.querySelectorAll('.reorder-tjeneste-btn');
-            // First service: up invisible, down visible
+            // First service: up hidden, down visible
             const firstUp = reorderBtns[0]; // dir=-1
             const firstDown = reorderBtns[1]; // dir=1
-            expect(firstUp.classList.contains('invisible')).toBe(true);
-            expect(firstDown.classList.contains('invisible')).toBe(false);
-            // Last service: up visible, down invisible
+            expect(firstUp.hidden).toBe(true);
+            expect(firstDown.hidden).toBe(false);
+            // Last service: up visible, down hidden
             const lastUp = reorderBtns[2]; // dir=-1
             const lastDown = reorderBtns[3]; // dir=1
-            expect(lastUp.classList.contains('invisible')).toBe(false);
-            expect(lastDown.classList.contains('invisible')).toBe(true);
+            expect(lastUp.hidden).toBe(false);
+            expect(lastDown.hidden).toBe(true);
         });
 
         it('should call onReorder when reorder button is clicked', async () => {
@@ -1191,7 +1191,7 @@ describe('admin-dashboard.js', () => {
 
             const reorderBtns = document.querySelectorAll('.reorder-btn');
             // Find the visible down-button for first item
-            const downBtn = Array.from(reorderBtns).find(btn => btn.dataset.dir === '1' && !btn.classList.contains('invisible'));
+            const downBtn = Array.from(reorderBtns).find(btn => btn.dataset.dir === '1' && !btn.hidden);
             if (downBtn) {
                 downBtn.click();
                 expect(onReorder).toHaveBeenCalledWith(2, 1);
@@ -1208,10 +1208,10 @@ describe('admin-dashboard.js', () => {
 
             const container = document.getElementById('galleri-liste-container');
             const cards = container.querySelectorAll('.admin-card-interactive');
-            // First card (forsidebilde) should have invisible reorder buttons
+            // First card (forsidebilde) should have hidden reorder buttons
             const forsideReorderBtns = cards[0].querySelectorAll('.reorder-btn');
             forsideReorderBtns.forEach(btn => {
-                expect(btn.classList.contains('invisible')).toBe(true);
+                expect(btn.hidden).toBe(true);
             });
         });
 

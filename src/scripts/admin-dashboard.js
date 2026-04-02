@@ -512,8 +512,8 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
                         </div>
                         <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                             <div class="flex flex-col gap-1">
-                                <button data-id="${s.driveId}" data-dir="-1" class="reorder-tjeneste-btn admin-icon-btn-reorder ${isFirst ? 'invisible' : ''}" title="Flytt opp">${ICON_UP}</button>
-                                <button data-id="${s.driveId}" data-dir="1" class="reorder-tjeneste-btn admin-icon-btn-reorder ${isLast ? 'invisible' : ''}" title="Flytt ned">${ICON_DOWN}</button>
+                                <button data-id="${s.driveId}" data-dir="-1" class="reorder-tjeneste-btn admin-reorder-btn" ${isFirst ? 'hidden' : ''} title="Flytt opp">${ICON_UP}</button>
+                                <button data-id="${s.driveId}" data-dir="1" class="reorder-tjeneste-btn admin-reorder-btn" ${isLast ? 'hidden' : ''} title="Flytt ned">${ICON_DOWN}</button>
                             </div>
                             <button data-id="${s.driveId}" data-name="${s.name}" class="edit-btn admin-icon-btn" title="Rediger">${ICON_EDIT}</button>
                             <button data-id="${s.driveId}" data-name="${s.name}" class="delete-btn admin-icon-btn-danger" title="Slett">${ICON_DELETE}</button>
@@ -735,8 +735,8 @@ export async function loadGalleriListeModule(sheetId, onEdit, onDelete, onReorde
                         </div>
                         <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                             <div class="flex flex-col gap-1">
-                                <button data-row="${img.rowIndex}" data-dir="-1" class="reorder-btn admin-icon-btn-reorder ${isFirst || isSpecial ? 'invisible' : ''}" title="Flytt opp">${ICON_UP}</button>
-                                <button data-row="${img.rowIndex}" data-dir="1" class="reorder-btn admin-icon-btn-reorder ${isLast || isSpecial ? 'invisible' : ''}" title="Flytt ned">${ICON_DOWN}</button>
+                                <button data-row="${img.rowIndex}" data-dir="-1" class="reorder-btn admin-reorder-btn" ${isFirst || isSpecial ? 'hidden' : ''} title="Flytt opp">${ICON_UP}</button>
+                                <button data-row="${img.rowIndex}" data-dir="1" class="reorder-btn admin-reorder-btn" ${isLast || isSpecial ? 'hidden' : ''} title="Flytt ned">${ICON_DOWN}</button>
                             </div>
                             <button data-row="${img.rowIndex}" data-title="${img.title}" class="edit-galleri-btn admin-icon-btn" title="Rediger">${ICON_EDIT}</button>
                             <button data-row="${img.rowIndex}" data-title="${img.title}" class="delete-galleri-btn admin-icon-btn-danger" title="Slett">${ICON_DELETE}</button>

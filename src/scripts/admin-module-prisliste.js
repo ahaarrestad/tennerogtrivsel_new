@@ -332,8 +332,8 @@ async function loadPrislisteList(sheetId) {
                     <div class="kategori-header px-6 py-4 border-b border-brand-border/60 flex items-center justify-between cursor-pointer select-none">
                         <div class="flex items-center gap-2">
                             <div class="flex flex-col gap-1">
-                                <button data-kategori="${escapeHtml(kategori)}" data-dir="-1" class="reorder-kategori-btn admin-icon-btn-reorder ${isFirstKat ? 'invisible' : ''}" title="Flytt kategori opp">${ICON_UP}</button>
-                                <button data-kategori="${escapeHtml(kategori)}" data-dir="1" class="reorder-kategori-btn admin-icon-btn-reorder ${isLastKat ? 'invisible' : ''}" title="Flytt kategori ned">${ICON_DOWN}</button>
+                                <button data-kategori="${escapeHtml(kategori)}" data-dir="-1" class="reorder-kategori-btn admin-reorder-btn" ${isFirstKat ? 'hidden' : ''} title="Flytt kategori opp">${ICON_UP}</button>
+                                <button data-kategori="${escapeHtml(kategori)}" data-dir="1" class="reorder-kategori-btn admin-reorder-btn" ${isLastKat ? 'hidden' : ''} title="Flytt kategori ned">${ICON_DOWN}</button>
                             </div>
                             ${ICON_CHEVRON_DOWN}
                             <h3 class="font-heading font-bold text-xl text-brand">${escapeHtml(kategori)}</h3>
@@ -359,8 +359,8 @@ async function loadPrislisteList(sheetId) {
                             <span class="text-sm whitespace-nowrap">${prisDisplay}</span>
                             <div class="flex items-center gap-2 shrink-0" onclick="event.stopPropagation()">
                                 <div class="flex flex-col gap-1">
-                                    <button data-row="${item.rowIndex}" data-dir="-1" class="reorder-pris-btn admin-icon-btn-reorder ${isFirst ? 'invisible' : ''}" title="Flytt opp">${ICON_UP}</button>
-                                    <button data-row="${item.rowIndex}" data-dir="1" class="reorder-pris-btn admin-icon-btn-reorder ${isLast ? 'invisible' : ''}" title="Flytt ned">${ICON_DOWN}</button>
+                                    <button data-row="${item.rowIndex}" data-dir="-1" class="reorder-pris-btn admin-reorder-btn" ${isFirst ? 'hidden' : ''} title="Flytt opp">${ICON_UP}</button>
+                                    <button data-row="${item.rowIndex}" data-dir="1" class="reorder-pris-btn admin-reorder-btn" ${isLast ? 'hidden' : ''} title="Flytt ned">${ICON_DOWN}</button>
                                 </div>
                                 <button data-row="${item.rowIndex}" data-name="${escapeHtml(item.behandling)}" class="edit-pris-btn admin-icon-btn group/btn" title="Rediger">${ICON_EDIT}</button>
                                 <button data-row="${item.rowIndex}" data-name="${escapeHtml(item.behandling)}" class="delete-pris-btn admin-icon-btn-danger group/btn" title="Slett">${ICON_DELETE}</button>

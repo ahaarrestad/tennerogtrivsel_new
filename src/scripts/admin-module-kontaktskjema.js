@@ -168,17 +168,25 @@ function attachEventListeners(SHEET_ID, raw) {
                 const currentVal     = currentInput.value;
                 const neighborVal    = neighborInput.value;
 
-                disableReorderButtons(document.getElementById('tema-list'));
+                const temaList = document.getElementById('tema-list');
+                disableReorderButtons(temaList, '.admin-reorder-btn');
                 try {
                     await animateSwap(currentRow, neighborRow);
                     await withRetry(async () => {
                         await updateKontaktSkjemaField(SHEET_ID, currentRowIdx, neighborVal);
                         await updateKontaktSkjemaField(SHEET_ID, neighborRowIdx, currentVal);
                     }, { refreshAuth: getRefreshAuth() });
-                    reloadKontaktSkjema();
+                    enableReorderButtons(temaList, '.admin-reorder-btn');
+                    const rows = [...temaList.querySelectorAll('[data-tema-row]')];
+                    rows.forEach((row, idx) => {
+                        const upBtn = row.querySelector('[data-direction="up"]');
+                        const downBtn = row.querySelector('[data-direction="down"]');
+                        if (upBtn) upBtn.hidden = idx === 0;
+                        if (downBtn) downBtn.hidden = idx === rows.length - 1;
+                    });
                 } catch (err) {
                     handleSaveError(err, 'rekkefølge');
-                    enableReorderButtons(document.getElementById('tema-list'));
+                    enableReorderButtons(temaList, '.admin-reorder-btn');
                 }
             });
         });
