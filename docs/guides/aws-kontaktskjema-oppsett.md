@@ -123,7 +123,47 @@ Gå til **GitHub → repo → Settings → Secrets and variables → Actions** o
 
 ---
 
-## Steg 8 — AWS Budget (valgfritt)
+## Steg 8 — SES identity policy (begrens hvem som kan sende)
+
+Som standard kan alle IAM-brukere/-roller i kontoen med `ses:SendEmail` sende fra den verifiserte identiteten. En ressursbasert policy på selve SES-identiteten begrenser dette til kun Lambda-rollen.
+
+1. Hent konto-ID og rolle-ARN:
+   ```bash
+   aws sts get-caller-identity --query Account --output text
+   aws lambda get-function-configuration --function-name kontakt-form-handler \
+     --query Role --output text
+   ```
+
+2. Gå til **SES → Verified identities → velg `aarrestad.com`**
+3. Fanen **Authorization → Create policy**
+4. Velg **Custom policy** og lim inn:
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Sid": "AllowOnlyKontaktLambda",
+         "Effect": "Allow",
+         "Principal": {
+           "AWS": "LAMBDA_ROLE_ARN"
+         },
+         "Action": [
+           "ses:SendEmail",
+           "ses:SendRawEmail"
+         ],
+         "Resource": "arn:aws:ses:eu-north-1:ACCOUNT_ID:identity/aarrestad.com"
+       }
+     ]
+   }
+   ```
+   Bytt ut `LAMBDA_ROLE_ARN` og `ACCOUNT_ID` med verdiene fra steg 1.
+5. Klikk **Create policy**
+
+> **Obs:** Etter at denne policyen er satt, vil andre IAM-brukere/-roller i kontoen få `Access Denied` ved forsøk på å sende fra `aarrestad.com`, selv om de har `ses:SendEmail` i sin IAM-policy.
+
+---
+
+## Steg 9 — AWS Budget (valgfritt)
 
 1. Gå til **AWS Billing → Budgets → Create budget**
 2. Velg **Cost budget**, sett beløp til `$1`
