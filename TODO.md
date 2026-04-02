@@ -37,6 +37,11 @@
     - Fjern alle spor etter epost-feltet som ikke lenger er aktuelt (felt, validering, tester, admin-kode, osv.)
     - Frontend-kode er allerede ryddet — gjenstående er trolig i midtre lag (scripts, admin-moduler, Sheets-integrasjon)
 
+- [ ] **Stram inn IAM-tillatelser for githubTestDeploy**
+    - Brukeren har i dag `AWSLambda_FullAccess` og `AmazonS3FullAccess` — bytt ut med smale inline policies
+    - Lambda: kun `UpdateFunctionCode`, `UpdateFunctionConfiguration`, `GetFunction`, `GetFunctionConfiguration` på `kontakt-form-handler`
+    - S3: kun nødvendige actions på de aktuelle bøttene
+
 - [ ] **«Husk meg» på admin-siden fungerer dårlig**
     - Innlogging huskes ikke som forventet — undersøk og fiks
 
