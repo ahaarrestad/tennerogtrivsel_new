@@ -78,7 +78,7 @@ export function updateReorderButtonVisibility(items, buttonSelector) {
     arr.forEach((item, idx) => {
         const upBtn = item.querySelector(`${buttonSelector}[data-dir="-1"]`);
         const downBtn = item.querySelector(`${buttonSelector}[data-dir="1"]`);
-        if (upBtn) upBtn.classList.toggle('invisible', idx === 0);
-        if (downBtn) downBtn.classList.toggle('invisible', idx === arr.length - 1);
+        if (upBtn) upBtn.hidden = idx === 0;
+        if (downBtn) downBtn.hidden = idx === arr.length - 1;
     });
 }

@@ -607,9 +607,8 @@
         @apply min-w-[44px] min-h-[44px] flex items-center justify-center
                p-2.5 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all;
     }
-    .admin-icon-btn-reorder {
-        @apply min-w-[44px] min-h-[44px] flex items-center justify-center
-               p-1.5 rounded-lg bg-admin-hover text-admin-muted-light hover:bg-brand hover:text-white transition-all;
+    .admin-reorder-btn {
+        @apply cursor-pointer text-admin-muted-light hover:text-brand transition-colors p-1;
     }
 
     /* SKELETON LOADERS */

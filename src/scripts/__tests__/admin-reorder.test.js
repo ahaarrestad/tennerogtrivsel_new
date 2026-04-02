@@ -201,14 +201,14 @@ describe('updateReorderButtonVisibility', () => {
         const items = document.querySelectorAll('.item');
         updateReorderButtonVisibility(items, '.reorder-btn');
 
-        // First: up invisible, down visible
-        expect(items[0].querySelector('[data-dir="-1"]').classList.contains('invisible')).toBe(true);
-        expect(items[0].querySelector('[data-dir="1"]').classList.contains('invisible')).toBe(false);
+        // First: up hidden, down visible
+        expect(items[0].querySelector('[data-dir="-1"]').hidden).toBe(true);
+        expect(items[0].querySelector('[data-dir="1"]').hidden).toBe(false);
         // Middle: both visible
-        expect(items[1].querySelector('[data-dir="-1"]').classList.contains('invisible')).toBe(false);
-        expect(items[1].querySelector('[data-dir="1"]').classList.contains('invisible')).toBe(false);
-        // Last: up visible, down invisible
-        expect(items[2].querySelector('[data-dir="-1"]').classList.contains('invisible')).toBe(false);
-        expect(items[2].querySelector('[data-dir="1"]').classList.contains('invisible')).toBe(true);
+        expect(items[1].querySelector('[data-dir="-1"]').hidden).toBe(false);
+        expect(items[1].querySelector('[data-dir="1"]').hidden).toBe(false);
+        // Last: up visible, down hidden
+        expect(items[2].querySelector('[data-dir="-1"]').hidden).toBe(false);
+        expect(items[2].querySelector('[data-dir="1"]').hidden).toBe(true);
     });
 });

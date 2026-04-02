@@ -853,8 +853,8 @@ describe('loadPrislisteList - sorting and reorder buttons', () => {
         await new Promise(r => setTimeout(r, 0));
 
         const upBtns = document.querySelectorAll('.reorder-pris-btn[data-dir="-1"]');
-        expect(upBtns[0].classList.contains('invisible')).toBe(true);
-        expect(upBtns[1].classList.contains('invisible')).toBe(false);
+        expect(upBtns[0].hidden).toBe(true);
+        expect(upBtns[1].hidden).toBe(false);
     });
 
     it('should make last item down-button invisible', async () => {
@@ -866,8 +866,8 @@ describe('loadPrislisteList - sorting and reorder buttons', () => {
         await new Promise(r => setTimeout(r, 0));
 
         const downBtns = document.querySelectorAll('.reorder-pris-btn[data-dir="1"]');
-        expect(downBtns[0].classList.contains('invisible')).toBe(false);
-        expect(downBtns[1].classList.contains('invisible')).toBe(true);
+        expect(downBtns[0].hidden).toBe(false);
+        expect(downBtns[1].hidden).toBe(true);
     });
 
     it('should optimistically swap DOM elements on reorder click without full reload', async () => {
