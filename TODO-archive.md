@@ -2,6 +2,15 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **AWS-oppsett for kontaktskjema (manuelt)**
+    - Lambda opprettet, kode lastet opp, Function URL aktivert
+    - IAM inline policy for DynamoDB og SES lagt til
+    - DynamoDB-tabell `kontakt-rate-limit` opprettet med TTL
+    - SES-domene verifisert, sending bekreftet fungerende
+    - CloudFront origin og behavior for `/api/kontakt` konfigurert
+    - GitHub Secrets `LAMBDA_KONTAKT_ARN` og `ORIGIN_VERIFY_SECRET` lagt til
+    - Google Sheet `KontaktSkjema`-fane opprettet
+
 - [x] **Støtte for ett telefonnummer til klinikken** ([plan](docs/superpowers/plans/archive/2026-03-24-ett-telefonnummer.md)) ([spec](docs/superpowers/specs/archive/2026-03-24-ett-telefonnummer-design.md))
     - Fjernet `phone2`-feltet fra hele kodebasen (innstillinger.json, getSettings.ts, sync-data.js, admin-module-settings.js, Kontakt.astro, Footer.astro)
     - Kontakt-kort viser nå kun ett telefonnummer, footer likeså
