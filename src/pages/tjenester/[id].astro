@@ -3,6 +3,7 @@ import {getCollection, render} from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import TelefonKnapp from "../../components/TelefonKnapp.astro";
 import ContactButton from "../../components/ContactButton.astro";
+import KontaktKnapp from "../../components/KontaktKnapp.astro";
 import { slugify } from '../../scripts/slugify';
 
 // 1. Generer stier for alle tjenestene
@@ -64,6 +65,7 @@ const currentSlug = slugify(entry.data.title);
                                 <TelefonKnapp variant="accent"/>
                                 <ContactButton variant="accent"/>
                             </div>
+                            <KontaktKnapp class="w-full"/>
                         </div>
                     </aside>
                 </div>
