@@ -5,8 +5,6 @@ const baseSettings: Record<string, string> = {
     siteTitle: 'Tenner og Trivsel',
     siteDescription: 'Din tannklinikk',
     phone1: '51 84 34 40',
-    email: 'post@tennerogtrivsel.no',
-    showEmail: 'ja',
     adresse1: 'Hillevågsveien 11',
     adresse2: '4011 Stavanger',
     latitude: '58.9690',
@@ -48,18 +46,6 @@ describe('buildSchema – toppnivå', () => {
     it('utelater url når siteUrl er tom', () => {
         const schema = buildSchema(baseSettings, [], '');
         expect(schema).not.toHaveProperty('url');
-    });
-});
-
-describe('buildSchema – email', () => {
-    it('inkluderer email når showEmail === "ja"', () => {
-        const schema = buildSchema(baseSettings, [], '');
-        expect(schema['email']).toBe('post@tennerogtrivsel.no');
-    });
-
-    it('utelater email når showEmail !== "ja"', () => {
-        const schema = buildSchema({ ...baseSettings, showEmail: 'nei' }, [], '');
-        expect(schema).not.toHaveProperty('email');
     });
 });
 

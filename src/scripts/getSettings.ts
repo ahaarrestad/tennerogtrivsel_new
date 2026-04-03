@@ -3,8 +3,6 @@ import {getCollection} from 'astro:content';
 
 export const HARD_DEFAULTS: Record<string, string> = {
     phone1: "51 52 96 18",
-    email: "resepsjon@tennerogtrivsel.no",
-    showEmail: "nei",
     adresse1: "Armauer Hansens vei 11",
     adresse2: "4011 Stavanger",
     velkomstTittel1: "Tannhelse i",
