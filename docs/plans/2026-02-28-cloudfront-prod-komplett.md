@@ -1,6 +1,20 @@
 # Plan: CloudFront produksjon — komplett oppsett med alle domener
 
-> **Status: PÅGÅENDE** — Verifisert 2026-03-01. Fase 1 mangler kun Response Headers Policy. Fase 2 klar i kode (utkommentert, bucket i Stockholm). Fase 3 ✅ ferdig — alle 6 domener, OAuth, redirect-buckets slettet. **Go-live krever:** (1) Response Headers Policy, (2) avkommenter prod-deploy i deploy.yml + region→eu-north-1, (3) deploy.
+> **Status: KLAR FOR GO-LIVE** — Oppdatert 2026-04-03. Infrastruktur ferdig, kontaktskjema ferdig på test. Gjenstående: Response Headers Policy, `/api/kontakt`-behavior på prod-distribusjon, avkommenter prod-deploy i deploy.yml, URL-redirects.
+
+---
+
+## Go-live sjekkliste
+
+Gjør disse stegene i rekkefølge. Detaljerte instruksjoner i fasene under.
+
+- [ ] **A. Response Headers Policy** (Fase 1.3) — legg til sikkerheitsheadere på prod-distribusjon
+- [ ] **B. Kontaktskjema på prod** (Fase 6) — legg til `/api/kontakt`-origin og behavior på prod-distribusjon
+- [ ] **C. Aktiver prod-deploy** (Fase 2.1–2.2) — avkommenter linjene i `deploy.yml` og kjør deploy
+- [ ] **D. Gamle URL-redirects** (Fase 5) — oppdater CloudFront Function for `?page=`-redirects
+- [ ] **E. Verifiser alt** (Fase 4) — kjør verifiseringsstegene
+
+---
 
 ## Bakgrunn
 
@@ -11,7 +25,7 @@ Sammenslått plan fra tre tidligere oppgaver som alle handler om det samme:
 
 Test-oppsettet (test2.aarrestad.com) er ferdig verifisert og fungerer. Denne planen gjør tilsvarende for produksjon, med alle domener på én distribusjon.
 
-> **Nåværende situasjon (2026-03-01):** Prod-distribusjonen (`d19b7g2frcrx6i.cloudfront.net`) serverer fortsatt den gamle nettsiden. Den nye Astro-siden er kun live på test (`dnpjnvcuk7ym7.cloudfront.net`). Alle 6 domener (3 www + 3 apex) peker nå direkte til samme CloudFront-distribusjon og S3-bucket. SAN-sertifikatet dekker alle 6 domener. Apex-domener serverer innhold direkte (ingen redirect til www).
+> **Nåværende situasjon (2026-04-03):** Prod-distribusjonen (`d19b7g2frcrx6i.cloudfront.net`) serverer den nye Astro-siden men har ikke Response Headers Policy, mangler `/api/kontakt`-behavior, og deploy-steget i CI/CD er utkommentert. Kontaktskjema er ferdig implementert og fungerer på test. Alle 6 domener og SAN-sertifikat er på plass.
 
 ### Erfaringer fra test-oppsettet
 
@@ -45,11 +59,11 @@ Distribusjon `d19b7g2frcrx6i` opprettet med OAC, CachingOptimized (default) + Ca
 
 > Verifisert 2026-03-01: Distribusjonen svarer og serverer innhold via CloudFront (OSL50-pop).
 
-### Steg 1.3: Response Headers Policy (sikkerhetsheadere) — ❌ ikke gjort
+### Steg 1.3: Response Headers Policy (sikkerhetsheadere) ❌
 
-Gjenbruk policyen `tenner-og-trivsel-security-headers` fra test, eller opprett ny for prod. Tilknytt den til **begge** behaviors (default + `/api/*`).
+Gjenbruk policyen `tenner-og-trivsel-security-headers` fra test, eller opprett ny for prod. Tilknytt den til **begge** behaviors (default + `/api/kontakt`).
 
-> **Verifisert 2026-03-01:** Prod returnerer **ingen** sikkerhetsheadere (ingen CSP, X-Frame-Options, HSTS, X-Content-Type-Options, Referrer-Policy). Test-distribusjonen har alle headere korrekt. Denne policyen må tilknyttes før go-live.
+> **Verifisert 2026-03-01:** Prod returnerer **ingen** sikkerhetsheadere. Test-distribusjonen har alle headere korrekt.
 
 Headere: X-Frame-Options (DENY), X-Content-Type-Options (nosniff), Referrer-Policy (strict-origin-when-cross-origin), HSTS (1 år, includeSubDomains, vurder preload for prod).
 
@@ -67,58 +81,53 @@ default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com ht
 
 Bucket policy satt, offentlig tilgang blokkert.
 
-> Verifisert 2026-03-01: CloudFront serverer innhold fra S3 (Server: AmazonS3).
-
 ### ~~Steg 1.5: DNS for www.tennerogtrivsel.no~~ ✅
 
 DNS peker til CloudFront-distribusjonen.
-
-> Verifisert 2026-03-01: `www.tennerogtrivsel.no` → `d19b7g2frcrx6i.cloudfront.net`
 
 ---
 
 ## Fase 2: Cache-Control, smart invalidering og deploy-workflow
 
-### Steg 2.1: Splitt S3-sync med Cache-Control headere — ✅ klar i kode (utkommentert)
+### Steg 2.1: Avkommenter prod-deploy i deploy.yml ❌
 
-Tre separate syncer er skrevet i `deploy.yml` (linje 140–153), men utkommentert. Avkommenter for go-live.
-
-> **Verifisert 2026-03-01:** Test-miljøet bruker identisk oppsett og har korrekt cache-control (fonter: `immutable`, HTML: `max-age=3600`). Prod har per nå ingen cache-control header (gammel side).
+Tre separate syncer er skrevet i `deploy.yml` (linje 149–163), men utkommentert. Avkommenter for go-live:
 
 ```yaml
-# 1. Hashed assets — immutable (1 år)
-aws s3 sync dist/_astro/ s3://tennerogtrivsel-se/_astro/ --delete \
-  --cache-control "public, max-age=31536000, immutable"
-
-# 2. Fonter — immutable (1 år, versjonert i filnavn)
-aws s3 sync dist/fonts/ s3://tennerogtrivsel-se/fonts/ \
-  --cache-control "public, max-age=31536000, immutable"
-
-# 3. Alt annet (HTML, favicons, SW) — kort cache med revalidering
-aws s3 sync dist/ s3://tennerogtrivsel-se --delete \
-  --exclude "_astro/*" --exclude "fonts/*" \
-  --cache-control "public, max-age=3600, stale-while-revalidate=86400"
+# - name: Deploy to S3 PROD-SE
+#   run: |
+#     aws s3 sync dist/_astro/ s3://tennerogtrivsel-se/_astro/ --delete \
+#       --cache-control "public, max-age=31536000, immutable"
+#     aws s3 sync dist/fonts/ s3://tennerogtrivsel-se/fonts/ \
+#       --cache-control "public, max-age=31536000, immutable"
+#     aws s3 sync dist/ s3://tennerogtrivsel-se --delete \
+#       --exclude "_astro/*" --exclude "fonts/*" \
+#       --cache-control "public, max-age=3600, stale-while-revalidate=86400"
 ```
 
-### Steg 2.2: Smart CloudFront-invalidering — ✅ klar i kode (utkommentert)
+> **Verifisert 2026-03-01:** Test-miljøet bruker identisk oppsett og har korrekt cache-control. Prod S3-bucket `tennerogtrivsel-se` er klar i eu-north-1.
 
-Invalidering er skrevet i `deploy.yml` (linje 161–165), men utkommentert. Avkommenter for go-live.
+### Steg 2.2: Avkommenter CloudFront-invalidering for prod ❌
+
+Invalidering er skrevet i `deploy.yml` (linje 170–174), men utkommentert. Avkommenter for go-live:
 
 ```yaml
-aws cloudfront create-invalidation \
-  --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }} \
-  --paths "/" "/index.html" "/kontakt/" "/tjenester/" "/tjenester/*" "/tannleger/" "/galleri/" "/api/*" "/404.html" "/admin/*" "/sitemap-index.xml" "/robots.txt"
+# - name: Invalidate CloudFront cache PROD
+#   run: |
+#     aws cloudfront create-invalidation \
+#       --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }} \
+#       --paths "/*"
 ```
 
-> Merk: deploy.yml bruker `CLOUDFRONT_DISTRIBUTION_ID_PROD` (ikke `CLOUDFRONT_PROD_DISTRIBUTION_ID` som opprinnelig planlagt).
+> GitHub Secret `CLOUDFRONT_DISTRIBUTION_ID_PROD` er allerede satt.
 
 ### ~~Steg 2.3: GitHub secrets~~ ✅
 
-> **Verifisert 2026-03-01:** `CLOUDFRONT_DISTRIBUTION_ID_PROD` finnes som GitHub secret (opprettet 2026-02-26). Også `CLOUDFRONT_DISTRIBUTION_ID_TEST` finnes.
+`CLOUDFRONT_DISTRIBUTION_ID_PROD` og `CLOUDFRONT_DISTRIBUTION_ID_TEST` finnes som GitHub secrets.
 
 ### ~~Steg 2.4: S3-bucket i eu-north-1 (Stockholm)~~ ✅
 
-> **Verifisert 2026-03-01:** Ny bucket `tennerogtrivsel-se` opprettet i eu-north-1 (Stockholm). CloudFront-origin peker til denne bucketen. OAC og bucket policy er konfigurert — direkte S3-tilgang returnerer 403 Forbidden. `deploy.yml` har korrekt bucket-navn (linje 143, 147, 151 — utkommentert, klar for go-live).
+Bucket `tennerogtrivsel-se` opprettet i eu-north-1. OAC og bucket policy konfigurert.
 
 ---
 
@@ -126,41 +135,12 @@ aws cloudfront create-invalidation \
 
 ### ~~Steg 3.1: ACM-sertifikat med alle 6 domener~~ ✅
 
-> **Verifisert 2026-03-01:** SAN-sertifikatet er **issued** og i bruk på prod-distribusjonen. Dekker alle 6 domener:
-> - `tennerogtrivsel.no` (CN)
-> - `www.tennerogtrivsel.no` (SAN)
-> - `www.tennerogtrivsel.net` (SAN)
-> - `tennerogtrivsel.net` (SAN)
-> - `www.tennerogtrivsel.com` (SAN)
-> - `tennerogtrivsel.com` (SAN)
->
-> Issuer: Amazon RSA 2048 M04.
+SAN-sertifikatet er issued og i bruk. Dekker alle 6 domener:
+- `tennerogtrivsel.no` (CN), `www.tennerogtrivsel.no`, `www.tennerogtrivsel.net`, `tennerogtrivsel.net`, `www.tennerogtrivsel.com`, `tennerogtrivsel.com`
 
-### ~~Steg 3.2: Alle 6 domener som CloudFront CNAMEs~~ ✅
+### ~~Steg 3.2–3.7~~ ✅
 
-> **Verifisert 2026-03-01:** Alle 6 domener er lagt til som alternate domain names på prod-distribusjonen (`d19b7g2frcrx6i`). Alle serverer identisk innhold (samme etag `024c00c1...`, Server: AmazonS3, x-cache: Hit from cloudfront, POP: OSL50-P2).
-
-### ~~Steg 3.3: DNS — alle domener peker til CloudFront~~ ✅
-
-> **Verifisert 2026-03-01:** Alle 6 domener resolver til `d19b7g2frcrx6i.cloudfront.net`. Apex-domener serverer innhold direkte (ingen redirect til www).
-
-### ~~Steg 3.4: Apex-domener~~ ✅ (endret design)
-
-Opprinnelig plan var 301-redirect fra apex til www. I stedet serverer apex-domenene innhold direkte via CloudFront — alle 6 domener er likeverdige CNAMEs på samme distribusjon.
-
-> **Verifisert 2026-03-01:** `http://apex` → 301 → `https://apex` (http→https redirect fungerer). `https://apex` → 200 med innhold direkte fra S3 via CloudFront.
-
-### ~~Steg 3.5: Google OAuth — legg til nye domener~~ ✅
-
-> **Fullført 2026-03-01:** `https://www.tennerogtrivsel.com` og `https://www.tennerogtrivsel.net` lagt til i Google Cloud Console → Authorized JavaScript origins.
-
-### ~~Steg 3.6: Google Maps API~~ — utgår
-
-> Ikke aktuelt. Kartfliser lastes via CloudFront tile-proxy (`/tiles/*` → OpenStreetMap), ingen ekstern Maps API-nøkkel brukes.
-
-### ~~Steg 3.7: Fjern gamle S3-redirect-buckets~~ ✅
-
-> **Fullført 2026-03-01:** Gamle redirect-buckets tømt og slettet.
+Alle domener som CloudFront CNAMEs, DNS, apex-domener, Google OAuth (`tennerogtrivsel.com`/`.net` lagt til), gamle S3-redirect-buckets slettet — alt fullført 2026-03-01.
 
 ---
 
@@ -169,7 +149,6 @@ Opprinnelig plan var 301-redirect fra apex til www. I stedet serverer apex-domen
 ### 4.1 HTTPS og sikkerhetsheadere
 
 ```bash
-# Alle 6 domener
 for domain in www.tennerogtrivsel.no www.tennerogtrivsel.com www.tennerogtrivsel.net tennerogtrivsel.no tennerogtrivsel.com tennerogtrivsel.net; do
   echo "=== $domain ==="
   curl -sI "https://$domain" | grep -iE '(HTTP|cache-control|content-security|x-frame|strict-transport|x-cache)'
@@ -180,7 +159,7 @@ done
 
 ```bash
 # Hashed asset — skal ha immutable
-curl -sI https://www.tennerogtrivsel.no/_astro/[en-fil].js | grep -i cache-control
+curl -sI https://www.tennerogtrivsel.no/_astro/index.js | grep -i cache-control
 
 # HTML — skal ha max-age=3600
 curl -sI https://www.tennerogtrivsel.no/ | grep -i cache-control
@@ -189,24 +168,30 @@ curl -sI https://www.tennerogtrivsel.no/ | grep -i cache-control
 curl -sI https://www.tennerogtrivsel.no/fonts/inter-v18-latin-regular.woff2 | grep -i cache-control
 ```
 
-### 4.3 API caches ikke
+### 4.3 API og kontaktskjema caches ikke
 
 ```bash
-curl -sI https://www.tennerogtrivsel.no/api/active-messages.json | grep -i x-cache
-# Forventet: Miss from cloudfront
+curl -sI https://www.tennerogtrivsel.no/api/kontakt | grep -i x-cache
+# Forventet: Miss from cloudfront (CachingDisabled-behavior)
 ```
 
-### 4.4 Apex http→https redirect
+### 4.4 Kontaktskjema fungerer
+
+1. Åpne `https://www.tennerogtrivsel.no`
+2. Klikk «Send melding»
+3. Fyll inn skjema og send — verifiser at e-post ankommer `kontaktEpost` fra Google Sheet
+
+### 4.5 Apex http→https redirect
 
 ```bash
 for domain in tennerogtrivsel.no tennerogtrivsel.com tennerogtrivsel.net; do
   echo "=== $domain ==="
   curl -sI "http://$domain" | grep -iE '(HTTP|location)'
 done
-# Forventet: 301 til https://<eget domene> (apex serverer innhold direkte, ingen redirect til www)
+# Forventet: 301 til https://<eget domene>
 ```
 
-### 4.5 Undersider og 404
+### 4.6 Undersider og 404
 
 ```bash
 curl -sI https://www.tennerogtrivsel.no/kontakt | head -1
@@ -215,20 +200,20 @@ curl -sI https://www.tennerogtrivsel.net/denne-finnes-ikke | head -1
 # Forventet: 200, 200, 404
 ```
 
-### 4.6 Admin-panel og OAuth
+### 4.7 Admin-panel og OAuth
 
 1. Gå til `https://www.tennerogtrivsel.no/admin`
 2. Logg inn med Google OAuth — sjekk at CSP ikke blokkerer
 3. Test bildeopplasting og lagring
 
-### 4.7 Direkte S3-tilgang blokkert
+### 4.8 Direkte S3-tilgang blokkert
 
 ```bash
 curl -ksI https://s3.eu-north-1.amazonaws.com/tennerogtrivsel-se/index.html | head -1
 # Forventet: 403 Forbidden
 ```
 
-### 4.8 SecurityHeaders.com
+### 4.9 SecurityHeaders.com
 
 Skann alle tre www-domener — forventet minimum karakter **B**.
 
@@ -236,21 +221,11 @@ Skann alle tre www-domener — forventet minimum karakter **B**.
 
 ## Fase 5: Redirects fra gammel side
 
-Den gamle nettsiden (`tennerogtrivsel.no`) bruker jQuery SPA med query-parameter-routing (`/index.html?page=X`). Disse URL-ene finnes i Google-indeks, bokmerker osv. og må redirectes til riktig ny side.
+Den gamle nettsiden bruker jQuery SPA med query-parameter-routing (`/index.html?page=X`). Disse URL-ene finnes i Google-indeks og bokmerker.
 
-### URL-kartlegging
+### Steg 5.1: Utvid CloudFront Function `url-rewrite-index` ❌
 
-| Gammel URL | Ny URL |
-|---|---|
-| `/index.html?page=kontakt` | `/kontakt` |
-| `/index.html?page=behandlingstilbud` | `/tjenester` |
-| `/index.html?page=trygdeordninger` | `/tjenester` |
-| `/index.html?page=omoss` | `/tannleger` |
-| `/index.html` (uten `?page`) | `/` |
-
-### Steg 5.1: Utvid CloudFront Function `url-rewrite-index`
-
-Legg til redirect-logikk **før** den eksisterende URL-rewrite-logikken. Funksjonen sjekker `querystring.page`-parameteren og returnerer 301-redirect til riktig ny path.
+Legg til redirect-logikk **før** den eksisterende URL-rewrite-logikken:
 
 ```javascript
 function handler(event) {
@@ -298,17 +273,60 @@ function handler(event) {
 ### Steg 5.2: Verifisering
 
 ```bash
-# Test alle gamle URL-er — forventet 301 til riktig ny side
 for page in kontakt behandlingstilbud trygdeordninger omoss; do
   echo "=== ?page=$page ==="
   curl -sI "https://www.tennerogtrivsel.no/index.html?page=$page" | grep -iE '(HTTP|location)'
 done
-# Test bare /index.html — forventet 301 til /
 curl -sI "https://www.tennerogtrivsel.no/index.html" | grep -iE '(HTTP|location)'
-# Sjekk at vanlige sider fortsatt fungerer
 curl -sI https://www.tennerogtrivsel.no/kontakt | head -1
-curl -sI https://www.tennerogtrivsel.no/tjenester | head -1
+# Forventet: 301 til riktig ny URL, og vanlige sider fortsatt 200
 ```
+
+---
+
+## Fase 6: Kontaktskjema på prod-distribusjon
+
+Kontaktskjema-infrastrukturen (Lambda, DynamoDB, SES) er delt mellom test og prod — samme funksjon brukes. Det som mangler er `/api/kontakt`-behavior på prod-distribusjonen (`d19b7g2frcrx6i`).
+
+Se [aws-kontaktskjema-oppsett.md](../guides/aws-kontaktskjema-oppsett.md) Steg 5 for detaljert veiledning.
+
+### Steg 6.1: Legg til Lambda-origin på prod-distribusjonen ❌
+
+1. Gå til **CloudFront → d19b7g2frcrx6i → Origins → Create origin**
+2. Origin domain: Lambda Function URL (samme som test — hentes fra `aws lambda get-function-url-config --function-name kontakt-form-handler`)
+3. Protocol: **HTTPS only**
+4. Custom header: `X-Origin-Verify` = `ORIGIN_VERIFY_SECRET` (hentes fra GitHub Secrets)
+
+### Steg 6.2: Legg til `/api/kontakt`-behavior ❌
+
+1. Gå til **Behaviors → Create behavior**
+   - Path pattern: `/api/kontakt`
+   - Origin: Lambda-origin fra steg 6.1
+   - Viewer protocol: HTTPS only
+   - Allowed HTTP methods: GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE
+   - Cache policy: **CachingDisabled**
+   - Origin request policy: **AllViewerExceptHostHeader**
+2. Legg også til Response Headers Policy (fra Fase 1.3) på dette behavioret
+
+### Steg 6.3: Verifiser
+
+```bash
+curl -s -X POST https://www.tennerogtrivsel.no/api/kontakt \
+  -H "Content-Type: application/json" \
+  -d '{"navn":"Test","epost":"test@test.no","melding":"testmelding","tema":"Annet","telefon":"","_honeypot":""}' \
+  | head -c 200
+# Forventet: JSON-respons (ikke 403/502)
+```
+
+---
+
+## Fremtidig: Separate IAM-brukere for test og prod
+
+Når **Dev-Test-Prod miljø oppsett** gjennomføres, bør `githubTestDeploy` erstattes med separate brukere:
+- `githubTestDeploy` — kun tilgang til test-bøtte og test-distribusjon
+- `githubProdDeploy` — kun tilgang til prod-bøtte og prod-distribusjon
+
+`CICDDeploy`-policyen i [aws-kontaktskjema-oppsett.md](../guides/aws-kontaktskjema-oppsett.md) kan da innsnevres ytterligere — fjern prod-ressursene fra test-brukeren og omvendt.
 
 ---
 
@@ -318,5 +336,5 @@ curl -sI https://www.tennerogtrivsel.no/tjenester | head -1
 |---------|---------|
 | ACM-sertifikat | Gratis |
 | CloudFront (allerede i bruk) | Ingen ekstra |
-| Registrar URL-forwarding | Vanligvis inkludert |
-| **Totalt ekstra** | **$0/mnd** |
+| Lambda, DynamoDB, SES | Marginalt (deles med test) |
+| **Totalt ekstra** | **~$0/mnd** |
