@@ -25,12 +25,6 @@
     - Astro-endepunkter som henter fra innstillinger.json, prisliste.json, tjenester og tannleger.json
     - Samme mønster som eksisterende robots.txt.ts
 
-
-- [ ] **Stram inn IAM-tillatelser for githubTestDeploy**
-    - Brukeren har i dag `AWSLambda_FullAccess` og `AmazonS3FullAccess` — bytt ut med smale inline policies
-    - Lambda: kun `UpdateFunctionCode`, `UpdateFunctionConfiguration`, `GetFunction`, `GetFunctionConfiguration` på `kontakt-form-handler`
-    - S3: kun nødvendige actions på de aktuelle bøttene
-
 - [ ] **«Husk meg» på admin-siden fungerer dårlig**
     - Innlogging huskes ikke som forventet — undersøk og fiks
 

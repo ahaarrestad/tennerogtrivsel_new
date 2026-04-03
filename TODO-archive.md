@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Stram inn IAM-tillatelser for githubTestDeploy** ([spec](docs/superpowers/specs/archive/2026-04-03-iam-githubTestDeploy-design.md)) ([plan](docs/superpowers/plans/archive/2026-04-03-iam-githubTestDeploy.md))
+  - Fjernet `AWSLambda_FullAccess`, `AmazonS3FullAccess`, `CloudFrontFullAccess` og gammel `lambda-deploy-kontakt-form` inline policy
+  - Erstattet med én smal inline policy `CICDDeploy`: STS, S3 (test + prod), CloudFront, Lambda
+  - Lagt til `sts:GetCallerIdentity` som var årsaken til at tidligere forsøk feilet
+
 - [x] **Rydd opp «epost»-rester i kodebasen** ([spec](docs/superpowers/specs/2026-04-02-fjern-epost-design.md)) ([plan](docs/superpowers/plans/2026-04-02-fjern-epost.md))
   - Fjernet `email`/`showEmail`-innstillingen og `EpostKnapp`-komponenten
   - `ContactButton` (nå `MessageButton`) internaliserer `aktiv`-sjekken
