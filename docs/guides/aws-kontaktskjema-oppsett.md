@@ -72,11 +72,64 @@ Se [spec](../superpowers/specs/2026-03-28-kontaktskjema-design.md) for fullstend
 
 ### IAM-tillatelser for githubTestDeploy (CI/CD)
 
-CI/CD-brukeren `githubTestDeploy` trenger tilgang til å deploye Lambda-kode. Gå til **IAM → Users → githubTestDeploy → Add permissions → Attach policies** og legg til:
+CI/CD-brukeren `githubTestDeploy` bruker én smal inline policy (`CICDDeploy`). Kjør:
 
-- `AWSLambda_FullAccess`
+```bash
+cat > /tmp/cicd-deploy-policy.json << 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "StsValidation",
+      "Effect": "Allow",
+      "Action": "sts:GetCallerIdentity",
+      "Resource": "*"
+    },
+    {
+      "Sid": "S3ListBuckets",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": [
+        "arn:aws:s3:::test2.aarrestad.com-se",
+        "arn:aws:s3:::tennerogtrivsel-se"
+      ]
+    },
+    {
+      "Sid": "S3ObjectOperations",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+      "Resource": [
+        "arn:aws:s3:::test2.aarrestad.com-se/*",
+        "arn:aws:s3:::tennerogtrivsel-se/*"
+      ]
+    },
+    {
+      "Sid": "CloudFrontInvalidation",
+      "Effect": "Allow",
+      "Action": "cloudfront:CreateInvalidation",
+      "Resource": "arn:aws:cloudfront::382286755083:distribution/*"
+    },
+    {
+      "Sid": "LambdaDeploy",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:GetFunction"
+      ],
+      "Resource": "arn:aws:lambda:eu-north-1:382286755083:function:kontakt-form-handler"
+    }
+  ]
+}
+EOF
 
-> **Merk:** En smalere inline policy (`UpdateFunctionCode`, `GetFunctionConfiguration` osv.) ble forsøkt, men `configure-aws-credentials@v6` i GitHub Actions blokkerte den konsekvent med AccessDeniedException selv med `Resource: *`. `AWSLambda_FullAccess` er samme nivå som `AmazonS3FullAccess` som allerede er i bruk for deploy. Se TODO for fremtidig opprydding.
+aws iam put-user-policy \
+  --user-name githubTestDeploy \
+  --policy-name CICDDeploy \
+  --policy-document file:///tmp/cicd-deploy-policy.json
+```
+
+> **Merk:** `sts:GetCallerIdentity` er påkrevd av `configure-aws-credentials@v6` for å validere credentials. `lambda:GetFunction` brukes av `aws lambda wait function-updated`. Ikke legg til `AWSLambda_FullAccess`, `AmazonS3FullAccess` eller `CloudFrontFullAccess` — disse er erstattet av `CICDDeploy`.
 
 ---
 
