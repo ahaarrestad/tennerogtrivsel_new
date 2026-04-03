@@ -8,7 +8,7 @@ import {getCollection} from 'astro:content';
 import hovedBilde from '../assets/hovedbilde.png';
 import {buildImageStyle} from '../scripts/image-config.js';
 
-import ContactButton from './ContactButton.astro';
+import MessageButton from './MessageButton.astro';
 
 const settings = await getSiteSettings();
 
@@ -32,7 +32,7 @@ const forsideStyle = buildImageStyle(forsideEntry?.data.imageConfig);
 
                 <div class="hidden lg:flex flex-row flex-wrap gap-4 pt-4">
                     <TelefonKnapp variant="accent"/>
-                    <ContactButton />
+                    <MessageButton />
                     <KontaktKnapp />
                 </div>
             </div>
@@ -52,7 +52,7 @@ const forsideStyle = buildImageStyle(forsideEntry?.data.imageConfig);
 
             <div class="order-3 lg:hidden flex flex-wrap gap-4 justify-center md:justify-start w-full mt-4">
                 <TelefonKnapp/>
-                <ContactButton />
+                <MessageButton />
                 <KontaktKnapp/>
             </div>
 
