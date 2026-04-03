@@ -11,7 +11,7 @@ import { parseImageConfig } from './image-config.js';
 
 // Nøkler som har hardkodede defaults i getSettings.ts — brukes for å logge oversikt ved sync
 const HARD_DEFAULT_KEYS = [
-    'phone1', 'email', 'showEmail', 'adresse1', 'adresse2',
+    'phone1', 'adresse1', 'adresse2',
     'velkomstTittel1', 'velkomstTittel2', 'sentralbordTekst', 'latitude', 'longitude',
     'siteTitle', 'siteDescription', 'velkomstTekst', 'kontaktTekst',
     'tannlegerTekst', 'tjenesteTekst', 'businessHours1', 'businessHours2',

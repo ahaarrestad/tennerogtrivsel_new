@@ -52,10 +52,6 @@ export function buildSchema(
         hasMap: `https://www.google.com/maps/search/?api=1&query=${settings.latitude},${settings.longitude}`,
     };
 
-    if (settings.showEmail === 'ja') {
-        schema.email = settings.email;
-    }
-
     if (siteUrl) {
         schema.url = siteUrl;
         schema.image = {
