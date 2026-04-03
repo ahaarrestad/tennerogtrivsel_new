@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **ContactModal forbedringer**
+    - Reset skjema, suksessmelding og feilmelding ved lukking (via `close`-event)
+    - Sentrert dialog på alle skjermstørrelser — fjernet bunn-ark-mønster
+    - Meldingsfelt økt til 5 rader med auto-vekst (`field-sizing: content`)
+
 - [x] **AWS-oppsett for kontaktskjema (manuelt)**
     - Lambda opprettet, kode lastet opp, Function URL aktivert
     - IAM inline policy for DynamoDB og SES lagt til
