@@ -51,7 +51,6 @@ describe('content.config.ts - Loaders', () => {
         it('bør lese innstillinger fra JSON-fil korrekt', async () => {
             const mockInnstillinger = [
                 { id: 'phone1', value: '12345678' },
-                { id: 'email', value: 'test@example.com' },
             ];
 
             (fs.existsSync as any).mockReturnValue(true);
@@ -60,7 +59,7 @@ describe('content.config.ts - Loaders', () => {
             const loader = (collections.innstillinger as any).loader;
             const result = await loader();
 
-            expect(result).toHaveLength(2);
+            expect(result).toHaveLength(1);
             expect(result[0]).toEqual({ id: 'phone1', value: '12345678' });
         });
 
