@@ -14,6 +14,9 @@
 ## Pågående
 
 ## Backlog
+- [ ] **Vite version warning**
+  - From "npm-run dev": Vite 8.0.3 detected in your project. Astro requires Vite 7. Add "overrides": { "vite": "^7" } to your package.json to avoid issues.
+
 - [ ] **«Bygg nå»-knapp i admin** ([plan](docs/superpowers/plans/2026-03-21-bygg-na-knapp.md)) ([spec](docs/superpowers/specs/2026-03-21-bygg-na-knapp-design.md))
   - Lambda Function URL-proxy som verifiserer Google OAuth-token og kaller GitHub `repository_dispatch`
   - Knapp i admin-dashboard med spinner, statusmelding og siste vellykkede bygg-tidspunkt
