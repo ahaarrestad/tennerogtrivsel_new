@@ -73,7 +73,8 @@ Kartlagt fra `.github/workflows/deploy.yml`:
       "Action": [
         "lambda:UpdateFunctionCode",
         "lambda:UpdateFunctionConfiguration",
-        "lambda:GetFunction"
+        "lambda:GetFunction",
+        "lambda:GetFunctionConfiguration"
       ],
       "Resource": "arn:aws:lambda:eu-north-1:382286755083:function:kontakt-form-handler"
     }

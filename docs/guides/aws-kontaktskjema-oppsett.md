@@ -115,7 +115,8 @@ cat > /tmp/cicd-deploy-policy.json << 'EOF'
       "Action": [
         "lambda:UpdateFunctionCode",
         "lambda:UpdateFunctionConfiguration",
-        "lambda:GetFunction"
+        "lambda:GetFunction",
+        "lambda:GetFunctionConfiguration"
       ],
       "Resource": "arn:aws:lambda:eu-north-1:382286755083:function:kontakt-form-handler"
     }
@@ -129,7 +130,7 @@ aws iam put-user-policy \
   --policy-document file:///tmp/cicd-deploy-policy.json
 ```
 
-> **Merk:** `sts:GetCallerIdentity` er påkrevd av `configure-aws-credentials@v6` for å validere credentials. `lambda:GetFunction` brukes av `aws lambda wait function-updated`. Ikke legg til `AWSLambda_FullAccess`, `AmazonS3FullAccess` eller `CloudFrontFullAccess` — disse er erstattet av `CICDDeploy`.
+> **Merk:** `sts:GetCallerIdentity` er påkrevd av `configure-aws-credentials@v6`. `lambda:GetFunction` og `lambda:GetFunctionConfiguration` brukes begge av `aws lambda wait function-updated`. Ikke legg til `AWSLambda_FullAccess`, `AmazonS3FullAccess` eller `CloudFrontFullAccess` — disse er erstattet av `CICDDeploy`.
 
 ---
 
