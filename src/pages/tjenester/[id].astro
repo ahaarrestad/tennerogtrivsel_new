@@ -2,7 +2,7 @@
 import {getCollection, render} from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import TelefonKnapp from "../../components/TelefonKnapp.astro";
-import ContactButton from "../../components/ContactButton.astro";
+import MessageButton from "../../components/MessageButton.astro";
 import KontaktKnapp from "../../components/KontaktKnapp.astro";
 import { slugify } from '../../scripts/slugify';
 
@@ -63,7 +63,7 @@ const currentSlug = slugify(entry.data.title);
                             </h3>
                             <div class="flex flex-col gap-3 relative z-10">
                                 <TelefonKnapp variant="accent"/>
-                                <ContactButton variant="accent"/>
+                                <MessageButton variant="accent"/>
                             </div>
                             <KontaktKnapp class="w-full"/>
                         </div>

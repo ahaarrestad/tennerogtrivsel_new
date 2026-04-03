@@ -5,7 +5,7 @@ import { getSectionClasses, type SectionVariant } from '../scripts/sectionVarian
 import SectionHeader from './SectionHeader.astro';
 import Card from "./Card.astro";
 import { getEntry } from 'astro:content';
-import ContactButton from './ContactButton.astro';
+import MessageButton from './MessageButton.astro';
 
 import {getBusinessHours} from '../scripts/getBusinessHours';
 
@@ -124,7 +124,7 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                             <polyline points="22,6 12,13 2,6"></polyline>
                         </svg>
                         <div slot="link" class="flex justify-center">
-                            <ContactButton />
+                            <MessageButton />
                         </div>
                     </Card>
             )}
