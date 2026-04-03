@@ -6,7 +6,7 @@ const ksEntry = await getEntry('kontaktskjema', 'kontaktskjema');
 const aktiv = ksEntry?.data?.aktiv ?? false;
 ---
 {aktiv && (
-<Button id="open-contact-modal" variant={variant} class={`open-contact-modal ${className ?? ''}`}>
+<Button id="open-contact-modal" variant={variant} class:list={['open-contact-modal', className]}>
     Send melding
 </Button>
 )}
