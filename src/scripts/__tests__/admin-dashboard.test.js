@@ -1533,13 +1533,13 @@ describe('admin-dashboard.js', () => {
             const sheetSettings = [
                 { id: 'phone1', value: '12345', description: 'Telefon' }
             ];
-            const defaults = { phone1: 'default1', email: 'default@test.no' };
+            const defaults = { phone1: 'default1', adresse1: 'Armauer Hansens vei 11' };
 
             const result = mergeSettingsWithDefaults(sheetSettings, defaults);
 
             expect(result).toHaveLength(2);
             expect(result[0]).toEqual({ id: 'phone1', value: '12345', description: 'Telefon' });
-            expect(result[1]).toEqual({ id: 'email', value: 'default@test.no', description: '', isVirtual: true });
+            expect(result[1]).toEqual({ id: 'adresse1', value: 'Armauer Hansens vei 11', description: '', isVirtual: true });
         });
 
         it('should return all defaults as virtual when sheet is empty', () => {
