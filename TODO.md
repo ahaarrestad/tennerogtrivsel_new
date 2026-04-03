@@ -13,14 +13,6 @@
 
 ## Pågående
 
-- [ ] **Kontaktskjema** ([spec](docs/superpowers/specs/2026-03-28-kontaktskjema-design.md))
-  - Modal fra kontaktsiden med feltene: tema, navn, telefon, e-post og melding
-  - Tema-liste, modal-tittel og -tekst administreres via Google Sheet + admin-blokk
-  - Mottaker-e-post i Sheets, aldri eksponert i frontend — Lambda-miljøvariabel oppdateres ved bygg
-  - AWS Lambda + SES for utsending, honeypot + rate limiting (DynamoDB) mot spam
-  - Sentrert modal (desktop) / bunnark (mobil), personvernerklæringen oppdateres
-  - **Manuelt AWS-oppsett gjenstår** (se nedenfor) — må gjøres før feature kan merges og testes
-
 ## Backlog
 - [ ] **«Bygg nå»-knapp i admin** ([plan](docs/superpowers/plans/2026-03-21-bygg-na-knapp.md)) ([spec](docs/superpowers/specs/2026-03-21-bygg-na-knapp-design.md))
   - Lambda Function URL-proxy som verifiserer Google OAuth-token og kaller GitHub `repository_dispatch`
@@ -33,9 +25,6 @@
     - Astro-endepunkter som henter fra innstillinger.json, prisliste.json, tjenester og tannleger.json
     - Samme mønster som eksisterende robots.txt.ts
 
-- [ ] **Rydd opp «epost»-rester i kodebasen**
-    - Fjern alle spor etter epost-feltet som ikke lenger er aktuelt (felt, validering, tester, admin-kode, osv.)
-    - Frontend-kode er allerede ryddet — gjenstående er trolig i midtre lag (scripts, admin-moduler, Sheets-integrasjon)
 
 - [ ] **Stram inn IAM-tillatelser for githubTestDeploy**
     - Brukeren har i dag `AWSLambda_FullAccess` og `AmazonS3FullAccess` — bytt ut med smale inline policies

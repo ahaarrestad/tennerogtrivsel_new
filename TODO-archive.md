@@ -2,6 +2,22 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Rydd opp «epost»-rester i kodebasen** ([spec](docs/superpowers/specs/2026-04-02-fjern-epost-design.md)) ([plan](docs/superpowers/plans/2026-04-02-fjern-epost.md))
+  - Fjernet `email`/`showEmail`-innstillingen og `EpostKnapp`-komponenten
+  - `ContactButton` (nå `MessageButton`) internaliserer `aktiv`-sjekken
+  - Fjernet fra `getSettings.ts`, `buildSchema.ts`, `sync-data.js`, `personvern.astro`
+  - Oppdaterte tester: `buildSchema.test.ts`, `content.config.test.ts`, `admin-module-settings.test.js`, `admin-dashboard.test.js`
+
+- [x] **Kontaktskjema** ([spec](docs/superpowers/specs/archive/2026-03-28-kontaktskjema-design.md)) ([plan](docs/superpowers/plans/archive/2026-03-28-kontaktskjema.md))
+  - ContactModal med feltene tema, navn, telefon, e-post og melding
+  - Sentrert modal (desktop) / bunnark (mobil)
+  - Tema-liste, tittel og tekst administreres via Google Sheet + admin-blokk (KontaktSkjema-fane)
+  - AWS Lambda + SES for utsending — mottaker-e-post som Lambda-miljøvariabel, aldri eksponert i frontend
+  - Honeypot + rate limiting via DynamoDB mot spam
+  - SES identity policy dokumentert og satt opp
+  - Fjernet gammel epost-visning (EpostKnapp → MessageButton)
+  - Personvernerklæringen oppdatert
+
 - [x] **ContactModal forbedringer**
     - Reset skjema, suksessmelding og feilmelding ved lukking (via `close`-event)
     - Sentrert dialog på alle skjermstørrelser — fjernet bunn-ark-mønster
