@@ -1,6 +1,5 @@
 ---
 import TelefonKnapp from "./TelefonKnapp.astro";
-import EpostKnapp from "./EpostKnapp.astro";
 import {getSiteSettings} from '../scripts/getSettings';
 import KontaktKnapp from "./KontaktKnapp.astro";
 
@@ -10,16 +9,12 @@ import hovedBilde from '../assets/hovedbilde.png';
 import {buildImageStyle} from '../scripts/image-config.js';
 
 import ContactButton from './ContactButton.astro';
-import { getEntry } from 'astro:content';
 
 const settings = await getSiteSettings();
 
 const galleri = await getCollection('galleri');
 const forsideEntry = galleri.find(item => item.data.type === 'forsidebilde');
 const forsideStyle = buildImageStyle(forsideEntry?.data.imageConfig);
-
-const ksEntry = await getEntry('kontaktskjema', 'kontaktskjema');
-const kontaktskjema = ksEntry?.data ?? { aktiv: false };
 ---
 <section id="forside" class="section-container bg-white">
     <div class="section-content">
@@ -37,10 +32,8 @@ const kontaktskjema = ksEntry?.data ?? { aktiv: false };
 
                 <div class="hidden lg:flex flex-row flex-wrap gap-4 pt-4">
                     <TelefonKnapp variant="accent"/>
-                   {kontaktskjema.aktiv && (
                     <ContactButton />
-                   )}
-                   <KontaktKnapp />
+                    <KontaktKnapp />
                 </div>
             </div>
 
@@ -59,9 +52,7 @@ const kontaktskjema = ksEntry?.data ?? { aktiv: false };
 
             <div class="order-3 lg:hidden flex flex-wrap gap-4 justify-center md:justify-start w-full mt-4">
                 <TelefonKnapp/>
-                {kontaktskjema.aktiv && (
-                    <ContactButton />
-                )}
+                <ContactButton />
                 <KontaktKnapp/>
             </div>
 
