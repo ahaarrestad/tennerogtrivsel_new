@@ -1458,7 +1458,7 @@ describe('admin-dashboard.js', () => {
         it('should swap order values between current and neighbor (down)', async () => {
             const items = [
                 { row: 2, id: 'phone1', order: 1 },
-                { row: 3, id: 'email', order: 2 }
+                { row: 3, id: 'adresse1', order: 2 }
             ];
             adminClient.updateSettingOrder.mockResolvedValue(true);
 
@@ -1473,7 +1473,7 @@ describe('admin-dashboard.js', () => {
         it('should swap order values between current and neighbor (up)', async () => {
             const items = [
                 { row: 2, id: 'phone1', order: 1 },
-                { row: 3, id: 'email', order: 2 }
+                { row: 3, id: 'adresse1', order: 2 }
             ];
             adminClient.updateSettingOrder.mockResolvedValue(true);
 

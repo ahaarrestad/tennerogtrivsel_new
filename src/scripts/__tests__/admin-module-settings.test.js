@@ -70,7 +70,6 @@ describe('loadSettingsModule', () => {
     it('should call updateBreadcrumbCount with settings length', async () => {
         const mockSettings = [
             { id: 'phone1', value: '12345678', description: 'Telefon', order: 1, row: 2 },
-            { id: 'email', value: 'x@y.no', description: 'E-post', order: 2, row: 3 },
         ];
         getSettingsWithNotes.mockResolvedValue(mockSettings);
         mergeSettingsWithDefaults.mockReturnValue(mockSettings);
