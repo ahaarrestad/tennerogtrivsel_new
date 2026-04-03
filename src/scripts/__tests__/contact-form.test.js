@@ -47,6 +47,22 @@ describe('initContactForm', () => {
         expect(HTMLDialogElement.prototype.close).toHaveBeenCalledOnce();
     });
 
+    it('resetter skjema og skjuler suksessmelding når modal lukkes', async () => {
+        setupDOM();
+        global.fetch.mockResolvedValue({ ok: true });
+        document.getElementById('contact-form')
+            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        await vi.waitFor(() =>
+            expect(document.getElementById('contact-success').hidden).toBe(false)
+        );
+
+        document.getElementById('contact-modal').dispatchEvent(new Event('close'));
+
+        expect(document.getElementById('contact-success').hidden).toBe(true);
+        expect(document.getElementById('contact-form').hidden).toBe(false);
+        expect(document.getElementById('contact-submit-btn').disabled).toBe(false);
+    });
+
     it('sender POST til /api/kontakt med skjemadata', async () => {
         setupDOM();
         global.fetch.mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });

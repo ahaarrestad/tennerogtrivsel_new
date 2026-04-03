@@ -14,6 +14,15 @@ export function initContactForm() {
     });
     closeBtn?.addEventListener('click', () => modal.close());
 
+    modal.addEventListener('close', () => {
+        form.reset();
+        form.hidden = false;
+        successEl.hidden = true;
+        errorEl.hidden = true;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send melding';
+    });
+
     modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.close();
     });
