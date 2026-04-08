@@ -5,7 +5,7 @@
   "description": "Lambda handler for kontaktskjema",
   "main": "index.mjs",
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.1025.0",
-    "@aws-sdk/client-ses": "^3.1025.0"
+    "@aws-sdk/client-dynamodb": "^3.1026.0",
+    "@aws-sdk/client-ses": "^3.1026.0"
   }
 }
