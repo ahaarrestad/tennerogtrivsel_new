@@ -24,3 +24,14 @@ jobs:
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
+
+      - name: Flag major updates for manual review
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        run: |
+          gh pr edit "$PR_URL" --add-assignee ahaarrestad || true
+          gh pr edit "$PR_URL" --add-reviewer ahaarrestad || true
+          gh pr comment "$PR_URL" --body "@ahaarrestad Auto-merge hoppet over — major-oppdatering (\`${DEPS}\`). Krever manuell review."
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          DEPS: ${{ steps.metadata.outputs.dependency-names }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
