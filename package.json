@@ -24,7 +24,7 @@
     "dompurify": "^3.4.0",
     "google-auth-library": "^10.6.2",
     "leaflet": "^1.9.4",
-    "marked": "^17.0.6",
+    "marked": "^18.0.0",
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
