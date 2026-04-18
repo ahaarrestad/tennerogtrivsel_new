@@ -1,17 +1,24 @@
 # Plan: CloudFront produksjon — komplett oppsett med alle domener
 
-> **Status: KLAR FOR GO-LIVE** — Oppdatert 2026-04-03. Infrastruktur ferdig, kontaktskjema ferdig på test. Gjenstående: Response Headers Policy, `/api/kontakt`-behavior på prod-distribusjon, avkommenter prod-deploy i deploy.yml, URL-redirects.
+> **Status: KLAR FOR GO-LIVE** — Oppdatert 2026-04-18. Infrastruktur ferdig, kontaktskjema-backend ferdig. Gjenstående: se sjekkliste under.
 
 ---
 
 ## Go-live sjekkliste
 
-Gjør disse stegene i rekkefølge. Detaljerte instruksjoner i fasene under.
+### FØR go-live (trygt å gjøre nå — ingen brukersynlig effekt)
+
+- [ ] **B. Kontaktskjema på prod** (Fase 6) — legg til `/api/kontakt`-origin og behavior på prod-distribusjon
+- [ ] **D. Gamle URL-redirects** (Fase 5) — oppdater CloudFront Function `url-rewrite-index` med `?page=`-redirects
+- [ ] **F. Oppdater `kontaktEpost`** — riktig klinikk-adresse i Google Sheet (KontaktSkjema-fanen)
+- [ ] **G. SES-verifisering** — verifiser den oppdaterte e-postadressen i AWS SES Console (eu-north-1)
+
+### Go-live (gjøres raskt og samlet)
+
+> ⚠️ Response Headers Policy kan ikke settes før go-live — ville ha brutt den eksisterende siden på prod-distribusjonen.
 
 - [ ] **A. Response Headers Policy** (Fase 1.3) — legg til sikkerheitsheadere på prod-distribusjon
-- [ ] **B. Kontaktskjema på prod** (Fase 6) — legg til `/api/kontakt`-origin og behavior på prod-distribusjon
-- [ ] **C. Aktiver prod-deploy** (Fase 2.1–2.2) — avkommenter linjene i `deploy.yml` og kjør deploy
-- [ ] **D. Gamle URL-redirects** (Fase 5) — oppdater CloudFront Function for `?page=`-redirects
+- [ ] **C. Aktiver prod-deploy** (Fase 2.1–2.2) — avkommenter linjene i `deploy.yml` og push → trigger bygg
 - [ ] **E. Verifiser alt** (Fase 4) — kjør verifiseringsstegene
 
 ---

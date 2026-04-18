@@ -2,6 +2,10 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Vite version warning**
+  - Lagt til `"vite": "^7"` i `overrides` i package.json for å låse alle avhengigheter til Vite 7
+  - Fjernet konflikt mellom astro 6 (krever vite ^7) og @tailwindcss/vite / vitest (trakk inn vite 8)
+
 - [x] **Stram inn IAM-tillatelser for githubTestDeploy** ([spec](docs/superpowers/specs/archive/2026-04-03-iam-githubTestDeploy-design.md)) ([plan](docs/superpowers/plans/archive/2026-04-03-iam-githubTestDeploy.md))
   - Fjernet `AWSLambda_FullAccess`, `AmazonS3FullAccess`, `CloudFrontFullAccess` og gammel `lambda-deploy-kontakt-form` inline policy
   - Erstattet med én smal inline policy `CICDDeploy`: STS, S3 (test + prod), CloudFront, Lambda
