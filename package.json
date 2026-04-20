@@ -20,11 +20,11 @@
     "@googleapis/drive": "^20.1.0",
     "@googleapis/sheets": "^13.0.1",
     "@tailwindcss/vite": "^4.2.2",
-    "astro": "^6.1.4",
+    "astro": "^6.1.8",
     "dompurify": "^3.4.0",
     "google-auth-library": "^10.6.2",
     "leaflet": "^1.9.4",
-    "marked": "^18.0.1",
+    "marked": "^18.0.2",
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
