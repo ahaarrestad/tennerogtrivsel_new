@@ -783,4 +783,21 @@
     details[open] .tannlege-summary {
         @apply border-brand;
     }
+
+    /* EasyMDE editor — admin-designsystem */
+    .EasyMDEContainer .editor-toolbar {
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        border-color: var(--color-admin-border);
+        background: var(--color-admin-surface);
+    }
+    .EasyMDEContainer .CodeMirror {
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
+        border-color: var(--color-admin-border);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    .EasyMDEContainer .editor-preview-active-side {
+        border-color: var(--color-admin-border);
+    }
 }
