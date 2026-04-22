@@ -3,15 +3,15 @@ import TelefonKnapp from "./TelefonKnapp.astro";
 import {Image} from "astro:assets";
 import logoImage from "../assets/tt-logo-2026.png";
 
-interface Props { settings?: Record<string, string>; showGalleri?: boolean; }
-const { settings = {}, showGalleri = true } = Astro.props;
+interface Props { settings?: Record<string, string>; showGalleri?: boolean; showTannleger?: boolean; }
+const { settings = {}, showGalleri = true, showTannleger = true } = Astro.props;
 
 const allNavLinks = [
     { name: 'Forside', href: '/', mobileHref: '/' },
     { name: settings.kontaktTittel || 'Kontakt', href: '/#kontakt', mobileHref: '/#kontakt' },
     { name: settings.galleriTittel || 'Klinikken vår', href: '/#galleri', mobileHref: '/galleri' },
     { name: settings.tjenesterTittel || 'Tjenester', href: '/#tjenester', mobileHref: '/tjenester' },
-    { name: settings.tannlegerTittel || 'Om oss', href: '/#tannleger', mobileHref: '/tannleger' },
+    { name: settings.tannlegerTittel || 'Om oss', href: showTannleger ? '/#tannleger' : '/tannleger', mobileHref: '/tannleger' },
     { name: 'Prisliste', href: '/prisliste', mobileHref: '/prisliste' },
 ];
 
