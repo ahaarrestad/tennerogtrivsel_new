@@ -22,6 +22,8 @@
     "@tailwindcss/vite": "^4.2.4",
     "astro": "^6.1.9",
     "dompurify": "^3.4.1",
+    "easymde": "^2.20.0",
+    "flatpickr": "^4.6.13",
     "google-auth-library": "^10.6.2",
     "leaflet": "^1.9.4",
     "marked": "^18.0.2",
