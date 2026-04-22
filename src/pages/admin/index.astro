@@ -26,15 +26,6 @@ const BILDER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID;
     <script src="https://apis.google.com/js/api.js" async defer></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
-    <!-- Editor & Datepicker assets (pinned versions + SRI) -->
-    <link rel="stylesheet" href="https://unpkg.com/easymde@2.20.0/dist/easymde.min.css" integrity="sha384-3AvV7152TgYAMYdGZPqG9BpmSH2ZW6ewTDL0QV5PyNkl19KMI+yLMdJz183N8A2d" crossorigin="anonymous">
-    <script src="https://unpkg.com/easymde@2.20.0/dist/easymde.min.js" integrity="sha384-YDXeUfPZ4SP6vJpnF+ZMmf4B1bax6yd4Q/aNbkvLidRD843hPG5RE67M0IYT4LOq" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" integrity="sha384-RkASv+6KfBMW9eknReJIJ6b3UnjKOKC5bOUaNgIY778NFbQ8MtWq9Lr/khUgqtTt" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13" integrity="sha384-5JqMv4L/Xa0hfvtF06qboNdhvuYXUku9ZrhZh3bSk8VXF0A/RuSLHpLsSV9Zqhl6" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/no.js" integrity="sha384-UOy25oJXKTxZ3z0Um6Yb4fWFI5XUD2EyyvYe66gTjPVh8m++j41++hDI0V/8nel6" crossorigin="anonymous"></script>
-
-    <!-- Icons for EasyMDE -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 </head>
 <body class="admin-layout">
 
@@ -258,7 +249,16 @@ const BILDER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID;
          class="hidden"></div>
 
     <script>
+        import EasyMDE from 'easymde';
+        import flatpickr from 'flatpickr';
+        import { Norwegian } from 'flatpickr/dist/l10n/no.js';
+        import 'easymde/dist/easymde.min.css';
+        import 'flatpickr/dist/flatpickr.min.css';
         import '../../scripts/admin-init.js';
+
+        flatpickr.localize(Norwegian);
+        window.EasyMDE = EasyMDE;
+        window.flatpickr = flatpickr;
     </script>
 </body>
 </html>
