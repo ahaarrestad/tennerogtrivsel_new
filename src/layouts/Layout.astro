@@ -21,7 +21,10 @@ const tjenester = await getCollection('tjenester');
 const schema = buildSchema(settings, tjenester, Astro.site?.toString() ?? '');
 const galleri = await getCollection('galleri');
 const showGalleri = galleri.some(item => (item.data.type ?? 'galleri') === 'galleri');
-const showTannleger = galleri.some(item => item.data.type === 'fellesbilde' && !!item.data.image);
+const galleriImages = import.meta.glob('/src/assets/galleri/*.{jpeg,jpg,png,webp}');
+const fellesbildeEntry = galleri.find(item => item.data.type === 'fellesbilde');
+const fellesbildePath = fellesbildeEntry?.data.image ? `/src/assets/galleri/${fellesbildeEntry.data.image}` : null;
+const showTannleger = !!(fellesbildePath && galleriImages[fellesbildePath]);
 
 const {
     title = settings.siteTitle,

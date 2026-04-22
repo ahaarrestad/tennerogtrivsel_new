@@ -36,6 +36,7 @@
     - Astro-endepunkter som henter fra innstillinger.json, prisliste.json, tjenester og tannleger.json
     - Samme mønster som eksisterende robots.txt.ts
 
+
 - [ ] **«Husk meg» på admin-siden fungerer dårlig**
     - Innlogging huskes ikke som forventet — undersøk og fiks
 

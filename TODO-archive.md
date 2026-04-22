@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Tannleger-bilde på framsiden valgfritt** ([plan](docs/superpowers/plans/archive/2026-04-22-tannleger-bilde-optional.md))
+  - Tannleger-seksjonen på framsiden skjules helt når fellesbilde ikke er satt i admin
+  - Navbar-lenken peker til `/#tannleger` (anchor) når bilde finnes, `/tannleger` (full side) ellers
+  - `showTannleger` beregnes i `Layout.astro` og sendes som prop til `Navbar`
+
 - [x] **Vite version warning**
   - Lagt til `"vite": "^7"` i `overrides` i package.json for å låse alle avhengigheter til Vite 7
   - Fjernet konflikt mellom astro 6 (krever vite ^7) og @tailwindcss/vite / vitest (trakk inn vite 8)
