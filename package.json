@@ -20,7 +20,7 @@
     "@googleapis/drive": "^20.1.0",
     "@googleapis/sheets": "^13.0.1",
     "@tailwindcss/vite": "^4.2.4",
-    "astro": "^6.1.8",
+    "astro": "^6.1.9",
     "dompurify": "^3.4.1",
     "google-auth-library": "^10.6.2",
     "leaflet": "^1.9.4",
