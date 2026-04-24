@@ -103,7 +103,6 @@ export async function loadBilderModule() {
                                 </div>
                                 <input type="checkbox" id="galleri-edit-fellesbilde" class="w-5 h-5 accent-sky-500 cursor-pointer">
                             </div>
-                            ${renderImageCropSliders({ prefix: 'galleri-edit', valPrefix: 'galleri-val' })}
                             <div class="pt-6 border-t border-admin-border">
                                 <button id="btn-ferdig-galleri" class="btn-primary w-full py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs flex items-center justify-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -120,6 +119,7 @@ export async function loadBilderModule() {
                                 </div>
                                 <img id="galleri-preview-img" src="" class="absolute inset-0 w-full h-full object-cover transition-all duration-75 hidden" style="">
                             </div>
+                            ${renderImageCropSliders({ prefix: 'galleri-edit', valPrefix: 'galleri-val' })}
                         </div>
                     </div>
                 </div>
