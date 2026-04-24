@@ -99,14 +99,13 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
                 eller når nettleserøkten avsluttes (avhengig av «Husk meg»-valget).
             </p>
             <p>
-                Admin-panelet laster ressurser fra følgende CDN-tjenester, som mottar
-                administratorens IP-adresse:
+                Admin-panelet laster inn Google-skript for autentisering fra
+                <code>apis.google.com</code> og <code>accounts.google.com</code>.
+                Disse tjenestene mottar administratorens IP-adresse som en del av
+                OAuth-innloggingsflyten. Se
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Googles personvernerklæring</a>
+                for detaljer.
             </p>
-            <ul>
-                <li><a href="https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net" target="_blank" rel="noopener noreferrer">jsDelivr</a></li>
-                <li><a href="https://www.unpkg.com" target="_blank" rel="noopener noreferrer">unpkg</a></li>
-                <li><a href="https://cdnjs.cloudflare.com/" target="_blank" rel="noopener noreferrer">cdnjs (Cloudflare)</a></li>
-            </ul>
 
             <h2>Kontakt</h2>
             <p>
