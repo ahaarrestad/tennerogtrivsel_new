@@ -106,6 +106,18 @@ vi.mock('../admin-module-tannleger.js', () => ({
     reloadTannleger: mockReloadTannleger,
 }));
 
+const mockReloadPrisliste = vi.fn();
+vi.mock('../admin-module-prisliste.js', () => ({
+    initPrislisteModule: vi.fn(),
+    reloadPrisliste: mockReloadPrisliste,
+}));
+
+const mockReloadKontaktSkjema = vi.fn();
+vi.mock('../admin-module-kontaktskjema.js', () => ({
+    initKontaktSkjemaModule: vi.fn(),
+    reloadKontaktSkjema: mockReloadKontaktSkjema,
+}));
+
 vi.mock('../textFormatter.js', () => ({
     formatDate: vi.fn(d => d),
     stripStackEditData: vi.fn(s => s),
@@ -157,6 +169,8 @@ function setupDOM() {
         <div id="card-meldinger"></div>
         <div id="card-tannleger"></div>
         <div id="card-bilder"></div>
+        <div id="card-prisliste"></div>
+        <div id="card-kontaktskjema"></div>
     `;
 }
 
@@ -735,4 +749,27 @@ describe('startup flow — ingen token', () => {
             expect(calls).toContain('login');
         });
     });
+});
+
+describe('admin-init openModule prisliste og kontaktskjema', () => {
+    it('openModule prisliste should call reloadPrisliste', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+
+        document.getElementById('card-prisliste').click();
+
+        expect(mockReloadPrisliste).toHaveBeenCalled();
+        expect(document.getElementById('module-title').textContent).toBe('Takstlista');
+    });
+
+    it('openModule kontaktskjema should call reloadKontaktSkjema', async () => {
+        await import('../admin-init.js');
+        await vi.waitFor(() => { expect(initGapi).toHaveBeenCalled(); });
+
+        document.getElementById('card-kontaktskjema').click();
+
+        expect(mockReloadKontaktSkjema).toHaveBeenCalled();
+        expect(document.getElementById('module-title').textContent).toBe('Kontaktskjemaet');
+    });
+
 });

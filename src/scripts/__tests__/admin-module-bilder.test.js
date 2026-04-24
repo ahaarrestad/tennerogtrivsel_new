@@ -459,6 +459,23 @@ describe('handleReorder (via loadBilderModule callback)', () => {
         expect(showToast).toHaveBeenCalledWith('Kunne ikke endre rekkefølge.', 'error');
         expect(enableReorderButtons).toHaveBeenCalled();
     });
+
+    it('should handle missing galleri-liste-container gracefully', async () => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+
+        document.getElementById('galleri-liste-container')?.remove();
+
+        getGalleriRaw.mockResolvedValue([{ rowIndex: 2, type: 'galleri', order: 1 }]);
+        reorderGalleriItem.mockResolvedValue(true);
+
+        const handleReorder = loadGalleriListeModule.mock.calls[0][3];
+        await handleReorder(2, 1);
+
+        expect(disableReorderButtons).not.toHaveBeenCalled();
+        expect(reorderGalleriItem).toHaveBeenCalled();
+    });
 });
 
 describe('toggleGalleriActive (via loadBilderModule callback)', () => {

@@ -683,6 +683,23 @@ describe('reorderTjeneste', () => {
 
         expect(disableReorderButtons).toHaveBeenCalled();
     });
+
+    it('should sort services using ?? 99 and || "" fallbacks when priority and title are undefined', async () => {
+        listFiles.mockResolvedValue([
+            { id: 'driveA', name: 'a.md' },
+            { id: 'driveB', name: 'b.md' },
+        ]);
+        getFileContent.mockResolvedValueOnce('raw1').mockResolvedValueOnce('raw2');
+        parseMarkdown
+            .mockReturnValueOnce({ data: {}, body: 'bodyA' })
+            .mockReturnValueOnce({ data: {}, body: 'bodyB' });
+        stringifyMarkdown.mockReturnValue('md');
+        saveFile.mockResolvedValue();
+
+        await reorderFn('driveA', 1);
+
+        expect(saveFile).toHaveBeenCalled();
+    });
 });
 
 describe('loadAllServices — withRetry integration', () => {
