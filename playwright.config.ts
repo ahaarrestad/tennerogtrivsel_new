@@ -5,7 +5,7 @@ export default defineConfig({
   testIgnore: ['**/csp-check.spec.ts'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: 0,
+  retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 4 : undefined,
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
@@ -32,7 +32,7 @@ export default defineConfig({
   ],
   webServer: {
     command: process.env.CI ? 'npm run dev:nosync' : 'npm run dev',
-    url: 'http://localhost:4321',
+    url: 'http://localhost:4321/admin',
     reuseExistingServer: !process.env.CI,
   },
 });

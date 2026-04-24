@@ -6,7 +6,8 @@ export default defineConfig({
     vite: {
         plugins: [tailwindcss()],
         optimizeDeps: {
-            include: ['easymde', 'flatpickr'],
+            entries: ['src/pages/admin/index.astro'],
+            include: ['easymde', 'flatpickr', 'flatpickr/dist/l10n/no.js'],
         },
         server: {
             proxy: {
