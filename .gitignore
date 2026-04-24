@@ -30,6 +30,7 @@ pnpm-debug.log*
 /src/assets/galleri/
 !src/assets/galleri/.gitkeep
 /public/hovedbilde.png
+/src/assets/hovedbilde.png
 src/content/tannleger.json
 src/content/galleri.json
 src/content/innstillinger.json
