@@ -12,7 +12,6 @@ const allNavLinks = [
     { name: settings.galleriTittel || 'Klinikken vår', href: '/#galleri', mobileHref: '/galleri' },
     { name: settings.tjenesterTittel || 'Tjenester', href: '/#tjenester', mobileHref: '/tjenester' },
     { name: settings.tannlegerTittel || 'Om oss', href: showTannleger ? '/#tannleger' : '/tannleger', mobileHref: '/tannleger' },
-    { name: 'Prisliste', href: '/prisliste', mobileHref: '/prisliste' },
 ];
 
 const navLinks = showGalleri ? allNavLinks : allNavLinks.filter(link => link.href !== '/#galleri');
