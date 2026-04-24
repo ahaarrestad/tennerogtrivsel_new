@@ -2,6 +2,10 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Bildeutsnitt for bilder på siden** ([plan](docs/superpowers/plans/archive/2026-04-24-bildeutsnitt-layout.md))
+  - Crop-sliders (zoom, fokuspunkt X/Y) flyttet fra venstre skjemakolonne til høyre kolonne under forhåndsvisningen i galleri-editoren
+  - Samme mønster som tannleger-editoren — sliders er nå synlige ved siden av preview under justering
+
 - [x] **Tannleger-bilde på framsiden valgfritt** ([plan](docs/superpowers/plans/archive/2026-04-22-tannleger-bilde-optional.md))
   - Tannleger-seksjonen på framsiden skjules helt når fellesbilde ikke er satt i admin
   - Navbar-lenken peker til `/#tannleger` (anchor) når bilde finnes, `/tannleger` (full side) ellers
