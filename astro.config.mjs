@@ -5,6 +5,9 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
     vite: {
         plugins: [tailwindcss()],
+        optimizeDeps: {
+            include: ['easymde', 'flatpickr'],
+        },
         server: {
             proxy: {
                 '/tiles': {
