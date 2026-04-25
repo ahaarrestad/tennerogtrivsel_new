@@ -47,6 +47,7 @@ const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).href;
     <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png">
     <link rel="canonical" href={canonicalURL} />
+    <link rel="alternate" type="text/plain" title="AI-lesbar versjon" href="/llms.txt">
 
     <title>{title}</title>
     <meta name="description" content={description} />
