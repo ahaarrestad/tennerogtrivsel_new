@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **llms.txt — AI-lesbar nettstedsbeskrivelse** ([plan](docs/plans/archive/2026-04-25-llms-txt.md))
+  - `generate-llms.js` med `generateLlmsTxt` og `generateLlmsFullTxt` — rene funksjoner, testbare
+  - `/llms.txt` (kortversjon med tjenester, tannleger, lenker) og `/llms-full.txt` (komplett med tjeneste-body og prisliste) som Astro API-ruter
+  - 22 enhetstester, 80% branch coverage
+
 - [x] **CDN til npm — avhengighetsreduksjon** ([plan](docs/superpowers/plans/archive/2026-04-22-cdn-til-npm.md))
   - EasyMDE, Flatpickr og Font Awesome fjernet fra CDN — nå installert som npm-pakker og versjonsstyrt via `package-lock.json`
   - npm-imports i `admin/index.astro` med `window.EasyMDE`/`window.flatpickr` for bakoverkompatibilitet
