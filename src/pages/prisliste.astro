@@ -3,23 +3,15 @@ import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 import logoImage from '../assets/tt-logo-2026.png';
-import fs from 'fs';
-import path from 'path';
+import prislisteJson from '../content/prisliste.json';
 import { formatPris } from '../utils/format-pris.js';
 import { findColumnSplitIndex } from '../utils/column-split.js';
 
 const rawPrisliste = await getCollection('prisliste');
 
-// Read category order from prisliste.json (top-level field set by sync-data)
-let kategoriOrderMap = new Map();
-try {
-    const prislisteJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/content/prisliste.json'), 'utf-8'));
-    if (prislisteJson.kategoriOrder) {
-        for (const k of prislisteJson.kategoriOrder) {
-            kategoriOrderMap.set(k.kategori, k.order);
-        }
-    }
-} catch { /* fallback to alphabetical */ }
+const kategoriOrderMap = new Map(
+    (prislisteJson.kategoriOrder ?? []).map(k => [k.kategori, k.order])
+);
 
 const kategorier = new Map();
 for (const item of rawPrisliste) {
