@@ -2329,6 +2329,28 @@ describe('admin-dashboard.js', () => {
             expect(adminClient.updatePrislisteRow).toHaveBeenCalledWith('sheet-id', 4, expect.objectContaining({ order: 20 }));
             expect(adminClient.updatePrislisteRow).toHaveBeenCalledWith('sheet-id', 7, expect.objectContaining({ order: 10 }));
         });
+
+        it('should sort by order before finding neighbors (consecutive swaps without reload)', async () => {
+            const items = [
+                { rowIndex: 1, kategori: 'K', behandling: 'A', pris: 100, order: 1 },
+                { rowIndex: 2, kategori: 'K', behandling: 'B', pris: 200, order: 2 },
+                { rowIndex: 3, kategori: 'K', behandling: 'C', pris: 300, order: 3 },
+            ];
+            adminClient.updatePrislisteRow.mockResolvedValue(true);
+
+            // First swap: A down — A(1) and B(2) swap → A(order=2), B(order=1), visual order: B,A,C
+            await reorderPrislisteItem('sheet-id', items, 1, 1);
+            adminClient.updatePrislisteRow.mockClear();
+
+            // Second swap: A down again — visually A is at index 1, neighbor should be C (not B)
+            await reorderPrislisteItem('sheet-id', items, 1, 1);
+
+            expect(items.find(i => i.rowIndex === 1).order).toBe(3); // A moved to last
+            expect(items.find(i => i.rowIndex === 3).order).toBe(2); // C moved to middle
+            expect(items.find(i => i.rowIndex === 2).order).toBe(1); // B unchanged
+            expect(adminClient.updatePrislisteRow).toHaveBeenCalledWith('sheet-id', 1, expect.objectContaining({ order: 3 }));
+            expect(adminClient.updatePrislisteRow).toHaveBeenCalledWith('sheet-id', 3, expect.objectContaining({ order: 2 }));
+        });
     });
 
     describe('reorderPrislisteKategori', () => {
