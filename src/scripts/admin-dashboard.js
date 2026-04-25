@@ -661,8 +661,9 @@ export async function reorderSettingItem(sheetId, items, index, direction) {
 }
 
 export async function reorderPrislisteItem(sheetId, items, rowIndex, direction) {
-    const currentIdx = items.findIndex(i => i.rowIndex === rowIndex);
-    return swapOrder(items, currentIdx, direction, (item) =>
+    const sorted = [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const currentIdx = sorted.findIndex(i => i.rowIndex === rowIndex);
+    return swapOrder(sorted, currentIdx, direction, (item) =>
         withRetry(() => updatePrislisteRow(sheetId, item.rowIndex, item), { refreshAuth: getRefreshAuth() })
     );
 }
