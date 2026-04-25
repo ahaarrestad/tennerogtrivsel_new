@@ -1,8 +1,7 @@
 // src/pages/llms-full.txt.ts
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
-import fs from 'fs';
-import path from 'path';
+import prislisteData from '../content/prisliste.json';
 import { generateLlmsFullTxt } from '../scripts/generate-llms.js';
 
 export const GET: APIRoute = async () => {
@@ -33,12 +32,9 @@ export const GET: APIRoute = async () => {
                 : '',
         }));
 
-    const prislisteJson = JSON.parse(
-        fs.readFileSync(path.join(process.cwd(), 'src/content/prisliste.json'), 'utf-8')
-    );
     const prisliste = {
-        kategoriOrder: prislisteJson.kategoriOrder ?? [],
-        items: prislisteJson.items ?? [],
+        kategoriOrder: prislisteData.kategoriOrder ?? [],
+        items: prislisteData.items ?? [],
     };
 
     const txt = generateLlmsFullTxt({ settings, tannleger, tjenester, prisliste });
