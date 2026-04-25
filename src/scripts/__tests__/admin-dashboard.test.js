@@ -1452,6 +1452,28 @@ describe('admin-dashboard.js', () => {
             // After swap both are 5, so force different: current.order = 0+1=1, neighbor.order = 0
             expect(items[0].order).not.toBe(items[1].order);
         });
+
+        it('should sort by order before finding neighbors (consecutive swaps without reload)', async () => {
+            const items = [
+                { rowIndex: 1, title: 'A', order: 1, type: 'galleri' },
+                { rowIndex: 2, title: 'B', order: 2, type: 'galleri' },
+                { rowIndex: 3, title: 'C', order: 3, type: 'galleri' },
+            ];
+            adminClient.updateGalleriRow.mockResolvedValue(true);
+
+            // First swap: A down — A(1) and B(2) swap → A(order=2), B(order=1), visual order: B,A,C
+            await reorderGalleriItem('sheet-id', items, 1, 1);
+            adminClient.updateGalleriRow.mockClear();
+
+            // Second swap: A down again — visually A is at index 1, neighbor should be C (not B)
+            await reorderGalleriItem('sheet-id', items, 1, 1);
+
+            expect(items.find(i => i.rowIndex === 1).order).toBe(3); // A moved to last
+            expect(items.find(i => i.rowIndex === 3).order).toBe(2); // C moved to middle
+            expect(items.find(i => i.rowIndex === 2).order).toBe(1); // B unchanged
+            expect(adminClient.updateGalleriRow).toHaveBeenCalledWith('sheet-id', 1, expect.objectContaining({ order: 3 }));
+            expect(adminClient.updateGalleriRow).toHaveBeenCalledWith('sheet-id', 3, expect.objectContaining({ order: 2 }));
+        });
     });
 
     describe('reorderSettingItem', () => {
