@@ -2,6 +2,17 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **CDN til npm — avhengighetsreduksjon** ([plan](docs/superpowers/plans/archive/2026-04-22-cdn-til-npm.md))
+  - EasyMDE, Flatpickr og Font Awesome fjernet fra CDN — nå installert som npm-pakker og versjonsstyrt via `package-lock.json`
+  - npm-imports i `admin/index.astro` med `window.EasyMDE`/`window.flatpickr` for bakoverkompatibilitet
+  - EasyMDE toolbar erstattet med inline SVG-ikoner — Font Awesome ikke lenger nødvendig
+  - EasyMDE CSS-override flyttet fra `<style is:global>` i Astro-filen til `global.css`
+
+- [x] **Bug i Takstlista** — Opp/ned-sortering rotet til rekkefølgen ved gjentatte bytter uten reload
+  - `reorderPrislisteItem` sorterte ikke items etter `.order` før `findIndex`, slik at feil nabo ble valgt etter første bytte
+  - Samme bug fikset i `reorderGalleriItem` samtidig
+  - Mønster: `[...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))` — identisk med `reorderPrislisteKategori`
+
 - [x] **Bildeutsnitt for bilder på siden** ([plan](docs/superpowers/plans/archive/2026-04-24-bildeutsnitt-layout.md))
   - Crop-sliders (zoom, fokuspunkt X/Y) flyttet fra venstre skjemakolonne til høyre kolonne under forhåndsvisningen i galleri-editoren
   - Samme mønster som tannleger-editoren — sliders er nå synlige ved siden av preview under justering
