@@ -14,7 +14,6 @@
 ## Pågående
 
 ## Backlog
-- [ ] **Bug i Takstlista** Flytting opp og ned fungere nesten, men rotes til spesielt på toppen.
 - [ ] **«Bygg nå»-knapp i admin** ([plan](docs/superpowers/plans/2026-03-21-bygg-na-knapp.md)) ([spec](docs/superpowers/specs/2026-03-21-bygg-na-knapp-design.md))
   - Lambda Function URL-proxy som verifiserer Google OAuth-token og kaller GitHub `repository_dispatch`
   - Knapp i admin-dashboard med spinner, statusmelding og siste vellykkede bygg-tidspunkt
@@ -37,12 +36,6 @@
     - Astro-endepunkter som henter fra innstillinger.json, prisliste.json, tjenester og tannleger.json
     - Samme mønster som eksisterende robots.txt.ts
 
-
-- [ ] **Teknisk og sikkerhetsgjennomgang — avhengighetsreduksjon** ([plan](docs/superpowers/plans/2026-04-22-cdn-til-npm.md))
-  - Gjennomgå alle npm-avhengigheter: hva kan vi lage selv, hva bør vi beholde?
-  - Mål: redusere trusselflaten mot supply chain-angrep
-  - Vurder sikkerheten i autentisering, API-kall og tredjepartsintegrasjoner
-  - Leveranse: rapport med konkrete anbefalinger (fjern / bytt ut / behold med begrunnelse)
 
 - [ ] **«Husk meg» på admin-siden fungerer dårlig**
     - Innlogging huskes ikke som forventet — undersøk og fiks
