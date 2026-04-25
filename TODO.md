@@ -31,15 +31,6 @@
     - [ ] Avkommenter prod-deploy + CloudFront-invalidering i `deploy.yml` og push
     - [ ] Verifiser: HTTPS/headere, cache-control, kontaktskjema, admin OAuth, URL-redirects, S3 blokkert
 
-- [ ] **llms.txt — AI-lesbar nettstedsbeskrivelse**
-    - Generer `/llms.txt` (kortfattet indeks) og `/llms-full.txt` (komplett innhold) automatisk ved bygg
-    - Astro-endepunkter som henter fra innstillinger.json, prisliste.json, tjenester og tannleger.json
-    - Samme mønster som eksisterende robots.txt.ts
-
-
-- [ ] **«Husk meg» på admin-siden fungerer dårlig**
-    - Innlogging huskes ikke som forventet — undersøk og fiks
-
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
