@@ -11,7 +11,7 @@ export const HARD_DEFAULTS: Record<string, string> = {
     latitude: "58.94826272363705",
     longitude: "5.738691380986355",
     siteTitle: "Tenner og Trivsel | Din Tannlege i Stavanger",
-    siteDescription: "Tenner og Trivsel tilbyr moderne tannbehandling i trygge rammer i Kilden Helsedel. Vi har fokus på din komfort og tannhelse.",
+    siteDescription: "Tenner og Trivsel tilbyr moderne tannbehandling i trygge rammer i Kilden Helse. Vi har fokus på din komfort og tannhelse.",
     velkomstTekst: "Velkommen til Tenner og Trivsel. Vi tilbyr tannbehandling av høy kvalitet med fokus på din trygghet og komfort.",
     kontaktTekst: "Vi holder til i 5. etasje på Kilden Helse. Det er mest praktisk å benytte parkering P4, hvor det er 1 time gratis kundeparkering. Derfra tar du heisen én etasje opp, og du finner oss innover i gangen til venstre.",
     tannlegerTekst: "Et varmt og erfarent team som setter pasienten i sentrum og tilbyr skreddersydd behandling.",
