@@ -21,4 +21,9 @@ describe('generate-robots.js', () => {
         expect(result).toContain('Allow: /');
         expect(result).toContain(`Sitemap: ${sitemapUrl}`);
     });
+
+    it('skal blokkere /api/ på produksjons-domenet', () => {
+        const result = generateRobotsTxt('www.tennerogtrivsel.no', sitemapUrl);
+        expect(result).toContain('Disallow: /api/');
+    });
 });

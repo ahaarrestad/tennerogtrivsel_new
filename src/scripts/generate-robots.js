@@ -13,6 +13,7 @@ Disallow: /`;
 Allow: /
 Disallow: /admin
 Disallow: /admin/*
+Disallow: /api/
 
 Sitemap: ${sitemapUrl}`;
     }
