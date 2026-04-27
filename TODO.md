@@ -18,18 +18,6 @@
   - Lambda Function URL-proxy som verifiserer Google OAuth-token og kaller GitHub `repository_dispatch`
   - Knapp i admin-dashboard med spinner, statusmelding og siste vellykkede bygg-tidspunkt
 
-- [ ] **Gå i produksjon** ([plan](docs/plans/2026-02-28-cloudfront-prod-komplett.md))
-  - Infrastruktur ferdig: CloudFront, S3, ACM, alle 6 domener, GitHub Secrets, IAM ✅
-  - Kontaktskjema-backend ferdig (Lambda, SES identity, DynamoDB) ✅
-  - **FØR go-live:**
-    - [ ] Legg til `/api/kontakt`-behavior på prod-distribusjonen (Lambda-origin + behavior)
-    - [ ] Oppdater CloudFront Function `url-rewrite-index` med `?page=`-redirects
-    - [ ] Oppdater `kontaktEpost` i Google Sheet til riktig klinikk-adresse
-    - [ ] SES: verifiser den oppdaterte e-postadressen i AWS Console
-  - **Go-live (gjøres raskt og samlet):**
-    - [ ] Response Headers Policy på prod-distribusjonen (CSP fra middleware.ts)
-    - [ ] Avkommenter prod-deploy + CloudFront-invalidering i `deploy.yml` og push
-    - [ ] Verifiser: HTTPS/headere, cache-control, kontaktskjema, admin OAuth, URL-redirects, S3 blokkert
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
