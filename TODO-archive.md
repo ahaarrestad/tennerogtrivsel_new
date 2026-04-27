@@ -2,6 +2,15 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Gå i produksjon** ([plan](docs/plans/archive/2026-02-28-cloudfront-prod-komplett.md))
+  - Lambda-origin + `/api/kontakt`-behavior lagt til prod-distribusjon via AWS CLI
+  - CloudFront Function `add-index-html` utvidet med `?page=`-redirects fra gammel side
+  - Response Headers Policy (CSP, HSTS, X-Frame-Options) tilknyttet alle behaviors
+  - Custom error responses (403→404, 404→404) lagt til prod-distribusjon
+  - Prod-deploy og CloudFront-invalidering aktivert i `deploy.yml`
+  - SES-domene `tennerogtrivsel.no` verifisert med DKIM i eu-north-1
+  - Alle 6 domener live: HTTPS, sikkerhetsheadere, cache-control og redirects verifisert
+
 - [x] **llms.txt — AI-lesbar nettstedsbeskrivelse** ([plan](docs/plans/archive/2026-04-25-llms-txt.md))
   - `generate-llms.js` med `generateLlmsTxt` og `generateLlmsFullTxt` — rene funksjoner, testbare
   - `/llms.txt` (kortversjon med tjenester, tannleger, lenker) og `/llms-full.txt` (komplett med tjeneste-body og prisliste) som Astro API-ruter
