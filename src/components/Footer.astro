@@ -36,7 +36,7 @@ const currentYear = new Date().getFullYear();
                     <p>{settings.adresse1}</p>
                     <p>{settings.adresse2}</p>
                     <p class="pt-2">
-                        <a href={`tel:${settings.phone1?.replace(/\s+/g, '')}`} class="hover:text-white transition-colors">
+                        <a href={`tel:${settings.phone1?.replace(/\s+/g, '')}`} class="hover:text-white transition-colors lg:pointer-events-none lg:cursor-default">
                             {settings.phone1}
                         </a>
                     </p>
