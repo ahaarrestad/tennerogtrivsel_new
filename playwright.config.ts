@@ -31,7 +31,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: process.env.CI ? 'npm run dev:nosync' : 'npm run dev',
+    command: process.env.CI ? 'npm run preview' : 'npm run dev',
     url: 'http://localhost:4321/admin',
     reuseExistingServer: !process.env.CI,
   },
