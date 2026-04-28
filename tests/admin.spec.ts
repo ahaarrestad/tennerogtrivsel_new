@@ -115,7 +115,7 @@ test.describe('Admin-panel Fase 1', () => {
     await expect(page).toHaveTitle(/Admin | Tenner og Trivsel/);
     await expect(page.locator('#login-btn')).toBeVisible();
     
-    const criticalErrors = consoleErrors.filter(e => !e.includes('401') && !e.includes('403') && !(e.includes('Content Security Policy') && e.includes('gstatic.com')) && !e.includes('Outdated Optimize Dep'));
+    const criticalErrors = consoleErrors.filter(e => !e.includes('401') && !e.includes('403') && !(e.includes('Content Security Policy') && e.includes('gstatic.com')));
     expect(criticalErrors, `Fant JS-feil i konsollen: ${criticalErrors.join(', ')}`).toHaveLength(0);
   });
 
