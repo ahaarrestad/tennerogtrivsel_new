@@ -70,7 +70,7 @@ Runtime-dependencies (`marked`, `dompurify`, `easymde`, `flatpickr`, `leaflet`, 
 
 - [ ] **Steg 1.1: Skill dependabot-grupper i `.github/dependabot.yml`**
 
-  Erstatt nåværende `groups: dependencies: patterns: ["*"]` med separate update-blokker for ordinær versjonsbump (gruppert per type) og security-updates (eget top-level block siden `applies-to` historisk ikke har vært stabilt inne i groups):
+  Erstatt nåværende `groups: dependencies: patterns: ["*"]` med ett `updates`-block med tre eksplisitte groups (én per type + en egen for security-advisories via `applies-to`, som har vært GA i Dependabot siden 2023):
 
   ```yaml
   updates:
@@ -80,20 +80,18 @@ Runtime-dependencies (`marked`, `dompurify`, `easymde`, `flatpickr`, `leaflet`, 
       groups:
         runtime-dependencies:
           dependency-type: production
+          applies-to: version-updates
           patterns: ["*"]
         dev-dependencies:
           dependency-type: development
+          applies-to: version-updates
           patterns: ["*"]
-    - package-ecosystem: npm
-      directory: /
-      schedule: { interval: daily }
-      open-pull-requests-limit: 10
-      labels: ["security"]
-      # Egen kjøring som kun åpner PR for security-advisories — Dependabot prioriterer disse
-      # (security-updates kommer uansett, dette gir tydelig label/scheduling).
+        security-updates:
+          applies-to: security-updates
+          patterns: ["*"]
   ```
 
-  Notér: hvis du senere vil bruke `applies-to: security-updates` som group-property og det er stabilt i Dependabot ved implementeringstidspunkt, kan dette forenkles til ett `updates`-block med tre groups.
+  Effekt: ordinære versjonsbumps grupperes per type (runtime vs dev), mens security-advisories samles i en egen gruppe (med tydelig PR-tittel) som auto-merge i Steg 1.2 kan whitelist'e separat.
 
 - [ ] **Steg 1.2: Endre auto-merge til kun dev og security**
 
@@ -109,6 +107,8 @@ Runtime-dependencies (`marked`, `dompurify`, `easymde`, `flatpickr`, `leaflet`, 
   ```
 
   For runtime-PRer (`dependency-type == 'direct:production'`): legg til et eget step som kommenterer på PR-en med varsel om at manuell review kreves og assigner reviewer (`gh pr edit --add-reviewer`).
+
+  Notér: `gh pr merge --auto --squash` (eller tilsvarende) fyrer kun når alle påkrevde checks er grønne. Auto-merge i denne workflow-en hopper altså **ikke** over unit-/E2E-tester eller `npm audit signatures` (Steg 4.2) — det venter på at `branch protection`-required checks passerer. Dokumenter eksplisitt i `docs/architecture/sikkerhet.md` hvilke checks som er required for at policy-en skal være meningsfull.
 
 - [ ] **Steg 1.3: Verifiser med en test-PR**
 
@@ -300,7 +300,7 @@ Vi kan ikke flytte token til httpOnly cookie (admin er klient-side SPA mot Googl
   Implementasjon:
   - `setRememberMe(true)` lagres i `localStorage` (kun et boolsk flagg, ikke token), slik at vi husker preferansen mellom browser-restarts
   - Selve OAuth-tokenet flyttes fra `localStorage` til `sessionStorage`
-  - Ved page-load: hvis `rememberMe`-flagget er satt og sessionStorage er tom, kjører vi `silentLogin()` — som benytter Google sin egen httpOnly session-cookie via GIS uten popup når brukeren fortsatt har gyldig Google-sesjon. Dette gir samme UX som dagens «husk meg» i de aller fleste tilfeller (bruker er innlogget i Google), men uten å lagre token vi selv kan miste til XSS.
+  - Ved page-load: hvis `rememberMe`-flagget er satt og sessionStorage er tom, kjører vi `silentLogin()` — GIS gjør en skjult iframe-flyt mot `accounts.google.com` med `prompt: 'none'`, som returnerer et nytt token uten popup når brukeren fortsatt har gyldig Google-sesjon (vår SPA leser **ikke** Google sin session-cookie selv — den er HttpOnly og scoped til Google-domenet). Dette gir samme UX som dagens «husk meg» i de aller fleste tilfeller (bruker er innlogget i Google), men uten å lagre et token vi selv kan miste til XSS.
   - Hvis silent-login feiler (bruker har logget ut av Google) → vis login-knapp som i dag
 
   Fordel: et stjålet sessionStorage-token dør når fanen lukkes; et stjålet localStorage-token lever til expiry (1t). Et stjålet `rememberMe`-flagg er verdiløst.
@@ -327,11 +327,18 @@ Mange CDN-er er allowlistet i middleware (`cdn.jsdelivr.net`, `unpkg.com`, `cdnj
 
   Behold kun det som faktisk lastes fra ekstern origin (Google APIs, Drive thumbnails).
 
-- [ ] **Steg 8.3: Erstatt `'unsafe-inline'` script-src med nonce**
+- [ ] **Steg 8.3: Erstatt `'unsafe-inline'` script-src med build-time hashes**
 
-  Astro 5 støtter `nonce`-injeksjon for inline-script-tags. Generer en nonce per request i middleware og injiser i CSP samt på alle inline `<script>`-tags som Astro genererer.
+  **Default for prod (statisk eksport på S3+CloudFront): bruk `'sha256-...'`-hashes, ikke nonces.** Astro middleware kjører ikke for prerendrede HTML-filer servert av CloudFront — per-request nonce-injeksjon krever Lambda@Edge eller Origin Response-funksjoner som rewriter både CSP-headeren og inline `<script nonce="...">`-attributter. Det er stort infra-arbeid for liten gevinst i et statisk site, fordi inline-scripts som Astro emitterer er stabile på tvers av builds.
 
-  **Ikke bruk `'strict-dynamic'` her:** når `'strict-dynamic'` er aktivt blir host-allowlists i `script-src` (inkl. `accounts.google.com`, `apis.google.com`) ignorert — kun nonces og hashes teller. Google Identity Services laster inn child-scripts via egne mekanismer, og selv om GIS sin parent-script er nonce-merket vil child-loading ofte feile under en streng `strict-dynamic`-policy. Test dette grundig i en preview-deploy før du vurderer å skru på `strict-dynamic`. For prod: hold deg til nonce + eksplisitte host-allowlists.
+  Konkret:
+  - Etter `astro build`: kjør et lite post-build-script som leser `dist/**/*.html`, finner alle inline `<script>`-tags, beregner `sha256` av innholdet, samler unique-listen
+  - Genererer `'sha256-<base64>'`-tokens som inkluderes i `script-src` i CloudFront Response Headers Policy (Steg 5.2)
+  - Hash-listen sjekkes inn i repo (eller genereres som en del av deploy-pipelinen) slik at CSP-strengen er deterministisk og diff-bar
+
+  Nonce-alternativet beholdes kun for SSR-modus (lokal `astro dev`/`preview` via middleware) og for å dokumentere at hvis prosjektet senere bytter til SSR/Lambda@Edge, er overgangen rett frem.
+
+  **Ikke bruk `'strict-dynamic'` her uansett:** når `'strict-dynamic'` er aktivt blir host-allowlists i `script-src` (inkl. `accounts.google.com`, `apis.google.com`) ignorert — kun nonces og hashes teller. Google Identity Services laster inn child-scripts via egne mekanismer, og selv om GIS sin parent-script er hash/nonce-merket vil child-loading ofte feile under en streng `strict-dynamic`-policy. Hold deg til hashes/nonces + eksplisitte host-allowlists.
 
 ---
 
