@@ -70,34 +70,45 @@ Runtime-dependencies (`marked`, `dompurify`, `easymde`, `flatpickr`, `leaflet`, 
 
 - [ ] **Steg 1.1: Skill dependabot-grupper i `.github/dependabot.yml`**
 
-  Erstatt nåværende `groups: dependencies: patterns: ["*"]` med eksplisitte grupper:
+  Erstatt nåværende `groups: dependencies: patterns: ["*"]` med separate update-blokker for ordinær versjonsbump (gruppert per type) og security-updates (eget top-level block siden `applies-to` historisk ikke har vært stabilt inne i groups):
 
   ```yaml
-  groups:
-    runtime-dependencies:
-      dependency-type: production
-      patterns: ["*"]
-    dev-dependencies:
-      dependency-type: development
-      patterns: ["*"]
-    security-updates:
-      applies-to: security-updates
-      patterns: ["*"]
+  updates:
+    - package-ecosystem: npm
+      directory: /
+      schedule: { interval: weekly }
+      groups:
+        runtime-dependencies:
+          dependency-type: production
+          patterns: ["*"]
+        dev-dependencies:
+          dependency-type: development
+          patterns: ["*"]
+    - package-ecosystem: npm
+      directory: /
+      schedule: { interval: daily }
+      open-pull-requests-limit: 10
+      labels: ["security"]
+      # Egen kjøring som kun åpner PR for security-advisories — Dependabot prioriterer disse
+      # (security-updates kommer uansett, dette gir tydelig label/scheduling).
   ```
+
+  Notér: hvis du senere vil bruke `applies-to: security-updates` som group-property og det er stabilt i Dependabot ved implementeringstidspunkt, kan dette forenkles til ett `updates`-block med tre groups.
 
 - [ ] **Steg 1.2: Endre auto-merge til kun dev og security**
 
-  I `.github/workflows/dependabot-auto-merge.yml`, bytt vilkår fra `update-type != version-update:semver-major` til:
+  I `.github/workflows/dependabot-auto-merge.yml`, bytt vilkår fra `update-type != version-update:semver-major` til en eksplisitt allowlist basert på `dependabot/fetch-metadata`-outputs (kun `dependency-type` og `update-type` — disse er stabile):
+
   ```yaml
-  if: |
-    steps.metadata.outputs.dependency-type == 'direct:development'
-    || steps.metadata.outputs.dependency-type == 'indirect'
-    || contains(steps.metadata.outputs.alert-state, 'auto_dismissed') == false
-       && steps.metadata.outputs.update-type != 'version-update:semver-major'
-       && steps.metadata.outputs.dependency-type != 'direct:production'
+  if: >-
+    steps.metadata.outputs.update-type != 'version-update:semver-major'
+    && (
+      steps.metadata.outputs.dependency-type == 'direct:development'
+      || steps.metadata.outputs.dependency-type == 'indirect'
+    )
   ```
 
-  For runtime-PRer: kommenter på PR-en med varsel om at manuell review kreves, og assign reviewer.
+  For runtime-PRer (`dependency-type == 'direct:production'`): legg til et eget step som kommenterer på PR-en med varsel om at manuell review kreves og assigner reviewer (`gh pr edit --add-reviewer`).
 
 - [ ] **Steg 1.3: Verifiser med en test-PR**
 
@@ -224,7 +235,13 @@ Supply-chain-angrep utnytter ofte postinstall-scripts. npm støtter signaturveri
 
 - [ ] **Steg 5.5: E2E-test som verifiserer headers i prod-build**
 
-  En Playwright-test som starter `astro preview` med en proxy som setter samme headers som CloudFront, og asserter at innholdet rendres OK uten CSP-violations.
+  Konkret implementasjon (velg én — første er enklest):
+
+  **Alt A — Astro middleware-sjekk i preview:** Behold `middleware.ts` aktiv i `astro preview` (samme prosess som E2E-tester allerede bruker, jf. b54f156), og legg til en Playwright-test som henter `/` og asserter at `Content-Security-Policy`-headeren matcher prod-strengen og at sidene laster uten konsoll-`SecurityPolicyViolation`-events. Krever at middleware er sannhetskilden — flyttes ved Steg 5.4 til en delt konstant.
+
+  **Alt B — Eksplisitt proxy:** Kjør Playwright med `webServer: { command: 'node tools/preview-with-headers.mjs' }` der scriptet er en liten Express/Node http-proxy som videresender til `astro preview` og injiserer prod-CSP/headers fra samme delte konstant. Mer arbeid, men nærmere prod-virkelighet.
+
+  Velg A med mindre middleware ikke kan brukes som sannhetskilde.
 
 ---
 
@@ -276,11 +293,17 @@ CMS-redigerer (eller en angriper med Sheets-skrivetilgang) kan injisere HTML i `
 
 Vi kan ikke flytte token til httpOnly cookie (admin er klient-side SPA mot Google). Men vi kan begrense XSS-blast-radius:
 
-- [ ] **Steg 7.1: Fjern `localStorage`-mode (kun sessionStorage)**
+- [ ] **Steg 7.1: Fjern `localStorage`-mode (kun sessionStorage), men behold rememberMe-flagget**
 
-  «Husk meg»-checkboxen kan beholdes, men koble den til Google sin egen silent-refresh i stedet for permanent token-lagring. `_rememberMe = true` betyr at vi forsøker `silentLogin()` ved page-load i stedet for at vi har et token i `localStorage`.
+  Trade-off: hvis brukeren lukker hele nettleseren (alle faner) går sessionStorage tapt og brukeren må re-logge inn. Det er bevisst — vi aksepterer en ekstra Google-popup ved cold start mot redusert XSS-blast-radius (1t window → live-tab window).
 
-  Fordel: et stjålet sessionStorage-token dør når fanen lukkes; et stjålet localStorage-token lever til expiry (1t).
+  Implementasjon:
+  - `setRememberMe(true)` lagres i `localStorage` (kun et boolsk flagg, ikke token), slik at vi husker preferansen mellom browser-restarts
+  - Selve OAuth-tokenet flyttes fra `localStorage` til `sessionStorage`
+  - Ved page-load: hvis `rememberMe`-flagget er satt og sessionStorage er tom, kjører vi `silentLogin()` — som benytter Google sin egen httpOnly session-cookie via GIS uten popup når brukeren fortsatt har gyldig Google-sesjon. Dette gir samme UX som dagens «husk meg» i de aller fleste tilfeller (bruker er innlogget i Google), men uten å lagre token vi selv kan miste til XSS.
+  - Hvis silent-login feiler (bruker har logget ut av Google) → vis login-knapp som i dag
+
+  Fordel: et stjålet sessionStorage-token dør når fanen lukkes; et stjålet localStorage-token lever til expiry (1t). Et stjålet `rememberMe`-flagg er verdiløst.
 
 - [ ] **Steg 7.2: Kortere effektiv expiry**
 
@@ -304,9 +327,11 @@ Mange CDN-er er allowlistet i middleware (`cdn.jsdelivr.net`, `unpkg.com`, `cdnj
 
   Behold kun det som faktisk lastes fra ekstern origin (Google APIs, Drive thumbnails).
 
-- [ ] **Steg 8.3: Erstatt `'unsafe-inline'` script-src med nonce eller hash**
+- [ ] **Steg 8.3: Erstatt `'unsafe-inline'` script-src med nonce**
 
-  Astro 5 støtter `nonce`-injeksjon for script-tags. Hvis dette er for invasivt, bruk `'strict-dynamic'` med hash for entry-script.
+  Astro 5 støtter `nonce`-injeksjon for inline-script-tags. Generer en nonce per request i middleware og injiser i CSP samt på alle inline `<script>`-tags som Astro genererer.
+
+  **Ikke bruk `'strict-dynamic'` her:** når `'strict-dynamic'` er aktivt blir host-allowlists i `script-src` (inkl. `accounts.google.com`, `apis.google.com`) ignorert — kun nonces og hashes teller. Google Identity Services laster inn child-scripts via egne mekanismer, og selv om GIS sin parent-script er nonce-merket vil child-loading ofte feile under en streng `strict-dynamic`-policy. Test dette grundig i en preview-deploy før du vurderer å skru på `strict-dynamic`. For prod: hold deg til nonce + eksplisitte host-allowlists.
 
 ---
 
@@ -351,9 +376,11 @@ Drive-oppdateringer trigger en build som hopper over unit/E2E. Hvis en kompromit
 
 - [ ] **Steg 11.3: Lag en lint-regel som flagger `innerHTML =` uten sanitering**
 
-  Custom ESLint-regel eller `eslint-plugin-security`-bruk: warn ved `innerHTML`-tilordning hvor høyresiden er en template-literal med `${...}`-interpolasjon, med mindre den er wrappet i `DOMPurify.sanitize(`, `escapeHtml(`, eller annoteres med `// safe: <reason>`.
+  Velg ESLint (ikke CodeQL) — vi vil ha rask lokal feedback i editor og pre-commit, ikke bare i CI.
 
-  Alternativ: legg til en CodeQL-egendefinert query som kjøres i den eksisterende workflow-en.
+  Bruk `eslint-plugin-security` (`detect-non-literal-html`-regelen som baseline) supplert med en liten egendefinert regel: warn ved `AssignmentExpression` der `left` er `MemberExpression` med property `innerHTML` og `right` er en `TemplateLiteral` med `${...}`-uttrykk, med mindre uttrykket er wrappet i `DOMPurify.sanitize(`, `escapeHtml(`, eller linja har `// safe: <reason>`-kommentar.
+
+  Kjør i CI som blokkerende step. CodeQL beholdes for bredere semantisk analyse — vi dupliserer ikke regelen der.
 
 - [ ] **Steg 11.4: Oppdater `docs/guides/test-guide.md` eller en ny `docs/guides/security-guide.md`**
 
