@@ -20,8 +20,8 @@
     "@googleapis/drive": "^20.1.0",
     "@googleapis/sheets": "^13.0.1",
     "@tailwindcss/vite": "^4.2.4",
-    "astro": "^6.1.10",
-    "dompurify": "^3.4.1",
+    "astro": "^6.2.1",
+    "dompurify": "^3.4.2",
     "easymde": "^2.20.0",
     "flatpickr": "^4.6.13",
     "google-auth-library": "^10.6.2",
@@ -30,12 +30,12 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.2",
+    "@axe-core/playwright": "^4.11.3",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/typography": "^0.5.19",
     "@types/leaflet": "^1.9.21",
     "@vitest/coverage-v8": "^4.1.5",
-    "jsdom": "^29.1.0",
+    "jsdom": "^29.1.1",
     "sharp": "^0.34.5",
     "vitest": "^4.0.18"
   },
