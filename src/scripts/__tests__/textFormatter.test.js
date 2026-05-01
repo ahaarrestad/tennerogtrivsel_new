@@ -95,6 +95,8 @@ describe('formatInfoText', () => {
             .toBe('&lt;script&gt;alert(1)&lt;/script&gt;');
         expect(formatInfoText('"><img src=x onerror=alert(1)>'))
             .toBe('&quot;&gt;&lt;img src=x onerror=alert(1)&gt;');
+        expect(formatInfoText("Sjekk & 'enkle' fnutter"))
+            .toBe('Sjekk &amp; &#39;enkle&#39; fnutter');
     });
 
     it('beholder telefon/email-formatering etter escape', () => {
