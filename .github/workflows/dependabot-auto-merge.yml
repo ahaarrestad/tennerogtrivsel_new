@@ -28,7 +28,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
 
       - name: Flag major updates for manual review
-        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        if: >-
+          steps.metadata.outputs.update-type == 'version-update:semver-major'
+          && steps.metadata.outputs.alert-state == ''
         run: |
           gh pr edit "$PR_URL" --add-assignee ahaarrestad || true
           gh pr edit "$PR_URL" --add-reviewer ahaarrestad || true
