@@ -236,7 +236,7 @@ Konkrete forenklinger:
   - Unit-tester på `middleware.ts` verifiserer at riktige header-verdier settes (Steg 5.2)
   - Curl mot test- og prod-distribusjonen (Steg 5.5) er den ekte E2E-verifiseringen
 
-- [ ] **Steg 5.4: Reaktiver test-deploy i `deploy.yml`**
+- [x] **Steg 5.4: Reaktiver test-deploy i `deploy.yml`**
 
   Test-bucketen `s3://test2.aarrestad.com-se` er tom i dag (auto-deploy ble kommentert ut). Un-comment:
   - `Deploy to S3 TEST-SE` (linje 134–147)
@@ -246,7 +246,7 @@ Konkrete forenklinger:
 
   Krever GitHub-secret: `CLOUDFRONT_DISTRIBUTION_ID_TEST` (sjekk at den finnes; hvis ikke, workflow feiler synlig).
 
-- [ ] **Steg 5.5: Dokumenter AWS Console-prosedyre i `sikkerhet.md`**
+- [x] **Steg 5.5: Dokumenter AWS Console-prosedyre i `sikkerhet.md`**
 
   Skriv steg-for-steg for begge distribusjonene:
 
@@ -263,7 +263,7 @@ Konkrete forenklinger:
 
   Inkluder eksempel-curl-output og rollback-instruks i dokumentet.
 
-- [ ] **Steg 5.6: Manuell verifisering i prod**
+- [x] **Steg 5.6: Manuell verifisering i prod**
 
   Etter at policy er konfigurert på prod:
   - `curl -I https://tennerogtrivsel.no/` viser alle headere
