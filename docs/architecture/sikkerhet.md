@@ -205,7 +205,7 @@ Dette beskytter mot forsyningskjede-angrep der et kompromittert CDN endrer filin
 
 ### Dependabot cooldown og auto-merge-policy
 
-Auto-merge av Dependabot-PR-er fungerer trygt kun fordi vi har en **cooldown**-periode som filtrerer ut versioner som er for nye til at community har oppdaget kompromittering.
+Auto-merge av Dependabot-PR-er fungerer trygt kun fordi vi har en **cooldown**-periode som filtrerer ut versjoner som er for nye til at community har oppdaget kompromittering.
 
 **Cooldown-innstillinger (`.github/dependabot.yml`):**
 

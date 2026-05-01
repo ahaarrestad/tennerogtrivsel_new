@@ -167,6 +167,8 @@ Dette erstatter den tidligere planen om å splitte runtime/dev og whiteliste pak
 
   Lag en throwaway-PR som bumper en runtime-dep til en ≥7 dager gammel versjon manuelt, og bekreft at auto-merge-jobben kjører `gh pr review --approve`. For security-flyten: hvis det ikke finnes en åpen GHSA mot prosjektet akkurat nå, verifiser logikken ved å midlertidig hardkode `alert-state=OPEN` i et lokalt workflow-run, eller stol på at koden er triviell nok (én if-setning) og dokumenter testen som "venter på neste reelle GHSA".
 
+  _Verifisert 2026-05-02 via kodegjennomgang — security-flyten er én if-setning (`alert-state != ''`), for enkel til å feile. Empirisk test av security-flyten venter på neste reelle GHSA-PR mot dette repoet._
+
 - [x] **Steg 1.4: Dokumenter cooldown-rasjonale i `docs/architecture/sikkerhet.md`**
 
   Kort seksjon: hvorfor 7/3/30 dager, hvordan cooldown og security-flow samspiller, og at trade-off'en er bevisst (~80–90 % av npm-angrep fanges innen en uke; sjeldne lange-løp-angrep som event-stream er en akseptert restrisiko).
