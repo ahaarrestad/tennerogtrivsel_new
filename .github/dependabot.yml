@@ -1,28 +1,37 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-
 version: 2
 updates:
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
-    schedule:
-      interval: "daily"
-    open-pull-requests-limit: 10 # Øk grensen slik at den ikke stopper opp
-    rebase-strategy: "auto" # Sørger for at PR-er alltid er oppdatert mot main
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 10
+    rebase-strategy: auto
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
     groups:
-      dependencies:
-        patterns:
-          - "*" # Grupperer oppdateringer (valgfritt, men ryddig)
+      version-updates:
+        applies-to: version-updates
+        patterns: ["*"]
+      security-updates:
+        applies-to: security-updates
+        patterns: ["*"]
 
-  - package-ecosystem: "npm"
-    directory: "/lambda/kontakt-form-handler"
-    schedule:
-      interval: "daily"
+  - package-ecosystem: npm
+    directory: /lambda/kontakt-form-handler
+    schedule: { interval: weekly }
     open-pull-requests-limit: 5
-    rebase-strategy: "auto"
+    rebase-strategy: auto
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
     groups:
-      lambda-dependencies:
-        patterns:
-          - "*"
+      lambda-version-updates:
+        applies-to: version-updates
+        patterns: ["*"]
+      lambda-security-updates:
+        applies-to: security-updates
+        patterns: ["*"]

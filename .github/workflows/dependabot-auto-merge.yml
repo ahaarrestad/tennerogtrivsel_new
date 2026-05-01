@@ -17,12 +17,14 @@ jobs:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Approve and Enable Auto-Merge
-        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        if: >-
+          steps.metadata.outputs.update-type != 'version-update:semver-major'
+          && steps.metadata.outputs.alert-state == ''
         run: |
           gh pr review --approve "$PR_URL"
           gh pr merge --auto --rebase "$PR_URL"
         env:
-          PR_URL: ${{github.event.pull_request.html_url}}
+          PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
 
       - name: Flag major updates for manual review
@@ -34,4 +36,16 @@ jobs:
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           DEPS: ${{ steps.metadata.outputs.dependency-names }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
+
+      - name: Flag security updates for manual review
+        if: steps.metadata.outputs.alert-state != ''
+        run: |
+          gh pr edit "$PR_URL" --add-assignee ahaarrestad || true
+          gh pr edit "$PR_URL" --add-reviewer ahaarrestad || true
+          gh pr comment "$PR_URL" --body "@ahaarrestad Security-advisory (\`${DEPS}\`, alert: ${ALERT}). Cooldown er omgått for CVE-fix — krever manuell review før merge."
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          DEPS: ${{ steps.metadata.outputs.dependency-names }}
+          ALERT: ${{ steps.metadata.outputs.alert-state }}
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
