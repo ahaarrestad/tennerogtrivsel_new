@@ -22,10 +22,14 @@ const dateFormatter = new Intl.DateTimeFormat('no-NO', {
 
 const FALLBACK_END_DATE = '2099-12-31';
 
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 export function formatInfoText(rawText) {
     if (!rawText) return "";
 
-    let formattedText = rawText
+    let formattedText = escapeHtml(rawText)
         .replace(emailRegex, '<a href="mailto:$1" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap">$1</a>');
 
     formattedText = formattedText.replace(combinedPhoneRegex, (match, p1) => { // p1 will be the matched phone number string

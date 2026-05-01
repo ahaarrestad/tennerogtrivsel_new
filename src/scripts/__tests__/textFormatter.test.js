@@ -89,6 +89,20 @@ describe('formatInfoText', () => {
         const expected = 'This has *some* markdown and <a href="mailto:test@example.com" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap">test@example.com</a>.';
         expect(formatInfoText(text)).toBe(expected);
     });
+
+    it('escaper HTML i input før regex-erstatning', () => {
+        expect(formatInfoText('<script>alert(1)</script>'))
+            .toBe('&lt;script&gt;alert(1)&lt;/script&gt;');
+        expect(formatInfoText('"><img src=x onerror=alert(1)>'))
+            .toBe('&quot;&gt;&lt;img src=x onerror=alert(1)&gt;');
+    });
+
+    it('beholder telefon/email-formatering etter escape', () => {
+        expect(formatInfoText('Ring 22 33 44 55 eller post@example.com'))
+            .toContain('<a href="tel:22334455"');
+        expect(formatInfoText('Ring 22 33 44 55 eller post@example.com'))
+            .toContain('<a href="mailto:post@example.com"');
+    });
 });
 
 describe('formatDate', () => {
