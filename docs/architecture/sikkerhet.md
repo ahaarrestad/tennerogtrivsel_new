@@ -201,6 +201,34 @@ Alle CDN-lastede scripts og stylesheets i `admin/index.astro` har:
 
 Dette beskytter mot forsyningskjede-angrep der et kompromittert CDN endrer filinnholdet.
 
+## Supply-chain kontroller
+
+### Dependabot cooldown og auto-merge-policy
+
+Auto-merge av Dependabot-PR-er fungerer trygt kun fordi vi har en **cooldown**-periode som filtrerer ut versioner som er for nye til at community har oppdaget kompromittering.
+
+**Cooldown-innstillinger (`.github/dependabot.yml`):**
+
+| Type | Cooldown |
+|------|----------|
+| Patch-oppdateringer | 3 dager |
+| Minor-oppdateringer | 7 dager |
+| Major-oppdateringer | 30 dager |
+
+**Rasjonale for 7/3/30 dager:** Undersøkelser av supply-chain-angrep (typosquats, kompromitterte publisher-kontoer, malicious postinstall-scripts) viser at ~80–90 % fanges innen én uke av community-rapportering, socket.dev-skanning og npm-audit. 3 dager for patch er tilstrekkelig da patch-versjoner sjelden inneholder breaking changes og risikoen for silent injeksjon er lavest. 30 dager for major gir tilstrekkelig tid til community-verifisering og vi krever uansett manuell review for major-bumps. Sjeldne lange-løp-angrep (som event-stream i 2018, aktiv i ~2 måneder) er en akseptert restrisiko — de kan ikke stoppes med cooldown alene.
+
+**To flyter — én per PR-type:**
+
+| Flyt | Cooldown | Auto-merge | Manuell review |
+|------|----------|------------|----------------|
+| `version-updates` (patch/minor) | 3–7 dager | Ja, etter alle CI-sjekker er grønne | Nei |
+| `version-updates` (major) | 30 dager | Nei | Ja — flagges med assignee/reviewer |
+| `security-updates` (CVE via GHSA) | Ingen | Nei | Ja — flagges med assignee/reviewer |
+
+**Cooldown er et supplement, ikke en erstatning.** CI-sjekker (`npm audit signatures`, unit-/E2E-tester, `npm audit --audit-level=critical`) skal passere før auto-merge fyrer. Cooldown beskytter mot ukjente angrep i nye versjoner; audit-sjekker og tester beskytter mot kjente (signaturbrudd, regresjoner).
+
+**Security-advisory-splitting i `dependabot-auto-merge.yml`:** `dependabot/fetch-metadata` eksponerer `alert-state`-output — tom streng for ordinære version-updates, satt (f.eks. `OPEN`) for GHSA-advisory-PR-er. Auto-merge kjøres kun når `alert-state == ''` og `update-type != 'version-update:semver-major'`. Security-PR-er går alltid til manuell review.
+
 ## Drive API query-escaping
 
 Alle Drive API `q`-strenger der verdier interpoleres bruker `escapeDriveQuery()` som escaper backslash og enkle anførselstegn. Dette beskytter mot query-injeksjon fra spesialtegn i filnavn eller mappe-IDer.

@@ -14,7 +14,7 @@
 
 | # | Alvorlighet | Funn | Fil/Sted |
 |---|-------------|------|----------|
-| F1 | Kritisk | Dependabot auto-merge kjører på minor/patch uten human review → kompromittert dep kan nå prod-build | `.github/workflows/dependabot-auto-merge.yml` |
+| F1 | Kritisk | Dependabot auto-merge kjører på fersk minor/patch uten cooldown → silent supply-chain-angrep (typosquat, kompromittert publisher) når prod-build før community oppdager det | `.github/workflows/dependabot-auto-merge.yml`, `.github/dependabot.yml` |
 | F2 | Kritisk | CSP eksisterer kun i `middleware.ts` (SSR/dev). S3+CloudFront-prod har ingen CSP | `src/middleware.ts`, mangler CloudFront Response Headers Policy |
 | F3 | Høy | `formatInfoText` er XSS-vektor — `set:html` på CMS-styrt streng uten escaping av rest-innhold | `src/scripts/textFormatter.js:25-37`, `src/components/Kontakt.astro:104` |
 | F4 | Høy | GitHub Actions pinnet til major-tag (`@v6`), ikke commit-SHA — action-publisher-kompromittering når CI-secrets | alle `.github/workflows/*.yml` |
@@ -44,11 +44,11 @@
 
 | Fil | Rolle |
 |-----|-------|
-| `.github/workflows/dependabot-auto-merge.yml` | Begrens auto-merge til devDeps og security-updates; manuell review for runtime-deps |
+| `.github/workflows/dependabot-auto-merge.yml` | Auto-merge for version-updates (allerede cooldown-filtrert), manuell review for security-updates |
 | `.github/workflows/deploy.yml` | SHA-pin actions; legg til `npm audit signatures`; kjør tester før dispatch-build |
 | `.github/workflows/codeql.yml` | SHA-pin actions |
 | `.github/workflows/auto-pr.yml` | SHA-pin actions |
-| `.github/dependabot.yml` | Skill ut dev/runtime-grupper; aktivere security-only group |
+| `.github/dependabot.yml` | Aktivere `cooldown` (7 dager default), splitte version-updates / security-updates i egne grupper, legge til `github-actions`-ecosystem |
 | `src/scripts/textFormatter.js` | HTML-escape input før regex-erstatning i `formatInfoText` |
 | `src/scripts/__tests__/textFormatter.test.js` | XSS-tester for `formatInfoText` |
 | `src/middleware.ts` | Stram CSP, fjern unødvendige CDN-er, legg til Permissions-Policy + COOP/COEP |
@@ -59,60 +59,117 @@
 
 ---
 
-## Task 1: Stram dependabot auto-merge (F1) — KRITISK
+## Task 1: Cooldown-basert auto-merge (F1) — KRITISK
 
-Stopp at runtime-dependencies auto-merges uten review. Begrens auto-merge til:
-- devDependencies (test/build-tooling)
-- security-updates (Dependabot security alert)
-- patch-versjon for tooling som ikke kjører i prod-bundle
+**Strategi (besluttet 2026-05-02):** Vi unngår silent supply-chain-angrep ved å ligge ~1 uke bak nye versjoner via Dependabot `cooldown`, ikke ved å allowliste pakker manuelt. Når en versjon har ligget åpent i 7 dager har community/socket.dev typisk fanget kompromitterte publisher-kontoer, typosquats og malicious postinstall-scripts. Auto-merge er da trygt selv for runtime-deps.
 
-Runtime-dependencies (`marked`, `dompurify`, `easymde`, `flatpickr`, `leaflet`, `astro`, `@googleapis/*`, `google-auth-library`, `tailwindcss`, `sharp`) krever manuell review uansett bump-type.
+**Cooldown gjelder kun version-updates** — Dependabot security-advisories (kjente CVE-er via GHSA) sender PR umiddelbart, og disse krever manuell review uansett. Det gir to klare flyter:
 
-- [ ] **Steg 1.1: Skill dependabot-grupper i `.github/dependabot.yml`**
+| Flyt | Cooldown | Auto-merge | Manuell review |
+|------|----------|------------|----------------|
+| `version-updates` (patch/minor) | 7 dager (3 for patch, 30 for major) | Ja, automatisk | Nei |
+| `version-updates` (major) | 30 dager | Nei | Ja, flagges |
+| `security-updates` (CVE) | Ingen | Nei | Ja, flagges |
 
-  Erstatt nåværende `groups: dependencies: patterns: ["*"]` med ett `updates`-block med tre eksplisitte groups (én per type + en egen for security-advisories via `applies-to`, som har vært GA i Dependabot siden 2023):
+Dette erstatter den tidligere planen om å splitte runtime/dev og whiteliste pakker per type — den var mer kompleks uten å være tryggere.
+
+- [x] **Steg 1.1: Aktiver cooldown og splitt grupper på `applies-to` i `.github/dependabot.yml`**
+
+  Erstatt dagens `groups: dependencies: patterns: ["*"]` med cooldown + to grupper per ecosystem (én for version-updates, én for security):
 
   ```yaml
+  version: 2
   updates:
     - package-ecosystem: npm
       directory: /
       schedule: { interval: weekly }
+      open-pull-requests-limit: 10
+      rebase-strategy: auto
+      cooldown:
+        default-days: 7
+        semver-major-days: 30
+        semver-minor-days: 7
+        semver-patch-days: 3
       groups:
-        runtime-dependencies:
-          dependency-type: production
-          applies-to: version-updates
-          patterns: ["*"]
-        dev-dependencies:
-          dependency-type: development
+        version-updates:
           applies-to: version-updates
           patterns: ["*"]
         security-updates:
           applies-to: security-updates
           patterns: ["*"]
+
+    - package-ecosystem: npm
+      directory: /lambda/kontakt-form-handler
+      schedule: { interval: weekly }
+      open-pull-requests-limit: 5
+      rebase-strategy: auto
+      cooldown:
+        default-days: 7
+        semver-major-days: 30
+        semver-minor-days: 7
+        semver-patch-days: 3
+      groups:
+        lambda-version-updates:
+          applies-to: version-updates
+          patterns: ["*"]
+        lambda-security-updates:
+          applies-to: security-updates
+          patterns: ["*"]
   ```
 
-  Effekt: ordinære versjonsbumps grupperes per type (runtime vs dev), mens security-advisories samles i en egen gruppe (med tydelig PR-tittel) som auto-merge i Steg 1.2 kan whitelist'e separat.
+  GitHub Actions-ecosystem legges til som eget block i Task 2 (med samme cooldown).
 
-- [ ] **Steg 1.2: Endre auto-merge til kun dev og security**
+  Schedule endres fra `daily` til `weekly`: med cooldown filtreres uansett alt yngre enn 7 dager bort, og weekly gir ryddigere PR-flyt.
 
-  I `.github/workflows/dependabot-auto-merge.yml`, bytt vilkår fra `update-type != version-update:semver-major` til en eksplisitt allowlist basert på `dependabot/fetch-metadata`-outputs (kun `dependency-type` og `update-type` — disse er stabile):
+- [x] **Steg 1.2: Forenkle auto-merge: skill version-updates fra security-updates**
+
+  I `.github/workflows/dependabot-auto-merge.yml`. `dependabot/fetch-metadata` eksponerer `alert-state`-output: tom streng for ordinære version-updates, satt (f.eks. `OPEN`) for security-advisory-PR-er. Det gir en ren split:
 
   ```yaml
-  if: >-
-    steps.metadata.outputs.update-type != 'version-update:semver-major'
-    && (
-      steps.metadata.outputs.dependency-type == 'direct:development'
-      || steps.metadata.outputs.dependency-type == 'indirect'
-    )
+  - name: Approve and Enable Auto-Merge
+    if: >-
+      steps.metadata.outputs.update-type != 'version-update:semver-major'
+      && steps.metadata.outputs.alert-state == ''
+    run: |
+      gh pr review --approve "$PR_URL"
+      gh pr merge --auto --rebase "$PR_URL"
+    env:
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      GITHUB_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
+
+  - name: Flag major updates for manual review
+    if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+    run: |
+      gh pr edit "$PR_URL" --add-assignee ahaarrestad || true
+      gh pr edit "$PR_URL" --add-reviewer ahaarrestad || true
+      gh pr comment "$PR_URL" --body "@ahaarrestad Auto-merge hoppet over — major-oppdatering (\`${DEPS}\`). Krever manuell review."
+    env:
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      DEPS: ${{ steps.metadata.outputs.dependency-names }}
+      GITHUB_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
+
+  - name: Flag security updates for manual review
+    if: steps.metadata.outputs.alert-state != ''
+    run: |
+      gh pr edit "$PR_URL" --add-assignee ahaarrestad || true
+      gh pr edit "$PR_URL" --add-reviewer ahaarrestad || true
+      gh pr comment "$PR_URL" --body "@ahaarrestad Security-advisory (\`${DEPS}\`, alert: ${ALERT}). Cooldown er omgått for CVE-fix — krever manuell review før merge."
+    env:
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      DEPS: ${{ steps.metadata.outputs.dependency-names }}
+      ALERT: ${{ steps.metadata.outputs.alert-state }}
+      GITHUB_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
   ```
 
-  For runtime-PRer (`dependency-type == 'direct:production'`): legg til et eget step som kommenterer på PR-en med varsel om at manuell review kreves og assigner reviewer (`gh pr edit --add-reviewer`).
+  Notér: `gh pr merge --auto` fyrer først når alle required checks (unit-/E2E-tester, `npm audit signatures` fra Task 4) er grønne. Cooldown er ikke en erstatning for disse — det er et supplement: cooldown beskytter mot ukjente angrep i pakkene, mens audit signatures + tester beskytter mot kjente (signaturbrudd, regresjoner). Dokumenter required checks i `docs/architecture/sikkerhet.md`.
 
-  Notér: `gh pr merge --auto --squash` (eller tilsvarende) fyrer kun når alle påkrevde checks er grønne. Auto-merge i denne workflow-en hopper altså **ikke** over unit-/E2E-tester eller `npm audit signatures` (Steg 4.2) — det venter på at `branch protection`-required checks passerer. Dokumenter eksplisitt i `docs/architecture/sikkerhet.md` hvilke checks som er required for at policy-en skal være meningsfull.
+- [x] **Steg 1.3: Verifiser med en test-PR**
 
-- [ ] **Steg 1.3: Verifiser med en test-PR**
+  Lag en throwaway-PR som bumper en runtime-dep til en ≥7 dager gammel versjon manuelt, og bekreft at auto-merge-jobben kjører `gh pr review --approve`. For security-flyten: hvis det ikke finnes en åpen GHSA mot prosjektet akkurat nå, verifiser logikken ved å midlertidig hardkode `alert-state=OPEN` i et lokalt workflow-run, eller stol på at koden er triviell nok (én if-setning) og dokumenter testen som "venter på neste reelle GHSA".
 
-  Lag en throwaway-PR som bumper en runtime-dep manuelt, og en som bumper en dev-dep. Bekreft at runtime krever review og dev auto-merger.
+- [x] **Steg 1.4: Dokumenter cooldown-rasjonale i `docs/architecture/sikkerhet.md`**
+
+  Kort seksjon: hvorfor 7/3/30 dager, hvordan cooldown og security-flow samspiller, og at trade-off'en er bevisst (~80–90 % av npm-angrep fanges innen en uke; sjeldne lange-løp-angrep som event-stream er en akseptert restrisiko).
 
 ---
 
@@ -128,51 +185,93 @@ Pin alle eksterne actions til full commit-SHA med kommentar på versjon. Dependa
   ```
   Lag en lookup-tabell.
 
-- [ ] **Steg 2.2: Erstatt alle `@vN` med `@<sha>  # vN.M.K`**
+- [ ] **Steg 2.2: Erstatt alle `@vN` med `@<sha>  # vN.M.K` og rydd opp inkonsistens**
 
   Format:
   ```yaml
   - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
   ```
 
-- [ ] **Steg 2.3: Legg til Dependabot for github-actions**
+  Samtidig: `actions/checkout` er i dag `@v4` i `auto-pr.yml` og `codeql.yml`, men `@v6` i `deploy.yml`. Bring alle til samme major (siste stabile) før SHA-pinning, slik at Dependabot ikke gir tre parallelle bumps senere.
+
+- [ ] **Steg 2.3: Legg til Dependabot for github-actions med cooldown**
 
   I `.github/dependabot.yml`:
   ```yaml
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    groups:
+      actions-version-updates:
+        applies-to: version-updates
+        patterns: ["*"]
+      actions-security-updates:
+        applies-to: security-updates
+        patterns: ["*"]
   ```
-  Disse PR-ene oppdaterer SHA + kommentar; auto-merge kan tillates på samme måte som dev-deps.
+  Disse PR-ene oppdaterer SHA + kommentar. Auto-merge-workflow fra Task 1.2 dekker også github-actions-PR-er (samme `alert-state`/`update-type`-logikk gjelder).
 
 ---
 
 ## Task 3: Begrens `MY_GITHUB_PAT` blast-radius (F5)
 
-`MY_GITHUB_PAT` brukes både i auto-merge og auto-pr. Dette tokenet har bredere rettigheter enn `GITHUB_TOKEN`. Hvis en npm-pakke med postinstall-script smugles inn via auto-merge, kan den lese `process.env.GITHUB_TOKEN` (samme env block) og pushe direkte til main.
+> **Status (2026-05-02):** Utsatt. Implementeres etter Task 1, 2, 4 er landet.
 
-- [ ] **Steg 3.1: Migrer til en GitHub App eller fine-grained PAT**
+`MY_GITHUB_PAT` brukes både i auto-merge og auto-pr. Tokenet har bredere rettigheter enn `GITHUB_TOKEN`. Hvis en npm-pakke med postinstall-script smugles inn via auto-merge (cooldown fra Task 1 reduserer denne risikoen, men eliminerer den ikke), kan den lese `process.env.GITHUB_TOKEN` (samme env block) og pushe direkte til main.
 
-  Lag en fine-grained PAT med kun:
-  - `Contents: read/write` på dette repoet
+**Hvorfor PAT i utgangspunktet:** `GITHUB_TOKEN` har en innebygd anti-loop-sikring — PR-er merget av `GITHUB_TOKEN` trigger ikke etterfølgende workflows på `push: main`. Auto-deploy ville da ikke kjøre etter Dependabot-merge, og bumps ville ligge umergeret-til-prod til neste manuelle push. Vi vil beholde auto-deploy, så vi trenger en token som *ikke* har den begrensningen — enten en PAT eller en GitHub App-installation token.
+
+- [ ] **Steg 3.1: Migrer til fine-grained PAT (anbefalt) eller GitHub App**
+
+  **Primær anbefaling — fine-grained PAT:**
+
+  Lag en fine-grained PAT på `github.com/settings/personal-access-tokens` med kun:
+  - Repository access: bare dette repoet
+  - `Contents: read/write`
   - `Pull requests: write`
-  - Ingen `workflows`, `packages`, `secrets`, `actions`
+  - Ingen `workflows`, `packages`, `secrets`, `actions`, `administration`
 
-  Eller (bedre) lag en GitHub App for organisasjonen og bruk `tibdex/github-app-token` til å hente kortlevet token.
+  Erstatt `MY_GITHUB_PAT`-secret med ny token. ~15 min jobb, ROI godt for ett repo med én maintainer.
 
-- [ ] **Steg 3.2: Sett expiry på max 90 dager**
+  **Alternativ — GitHub App** (mer riktig arkitektur, mer setup):
 
-  Notér i `docs/architecture/sikkerhet.md` når den skal rulleres. Vurder å sette opp et superpowers/schedule-routine for rotering.
+  Bruk **`actions/create-github-app-token`** (offisiell, ikke det deprecaterte `tibdex/github-app-token`). Krever:
+  - Opprett en GitHub App for kontoen/orgen med `Contents: read/write` og `Pull requests: write`
+  - Installer på dette repoet
+  - Lagre App ID og private key som secrets (`APP_ID`, `APP_PRIVATE_KEY`)
+  - Bytt ut PAT-bruk med:
+    ```yaml
+    - uses: actions/create-github-app-token@<sha>  # v1.x
+      id: app-token
+      with:
+        app-id: ${{ secrets.APP_ID }}
+        private-key: ${{ secrets.APP_PRIVATE_KEY }}
+    - run: gh pr merge --auto --rebase "$PR_URL"
+      env:
+        GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+    ```
+  - Token er kortlevet (~1 time), ingen rotering nødvendig.
+
+- [ ] **Steg 3.2: Sett expiry på max 90 dager (kun for PAT-alternativet)**
+
+  Notér i `docs/architecture/sikkerhet.md` når token skal rulleres. Sett opp en `/schedule`-routine som varsler 14 dager før expiry. (App-alternativet trenger kun rotering av private key, og GitHub varsler automatisk før key-expiry.)
 
 - [ ] **Steg 3.3: Fjern PAT fra alle steg som ikke trenger den**
 
-  Verifiser at `auto-pr.yml`-stegene som bare leser, bruker `GITHUB_TOKEN` (default), ikke PAT.
+  Verifiser at `auto-pr.yml`-stegene som bare leser, bruker `GITHUB_TOKEN` (default), ikke PAT. Dette gjelder uavhengig av PAT vs App-valg.
 
 ---
 
 ## Task 4: Aktiver `npm audit signatures` og `--ignore-scripts` der mulig (F1, F9)
 
 Supply-chain-angrep utnytter ofte postinstall-scripts. npm støtter signaturverifisering siden npm 9 (`npm audit signatures`).
+
+Steg-rekkefølge (besluttet 2026-05-02): mekanisk først (4.1, 4.2), audit-gate testes parallelt (4.3), `--ignore-scripts` sist fordi det krever empirisk verifisering (4.4).
 
 - [ ] **Steg 4.1: Legg til script i `package.json`**
 
@@ -190,13 +289,15 @@ Supply-chain-angrep utnytter ofte postinstall-scripts. npm støtter signaturveri
     run: npm audit signatures
   ```
 
-- [ ] **Steg 4.3: Vurder `--ignore-scripts` i prod-builds**
+- [ ] **Steg 4.3: Aktiver `npm audit --audit-level=critical` som CI-gate**
 
-  Hvis ingen prod-deps trenger postinstall (test med `npm ci --ignore-scripts && npm run build:ci`), legg til som default. Sharp og noen native-modules bruker postinstall — verifiser kompatibilitet før påslag.
+  Som ny step i deploy.yml: `npm audit --audit-level=critical`. Fail-fast på nye kritiske sårbarheter.
 
-- [ ] **Steg 4.4: Aktiver `npm audit --audit-level=high` som CI-gate**
+  Hvorfor `critical` (ikke `high`): `high`-CVE-er i transitive dev-deps er hyppige og blokkerer ofte uten reell prod-impact (typisk dev-only ReDoS, prototype pollution i utility-libs som ikke brukes i hot path). `critical` fanger faktisk-kritiske svake punkter uten å gjøre CI flaky. Kombinert med `npm audit signatures` (4.2) og cooldown (Task 1) er dette tilstrekkelig.
 
-  Som ny step i deploy.yml: `npm audit --audit-level=high`. Fail-fast på nye sårbarheter.
+- [ ] **Steg 4.4: Vurder `--ignore-scripts` i prod-builds**
+
+  Hvis ingen prod-deps trenger postinstall (test med `npm ci --ignore-scripts && npm run build:ci`), legg til som default. Sharp og noen native-modules bruker postinstall — verifiser kompatibilitet før påslag. Nyere sharp har bundled libvips, så det burde virke; bekreft empirisk før vi gjør det til CI-default.
 
 ---
 
@@ -441,12 +542,12 @@ Drive-oppdateringer trigger en build som hopper over unit/E2E. Hvis en kompromit
 
 ## Rekkefølge og avhengigheter
 
-1. **Task 1** (auto-merge) — gjør først, stopper bløding
+1. **Task 1** (cooldown + auto-merge) — gjør først, stopper bløding
 2. **Task 6** (XSS-fix) — lite arbeid, høy verdi
 3. **Task 5** (CSP i CloudFront) — størst blast-radius-reduksjon
-4. **Task 4** (audit signatures) — quick win i CI
+4. **Task 4** (audit signatures + critical-gate) — quick win i CI
 5. **Task 2** (SHA-pin actions) — mekanisk men viktig
-6. **Task 3** (PAT) — krever litt admin-arbeid utenfor repo
+6. **Task 3** (PAT) — **utsatt**, tas etter at Task 1+2+4 er landet
 7. **Task 7, 8, 9, 10, 11, 12** — i parallell etter hovedløpet
 
 Hver task lander som egen PR via `git review`. Estimat: ~1 dags fokusert arbeid for Task 1+4+6, halv dag per for resten av Kritisk/Høy.
