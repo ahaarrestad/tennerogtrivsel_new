@@ -25,6 +25,12 @@
   - Knapp i admin-dashboard med spinner, statusmelding og siste vellykkede bygg-tidspunkt
 
 
+- [ ] **Fjern deprecation-advarsel: apple-mobile-web-app-capable** — *ingen plan ennå*
+  - Console-advarsel: `<meta name="apple-mobile-web-app-capable" content="yes">` er deprecated
+  - Legg til `<meta name="mobile-web-app-capable" content="yes">` (kan beholde begge for bakoverkompabilitet med iOS)
+  - Sjekk hvor meta-taggen er definert (sannsynligvis `BaseLayout.astro` eller tilsvarende)
+
+
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
