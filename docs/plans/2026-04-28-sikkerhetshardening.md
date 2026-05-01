@@ -200,48 +200,76 @@ Supply-chain-angrep utnytter ofte postinstall-scripts. npm støtter signaturveri
 
 ---
 
-## Task 5: Flytt CSP og security-headers til CloudFront (F2, F8) — KRITISK
+## Task 5: Flytt CSP og security-headers til CloudFront (F2) — KRITISK
 
-`middleware.ts` kjører ikke på S3-statisk. Produksjon må ha en CloudFront **Response Headers Policy** med samme (eller strammere) policy. Dette er det viktigste blast-radius-tiltaket: hvis en kompromittert build-dep injiserer skript, stopper CSP `connect-src` exfiltrering til angriperens domene.
+`middleware.ts` kjører ikke på S3-statisk. Produksjon må ha en CloudFront **Response Headers Policy** med samme policy. Dette er det viktigste blast-radius-tiltaket: hvis en kompromittert build-dep injiserer skript, stopper CSP `connect-src` exfiltrering til angriperens domene.
 
-- [ ] **Steg 5.1: Definer prod-CSP**
+**Forenklet tilnærming (besluttet 2026-04-29):**
 
-  Strammere enn middleware:
-  - Fjern `'unsafe-inline'` fra `script-src` (Astro produserer hashed scripts; bruk `'self' 'wasm-unsafe-eval'` om nødvendig)
-  - Behold `'unsafe-inline'` i `style-src` kun fordi Tailwind v4 inliner kritisk CSS
-  - Begrens `connect-src` til kun Google API-endepunkter brukt på admin-siden
-  - `frame-ancestors 'none'`
-  - `report-uri` til en endpoint vi kan logge brudd på (eller en Lambda)
+Vi splitter Task 5 og Task 8. Mål for **denne** task-en er å få CSP **i det hele tatt** til prod, ikke å stramme den. Speil eksisterende middleware-CSP og legg til security-headere som mangler. Innstramming (fjerne `unsafe-inline`, hash-liste, fjerne ubrukte CDN-er) skjer i Task 8 etter at vi har bekreftet at speilingen virker i prod.
 
-- [ ] **Steg 5.2: Opprett Response Headers Policy i CloudFront**
+Konkrete forenklinger:
+- **Behold `'unsafe-inline'` i script-src og style-src** midlertidig — Task 8 strammer
+- **Behold dagens CDN-allowlists** — Task 8 reviderer (admin laster faktisk EasyMDE/Flatpickr/Font Awesome fra cdn.jsdelivr.net + cdnjs.cloudflare.com med SRI, så de er **ikke** alle ubrukte)
+- **Drop `report-uri`** — krever Lambda-mottaker, blir egen task
+- **Manuell AWS Console-konfig**, ikke IaC — repoet har ingen Terraform/CDK i dag, og innføring av IaC er stort arbeid med liten gevinst for ett enkelt CloudFront-objekt. Konfigurasjonen dokumenteres detaljert i `docs/architecture/sikkerhet.md` slik at den er gjenopprettelig manuelt.
 
-  Via AWS Console eller IaC. Inkluder:
-  - `Content-Security-Policy` (verdi fra 5.1)
-  - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
-  - `X-Content-Type-Options: nosniff`
-  - `X-Frame-Options: DENY`
-  - `Referrer-Policy: strict-origin-when-cross-origin`
-  - `Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()`
-  - `Cross-Origin-Opener-Policy: same-origin-allow-popups` (admin trenger Google popup)
-  - `Cross-Origin-Resource-Policy: same-origin`
+**Test-først-strategi (besluttet 2026-04-30):** Vi knytter CSP-policyen til **test-distribusjonen** (`test2.aarrestad.com`) før prod, så vi kan verifisere at admin/OAuth/CDN-er fungerer. Testen-bucketen er tom i dag, så vi reaktiverer test-deploy-stegene i `deploy.yml` (kommentert ut tidligere) som del av denne PR-en. Push til main vil deretter deploye til både test og prod, men CSP-policyen kontrolleres separat per distribusjon i CloudFront.
 
-- [ ] **Steg 5.3: Knytt policy til distribusjonen**
+- [x] **Steg 5.1: Lag delt CSP/headers-konstant**
 
-  Behavior `*` får policyen. Verifiser med `curl -I https://tennerogtrivsel.no/`.
+  Opprett `src/utils/security-headers.ts` med:
+  - `CSP`-streng (eksakt kopi av dagens middleware-CSP, ingen endringer i source-listene)
+  - `SECURITY_HEADERS`-objekt med alle navn/verdier som skal settes både av middleware og CloudFront
 
-- [ ] **Steg 5.4: Speil i `middleware.ts`**
+  Modulen er sannhetskilden. `middleware.ts` importerer fra den. CloudFront-konfig dokumenteres i `sikkerhet.md` med samme verdier — copy/paste-vennlig.
 
-  Hold dev-CSP synkronisert med prod for å fange opp brudd lokalt før deploy. Lag en CSP-streng-konstant som genereres fra én kilde (f.eks. en JS-fil) og brukes både i middleware og som input til Terraform/manuell CloudFront-config.
+- [x] **Steg 5.2: Oppdater `src/middleware.ts` til å bruke delt konstant**
 
-- [ ] **Steg 5.5: E2E-test som verifiserer headers i prod-build**
+  Fjern hardkodede strenger i middleware. Importer fra `security-headers.ts`. Legg til de nye headerne (HSTS, Permissions-Policy, COOP, CORP) som i dag mangler både i dev og prod.
 
-  Konkret implementasjon (velg én — første er enklest):
+  Resultat: dev-server og prod skal serve identiske headere når CloudFront-policyen er aktivert. Eksisterende `src/__tests__/middleware.test.ts` utvides med assertions for de nye headerne.
 
-  **Alt A — Astro middleware-sjekk i preview:** Behold `middleware.ts` aktiv i `astro preview` (samme prosess som E2E-tester allerede bruker, jf. b54f156), og legg til en Playwright-test som henter `/` og asserter at `Content-Security-Policy`-headeren matcher prod-strengen og at sidene laster uten konsoll-`SecurityPolicyViolation`-events. Krever at middleware er sannhetskilden — flyttes ved Steg 5.4 til en delt konstant.
+- [x] **Steg 5.3: Drop Playwright E2E-test for headers**
 
-  **Alt B — Eksplisitt proxy:** Kjør Playwright med `webServer: { command: 'node tools/preview-with-headers.mjs' }` der scriptet er en liten Express/Node http-proxy som videresender til `astro preview` og injiserer prod-CSP/headers fra samme delte konstant. Mer arbeid, men nærmere prod-virkelighet.
+  Begrunnelse: Astro 5 i statisk modus kjører **ikke** middleware i `astro preview` (CI bruker preview, ikke dev). Test ville feilaktig vist headers lokalt (dev-modus) men ikke matche CI/prod-virkeligheten. Dekning er istedet:
+  - Unit-tester på `middleware.ts` verifiserer at riktige header-verdier settes (Steg 5.2)
+  - Curl mot test- og prod-distribusjonen (Steg 5.5) er den ekte E2E-verifiseringen
 
-  Velg A med mindre middleware ikke kan brukes som sannhetskilde.
+- [ ] **Steg 5.4: Reaktiver test-deploy i `deploy.yml`**
+
+  Test-bucketen `s3://test2.aarrestad.com-se` er tom i dag (auto-deploy ble kommentert ut). Un-comment:
+  - `Deploy to S3 TEST-SE` (linje 134–147)
+  - `Invalidate CloudFront cache TEST` (linje 164–168)
+
+  Etter merge vil push til main deploye til både test og prod. Det er greit for vårt formål — CSP-rollout kontrolleres per CloudFront-distribusjon, ikke per S3-deploy.
+
+  Krever GitHub-secret: `CLOUDFRONT_DISTRIBUTION_ID_TEST` (sjekk at den finnes; hvis ikke, workflow feiler synlig).
+
+- [ ] **Steg 5.5: Dokumenter AWS Console-prosedyre i `sikkerhet.md`**
+
+  Skriv steg-for-steg for begge distribusjonene:
+
+  1. AWS Console → CloudFront → Policies → Response headers → Create
+  2. Konfigurer Custom headers og Custom CSP med eksakte verdier (lim inn fra `src/utils/security-headers.ts`)
+  3. **Test først:** Distribution `test2.aarrestad.com` → Behaviors → Edit `*` → velg ny Response headers policy
+  4. Vent på CloudFront-deploy (typisk 5–15 min)
+  5. Verifiser test:
+     - `curl -I https://test2.aarrestad.com/` viser alle headere
+     - Last sider i nettleser, sjekk console for CSP-violations
+     - `https://test2.aarrestad.com/admin` — Google OAuth-popup fungerer
+  6. **Hvis test OK:** gjenta steg 3–5 for prod-distribusjonen (`tennerogtrivsel.no`)
+  7. **Hvis test feiler:** rull tilbake — fjern policy fra test-behavior. Fix CSP, prøv igjen.
+
+  Inkluder eksempel-curl-output og rollback-instruks i dokumentet.
+
+- [ ] **Steg 5.6: Manuell verifisering i prod**
+
+  Etter at policy er konfigurert på prod:
+  - `curl -I https://tennerogtrivsel.no/` viser alle headere
+  - Forsiden, `/kontakt`, `/admin` lastes uten console-CSP-feil
+  - Google OAuth-login i admin fungerer
+  - Hvis noe knekker: rull tilbake via AWS Console (samme prosedyre som i 5.5)
 
 ---
 

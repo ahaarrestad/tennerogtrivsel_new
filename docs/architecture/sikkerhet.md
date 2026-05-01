@@ -20,11 +20,107 @@ I node-miljø (Vitest) finnes ingen DOM, så DOMPurify må mockes i testfiler:
 vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
 ```
 
-## Middleware og produksjonsmiljø
+## Sikkerhetsheadere — sannhetskilde og deployment
 
-`src/middleware.ts` setter HTTP-sikkerhetsheadere (CSP, X-Frame-Options, m.fl.) og kjører i Astro dev-server og for SSR-endepunkter. **Prosjektet deployes som statiske filer til AWS S3 og har ingen kjørende server i produksjon.** Middleware påvirker derfor ikke produksjon. Dersom disse headerne skal gjelde i prod, må de konfigureres i CloudFront (Response Headers Policy) eller S3.
+**Sannhetskilde:** `src/utils/security-headers.ts` eksporterer `CSP`-strengen og `SECURITY_HEADERS`-objektet med alle navn/verdier.
+
+**Hvor headerne settes:**
+
+| Miljø | Mekanisme | Henter fra |
+|-------|-----------|------------|
+| Lokal dev (`npm run dev`) | Astro middleware (`src/middleware.ts`) | `SECURITY_HEADERS` |
+| `astro preview` (CI E2E) | Ingen — Astro statisk-modus kjører ikke middleware i preview | — |
+| Test (`test2.aarrestad.com`) | CloudFront Response Headers Policy | Manuelt kopiert fra `SECURITY_HEADERS` |
+| Prod (`tennerogtrivsel.no`) | CloudFront Response Headers Policy | Manuelt kopiert fra `SECURITY_HEADERS` |
 
 CSP inkluderer `blob:` i `connect-src` for å støtte thumbnail-forhåndsvisning (blob-URLer fra `getDriveImageBlob()`) i admin-panelet.
+
+### Konfigurering av CloudFront Response Headers Policy
+
+Følg denne prosedyren ved første oppsett, og hver gang `SECURITY_HEADERS` endres i koden.
+
+**Forutsetninger:**
+- AWS Console-tilgang til CloudFront-distribusjonene
+- Innholdet i `src/utils/security-headers.ts` for å lime inn verdier
+
+**Steg 1 — Opprett policy:**
+
+1. AWS Console → **CloudFront → Policies → Response headers policies → Create response headers policy**
+2. Navn: `tot-security-headers` (eller annet beskrivende)
+3. **Custom headers** — Legg til disse seks:
+
+   | Header name | Value | Override |
+   |-------------|-------|----------|
+   | `Content-Security-Policy` | (lim inn `CSP`-konstant fra `security-headers.ts`, alt på én linje, semikolon-separert) | ✅ Yes |
+   | `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` | ✅ Yes |
+   | `X-Content-Type-Options` | `nosniff` | ✅ Yes |
+   | `X-Frame-Options` | `DENY` | ✅ Yes |
+   | `Referrer-Policy` | `strict-origin-when-cross-origin` | ✅ Yes |
+   | `Cross-Origin-Opener-Policy` | `same-origin-allow-popups` | ✅ Yes |
+   | `Cross-Origin-Resource-Policy` | `same-origin` | ✅ Yes |
+   | `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), interest-cohort=()` | ✅ Yes |
+
+   **NB:** Selv om AWS har egne felter under "Security headers" for HSTS, X-Content-Type-Options, X-Frame-Options og Referrer-Policy, anbefales det å bruke **Custom headers** for alle for å holde CSP-strengen og resten i samme tabell — enklere å vedlikeholde.
+
+4. Lagre policy.
+
+**Steg 2 — Knytt policy til TEST-distribusjonen først:**
+
+1. CloudFront → **Distributions → (test2.aarrestad.com-distribusjonen) → Behaviors**
+2. Velg behavior med Path Pattern `*` (default) → **Edit**
+3. Under **Response headers policy** velg `tot-security-headers`
+4. Save changes
+5. Vent 5–15 min på CloudFront-deploy (status: «Deploying» → «Enabled»)
+
+**Steg 3 — Verifiser test:**
+
+```bash
+curl -I https://test2.aarrestad.com/
+```
+
+Forventet utdrag:
+
+```
+HTTP/2 200
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com ...
+strict-transport-security: max-age=63072000; includeSubDomains; preload
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+cross-origin-opener-policy: same-origin-allow-popups
+cross-origin-resource-policy: same-origin
+permissions-policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+```
+
+I nettleser (DevTools-konsoll åpen):
+- `https://test2.aarrestad.com/` — laster, ingen røde CSP-violations
+- `https://test2.aarrestad.com/kontakt` — kart vises, kontaktskjema fungerer
+- `https://test2.aarrestad.com/admin` — Google OAuth-popup åpnes og fullfører login
+
+**Steg 4 — Hvis test OK, knytt samme policy til PROD-distribusjonen:**
+
+Gjenta Steg 2 for prod-distribusjonen (den med `CLOUDFRONT_DISTRIBUTION_ID_PROD`). Verifiser med `curl -I https://tennerogtrivsel.no/`.
+
+**Steg 5 — Hvis noe knekker (test eller prod):**
+
+Rollback tar sekunder:
+1. CloudFront → Distributions → (relevant distribusjon) → Behaviors → Edit `*`
+2. Sett **Response headers policy** til `None` (eller en tidligere AWS-managed policy)
+3. Save changes
+4. Etter 1–2 min er CSP-headeren borte og siden fungerer som før
+
+Identifiser feilen (typisk: en CDN-host som mangler i `script-src` eller `style-src`), oppdater `SECURITY_HEADERS` i koden, deploy, gjenta Steg 1–4.
+
+### Hvorfor ikke IaC?
+
+Repoet har ingen Terraform/CDK i dag. Innføring for ett enkelt CloudFront-objekt gir liten gevinst. Konfigurasjonen er gjenopprettelig manuelt via prosedyren over — alle verdier finnes i `src/utils/security-headers.ts` slik at policy-en kan rekonstrueres.
+
+### Dev/preview-merknad
+
+`astro preview` kjører ikke middleware (statisk eksport). E2E-tester via Playwright (`npm run preview`) ser derfor ikke security-headerne. Dekning er istedet:
+- Unit-tester på `src/middleware.ts` verifiserer at riktige verdier settes
+- `tests/csp-check.spec.ts` (kun manuell `npx playwright test csp-check --project=chromium` i dev-modus) fanger CSP-violations i konsoll
+- Curl-verifisering mot test/prod-distribusjon er den ekte E2E-sjekken
 
 ## CloudFront tile-proxy (GDPR)
 

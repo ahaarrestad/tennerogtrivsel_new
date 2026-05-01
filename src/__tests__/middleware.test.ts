@@ -98,6 +98,36 @@ describe('src/middleware.ts – HTTP security headers', () => {
         expect(response.headers.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin');
     });
 
+    it('setter Strict-Transport-Security', async () => {
+        const handler = await importMiddleware();
+        const response = await handler({}, makeNext());
+        expect(response.headers.get('Strict-Transport-Security'))
+            .toBe('max-age=63072000; includeSubDomains; preload');
+    });
+
+    it('setter Permissions-Policy som låser kamera/mikrofon/geo', async () => {
+        const handler = await importMiddleware();
+        const response = await handler({}, makeNext());
+        const policy = response.headers.get('Permissions-Policy')!;
+        expect(policy).toContain('camera=()');
+        expect(policy).toContain('microphone=()');
+        expect(policy).toContain('geolocation=()');
+        expect(policy).toContain('interest-cohort=()');
+    });
+
+    it('setter COOP til same-origin-allow-popups (Google OAuth-popup)', async () => {
+        const handler = await importMiddleware();
+        const response = await handler({}, makeNext());
+        expect(response.headers.get('Cross-Origin-Opener-Policy'))
+            .toBe('same-origin-allow-popups');
+    });
+
+    it('setter Cross-Origin-Resource-Policy til same-origin', async () => {
+        const handler = await importMiddleware();
+        const response = await handler({}, makeNext());
+        expect(response.headers.get('Cross-Origin-Resource-Policy')).toBe('same-origin');
+    });
+
     it('videresender responsen fra next uendret bortsett fra headers', async () => {
         const handler = await importMiddleware();
         const next = makeNext(404);
