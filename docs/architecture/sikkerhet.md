@@ -47,7 +47,7 @@ Følg denne prosedyren ved første oppsett, og hver gang `SECURITY_HEADERS` endr
 
 1. AWS Console → **CloudFront → Policies → Response headers policies → Create response headers policy**
 2. Navn: `tot-security-headers` (eller annet beskrivende)
-3. **Custom headers** — Legg til disse seks:
+3. **Custom headers** — Legg til alle disse:
 
    | Header name | Value | Override |
    |-------------|-------|----------|
