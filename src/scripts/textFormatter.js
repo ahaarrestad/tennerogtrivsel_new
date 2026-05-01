@@ -22,8 +22,9 @@ const dateFormatter = new Intl.DateTimeFormat('no-NO', {
 
 const FALLBACK_END_DATE = '2099-12-31';
 
+const ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    return String(s).replace(/[&<>"']/g, c => ESCAPE_MAP[c]);
 }
 
 export function formatInfoText(rawText) {
