@@ -2,6 +2,10 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Fjern deprecation-advarsel: apple-mobile-web-app-capable**
+  - Lagt til `<meta name="mobile-web-app-capable" content="yes">` i `src/pages/admin/index.astro`
+  - Apple-taggen beholdt for iOS-bakoverkompatibilitet
+
 - [x] **Gå i produksjon** ([plan](docs/plans/archive/2026-02-28-cloudfront-prod-komplett.md))
   - Lambda-origin + `/api/kontakt`-behavior lagt til prod-distribusjon via AWS CLI
   - CloudFront Function `add-index-html` utvidet med `?page=`-redirects fra gammel side
