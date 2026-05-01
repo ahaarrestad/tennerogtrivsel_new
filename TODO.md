@@ -17,7 +17,7 @@
   - Kritisk: Dependabot auto-merge for runtime-deps (F1), CSP mangler i CloudFront-prod (F2)
   - Høy: XSS via `formatInfoText` (F3), GitHub Actions ikke SHA-pinnet (F4), bredt PAT-scope (F5), admin-token i localStorage (F6)
   - Medium: `unsafe-inline` i CSP (F7), mangler Permissions-Policy/HSTS (F8), ingen `npm audit signatures` (F9), `PUBLIC_GOOGLE_API_KEY` ikke verifisert restricted (F10)
-  - **Aktiv:** Task 5 — CSP og security-headers til CloudFront (forenklet, speil dagens middleware-CSP)
+  - ~~Task 5 (F2, F8): CSP og security-headers til CloudFront — ferdig 2026-05-01~~
 
 ## Backlog
 - [ ] **«Bygg nå»-knapp i admin** ([plan](docs/superpowers/plans/2026-03-21-bygg-na-knapp.md)) ([spec](docs/superpowers/specs/2026-03-21-bygg-na-knapp-design.md))
