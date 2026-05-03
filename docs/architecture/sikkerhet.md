@@ -194,12 +194,7 @@ Kaller (`admin-gallery.js`) har allerede try/catch med `showToast` — feilmeldi
 
 ## Subresource Integrity (SRI)
 
-Alle CDN-lastede scripts og stylesheets i `admin/index.astro` har:
-- Pinnede versjoner (EasyMDE 2.20.0, Flatpickr 4.6.13, Font Awesome 4.7.0)
-- `integrity="sha384-..."` hasher
-- `crossorigin="anonymous"`
-
-Dette beskytter mot forsyningskjede-angrep der et kompromittert CDN endrer filinnholdet.
+EasyMDE, Flatpickr og Font Awesome er bundlet via npm og Vite — ingen CDN-`<script>`- eller `<link>`-tagger i `admin/index.astro`. SRI-beskyttelse for disse pakkene ivaretas av npm-registryets pakke-integritet (lockfile + `npm audit signatures` i CI) fremfor browser-SRI.
 
 ## Supply-chain kontroller
 

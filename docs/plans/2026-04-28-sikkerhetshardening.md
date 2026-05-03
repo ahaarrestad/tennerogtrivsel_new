@@ -313,7 +313,7 @@ Vi splitter Task 5 og Task 8. Mål for **denne** task-en er å få CSP **i det h
 
 Konkrete forenklinger:
 - **Behold `'unsafe-inline'` i script-src og style-src** midlertidig — Task 8 strammer
-- **Behold dagens CDN-allowlists** — Task 8 reviderer (admin laster faktisk EasyMDE/Flatpickr/Font Awesome fra cdn.jsdelivr.net + cdnjs.cloudflare.com med SRI, så de er **ikke** alle ubrukte)
+- **Behold dagens CDN-allowlists** — Task 8 reviderer (EasyMDE/Flatpickr/Font Awesome viste seg å være bundlet via npm/Vite, ikke CDN — alle CDN-er ble fjernet i Task 8)
 - **Drop `report-uri`** — krever Lambda-mottaker, blir egen task
 - **Manuell AWS Console-konfig**, ikke IaC — repoet har ingen Terraform/CDK i dag, og innføring av IaC er stort arbeid med liten gevinst for ett enkelt CloudFront-objekt. Konfigurasjonen dokumenteres detaljert i `docs/architecture/sikkerhet.md` slik at den er gjenopprettelig manuelt.
 
@@ -450,13 +450,13 @@ Vi kan ikke flytte token til httpOnly cookie (admin er klient-side SPA mot Googl
 
 Mange CDN-er er allowlistet i middleware (`cdn.jsdelivr.net`, `unpkg.com`, `cdnjs.cloudflare.com`) men brukes ikke i bygget output (alt bundles av Vite). Hver allowlist er en angrepsmulighet.
 
-- [ ] **Steg 8.1: Audit faktisk bruk av eksterne CDN-er**
+- [x] **Steg 8.1: Audit faktisk bruk av eksterne CDN-er**
 
-  `grep -rn "cdn\.jsdelivr\|unpkg\|cdnjs" src/` — finn faktisk bruk. Mest sannsynlig kun fra gamle iterasjoner.
+  `grep -rn "cdn\.jsdelivr\|unpkg\|cdnjs" src/` — ingen treff utenom security-headers.ts og middleware.test.ts. Alle tre bibliotekene bundlet via npm/Vite.
 
-- [ ] **Steg 8.2: Fjern ubrukte CDN-er fra CSP**
+- [x] **Steg 8.2: Fjern ubrukte CDN-er fra CSP**
 
-  Behold kun det som faktisk lastes fra ekstern origin (Google APIs, Drive thumbnails).
+  Fjernet cdn.jsdelivr.net, unpkg.com og cdnjs.cloudflare.com fra script-src, style-src og font-src. CloudFront Response Headers Policy oppdatert via AWS CLI. Verifisert med curl mot test og prod.
 
 - [ ] **Steg 8.3: Erstatt `'unsafe-inline'` script-src med build-time hashes**
 
