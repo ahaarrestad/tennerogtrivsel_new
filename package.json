@@ -13,7 +13,8 @@
     "astro": "astro",
     "test": "vitest --run --coverage",
     "test:e2e": "playwright test",
-    "test:e2e:repeat": "npx playwright test --repeat-each=10"
+    "test:e2e:repeat": "npx playwright test --repeat-each=10",
+    "audit:sigs": "npm audit signatures"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.0",
