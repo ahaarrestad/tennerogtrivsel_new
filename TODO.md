@@ -22,6 +22,7 @@
   - ~~Task 6 (F3): XSS-fix i formatInfoText — ferdig 2026-05-02~~
   - ~~Task 4 (F9): npm audit signatures + critical-gate + --ignore-scripts i CI — ferdig 2026-05-03~~
   - ~~Task 8 steg 8.1–8.2 (F7): ubrukte CDN-er fjernet fra CSP — ferdig 2026-05-03~~
+  - ~~Task 8 steg 8.3 (F7): `unsafe-inline` erstattet med SHA256-hashes i script-src — ferdig 2026-05-03~~
   - Neste: Task 2 (F4): SHA-pin GitHub Actions
 
 ## Backlog
