@@ -3,7 +3,11 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node', // or 'jsdom' if you need browser APIs
-    include: ['src/**/__tests__/**/*.{ts,js}', 'lambda/**/__tests__/**/*.mjs'],
+    include: [
+      'src/**/__tests__/**/*.{ts,js}',
+      'lambda/**/__tests__/**/*.mjs',
+      'scripts/**/__tests__/**/*.mjs',
+    ],
     exclude: ['src/**/__tests__/test-helpers.js'],
     // workaround for astro:content
     alias: {
