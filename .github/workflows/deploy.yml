@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - name: Run unit tests
         run: npm test
 
@@ -49,7 +49,11 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-      - run: npm ci
+      - run: npm ci --ignore-scripts
+      - name: Verify npm package signatures
+        run: npm audit signatures
+      - name: Check for critical vulnerabilities
+        run: npm audit --audit-level=critical
 
       - name: Sync data
         run: npm run sync
@@ -94,8 +98,14 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-      - run: npm ci
+      - run: npm ci --ignore-scripts
         if: github.event_name == 'repository_dispatch'
+      - name: Verify npm package signatures
+        if: github.event_name == 'repository_dispatch'
+        run: npm audit signatures
+      - name: Check for critical vulnerabilities
+        if: github.event_name == 'repository_dispatch'
+        run: npm audit --audit-level=critical
       - name: Sync data
         if: github.event_name == 'repository_dispatch'
         run: npm run sync

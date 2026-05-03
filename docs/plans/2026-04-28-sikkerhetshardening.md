@@ -275,7 +275,7 @@ Supply-chain-angrep utnytter ofte postinstall-scripts. npm støtter signaturveri
 
 Steg-rekkefølge (besluttet 2026-05-02): mekanisk først (4.1, 4.2), audit-gate testes parallelt (4.3), `--ignore-scripts` sist fordi det krever empirisk verifisering (4.4).
 
-- [ ] **Steg 4.1: Legg til script i `package.json`**
+- [x] **Steg 4.1: Legg til script i `package.json`**
 
   ```json
   "scripts": {
@@ -283,7 +283,7 @@ Steg-rekkefølge (besluttet 2026-05-02): mekanisk først (4.1, 4.2), audit-gate 
   }
   ```
 
-- [ ] **Steg 4.2: Kjør i CI før build**
+- [x] **Steg 4.2: Kjør i CI før build**
 
   I `deploy.yml`, etter `npm ci` i `e2e-tests` og `build`-job:
   ```yaml
@@ -291,13 +291,13 @@ Steg-rekkefølge (besluttet 2026-05-02): mekanisk først (4.1, 4.2), audit-gate 
     run: npm audit signatures
   ```
 
-- [ ] **Steg 4.3: Aktiver `npm audit --audit-level=critical` som CI-gate**
+- [x] **Steg 4.3: Aktiver `npm audit --audit-level=critical` som CI-gate**
 
   Som ny step i deploy.yml: `npm audit --audit-level=critical`. Fail-fast på nye kritiske sårbarheter.
 
   Hvorfor `critical` (ikke `high`): `high`-CVE-er i transitive dev-deps er hyppige og blokkerer ofte uten reell prod-impact (typisk dev-only ReDoS, prototype pollution i utility-libs som ikke brukes i hot path). `critical` fanger faktisk-kritiske svake punkter uten å gjøre CI flaky. Kombinert med `npm audit signatures` (4.2) og cooldown (Task 1) er dette tilstrekkelig.
 
-- [ ] **Steg 4.4: Vurder `--ignore-scripts` i prod-builds**
+- [x] **Steg 4.4: Vurder `--ignore-scripts` i prod-builds**
 
   Hvis ingen prod-deps trenger postinstall (test med `npm ci --ignore-scripts && npm run build:ci`), legg til som default. Sharp og noen native-modules bruker postinstall — verifiser kompatibilitet før påslag. Nyere sharp har bundled libvips, så det burde virke; bekreft empirisk før vi gjør det til CI-default.
 
@@ -380,7 +380,7 @@ Konkrete forenklinger:
 
 CMS-redigerer (eller en angriper med Sheets-skrivetilgang) kan injisere HTML i `phone1`-feltet, som rendres med `set:html`. Funksjonen må HTML-escape input før den gjør regex-erstatning.
 
-- [ ] **Steg 6.1: Skriv test først (TDD)**
+- [x] **Steg 6.1: Skriv test først (TDD)**
 
   I `src/scripts/__tests__/textFormatter.test.js`:
   ```js
@@ -398,7 +398,7 @@ CMS-redigerer (eller en angriper med Sheets-skrivetilgang) kan injisere HTML i `
   });
   ```
 
-- [ ] **Steg 6.2: Implementer escaping**
+- [x] **Steg 6.2: Implementer escaping**
 
   Legg til en helper `escapeHtml` (eller bruk eksisterende fra admin-modulen — flytt til `textFormatter.js`):
   ```js
@@ -410,11 +410,11 @@ CMS-redigerer (eller en angriper med Sheets-skrivetilgang) kan injisere HTML i `
   ```
   Endre `formatInfoText` til å starte med `let formattedText = escapeHtml(rawText);` før regex-erstatningene.
 
-- [ ] **Steg 6.3: Verifiser at telefon/email-mønstre fortsatt matcher etter escape**
+- [x] **Steg 6.3: Verifiser at telefon/email-mønstre fortsatt matcher etter escape**
 
   E-post-tegn (`@`, `.`, alfanum, `_`, `+`, `-`) escapes ikke. Telefonmønster bruker bare siffer og mellomrom — også uberørt. Tester fra 6.1 dekker dette.
 
-- [ ] **Steg 6.4: Sjekk om andre `set:html`-bruk har lignende sårbarhet**
+- [x] **Steg 6.4: Sjekk om andre `set:html`-bruk har lignende sårbarhet**
 
   `grep -rn "set:html" --include="*.astro"` → `SchemaOrg.astro` bruker `JSON.stringify(schema)` som er trygg. `Kontakt.astro:104` er den eneste eksponerte. Verifiser at andre felter (`adresse1`, `adresse2`) ikke senere flyttes til `set:html`.
 
