@@ -25,14 +25,14 @@ const scriptSrc = hashData.scriptHashes.length > 0
     ? `'self' ${hashData.scriptHashes.map(h => `'${h}'`).join(' ')} https://apis.google.com https://accounts.google.com`
     : `'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com`;
 
-const items = config.CustomHeadersConfig.Items;
-const cspItem = items.find(item => item.Header === 'Content-Security-Policy');
-if (!cspItem) {
-    console.error('Error: Content-Security-Policy header not found in CloudFront policy');
+if (!config.SecurityHeadersConfig?.ContentSecurityPolicy) {
+    console.error('Error: SecurityHeadersConfig.ContentSecurityPolicy not found in CloudFront policy');
     process.exit(1);
 }
 
-cspItem.Value = cspItem.Value.replace(/script-src [^;]+/, `script-src ${scriptSrc}`);
+config.SecurityHeadersConfig.ContentSecurityPolicy.ContentSecurityPolicy =
+    config.SecurityHeadersConfig.ContentSecurityPolicy.ContentSecurityPolicy
+        .replace(/script-src [^;]+/, `script-src ${scriptSrc}`);
 
 const tmpPath = '/tmp/cfn-policy-update.json';
 writeFileSync(tmpPath, JSON.stringify(config));
