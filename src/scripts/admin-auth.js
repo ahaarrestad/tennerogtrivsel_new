@@ -93,14 +93,17 @@ export function initGis(callback) {
 
             // Lagre token og utløpstidspunkt
             const expiry = Date.now() + (resp.expires_in * 1000);
-            const storage    = _rememberMe ? localStorage  : sessionStorage;
-            const otherStore = _rememberMe ? sessionStorage : localStorage;
-            storage.setItem('admin_google_token', JSON.stringify({
+            sessionStorage.setItem('admin_google_token', JSON.stringify({
                 access_token: resp.access_token,
                 expiry: expiry,
                 user: userInfo
             }));
-            otherStore.removeItem('admin_google_token');
+            localStorage.removeItem('admin_google_token');
+            if (_rememberMe) {
+                localStorage.setItem('admin_remember_me', '1');
+            } else {
+                localStorage.removeItem('admin_remember_me');
+            }
 
             callback(userInfo);
             window.dispatchEvent(new Event('admin-auth-refreshed'));
@@ -116,18 +119,16 @@ export function initGis(callback) {
  * silent-refresh bevarer brukerens valg.
  */
 export function getStoredUser() {
-    for (const storage of [localStorage, sessionStorage]) {
-        const stored = storage.getItem('admin_google_token');
-        if (!stored) continue;
-        try {
-            const { expiry, user } = JSON.parse(stored);
-            if (Date.now() < expiry - 60000) {
-                _rememberMe = (storage === localStorage);
-                return user;
-            }
-        } catch { /* fall through */ }
-        storage.removeItem('admin_google_token');
-    }
+    const stored = sessionStorage.getItem('admin_google_token');
+    if (!stored) return null;
+    try {
+        const { expiry, user } = JSON.parse(stored);
+        if (Date.now() < expiry - 300000) {
+            _rememberMe = !!localStorage.getItem('admin_remember_me');
+            return user;
+        }
+    } catch { /* fall through */ }
+    sessionStorage.removeItem('admin_google_token');
     return null;
 }
 
@@ -136,26 +137,24 @@ export function getStoredUser() {
  * Setter også _rememberMe basert på hvor tokenet ble funnet.
  */
 export function tryRestoreSession() {
-    for (const storage of [localStorage, sessionStorage]) {
-        const stored = storage.getItem('admin_google_token');
-        if (!stored) continue;
-        try {
-            const { access_token, expiry } = JSON.parse(stored);
-            if (Date.now() < expiry - 60000) {
-                if (!gapi.client) {
-                    console.warn("[Admin] gapi.client ikke klar for setToken");
-                    return false;
-                }
-                _rememberMe = (storage === localStorage);
-                console.log("[Admin] Gjenoppretter sesjon i GAPI (rememberMe=%s)", _rememberMe);
-                gapi.client.setToken({ access_token });
-                return true;
+    const stored = sessionStorage.getItem('admin_google_token');
+    if (!stored) return false;
+    try {
+        const { access_token, expiry } = JSON.parse(stored);
+        if (Date.now() < expiry - 300000) {
+            if (!gapi.client) {
+                console.warn("[Admin] gapi.client ikke klar for setToken");
+                return false;
             }
-        } catch (e) {
-            console.error("[Admin] Feil ved lesing av lagret sesjon:", e);
+            _rememberMe = !!localStorage.getItem('admin_remember_me');
+            console.log("[Admin] Gjenoppretter sesjon i GAPI (rememberMe=%s)", _rememberMe);
+            gapi.client.setToken({ access_token });
+            return true;
         }
-        storage.removeItem('admin_google_token');
+    } catch (e) {
+        console.error("[Admin] Feil ved lesing av lagret sesjon:", e);
     }
+    sessionStorage.removeItem('admin_google_token');
     return false;
 }
 
@@ -215,5 +214,6 @@ export function logout() {
         }
     }
     localStorage.removeItem('admin_google_token');
+    localStorage.removeItem('admin_remember_me');
     sessionStorage.removeItem('admin_google_token');
 }

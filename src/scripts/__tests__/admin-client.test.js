@@ -273,11 +273,28 @@ describe('admin-client.js', () => {
             expect(getStoredUser()).toBeNull();
         });
 
-        it('skal returnere brukerinfo hvis gyldig sesjon finnes', () => {
+        it('skal returnere brukerinfo hvis gyldig sesjon finnes i sessionStorage', () => {
             const future = Date.now() + 3600000;
             const mockUser = { name: 'Ola' };
-            localStorage.setItem('admin_google_token', JSON.stringify({
+            sessionStorage.setItem('admin_google_token', JSON.stringify({
                 expiry: future,
+                user: mockUser
+            }));
+            expect(getStoredUser()).toEqual(mockUser);
+        });
+
+        it('returnerer null for token som utløper om 4 min (< 5 min margin)', () => {
+            sessionStorage.setItem('admin_google_token', JSON.stringify({
+                expiry: Date.now() + 240000,
+                user: { name: 'X' }
+            }));
+            expect(getStoredUser()).toBeNull();
+        });
+
+        it('returnerer bruker for token som utløper om 6 min (> 5 min margin)', () => {
+            const mockUser = { name: 'X' };
+            sessionStorage.setItem('admin_google_token', JSON.stringify({
+                expiry: Date.now() + 360000,
                 user: mockUser
             }));
             expect(getStoredUser()).toEqual(mockUser);
@@ -308,49 +325,50 @@ describe('admin-client.js', () => {
             expect(tryRestoreSession()).toBe(false);
         });
 
-        it('tryRestoreSession skal sette token i GAPI hvis gyldig', async () => {
-            await initGapi(); 
+        it('tryRestoreSession skal sette token i GAPI fra sessionStorage', async () => {
+            await initGapi();
             const future = Date.now() + 3600000;
-            localStorage.setItem('admin_google_token', JSON.stringify({
-                access_token: 'test-token',
+            sessionStorage.setItem('admin_google_token', JSON.stringify({
+                access_token: 'ses-token',
                 expiry: future
             }));
-
             expect(tryRestoreSession()).toBe(true);
-            expect(gapi.client.setToken).toHaveBeenCalledWith({ access_token: 'test-token' });
+            expect(gapi.client.setToken).toHaveBeenCalledWith({ access_token: 'ses-token' });
         });
 
-        it('tryRestoreSession skal fjerne utløpt token og returnere false', async () => {
+        it('tryRestoreSession skal fjerne utløpt token i sessionStorage og returnere false', async () => {
             await initGapi();
             const past = Date.now() - 1000;
-            localStorage.setItem('admin_google_token', JSON.stringify({
+            sessionStorage.setItem('admin_google_token', JSON.stringify({
                 access_token: 'old-token',
                 expiry: past
             }));
 
             expect(tryRestoreSession()).toBe(false);
-            expect(localStorage.getItem('admin_google_token')).toBeNull();
+            expect(sessionStorage.getItem('admin_google_token')).toBeNull();
         });
 
         it('tryRestoreSession skal returnere false og BEVARE token hvis gapi.client ikke er klar', async () => {
             const future = Date.now() + 3600000;
-            localStorage.setItem('admin_google_token', JSON.stringify({
-                access_token: 'test-token',
+            sessionStorage.setItem('admin_google_token', JSON.stringify({
+                access_token: 'ses-token',
                 expiry: future
             }));
-            // gapi.client is null before initGapi()
             vi.stubGlobal('gapi', { client: null });
 
             expect(tryRestoreSession()).toBe(false);
-            // Tokenet skal IKKE slettes – det kan brukes når gapi er klart
-            expect(localStorage.getItem('admin_google_token')).not.toBeNull();
+            expect(sessionStorage.getItem('admin_google_token')).not.toBeNull();
         });
 
-        it('logout skal fjerne token hvis gapi.client finnes', () => {
-            localStorage.setItem('admin_google_token', 'some-data');
+        it('logout skal fjerne token og admin_remember_me-flagget', () => {
+            localStorage.setItem('admin_google_token', 'lokal');
+            sessionStorage.setItem('admin_google_token', 'sesjon');
+            localStorage.setItem('admin_remember_me', '1');
             logout();
             expect(google.accounts.oauth2.revoke).toHaveBeenCalled();
             expect(localStorage.getItem('admin_google_token')).toBeNull();
+            expect(sessionStorage.getItem('admin_google_token')).toBeNull();
+            expect(localStorage.getItem('admin_remember_me')).toBeNull();
         });
     });
 
@@ -505,9 +523,9 @@ describe('admin-client.js', () => {
         });
 
         it('getStoredUser skal håndtere korrupt JSON', () => {
-            localStorage.setItem('admin_google_token', 'ikke-json');
+            sessionStorage.setItem('admin_google_token', 'ikke-json');
             expect(getStoredUser()).toBeNull();
-            expect(localStorage.getItem('admin_google_token')).toBeNull();
+            expect(sessionStorage.getItem('admin_google_token')).toBeNull();
         });
 
         it('initGis callback skal håndtere error-respons', async () => {
@@ -536,8 +554,8 @@ describe('admin-client.js', () => {
         });
 
         it('tryRestoreSession skal håndtere korrupt JSON', async () => {
-            await initGapi(); 
-            localStorage.setItem('admin_google_token', '{invalid');
+            await initGapi();
+            sessionStorage.setItem('admin_google_token', 'ikke-json');
             expect(tryRestoreSession()).toBe(false);
         });
 
@@ -1038,7 +1056,7 @@ describe('admin-client.js', () => {
     });
 
     describe('login()-flyt med setRememberMe', () => {
-        it('login() med _rememberMe=false lagrer token i sessionStorage', async () => {
+        it('login() lagrer alltid token i sessionStorage, aldri i localStorage', async () => {
             setRememberMe(false);
             initGis(() => {});
             login();
@@ -1046,41 +1064,49 @@ describe('admin-client.js', () => {
             expect(localStorage.getItem('admin_google_token')).toBeNull();
         });
 
-        it('login() med _rememberMe=true lagrer token i localStorage', async () => {
+        it('login() med rememberMe=true lagrer token i sessionStorage og setter admin_remember_me-flagg', async () => {
             setRememberMe(true);
             initGis(() => {});
             login();
-            await vi.waitFor(() => expect(localStorage.getItem('admin_google_token')).not.toBeNull());
-            expect(sessionStorage.getItem('admin_google_token')).toBeNull();
+            await vi.waitFor(() => expect(sessionStorage.getItem('admin_google_token')).not.toBeNull());
+            expect(localStorage.getItem('admin_google_token')).toBeNull();
+            expect(localStorage.getItem('admin_remember_me')).toBe('1');
         });
     });
 
     describe('setRememberMe og lagringsstrategi', () => {
-        it('setRememberMe(true) → initGis callback lagrer i localStorage og fjerner fra sessionStorage', async () => {
+        it('setRememberMe(true) → token i sessionStorage, admin_remember_me=1 i localStorage', async () => {
             setRememberMe(true);
-            sessionStorage.setItem('admin_google_token', 'gammel-sesjon');
-            initGis(() => {});
-            const callback = google.accounts.oauth2.initTokenClient.mock.calls[0][0].callback;
-            await callback({ access_token: 'tok', expires_in: 3600 });
-            expect(localStorage.getItem('admin_google_token')).not.toBeNull();
-            expect(sessionStorage.getItem('admin_google_token')).toBeNull();
-        });
-
-        it('setRememberMe(false) → initGis callback lagrer i sessionStorage og fjerner fra localStorage', async () => {
-            setRememberMe(false);
-            localStorage.setItem('admin_google_token', 'gammel-lokal');
             initGis(() => {});
             const callback = google.accounts.oauth2.initTokenClient.mock.calls[0][0].callback;
             await callback({ access_token: 'tok', expires_in: 3600 });
             expect(sessionStorage.getItem('admin_google_token')).not.toBeNull();
             expect(localStorage.getItem('admin_google_token')).toBeNull();
+            expect(localStorage.getItem('admin_remember_me')).toBe('1');
         });
 
-        it('getStoredUser finner gyldig token i sessionStorage når localStorage er tom', () => {
+        it('setRememberMe(false) → token i sessionStorage, admin_remember_me fjernet fra localStorage', async () => {
+            setRememberMe(false);
+            localStorage.setItem('admin_remember_me', '1');
+            initGis(() => {});
+            const callback = google.accounts.oauth2.initTokenClient.mock.calls[0][0].callback;
+            await callback({ access_token: 'tok', expires_in: 3600 });
+            expect(sessionStorage.getItem('admin_google_token')).not.toBeNull();
+            expect(localStorage.getItem('admin_google_token')).toBeNull();
+            expect(localStorage.getItem('admin_remember_me')).toBeNull();
+        });
+
+        it('getStoredUser finner gyldig token i sessionStorage', () => {
             const future = Date.now() + 3600000;
             const mockUser = { name: 'Kari' };
             sessionStorage.setItem('admin_google_token', JSON.stringify({ expiry: future, user: mockUser }));
             expect(getStoredUser()).toEqual(mockUser);
+        });
+
+        it('getStoredUser returnerer null når token kun ligger i localStorage', () => {
+            const future = Date.now() + 3600000;
+            localStorage.setItem('admin_google_token', JSON.stringify({ expiry: future, user: { name: 'X' } }));
+            expect(getStoredUser()).toBeNull();
         });
 
         it('tryRestoreSession gjenoppretter sesjon fra sessionStorage', async () => {
@@ -1094,12 +1120,24 @@ describe('admin-client.js', () => {
             expect(gapi.client.setToken).toHaveBeenCalledWith({ access_token: 'ses-token' });
         });
 
-        it('logout kaller sessionStorage.removeItem i tillegg til localStorage.removeItem', () => {
+        it('tryRestoreSession returnerer false når token kun er i localStorage', async () => {
+            await initGapi();
+            const future = Date.now() + 3600000;
+            localStorage.setItem('admin_google_token', JSON.stringify({
+                access_token: 'local-token',
+                expiry: future
+            }));
+            expect(tryRestoreSession()).toBe(false);
+        });
+
+        it('logout fjerner token fra begge storages og admin_remember_me-flagget', () => {
             localStorage.setItem('admin_google_token', 'lokal');
             sessionStorage.setItem('admin_google_token', 'sesjon');
+            localStorage.setItem('admin_remember_me', '1');
             logout();
             expect(localStorage.getItem('admin_google_token')).toBeNull();
             expect(sessionStorage.getItem('admin_google_token')).toBeNull();
+            expect(localStorage.getItem('admin_remember_me')).toBeNull();
         });
     });
 
