@@ -11,12 +11,9 @@
 
 export const CSP = [
     "default-src 'self'",
-    // Scripts: eget domene + Google APIs + CDN-er brukt i admin-panel
-    "script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com https://cdn.jsdelivr.net https://unpkg.com",
-    // Stiler: eget domene + CDN-er brukt i admin-panel
-    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com",
-    // Fonter: eget domene + Font Awesome (cdnjs) + CDN-er brukt i admin-panel
-    "font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+    "script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com",
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self'",
     // Bilder: eget domene + Google Drive-preview + data: URI + blob: (preview-bilder i admin)
     "img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com",
     // Iframes: Google Drive + Google OAuth + GAPI iframe-kanaler (content-*.googleapis.com)
