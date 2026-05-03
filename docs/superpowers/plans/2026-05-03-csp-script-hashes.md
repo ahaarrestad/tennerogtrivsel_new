@@ -234,7 +234,7 @@
 
       it('script-src faller tilbake til unsafe-inline når scriptHashes er tom', async () => {
           vi.resetModules();
-          vi.doMock('../../src/generated/csp-hashes.json', () => ({
+          vi.doMock('../generated/csp-hashes.json', () => ({
               default: { scriptHashes: [] }
           }));
           vi.doMock('astro:middleware', () => ({
