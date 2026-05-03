@@ -38,7 +38,7 @@ const tmpPath = '/tmp/cfn-policy-update.json';
 writeFileSync(tmpPath, JSON.stringify(config));
 
 execSync(
-    `aws cloudfront update-response-headers-policy --id ${policyId} --if-match ${etag} --response-headers-policy-config file://${tmpPath}`,
+    `aws cloudfront update-response-headers-policy --id ${policyId} --if-match "${etag}" --response-headers-policy-config file://${tmpPath}`,
     { stdio: 'inherit' }
 );
 
