@@ -1,24 +1,16 @@
-/**
- * Sannhetskilde for HTTP-sikkerhetsheadere.
- *
- * Brukes av:
- * - `src/middleware.ts` (Astro dev-server + SSR)
- * - CloudFront Response Headers Policy i prod (manuelt konfigurert via AWS Console)
- *
- * Verdiene må holdes synkronisert mellom de to. Se
- * `docs/architecture/sikkerhet.md` for AWS Console-prosedyre.
- */
+import hashData from '../generated/csp-hashes.json';
+
+const scriptSrcDirective = hashData.scriptHashes.length > 0
+    ? `script-src 'self' ${hashData.scriptHashes.map(h => `'${h}'`).join(' ')} https://apis.google.com https://accounts.google.com`
+    : `script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com`;
 
 export const CSP = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com",
+    scriptSrcDirective,
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
-    // Bilder: eget domene + Google Drive-preview + data: URI + blob: (preview-bilder i admin)
     "img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com",
-    // Iframes: Google Drive + Google OAuth + GAPI iframe-kanaler (content-*.googleapis.com)
     "frame-src https://drive.google.com https://accounts.google.com https://www.google.com https://*.googleapis.com",
-    // API-kall: Google APIs + OAuth + telemetri fra Google-skript (gen_204)
     "connect-src 'self' blob: https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://www.google.com",
 ].join('; ');
 
@@ -28,7 +20,6 @@ export const SECURITY_HEADERS: Readonly<Record<string, string>> = Object.freeze(
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    // COOP: same-origin-allow-popups kreves fordi admin åpner Google OAuth-popup
     'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
     'Cross-Origin-Resource-Policy': 'same-origin',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
