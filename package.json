@@ -6,6 +6,7 @@
     "dev": "node src/scripts/sync-data.js && astro dev",
     "dev:nosync": "astro dev",
     "dev:lambda": "node scripts/dev-lambda.mjs",
+    "dev:secure": "npm run build:ci && npm run generate-csp-hashes && astro dev",
     "sync": "node src/scripts/sync-data.js",
     "build": "node src/scripts/sync-data.js && astro build",
     "build:ci": "astro build",
@@ -14,6 +15,7 @@
     "test": "vitest --run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:repeat": "npx playwright test --repeat-each=10",
+    "generate-csp-hashes": "node scripts/generate-csp-hashes.mjs",
     "audit:sigs": "npm audit signatures",
     "audit": "npm audit --audit-level=critical"
   },
