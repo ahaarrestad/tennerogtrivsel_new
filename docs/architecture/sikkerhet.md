@@ -31,7 +31,7 @@ vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));
 | Lokal dev (`npm run dev`) | Astro middleware (`src/middleware.ts`) | `SECURITY_HEADERS` |
 | `astro preview` (CI E2E) | Ingen — Astro statisk-modus kjører ikke middleware i preview | — |
 | Test (`test2.aarrestad.com`) | CloudFront Response Headers Policy | Manuelt kopiert fra `SECURITY_HEADERS` |
-| Prod (`tennerogtrivsel.no`) | CloudFront Response Headers Policy | Manuelt kopiert fra `SECURITY_HEADERS` |
+| Prod (`tennerogtrivsel.no`) | CloudFront Response Headers Policy | Automatisk oppdatert via CI (update-cloudfront-csp.mjs) |
 
 CSP inkluderer `blob:` i `connect-src` for å støtte thumbnail-forhåndsvisning (blob-URLer fra `getDriveImageBlob()`) i admin-panelet.
 
@@ -114,6 +114,27 @@ Identifiser feilen (typisk: en CDN-host som mangler i `script-src` eller `style-
 ### Hvorfor ikke IaC?
 
 Repoet har ingen Terraform/CDK i dag. Innføring for ett enkelt CloudFront-objekt gir liten gevinst. Konfigurasjonen er gjenopprettelig manuelt via prosedyren over — alle verdier finnes i `src/utils/security-headers.ts` slik at policy-en kan rekonstrueres.
+
+### Automatisk CSP-oppdatering i CI
+
+`script-src`-direktivet i CloudFront-policyen oppdateres automatisk ved hver deploy:
+
+1. `scripts/generate-csp-hashes.mjs` scanner `dist/**/*.html` for inline `<script>`-blokker
+2. Beregner SHA256-hashes og skriver til `src/generated/csp-hashes.json`
+3. `scripts/update-cloudfront-csp.mjs` henter gjeldende policy, patcher `script-src` og oppdaterer
+
+**Forutsetninger:**
+- GitHub secret `CLOUDFRONT_CSP_POLICY_ID` — ID-en til Response Headers Policy (ikke distribusjons-ID).
+  Finn den i AWS Console → CloudFront → Policies → Response headers policies → klikk policy → kopier ID fra URL.
+- Deploy-jobbens IAM-rolle må ha:
+  - `cloudfront:GetResponseHeadersPolicy`
+  - `cloudfront:UpdateResponseHeadersPolicy`
+
+**Lokal oppdatering (etter Astro-oppgradering eller endring av inline-skript):**
+```bash
+npm run build:ci && npm run generate-csp-hashes
+# Commit src/generated/csp-hashes.json
+```
 
 ### Dev/preview-merknad
 

@@ -19,7 +19,23 @@ www.tennerogtrivsel.no
 * gihub secrets brukes for å holde AWS nøkler og google api nøkler hemmelige - bruker .env lokalt
 
 ### Lokalt oppsett
-For å teste lokalt, brukt "npm run dev" og se siden på http://localhost:4321/
+
+For standard utvikling (rask oppstart, `unsafe-inline` i CSP):
+
+    npm run dev
+
+For å teste med produksjons-lik hash-basert CSP (anbefalt etter Astro-oppgraderinger
+eller endringer i inline-skript):
+
+    npm run dev:secure
+
+`dev:secure` bygger siden, beregner CSP-hashes fra dist-outputen og starter
+dev-serveren med disse hashene aktive i middleware. Sjekk at det ikke er
+CSP-violations i browser-konsollen på http://localhost:4321/
+
+Hash-filen (`src/generated/csp-hashes.json`) sjekkes inn og oppdateres
+automatisk av CI ved deploy. Kjør `dev:secure` på nytt etter pull hvis
+hash-filen har endret seg.
 
 ### Kontakt utvikler
 For spørsmål om løsningen, kontakt Asbjørn Aarrestad
