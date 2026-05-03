@@ -137,3 +137,40 @@ describe('src/middleware.ts – HTTP security headers', () => {
         expect(response.status).toBe(404);
     });
 });
+
+describe('src/middleware.ts – script-src hashes', () => {
+    it('script-src bruker hashes når csp-hashes.json inneholder hashes', async () => {
+        vi.resetModules();
+        vi.doMock('../generated/csp-hashes.json', () => ({
+            default: { scriptHashes: ['sha256-testHash1==', 'sha256-testHash2=='] }
+        }));
+        vi.doMock('astro:middleware', () => ({
+            defineMiddleware: (fn: unknown) => fn,
+        }));
+        const mod = await import('../middleware');
+        const handler = mod.onRequest as (ctx: unknown, next: () => Promise<Response>) => Promise<Response>;
+        const response = await handler({}, makeNext());
+        const csp = response.headers.get('Content-Security-Policy')!;
+
+        expect(csp).toContain("'sha256-testHash1=='");
+        expect(csp).toContain("'sha256-testHash2=='");
+        const scriptSrcDirective = csp.split(';').find(d => d.trim().startsWith('script-src'))!;
+        expect(scriptSrcDirective).not.toContain("'unsafe-inline'");
+    });
+
+    it('script-src faller tilbake til unsafe-inline når scriptHashes er tom', async () => {
+        vi.resetModules();
+        vi.doMock('../generated/csp-hashes.json', () => ({
+            default: { scriptHashes: [] }
+        }));
+        vi.doMock('astro:middleware', () => ({
+            defineMiddleware: (fn: unknown) => fn,
+        }));
+        const mod = await import('../middleware');
+        const handler = mod.onRequest as (ctx: unknown, next: () => Promise<Response>) => Promise<Response>;
+        const response = await handler({}, makeNext());
+        const csp = response.headers.get('Content-Security-Policy')!;
+
+        expect(csp).toContain("'unsafe-inline'");
+    });
+});
