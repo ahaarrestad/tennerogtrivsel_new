@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { extractInlineScripts, computeHash, run } from '../generate-csp-hashes.mjs';
 
 describe('extractInlineScripts', () => {
@@ -65,8 +65,7 @@ describe('run', () => {
 
     afterEach(() => {
         rmSync(tmpDist, { recursive: true, force: true });
-        // tmpOut dir cleaned up separately
-        rmSync(tmpOut.replace('/csp-hashes.json', ''), { recursive: true, force: true });
+        rmSync(dirname(tmpOut), { recursive: true, force: true });
     });
 
     it('skriver korrekte hashes for inline scripts i dist-mappen', () => {
