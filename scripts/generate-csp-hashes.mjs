@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, statSync, mkdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,18 +33,24 @@ function walkHtmlFiles(dir) {
     return files;
 }
 
-// Bare kjør hvis dette er entry-point (ikke ved import i tester)
-if (import.meta.url === `file://${process.argv[1]}`) {
-    const distDir = join(__dirname, '../dist');
-    const outputFile = join(__dirname, '../src/generated/csp-hashes.json');
-
+export function run(distDir, outputFile) {
     const htmlFiles = walkHtmlFiles(distDir);
     const allContents = htmlFiles.flatMap(f =>
         extractInlineScripts(readFileSync(f, 'utf-8'))
     );
     const uniqueHashes = [...new Set(allContents.map(computeHash))];
-
+    mkdirSync(dirname(outputFile), { recursive: true });
     writeFileSync(outputFile, JSON.stringify({ scriptHashes: uniqueHashes }, null, 2) + '\n');
-    console.log(`Wrote ${uniqueHashes.length} hash(es) to src/generated/csp-hashes.json`);
+    console.log(`Wrote ${uniqueHashes.length} hash(es) to ${outputFile}`);
     uniqueHashes.forEach(h => console.log(`  ${h}`));
+    return uniqueHashes;
+}
+
+// Bare kjør hvis dette er entry-point (ikke ved import i tester)
+/* v8 ignore next 6 */
+if (import.meta.url === `file://${process.argv[1]}`) {
+    run(
+        join(__dirname, '../dist'),
+        join(__dirname, '../src/generated/csp-hashes.json')
+    );
 }
