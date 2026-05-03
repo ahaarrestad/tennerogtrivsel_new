@@ -197,7 +197,11 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-      - run: npm ci
+      - run: npm ci --ignore-scripts
+      - name: Verify npm package signatures
+        run: npm audit signatures
+      - name: Check for critical vulnerabilities
+        run: npm audit --audit-level=critical
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
@@ -209,7 +213,7 @@ jobs:
       - name: Deploy Lambda code
         working-directory: lambda/kontakt-form-handler
         run: |
-          npm ci --omit=dev
+          npm ci --omit=dev --ignore-scripts
           zip -r function.zip index.mjs node_modules/
           aws lambda update-function-code \
             --function-name ${{ secrets.LAMBDA_KONTAKT_ARN }} \
