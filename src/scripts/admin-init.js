@@ -119,7 +119,7 @@ const setup = async () => {
 
         initPwaPrompt();
 
-        const hadRememberMe = !!localStorage.getItem('admin_google_token');
+        const hadRememberMe = !!localStorage.getItem('admin_remember_me');
 
         const gapiSuccess = await initGapi();
         if (gapiSuccess) tryRestoreSession();

@@ -222,7 +222,7 @@ describe('admin-init', () => {
     });
 
     it('should try silentLogin when localStorage has token but no user', async () => {
-        localStorage.setItem('admin_google_token', 'old-token');
+        localStorage.setItem('admin_remember_me', '1');
         getStoredUser.mockReturnValue(null);
         await import('../admin-init.js');
         await vi.waitFor(() => {
@@ -709,7 +709,7 @@ describe('startup flow — ingen token', () => {
     });
 
     it('should show spinner and call silentLogin when hadRememberMe', async () => {
-        localStorage.setItem('admin_google_token', 'old-token');
+        localStorage.setItem('admin_remember_me', '1');
         getStoredUser.mockReturnValue(null);
 
         await import('../admin-init.js');
@@ -734,7 +734,7 @@ describe('startup flow — ingen token', () => {
     });
 
     it('should show login when admin-auth-failed fires during silent login', async () => {
-        localStorage.setItem('admin_google_token', 'old-token');
+        localStorage.setItem('admin_remember_me', '1');
         getStoredUser.mockReturnValue(null);
 
         await import('../admin-init.js');
