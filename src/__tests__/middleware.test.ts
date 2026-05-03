@@ -62,14 +62,14 @@ describe('src/middleware.ts – HTTP security headers', () => {
         expect(csp).not.toContain('fonts.gstatic.com');
     });
 
-    it('CSP inneholder CDN-er brukt i admin-panel', async () => {
+    it('CSP inneholder ikke CDN-er (EasyMDE/Flatpickr/Font Awesome bundles via npm)', async () => {
         const handler = await importMiddleware();
         const response = await handler({}, makeNext());
         const csp = response.headers.get('Content-Security-Policy')!;
 
-        expect(csp).toContain('https://cdn.jsdelivr.net');   // Flatpickr
-        expect(csp).toContain('https://unpkg.com');           // EasyMDE
-        expect(csp).toContain('https://cdnjs.cloudflare.com'); // Font Awesome
+        expect(csp).not.toContain('https://cdn.jsdelivr.net');
+        expect(csp).not.toContain('https://unpkg.com');
+        expect(csp).not.toContain('https://cdnjs.cloudflare.com');
     });
 
     it('CSP tillater blob: i img-src (preview-bilder i admin)', async () => {
