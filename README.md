@@ -33,9 +33,8 @@ eller endringer i inline-skript):
 dev-serveren med disse hashene aktive i middleware. Sjekk at det ikke er
 CSP-violations i browser-konsollen på http://localhost:4321/
 
-Hash-filen (`src/generated/csp-hashes.json`) sjekkes inn og oppdateres
-automatisk av CI ved deploy. Kjør `dev:secure` på nytt etter pull hvis
-hash-filen har endret seg.
+CI regenererer hash-filen automatisk fra det faktiske bygget ved hver deploy —
+du trenger ikke committe den manuelt etter endringer i inline-skript.
 
 ### Kontakt utvikler
 For spørsmål om løsningen, kontakt Asbjørn Aarrestad

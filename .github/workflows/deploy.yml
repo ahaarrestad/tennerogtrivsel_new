@@ -165,6 +165,9 @@ jobs:
 #            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_TEST }} \
 #            --paths "/*"
 
+      - name: Generate CSP hashes from build output
+        run: node scripts/generate-csp-hashes.mjs
+
       - name: Deploy to S3 PROD-SE
         run: |
           # 1. Hashed assets — immutable (1 år)
