@@ -6,7 +6,7 @@
     "dev": "node src/scripts/sync-data.js && astro dev",
     "dev:nosync": "astro dev",
     "dev:lambda": "node scripts/dev-lambda.mjs",
-    "dev:secure": "node src/scripts/sync-data.js && npm run build:ci && npm run generate-csp-hashes && astro dev",
+    "dev:secure": "node src/scripts/sync-data.js && npm run build:ci && npm run generate-csp-hashes && SECURE_DEV=true astro dev",
     "sync": "node src/scripts/sync-data.js",
     "build": "node src/scripts/sync-data.js && astro build",
     "build:ci": "astro build",
