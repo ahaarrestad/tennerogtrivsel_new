@@ -114,9 +114,8 @@ export function initGis(callback) {
 }
 
 /**
- * Henter lagret brukerinfo fra localStorage eller sessionStorage uten å røre GAPI.
- * Setter også _rememberMe basert på hvor tokenet ble funnet, slik at
- * silent-refresh bevarer brukerens valg.
+ * Henter lagret brukerinfo fra sessionStorage uten å røre GAPI.
+ * Setter _rememberMe basert på admin_remember_me-flagget i localStorage.
  */
 export function getStoredUser() {
     const stored = sessionStorage.getItem('admin_google_token');
@@ -133,8 +132,8 @@ export function getStoredUser() {
 }
 
 /**
- * Prøver å gjenopprette pålogging fra localStorage eller sessionStorage inn i GAPI.
- * Setter også _rememberMe basert på hvor tokenet ble funnet.
+ * Prøver å gjenopprette pålogging fra sessionStorage inn i GAPI.
+ * Setter _rememberMe basert på admin_remember_me-flagget i localStorage.
  */
 export function tryRestoreSession() {
     const stored = sessionStorage.getItem('admin_google_token');
