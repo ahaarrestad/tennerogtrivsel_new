@@ -221,7 +221,7 @@ describe('admin-init', () => {
         });
     });
 
-    it('should try silentLogin when localStorage has token but no user', async () => {
+    it('should try silentLogin when localStorage has remember-me flag but no user', async () => {
         localStorage.setItem('admin_remember_me', '1');
         getStoredUser.mockReturnValue(null);
         await import('../admin-init.js');
