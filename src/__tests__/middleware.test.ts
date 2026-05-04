@@ -174,3 +174,38 @@ describe('src/middleware.ts – script-src hashes', () => {
         expect(csp).toContain("'unsafe-inline'");
     });
 });
+
+describe('src/middleware.ts – X-Robots-Tag', () => {
+    it('setter X-Robots-Tag: noindex på /admin-paths', async () => {
+        const handler = await importMiddleware();
+        const response = await handler(
+            { url: new URL('https://example.com/admin') },
+            makeNext()
+        );
+        expect(response.headers.get('X-Robots-Tag')).toBe('noindex');
+    });
+
+    it('setter X-Robots-Tag: noindex på /admin/subpath', async () => {
+        const handler = await importMiddleware();
+        const response = await handler(
+            { url: new URL('https://example.com/admin/settings') },
+            makeNext()
+        );
+        expect(response.headers.get('X-Robots-Tag')).toBe('noindex');
+    });
+
+    it('setter IKKE X-Robots-Tag på andre paths', async () => {
+        const handler = await importMiddleware();
+        const response = await handler(
+            { url: new URL('https://example.com/') },
+            makeNext()
+        );
+        expect(response.headers.get('X-Robots-Tag')).toBeNull();
+    });
+
+    it('setter IKKE X-Robots-Tag når context.url mangler (bakoverkompatibelt)', async () => {
+        const handler = await importMiddleware();
+        const response = await handler({}, makeNext());
+        expect(response.headers.get('X-Robots-Tag')).toBeNull();
+    });
+});
