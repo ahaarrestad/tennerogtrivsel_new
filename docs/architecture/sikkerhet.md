@@ -261,17 +261,42 @@ Alle Drive API `q`-strenger der verdier interpoleres bruker `escapeDriveQuery()`
 
 `silentLogin()` i `admin-auth.js` har en debounce-mekanisme som forhindrer samtidige token-forespørsler. Flagget `_silentLoginPending` settes til `true` ved kall og resettes ved `admin-auth-refreshed`/`admin-auth-failed`-events, eller via en 15-sekunders fallback-timeout.
 
+## X-Robots-Tag: noindex på /admin
+
+Admin-siden hindres fra indeksering på tre nivåer:
+1. `<meta name="robots" content="noindex, nofollow">` i HTML (dekker alle crawlere)
+2. `robots.txt Disallow: /admin` (advisory)
+3. `X-Robots-Tag: noindex` HTTP-header satt av:
+   - **Dev:** Astro middleware (`src/middleware.ts`) på paths som starter med `/admin`
+   - **Prod:** CloudFront Function `tot-admin-noindex` (viewer-response trigger) koblet til default behavior
+
+CloudFront Function settes opp én gang med `scripts/setup-admin-cloudfront-function.mjs`.
+
+## OAuth-token storage og rememberMe-logikk
+
+OAuth-access-token lagres alltid i `sessionStorage` — aldri i `localStorage`. Token lever kun så lenge fanen er åpen.
+
+`localStorage` bruker kun ett nøkkel: `admin_remember_me = '1'` (boolsk flagg). Flagget settes ved innlogging med "Husk meg" avkrysset, og fjernes ved utlogging eller når "Husk meg" er unchecked.
+
+**Cold start-logikk i `admin-init.js`:**
+- Finnes `admin_remember_me`-flagget og `sessionStorage`-token mangler → kjør `silentLogin()` (usynlig GIS-flyt med `prompt: 'none'`)
+- Lykkes silent login → innlogget uten popup
+- Feiler silent login (Google-sesjon utløpt) → vis login-skjerm
+
+**Expiry-margin:** `getStoredUser()` og `tryRestoreSession()` regner token som utløpt 5 min *før* Google-expiry (`Date.now() < expiry - 300000`). Dette reduserer vinduet for et stjålet token.
+
 ## Akseptert risiko
 
 | Funn | Begrunnelse |
 |------|-------------|
 | `unsafe-inline` i CSP (M4) | Nødvendig for Google OAuth og Tailwind v4. Mitigert av script-src whitelist og DOMPurify. |
-| Token i localStorage (M5) | Ingen HTTPOnly-alternativ for klient-side OAuth. Mitigert av token-expiry og CSP. |
+| Token i sessionStorage (M5) | Ingen HTTPOnly-alternativ for klient-side OAuth. Token er nå i sessionStorage (dør med fanen) — `localStorage` beholder kun et boolsk `admin_remember_me`-flagg som er verdiløst for angriper. Mitigert av token-expiry (5 min margin) og CSP. |
 | Ingen audit-logging (M6) | Krever ekstra infrastruktur. Kan vurderes som egen oppgave. |
 | `repository_dispatch` uten tester (L6) | Akseptert avveining — koden er allerede testet på main, risiko begrenset til kompromittert Drive-innhold. |
 | Admin-side offentlig (L5) | Alle data/funksjonalitet krever gyldig OAuth-token. `noindex` + `robots.txt Disallow` hindrer indeksering. |
 | API-feilmeldinger til bruker (L7) | Admin er OAuth-beskyttet — kun autoriserte brukere ser feilmeldinger. Google API-detaljer i feilmeldinger gir ikke angrepsoverflate. |
 | Vite dev proxy uten path-validering (L8) | Kun aktiv i dev, hardkodet til `basemaps.cartocdn.com`. Ingen brukerdata interpoleres i URL. |
+| COOP-advarsler fra GIS (L9) | `Cross-Origin-Opener-Policy: same-origin-allow-popups` genererer konsolladvarsler fra GIS sin `m_migration_mod` — "would block the window.opener call". OAuth-funksjonalitet er upåvirket. GIS har interne fallback-mekanismer som håndterer dette. Akseptert. |
 
 ## Web Storage og modul-tilstand i tester
 
@@ -281,3 +306,4 @@ Alle Drive API `q`-strenger der verdier interpoleres bruker `escapeDriveQuery()`
   `gisInited`) som **ikke** nullstilles av `vi.clearAllMocks()`. Tester som er sensitive
   for denne tilstanden MÅ eksplisitt kalle de eksporterte setter-funksjonene
   (f.eks. `setRememberMe(false)`) i `beforeEach`.
+- Nøkkelnavnet for "husk meg"-flagget er `admin_remember_me` i `localStorage` (ikke `admin_google_token` som tidligere). Token lagres utelukkende i `sessionStorage`.
