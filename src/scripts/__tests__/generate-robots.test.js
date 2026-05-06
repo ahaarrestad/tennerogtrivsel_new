@@ -22,13 +22,8 @@ describe('generate-robots.js', () => {
         expect(result).toContain(`Sitemap: ${sitemapUrl}`);
     });
 
-    it('skal blokkere /api/ på produksjons-domenet', () => {
+    it('skal ikke ha Disallow-regler i prod — noindex håndteres via X-Robots-Tag', () => {
         const result = generateRobotsTxt('www.tennerogtrivsel.no', sitemapUrl);
-        expect(result).toContain('Disallow: /api/');
-    });
-
-    it('skal ikke blokkere /prisliste på produksjons-domenet (noindex-tag brukes i staden)', () => {
-        const result = generateRobotsTxt('www.tennerogtrivsel.no', sitemapUrl);
-        expect(result).not.toContain('Disallow: /prisliste');
+        expect(result).not.toContain('Disallow:');
     });
 });
