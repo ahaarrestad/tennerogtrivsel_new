@@ -176,25 +176,22 @@ describe('src/middleware.ts – script-src hashes', () => {
 });
 
 describe('src/middleware.ts – X-Robots-Tag', () => {
-    it('setter X-Robots-Tag: noindex på /admin-paths', async () => {
+    it.each([
+        '/admin',
+        '/admin/settings',
+        '/prisliste',
+        '/api',
+        '/api/kontakt',
+    ])('setter X-Robots-Tag: noindex på %s', async (path) => {
         const handler = await importMiddleware();
         const response = await handler(
-            { url: new URL('https://example.com/admin') },
+            { url: new URL(`https://example.com${path}`) },
             makeNext()
         );
         expect(response.headers.get('X-Robots-Tag')).toBe('noindex');
     });
 
-    it('setter X-Robots-Tag: noindex på /admin/subpath', async () => {
-        const handler = await importMiddleware();
-        const response = await handler(
-            { url: new URL('https://example.com/admin/settings') },
-            makeNext()
-        );
-        expect(response.headers.get('X-Robots-Tag')).toBe('noindex');
-    });
-
-    it('setter IKKE X-Robots-Tag på andre paths', async () => {
+    it('setter IKKE X-Robots-Tag på vanlige paths', async () => {
         const handler = await importMiddleware();
         const response = await handler(
             { url: new URL('https://example.com/') },
