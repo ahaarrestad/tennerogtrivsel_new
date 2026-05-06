@@ -64,14 +64,14 @@ Koden for denne CF Function finnes kun i AWS. Den må hentes ut og sjekkes inn.
 **Files:**
 - Create: `scripts/cloudfront-strip-tiles-prefix.js`
 
-- [ ] **Steg 1.1: Hent funksjonskode fra AWS**
+- [x] **Steg 1.1: Hent funksjonskode fra AWS**
 
   ```bash
   aws cloudfront get-function --name strip-tiles-prefix --stage LIVE --outfile /tmp/strip-tiles-prefix.js
   cat /tmp/strip-tiles-prefix.js
   ```
 
-- [ ] **Steg 1.2: Lagre som `scripts/cloudfront-strip-tiles-prefix.js`**
+- [x] **Steg 1.2: Lagre som `scripts/cloudfront-strip-tiles-prefix.js`**
 
   Kopier innholdet til `scripts/cloudfront-strip-tiles-prefix.js`. Legg til kommentar øverst:
 
@@ -88,12 +88,12 @@ Koden for denne CF Function finnes kun i AWS. Den må hentes ut og sjekkes inn.
   }
   ```
 
-- [ ] **Steg 1.3: Verifiser at koden er korrekt ved å se på `/tiles/*`-logikken**
+- [x] **Steg 1.3: Verifiser at koden er korrekt ved å se på `/tiles/*`-logikken**
 
   Funksjonens oppgave: `/tiles/a/b/c` → stripper `/tiles`-prefiks → `a/b/c` sendes til cartocdn.com.
   Bekreft at dette stemmer med koden du hentet.
 
-- [ ] **Steg 1.4: Commit**
+- [x] **Steg 1.4: Commit**
 
   ```bash
   git add scripts/cloudfront-strip-tiles-prefix.js
