@@ -24,13 +24,19 @@
   - ~~Task 8 steg 8.1–8.2 (F7): ubrukte CDN-er fjernet fra CSP — ferdig 2026-05-03~~
   - ~~Task 8 steg 8.3 (F7): `unsafe-inline` erstattet med SHA256-hashes i script-src — ferdig 2026-05-03~~
   - ~~Task 7 (F6): admin-token til sessionStorage, rememberMe-flagg, X-Robots-Tag noindex — ferdig 2026-05-06~~
-  - Neste: Task 2 (F4): SHA-pin GitHub Actions
+  - Neste: Task 2 (F4): SHA-pin GitHub Actions ([plan](docs/plans/2026-05-06-sha-pin-github-actions.md))
 
 ## Backlog
 - [ ] **«Bygg nå»-knapp i admin** ([plan](docs/superpowers/plans/2026-03-21-bygg-na-knapp.md)) ([spec](docs/superpowers/specs/2026-03-21-bygg-na-knapp-design.md))
   - Lambda Function URL-proxy som verifiserer Google OAuth-token og kaller GitHub `repository_dispatch`
   - Knapp i admin-dashboard med spinner, statusmelding og siste vellykkede bygg-tidspunkt
 
+
+- [ ] **AWS infrastruktur som kode** ([plan](docs/plans/2026-05-06-aws-infrastruktur-som-kode.md))
+  - Kartlegg hva som er manuelt oppsatt i AWS vs. hva som allerede er i kode (Lambda, CloudFront Functions, S3, DynamoDB, SES, IAM, CloudFront distributions)
+  - Mål: mest mulig av oppsettet i kode for konsistent og reproduserbart deploy
+  - Vurder verktøy: AWS CDK, Terraform, eller utvidede setup-scripts (allerede brukt for CloudFront Functions)
+  - Referanse: `docs/guides/aws-kontaktskjema-oppsett.md` og eksisterende scripts i `scripts/`
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
