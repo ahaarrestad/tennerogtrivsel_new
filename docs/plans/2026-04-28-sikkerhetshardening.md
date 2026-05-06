@@ -424,7 +424,7 @@ CMS-redigerer (eller en angriper med Sheets-skrivetilgang) kan injisere HTML i `
 
 Vi kan ikke flytte token til httpOnly cookie (admin er klient-side SPA mot Google). Men vi kan begrense XSS-blast-radius:
 
-- [ ] **Steg 7.1: Fjern `localStorage`-mode (kun sessionStorage), men behold rememberMe-flagget**
+- [x] **Steg 7.1: Fjern `localStorage`-mode (kun sessionStorage), men behold rememberMe-flagget**
 
   Trade-off: hvis brukeren lukker hele nettleseren (alle faner) går sessionStorage tapt og brukeren må re-logge inn. Det er bevisst — vi aksepterer en ekstra Google-popup ved cold start mot redusert XSS-blast-radius (1t window → live-tab window).
 
@@ -436,11 +436,11 @@ Vi kan ikke flytte token til httpOnly cookie (admin er klient-side SPA mot Googl
 
   Fordel: et stjålet sessionStorage-token dør når fanen lukkes; et stjålet localStorage-token lever til expiry (1t). Et stjålet `rememberMe`-flagg er verdiløst.
 
-- [ ] **Steg 7.2: Kortere effektiv expiry**
+- [x] **Steg 7.2: Kortere effektiv expiry**
 
   Reduser intern `expiry`-grense fra 60s før Google-expiry til 5min før, slik at silent-refresh skjer oftere → kortere vindu hvor et stjålet token er gyldig.
 
-- [ ] **Steg 7.3: Add `X-Robots-Tag: noindex` på `/admin/*`**
+- [x] **Steg 7.3: Add `X-Robots-Tag: noindex` på `/admin/*`**
 
   Sett i CloudFront eller Astro-frontmatter. Allerede `noindex` i `<meta>`, men header er stødigere.
 
@@ -458,7 +458,7 @@ Mange CDN-er er allowlistet i middleware (`cdn.jsdelivr.net`, `unpkg.com`, `cdnj
 
   Fjernet cdn.jsdelivr.net, unpkg.com og cdnjs.cloudflare.com fra script-src, style-src og font-src. CloudFront Response Headers Policy oppdatert via AWS CLI. Verifisert med curl mot test og prod.
 
-- [ ] **Steg 8.3: Erstatt `'unsafe-inline'` script-src med build-time hashes**
+- [x] **Steg 8.3: Erstatt `'unsafe-inline'` script-src med build-time hashes**
 
   **Default for prod (statisk eksport på S3+CloudFront): bruk `'sha256-...'`-hashes, ikke nonces.** Astro middleware kjører ikke for prerendrede HTML-filer servert av CloudFront — per-request nonce-injeksjon krever Lambda@Edge eller Origin Response-funksjoner som rewriter både CSP-headeren og inline `<script nonce="...">`-attributter. Det er stort infra-arbeid for liten gevinst i et statisk site, fordi inline-scripts som Astro emitterer er stabile på tvers av builds.
 
