@@ -5,9 +5,9 @@ import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const FUNCTION_NAME = 'tennerogtrivsel-trailing-slash';
+const FUNCTION_NAME = 'sitemap_redirect';
 const FUNCTION_CONFIG = JSON.stringify({
-    Comment: '301-redirect URIer uten avsluttende skråstrek til tilsvarende URI med skråstrek',
+    Comment: 'viewer-request: sitemap.xml-redirect + trailing-slash-redirect',
     Runtime: 'cloudfront-js-2.0',
 });
 

@@ -39,7 +39,7 @@ describe('cloudfront-trailing-slash', () => {
             expect(handler(makeEvent('/favicon.ico'))).toEqual({ uri: '/favicon.ico' });
         });
 
-        it('fil med .xml-utvidelse (sitemap)', () => {
+        it('fil med .xml-utvidelse (sitemap-index)', () => {
             expect(handler(makeEvent('/sitemap-index.xml'))).toEqual({ uri: '/sitemap-index.xml' });
         });
 
@@ -53,6 +53,14 @@ describe('cloudfront-trailing-slash', () => {
 
         it('fil med .png-utvidelse', () => {
             expect(handler(makeEvent('/android-chrome-192x192.png'))).toEqual({ uri: '/android-chrome-192x192.png' });
+        });
+    });
+
+    describe('sitemap.xml-redirect', () => {
+        it('redirecter /sitemap.xml til /sitemap-index.xml', () => {
+            const result = handler(makeEvent('/sitemap.xml'));
+            expect(result.statusCode).toBe(301);
+            expect(result.headers.location.value).toBe('/sitemap-index.xml');
         });
     });
 
