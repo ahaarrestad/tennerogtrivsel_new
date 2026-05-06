@@ -26,6 +26,6 @@ export default defineConfig({
     devToolbar: { enabled: process.env.SECURE_DEV !== 'true' },
     site: 'https://www.tennerogtrivsel.no',
     integrations: [sitemap({
-        filter: (page) => !page.includes('/admin') && !page.includes('/robots.txt'),
+        filter: (page) => !page.includes('/admin') && !page.includes('/robots.txt') && !page.includes('/prisliste'),
     })],
 });
