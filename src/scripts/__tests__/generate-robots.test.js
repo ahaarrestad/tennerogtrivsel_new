@@ -26,4 +26,9 @@ describe('generate-robots.js', () => {
         const result = generateRobotsTxt('www.tennerogtrivsel.no', sitemapUrl);
         expect(result).toContain('Disallow: /api/');
     });
+
+    it('skal blokkere /prisliste på produksjons-domenet', () => {
+        const result = generateRobotsTxt('www.tennerogtrivsel.no', sitemapUrl);
+        expect(result).toContain('Disallow: /prisliste');
+    });
 });

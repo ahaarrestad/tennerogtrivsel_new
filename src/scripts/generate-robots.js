@@ -14,6 +14,7 @@ Allow: /
 Disallow: /admin
 Disallow: /admin/*
 Disallow: /api/
+Disallow: /prisliste
 
 Sitemap: ${sitemapUrl}`;
     }
