@@ -23,6 +23,7 @@
   - ~~Task 4 (F9): npm audit signatures + critical-gate + --ignore-scripts i CI — ferdig 2026-05-03~~
   - ~~Task 8 steg 8.1–8.2 (F7): ubrukte CDN-er fjernet fra CSP — ferdig 2026-05-03~~
   - ~~Task 8 steg 8.3 (F7): `unsafe-inline` erstattet med SHA256-hashes i script-src — ferdig 2026-05-03~~
+  - ~~Task 7 (F6): admin-token til sessionStorage, rememberMe-flagg, X-Robots-Tag noindex — ferdig 2026-05-06~~
   - Neste: Task 2 (F4): SHA-pin GitHub Actions
 
 ## Backlog
