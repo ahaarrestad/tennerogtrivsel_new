@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { tmpdir } from 'node:os';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FUNCTION_NAME = 'tennerogtrivsel-trailing-slash';
@@ -11,24 +12,30 @@ const FUNCTION_CONFIG = JSON.stringify({
 });
 
 const functionCode = readFileSync(join(__dirname, 'cloudfront-trailing-slash.js'));
-const tmpPath = '/tmp/cf-trailing-slash.js';
+const tmpPath = join(tmpdir(), 'cf-trailing-slash.js');
 writeFileSync(tmpPath, functionCode);
 
 let etag;
+let existingEtag;
 try {
     const existing = JSON.parse(
         execSync(`aws cloudfront describe-function --name ${FUNCTION_NAME} --stage DEVELOPMENT`, { encoding: 'utf-8' })
     );
-    etag = existing.ETag;
+    existingEtag = existing.ETag;
+} catch (e) {
+    if (!e.message.includes('NoSuchFunctionExists')) throw e;
+}
+
+if (existingEtag) {
     const updated = JSON.parse(
         execSync(
-            `aws cloudfront update-function --name ${FUNCTION_NAME} --if-match "${etag}" --function-config '${FUNCTION_CONFIG}' --function-code fileb://${tmpPath}`,
+            `aws cloudfront update-function --name ${FUNCTION_NAME} --if-match "${existingEtag}" --function-config '${FUNCTION_CONFIG}' --function-code fileb://${tmpPath}`,
             { encoding: 'utf-8' }
         )
     );
     etag = updated.ETag;
     console.log('CloudFront-funksjon oppdatert');
-} catch {
+} else {
     const created = JSON.parse(
         execSync(
             `aws cloudfront create-function --name ${FUNCTION_NAME} --function-config '${FUNCTION_CONFIG}' --function-code fileb://${tmpPath}`,
