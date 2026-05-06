@@ -28,7 +28,7 @@ test.describe('Admin-panel Fase 1', () => {
 
   const setupMocks = async (page, options: any = {}) => {
     await page.addInitScript(({ messages = [], services = [], dentists = [] }) => {
-      localStorage.setItem('admin_google_token', JSON.stringify({
+      sessionStorage.setItem('admin_google_token', JSON.stringify({
         access_token: 'mock_token',
         expiry: Date.now() + 3600000,
         user: { name: 'Test User', email: 'test@example.com' }
