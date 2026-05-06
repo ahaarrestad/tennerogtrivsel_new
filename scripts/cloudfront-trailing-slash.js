@@ -1,6 +1,7 @@
 // CloudFront Function (viewer-request): samlet viewer-request-logikk for default behavior.
 // 1. /sitemap.xml → /sitemap-index.xml (301)
 // 2. URIer uten avsluttende skråstrek og uten filutvidelse → URI/ (301)
+// 3. URIer med avsluttende skråstrek (unntatt rot) → legg til index.html (S3 REST serverer ikke kataloger)
 // Kjøretid: cloudfront-js-2.0 (ES5.1-kompatibel)
 function handler(event) {
     var uri = event.request.uri;
@@ -17,7 +18,12 @@ function handler(event) {
     var hasExtension = lastSegment.indexOf('.') !== -1;
     var hasTrailingSlash = uri.charAt(uri.length - 1) === '/';
 
-    if (uri === '/' || hasTrailingSlash || hasExtension) {
+    if (hasExtension || uri === '/') {
+        return event.request;
+    }
+
+    if (hasTrailingSlash) {
+        event.request.uri = uri + 'index.html';
         return event.request;
     }
 

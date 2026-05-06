@@ -14,7 +14,12 @@ export function handler(event) {
     var hasExtension = lastSegment.indexOf('.') !== -1;
     var hasTrailingSlash = uri.charAt(uri.length - 1) === '/';
 
-    if (uri === '/' || hasTrailingSlash || hasExtension) {
+    if (hasExtension || uri === '/') {
+        return event.request;
+    }
+
+    if (hasTrailingSlash) {
+        event.request.uri = uri + 'index.html';
         return event.request;
     }
 
