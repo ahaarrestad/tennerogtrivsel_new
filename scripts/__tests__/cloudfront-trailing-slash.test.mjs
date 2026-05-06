@@ -6,17 +6,9 @@ function makeEvent(uri) {
 }
 
 describe('cloudfront-trailing-slash', () => {
-    describe('pass-through (ingen redirect)', () => {
+    describe('pass-through (ingen redirect, ingen reskriving)', () => {
         it('rotsti /', () => {
             expect(handler(makeEvent('/'))).toEqual({ uri: '/' });
-        });
-
-        it('URI med avsluttende skråstrek', () => {
-            expect(handler(makeEvent('/tjenester/bleking/'))).toEqual({ uri: '/tjenester/bleking/' });
-        });
-
-        it('rotnivå URI med avsluttende skråstrek', () => {
-            expect(handler(makeEvent('/personvern/'))).toEqual({ uri: '/personvern/' });
         });
 
         it('fil med .js-utvidelse', () => {
@@ -53,6 +45,23 @@ describe('cloudfront-trailing-slash', () => {
 
         it('fil med .png-utvidelse', () => {
             expect(handler(makeEvent('/android-chrome-192x192.png'))).toEqual({ uri: '/android-chrome-192x192.png' });
+        });
+    });
+
+    describe('index.html-reskriving (avsluttende skråstrek → S3-fil)', () => {
+        it('rotnivå-side med skråstrek', () => {
+            const result = handler(makeEvent('/personvern/'));
+            expect(result).toEqual({ uri: '/personvern/index.html' });
+        });
+
+        it('nestede side med skråstrek', () => {
+            const result = handler(makeEvent('/tjenester/bleking/'));
+            expect(result).toEqual({ uri: '/tjenester/bleking/index.html' });
+        });
+
+        it('tannleger med skråstrek', () => {
+            const result = handler(makeEvent('/tannleger/'));
+            expect(result).toEqual({ uri: '/tannleger/index.html' });
         });
     });
 
