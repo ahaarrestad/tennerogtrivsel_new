@@ -3,6 +3,7 @@ export interface Props {
     title?: string;
     description?: string;
     canonical?: string;
+    noindex?: boolean;
 }
 import Footer from '../components/Footer.astro';
 import '../styles/global.css';
@@ -29,7 +30,8 @@ const showTannleger = !!(fellesbildePath && galleriImages[fellesbildePath]);
 const {
     title = settings.siteTitle,
     description = settings.siteDescription,
-    canonical
+    canonical,
+    noindex = false,
 } = Astro.props;
 
 const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).href;
@@ -47,6 +49,7 @@ const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).href;
     <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png">
     <link rel="canonical" href={canonicalURL} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <link rel="alternate" type="text/plain" title="AI-lesbar versjon" href={new URL('/llms.txt', Astro.site).href}>
 
     <title>{title}</title>
