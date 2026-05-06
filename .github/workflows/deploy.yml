@@ -194,6 +194,9 @@ jobs:
         env:
           CLOUDFRONT_POLICY_ID: ${{ secrets.CLOUDFRONT_CSP_POLICY_ID }}
 
+      - name: Deploy CloudFront trailing-slash function
+        run: node scripts/deploy-cloudfront-function.mjs
+
   update-lambda:
     needs: build
     if: always() && needs.build.result == 'success' && github.event_name != 'pull_request'
