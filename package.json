@@ -24,7 +24,7 @@
     "@googleapis/drive": "^20.1.0",
     "@googleapis/sheets": "^13.0.1",
     "@tailwindcss/vite": "^4.2.4",
-    "astro": "^6.2.1",
+    "astro": "^6.2.2",
     "dompurify": "^3.4.2",
     "easymde": "^2.20.0",
     "flatpickr": "^4.6.13",
