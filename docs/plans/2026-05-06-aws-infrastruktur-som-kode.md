@@ -90,7 +90,7 @@ Koden for denne CF Function finnes kun i AWS. Den må hentes ut og sjekkes inn.
 
 - [x] **Steg 1.3: Verifiser at koden er korrekt ved å se på `/tiles/*`-logikken**
 
-  Funksjonens oppgave: `/tiles/a/b/c` → stripper `/tiles`-prefiks → `a/b/c` sendes til cartocdn.com.
+  Funksjonens oppgave: `/tiles/a/b/c` → omskriver til `/rastertiles/voyager/a/b/c` som sendes til basemaps.cartocdn.com.
   Bekreft at dette stemmer med koden du hentet.
 
 - [x] **Steg 1.4: Commit**
