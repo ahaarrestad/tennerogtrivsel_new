@@ -9,6 +9,7 @@ function handler(event) {
     return response;
 }
 
+/* v8 ignore next */
 if (typeof module !== 'undefined') {
   module.exports = { handler };
 }

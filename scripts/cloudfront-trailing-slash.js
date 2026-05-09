@@ -35,6 +35,7 @@ function handler(event) {
 }
 
 // Eksport for Node.js-testing — ignorert av CloudFront-runtime
+/* v8 ignore next */
 if (typeof module !== 'undefined') {
     module.exports = { handler };
 }
