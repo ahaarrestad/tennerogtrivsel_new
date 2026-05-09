@@ -1,4 +1,4 @@
-// CloudFront Function (viewer-request): stripper /tiles/-prefiks fra URI
+// CloudFront Function (viewer-request): omskriver /tiles/{z}/{x}/{y} til /rastertiles/voyager/{z}/{x}/{y}
 // slik at basemaps.cartocdn.com mottar riktig path.
 // Kjøretid: cloudfront-js-2.0
 function handler(event) {
