@@ -212,7 +212,7 @@ I dag er deployscripts spredt: `deploy-cloudfront-function.mjs` deployer `sitema
 
 S3-buckets for prod og test opprettes manuelt i dag. Scriptet skal sjekke om bucket finnes og opprette + sette policy om nødvendig.
 
-- [ ] **Steg 3.1: Skriv `scripts/setup-s3.mjs`**
+- [x] **Steg 3.1: Skriv `scripts/setup-s3.mjs`**
 
   ```js
   #!/usr/bin/env node
@@ -269,7 +269,7 @@ S3-buckets for prod og test opprettes manuelt i dag. Scriptet skal sjekke om buc
   console.log('S3-buckets klare.');
   ```
 
-- [ ] **Steg 3.2: Kjør mot AWS og verifiser (kun test — prod bucket finnes allerede)**
+- [x] **Steg 3.2: Kjør mot AWS og verifiser (kun test — prod bucket finnes allerede)**
 
   ```bash
   node scripts/setup-s3.mjs
@@ -284,7 +284,7 @@ S3-buckets for prod og test opprettes manuelt i dag. Scriptet skal sjekke om buc
   S3-buckets klare.
   ```
 
-- [ ] **Steg 3.3: Commit**
+- [x] **Steg 3.3: Commit**
 
   ```bash
   git add scripts/setup-s3.mjs
