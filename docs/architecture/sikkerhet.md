@@ -270,7 +270,7 @@ Admin-siden hindres fra indeksering på tre nivåer:
    - **Dev:** Astro middleware (`src/middleware.ts`) på paths som starter med `/admin`
    - **Prod:** CloudFront Function `tot-admin-noindex` (viewer-response trigger) koblet til default behavior
 
-CloudFront Function settes opp én gang med `scripts/setup-admin-cloudfront-function.mjs`.
+CloudFront Function deployes ved hvert CI-bygg via `scripts/setup-cloudfront-functions.mjs` (idempotent). Koden ligger i `scripts/cloudfront-admin-noindex.js`.
 
 ## OAuth-token storage og rememberMe-logikk
 

@@ -7,6 +7,7 @@ function handler(event) {
     return request;
 }
 
+/* v8 ignore next */
 if (typeof module !== 'undefined') {
   module.exports = { handler };
 }
