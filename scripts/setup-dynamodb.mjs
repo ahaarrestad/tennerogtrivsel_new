@@ -50,13 +50,17 @@ function tableExists() {
     }
 }
 
+const POLL_INTERVAL_MS = 2000;
+const MAX_WAIT_MS = 60_000;
+
 function sleep(ms) {
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
 function waitForActive() {
     console.log(`  Venter på at ${TABLE_NAME} blir aktiv...`);
-    for (let i = 0; i < 30; i++) {
+    const iterations = MAX_WAIT_MS / POLL_INTERVAL_MS;
+    for (let i = 0; i < iterations; i++) {
         let output;
         try {
             output = execFileSync('aws', [
@@ -71,34 +75,34 @@ function waitForActive() {
             throw new FatalError(`describe-table under vent feilet (${exitInfo(err)}): ${msg || '(ingen output)'}`);
         }
         if (output.trim() === 'ACTIVE') return;
-        sleep(2000);
+        sleep(POLL_INTERVAL_MS);
     }
-    throw new FatalError(`${TABLE_NAME} ble ikke aktiv etter 60 sekunder.`);
+    throw new FatalError(`${TABLE_NAME} ble ikke aktiv etter ${MAX_WAIT_MS / 1000} sekunder.`);
 }
 
-function ensureTable() {
-    if (tableExists()) {
-        console.log(`DynamoDB ${TABLE_NAME}: finnes allerede`);
-        return;
-    }
-
-    console.log(`Oppretter DynamoDB ${TABLE_NAME}...`);
+function ttlIsEnabled() {
+    let output;
     try {
-        execFileSync('aws', [
-            '--no-cli-pager', 'dynamodb', 'create-table',
+        output = execFileSync('aws', [
+            '--no-cli-pager', 'dynamodb', 'describe-time-to-live',
             '--table-name', TABLE_NAME,
             '--region', REGION,
-            '--attribute-definitions', 'AttributeName=ip,AttributeType=S',
-            '--key-schema', 'AttributeName=ip,KeyType=HASH',
-            '--billing-mode', 'PAY_PER_REQUEST',
-        ], { stdio: 'pipe' });
+            '--output', 'json',
+        ], { encoding: 'utf-8', stdio: 'pipe' });
     } catch (err) {
         const msg = ((err.stderr?.toString() ?? '') + (err.stdout?.toString() ?? '')).trim();
-        throw new FatalError(`create-table feilet (${exitInfo(err)}): ${msg || '(ingen output)'}`);
+        throw new FatalError(`describe-time-to-live feilet (${exitInfo(err)}): ${msg || '(ingen output)'}`);
     }
+    const ttl = JSON.parse(output).TimeToLiveDescription;
+    return ttl.TimeToLiveStatus === 'ENABLED' && ttl.AttributeName === 'ttl';
+}
 
-    waitForActive();
-
+function ensureTtl() {
+    if (ttlIsEnabled()) {
+        console.log(`  TTL uendret for ${TABLE_NAME}`);
+        return;
+    }
+    console.log(`  Aktiverer TTL på ${TABLE_NAME}...`);
     try {
         execFileSync('aws', [
             '--no-cli-pager', 'dynamodb', 'update-time-to-live',
@@ -110,8 +114,31 @@ function ensureTable() {
         const msg = ((err.stderr?.toString() ?? '') + (err.stdout?.toString() ?? '')).trim();
         throw new FatalError(`update-time-to-live feilet (${exitInfo(err)}): ${msg || '(ingen output)'}`);
     }
+    console.log(`  TTL aktivert for ${TABLE_NAME}`);
+}
 
-    console.log(`  ${TABLE_NAME} klar med TTL`);
+function ensureTable() {
+    if (tableExists()) {
+        console.log(`DynamoDB ${TABLE_NAME}: finnes allerede`);
+    } else {
+        console.log(`Oppretter DynamoDB ${TABLE_NAME}...`);
+        try {
+            execFileSync('aws', [
+                '--no-cli-pager', 'dynamodb', 'create-table',
+                '--table-name', TABLE_NAME,
+                '--region', REGION,
+                '--attribute-definitions', 'AttributeName=ip,AttributeType=S',
+                '--key-schema', 'AttributeName=ip,KeyType=HASH',
+                '--billing-mode', 'PAY_PER_REQUEST',
+            ], { stdio: 'pipe' });
+        } catch (err) {
+            const msg = ((err.stderr?.toString() ?? '') + (err.stdout?.toString() ?? '')).trim();
+            throw new FatalError(`create-table feilet (${exitInfo(err)}): ${msg || '(ingen output)'}`);
+        }
+        waitForActive();
+    }
+
+    ensureTtl();
 }
 
 try {
