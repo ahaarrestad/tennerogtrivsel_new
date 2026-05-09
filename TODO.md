@@ -38,7 +38,8 @@
   - Vurder verktøy: AWS CDK, Terraform, eller utvidede setup-scripts (allerede brukt for CloudFront Functions)
   - Referanse: `docs/guides/aws-kontaktskjema-oppsett.md` og eksisterende scripts i `scripts/`
   - ~~Task 1: Redde strip-tiles-prefix CF Function fra AWS til kode — ferdig 2026-05-06~~
-  - Neste: Task 2: Samle alle CF Function-deployscripts i ett idempotent script
+  - ~~Task 2: Saml alle CF Function-deployscripts i setup-cloudfront-functions.mjs — ferdig 2026-05-09~~
+  - Neste: Task 3: Script for S3-buckets
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod

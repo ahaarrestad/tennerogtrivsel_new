@@ -110,7 +110,7 @@ I dag er deployscripts spredt: `deploy-cloudfront-function.mjs` deployer `sitema
 - Create: `scripts/setup-cloudfront-functions.mjs`
 - Keep: `deploy-cloudfront-function.mjs` og `setup-admin-cloudfront-function.mjs` (brukt i CI — fjernes i egen PR etter migrering)
 
-- [ ] **Steg 2.1: Skriv `scripts/setup-cloudfront-functions.mjs`**
+- [x] **Steg 2.1: Skriv `scripts/setup-cloudfront-functions.mjs`**
 
   ```js
   #!/usr/bin/env node
@@ -177,7 +177,7 @@ I dag er deployscripts spredt: `deploy-cloudfront-function.mjs` deployer `sitema
   console.log('Alle CF Functions er oppdatert og publisert.');
   ```
 
-- [ ] **Steg 2.2: Finn riktig filnavn på admin-noindex-funksjonen**
+- [x] **Steg 2.2: Finn riktig filnavn på admin-noindex-funksjonen**
 
   ```bash
   grep -r "admin-noindex\|noindex" scripts/ --include="*.mjs" --include="*.js" -l
@@ -186,7 +186,7 @@ I dag er deployscripts spredt: `deploy-cloudfront-function.mjs` deployer `sitema
 
   Finn hvilken JS-fil som inneholder koden for `tot-admin-noindex`, og oppdater `codePath` i FUNCTIONS-lista tilsvarende.
 
-- [ ] **Steg 2.3: Kjør scriptet manuelt og verifiser**
+- [x] **Steg 2.3: Kjør scriptet manuelt og verifiser**
 
   ```bash
   node scripts/setup-cloudfront-functions.mjs
@@ -196,7 +196,7 @@ I dag er deployscripts spredt: `deploy-cloudfront-function.mjs` deployer `sitema
 
   Verifiser i AWS Console at alle tre er publisert og viser LIVE-status.
 
-- [ ] **Steg 2.4: Commit**
+- [x] **Steg 2.4: Commit**
 
   ```bash
   git add scripts/setup-cloudfront-functions.mjs
