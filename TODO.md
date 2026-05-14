@@ -43,10 +43,6 @@
   - `sourceIp` i Lambda-konteksten er CloudFront-nodens IP, ikke sluttbrukerens — rate-limiting er ubrukelig slik den er
   - Fix: merk som FUNN, anbefal `x-forwarded-for` med validering av at kilden er CloudFront
 
-- [ ] **Utvid grep-scope for `repository_dispatch` i sikkerhetsplan** — *ingen plan ennå*
-  - PR #297 review-funn: grep-kommandoen på linje 114 i planen begrenser søk til JS/TS-filer og kan misse referanser i YAML, JSON og andre skriptfiler
-  - Fix: `grep -rn "repository_dispatch" . --exclude-dir={node_modules,.worktrees,.claude}`
-
 - [ ] **Fiks `unsafe-inline` fallback i setup-response-headers-policy.mjs** — *ingen plan ennå*
   - PR #298 review-funn: dersom `scriptHashes` er tom faller scriptet tilbake til `'unsafe-inline'` og kan rulle ut en svakere CSP til prod ved en feil
   - Siden `unsafe-inline` allerede er fjernet fra prosjektet, bør scriptet heller feile hardt med forklarende feilmelding

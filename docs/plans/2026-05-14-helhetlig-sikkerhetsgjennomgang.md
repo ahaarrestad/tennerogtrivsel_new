@@ -111,7 +111,7 @@ Der brukerens tilgang kreves: planen gir eksakte kommandoer og hva som er forven
   Verifiser: finnes det noe i Lambda-koden eller andre steder som sender `repository_dispatch`?
 
   ```bash
-  grep -rn "repository_dispatch" . --include="*.mjs" --include="*.js" --include="*.ts" | grep -v node_modules | grep -v ".worktrees" | grep -v ".claude"
+  grep -rn "repository_dispatch" . --exclude-dir={node_modules,.worktrees,.claude}
   ```
 
   Hvis ingenting sender det: trigger er harmløs men unødvendig overhead. Vurder om den burde fjernes til «Bygg nå»-oppgaven er implementert.
