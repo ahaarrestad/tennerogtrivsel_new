@@ -14,7 +14,7 @@ const FUNCTIONS = [
     {
         name: 'sitemap_redirect',
         codePath: join(__dirname, 'cloudfront-trailing-slash.js'),
-        comment: 'viewer-request: sitemap.xml-redirect + trailing-slash-redirect',
+        comment: 'viewer-request: www-redirect + sitemap-redirect + trailing-slash-redirect',
         runtime: 'cloudfront-js-2.0',
     },
     {
