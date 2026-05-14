@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Oppretter tot-security-headers Response Headers Policy i CloudFront om den ikke finnes.
+// Oppretter/oppdaterer tot-security-headers Response Headers Policy i CloudFront.
 // Printer policy-IDen til stdout (siste linje).
 // Bruk: export CLOUDFRONT_POLICY_ID=$(node scripts/setup-response-headers-policy.mjs | tail -1)
 import { readFileSync, writeFileSync, rmSync, mkdtempSync, chmodSync } from 'node:fs';
@@ -13,26 +13,44 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const EXPECTED_ACCOUNT = '382286755083';
 const POLICY_NAME = 'tot-security-headers';
 
-const hashData = JSON.parse(
-    readFileSync(join(__dirname, '../src/generated/csp-hashes.json'), 'utf-8')
-);
-
-const scriptSrc = hashData.scriptHashes.length > 0
-    ? `'self' ${hashData.scriptHashes.map(h => `'${h}'`).join(' ')} https://apis.google.com https://accounts.google.com`
-    : `'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com`;
-
-const CSP_STRING = [
-    "default-src 'self'",
-    `script-src ${scriptSrc}`,
-    "style-src 'self' 'unsafe-inline'",
-    "font-src 'self'",
-    "img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com",
-    "frame-src https://drive.google.com https://accounts.google.com https://www.google.com https://*.googleapis.com",
-    "connect-src 'self' blob: https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://www.google.com",
-].join('; ');
-
-class FatalError extends Error {
+export class FatalError extends Error {
     constructor(m) { super(m); this.name = 'FatalError'; }
+}
+
+export function loadHashData(filePath) {
+    try {
+        return JSON.parse(readFileSync(filePath, 'utf-8'));
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            throw new Error(
+                `Feil: ${filePath} finnes ikke.\n` +
+                'Kjør "npm run build" for å generere filen før du kjører dette scriptet.'
+            );
+        }
+        throw new Error(`Klarte ikke lese csp-hashes.json: ${err.message}`);
+    }
+}
+
+export function buildScriptSrc(scriptHashes) {
+    if (scriptHashes.length === 0) {
+        throw new FatalError(
+            'csp-hashes.json inneholder ingen script-hashes. ' +
+            'Kjør "npm run build" for å generere dem før du kjører dette scriptet.'
+        );
+    }
+    return `'self' ${scriptHashes.map(h => `'${h}'`).join(' ')} https://apis.google.com https://accounts.google.com`;
+}
+
+export function buildCspString(scriptSrc) {
+    return [
+        "default-src 'self'",
+        `script-src ${scriptSrc}`,
+        "style-src 'self' 'unsafe-inline'",
+        "font-src 'self'",
+        "img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com",
+        "frame-src https://drive.google.com https://accounts.google.com https://www.google.com https://*.googleapis.com",
+        "connect-src 'self' blob: https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://www.google.com",
+    ].join('; ');
 }
 
 function exitInfo(err) {
@@ -59,7 +77,7 @@ function checkAccount() {
     console.log(`AWS-konto verifisert: ${identity.Account}`);
 }
 
-function findExistingPolicy() {
+export function findExistingPolicy() {
     let output;
     try {
         output = execFileSync('aws', [
@@ -80,8 +98,8 @@ function findExistingPolicy() {
     return match ? match.ResponseHeadersPolicy.Id : null;
 }
 
-function createPolicy() {
-    const config = {
+function buildPolicyConfig(cspString) {
+    return {
         Name: POLICY_NAME,
         Comment: `${POLICY_NAME} — speiler src/utils/security-headers.ts`,
         SecurityHeadersConfig: {
@@ -97,7 +115,7 @@ function createPolicy() {
             XSSProtection: { Override: false, Protection: false },
             ContentSecurityPolicy: {
                 Override: true,
-                ContentSecurityPolicy: CSP_STRING,
+                ContentSecurityPolicy: cspString,
             },
         },
         CustomHeadersConfig: {
@@ -109,56 +127,112 @@ function createPolicy() {
             ],
         },
     };
+}
 
+function runWithTempFile(subcommand, extraArgs, config) {
     const tmpDir = mkdtempSync(join(tmpdir(), 'cf-policy-'));
     try {
         chmodSync(tmpDir, 0o700);
         const configPath = join(tmpDir, 'policy-config.json');
         writeFileSync(configPath, JSON.stringify(config), { mode: 0o600 });
-        let output;
         try {
-            output = execFileSync('aws', [
-                '--no-cli-pager', 'cloudfront', 'create-response-headers-policy',
+            return execFileSync('aws', [
+                '--no-cli-pager', 'cloudfront', subcommand,
+                ...extraArgs,
                 '--response-headers-policy-config', `file://${configPath}`,
                 '--output', 'json',
             ], { encoding: 'utf-8', stdio: 'pipe' });
         } catch (err) {
             const msg = ((err.stderr?.toString() ?? '') + (err.stdout?.toString() ?? '')).trim();
-            throw new FatalError(`create-response-headers-policy feilet (${exitInfo(err)}): ${msg || '(ingen output)'}`);
+            throw new FatalError(`${subcommand} feilet (${exitInfo(err)}): ${msg || '(ingen output)'}`);
         }
-        const result = JSON.parse(output);
-        return result.ResponseHeadersPolicy.Id;
     } finally {
         rmSync(tmpDir, { recursive: true, force: true });
     }
 }
 
-function ensurePolicy() {
+function createPolicy(cspString) {
+    const output = runWithTempFile('create-response-headers-policy', [], buildPolicyConfig(cspString));
+    return JSON.parse(output).ResponseHeadersPolicy.Id;
+}
+
+export function getExistingPolicyConfig(id) {
+    let output;
+    try {
+        output = execFileSync('aws', [
+            '--no-cli-pager', 'cloudfront', 'get-response-headers-policy',
+            '--id', id,
+            '--output', 'json',
+        ], { encoding: 'utf-8', stdio: 'pipe' });
+    } catch (err) {
+        const msg = ((err.stderr?.toString() ?? '') + (err.stdout?.toString() ?? '')).trim();
+        throw new FatalError(`get-response-headers-policy feilet (${exitInfo(err)}): ${msg || '(ingen output)'}`);
+    }
+    const result = JSON.parse(output);
+    return {
+        etag: result.ETag,
+        csp: result.ResponseHeadersPolicy.ResponseHeadersPolicyConfig.SecurityHeadersConfig.ContentSecurityPolicy.ContentSecurityPolicy,
+    };
+}
+
+function updatePolicy(id, etag, cspString) {
+    runWithTempFile('update-response-headers-policy', ['--id', id, '--if-match', etag], buildPolicyConfig(cspString));
+}
+
+export function ensurePolicy(cspString) {
     const existingId = findExistingPolicy();
     if (existingId) {
-        console.log(`Policy finnes: ${existingId}`);
+        const { etag, csp } = getExistingPolicyConfig(existingId);
+        if (csp === cspString) {
+            console.log(`Policy er oppdatert, ingen endring nødvendig: ${existingId}`);
+        } else {
+            console.log('CSP-streng er endret — oppdaterer policy...');
+            updatePolicy(existingId, etag, cspString);
+            console.log(`  Policy oppdatert: ${existingId}`);
+        }
         return existingId;
     }
 
     console.log('Oppretter tot-security-headers policy...');
-    const id = createPolicy();
+    const id = createPolicy(cspString);
     console.log(`  Opprettet med ID: ${id}`);
     return id;
 }
 
-try {
-    checkAccount();
-} catch (err) {
-    console.error(err.message);
-    process.exit(1);
-}
+/* v8 ignore next 25 */
+if (import.meta.url === `file://${process.argv[1]}`) {
+    let hashData;
+    try {
+        hashData = loadHashData(join(__dirname, '../src/generated/csp-hashes.json'));
+    } catch (err) {
+        console.error(err.message);
+        process.exit(1);
+    }
 
-let id;
-try {
-    id = ensurePolicy();
-} catch (err) {
-    console.error(`Kritisk feil: ${err.message}`);
-    process.exit(1);
-}
+    let scriptSrc;
+    try {
+        scriptSrc = buildScriptSrc(hashData.scriptHashes);
+    } catch (err) {
+        console.error(err.message);
+        process.exit(1);
+    }
 
-process.stdout.write(id + '\n');
+    const cspString = buildCspString(scriptSrc);
+
+    try {
+        checkAccount();
+    } catch (err) {
+        console.error(err.message);
+        process.exit(1);
+    }
+
+    let id;
+    try {
+        id = ensurePolicy(cspString);
+    } catch (err) {
+        console.error(`Kritisk feil: ${err.message}`);
+        process.exit(1);
+    }
+
+    process.stdout.write(id + '\n');
+}
