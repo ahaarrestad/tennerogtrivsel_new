@@ -51,6 +51,12 @@
   - Logg hvem som gjør hvilke endringer når (oppretter, redigerer, sletter innhold)
   - Relevant for sporbarhet og feilsøking
 
+- [ ] **i18n — mulighetsstudie** — *ingen plan ennå*
+  - Er det mulig og gjennomførbart å legge til flerspråklig støtte på siden?
+  - Kartlegg hva Astro 5 tilbyr av i18n-støtte, hva som må oversettes (innhold vs. UI-tekster), og konsekvenser for CMS-flyten (Google Sheets/Drive)
+  - Vurder kostnad/nytte: er det faktisk et behov, og er det verdt arbeidsmengden?
+  - Avslutt med en anbefaling: gjør det / gjør det ikke / gjør det men bare X
+
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
