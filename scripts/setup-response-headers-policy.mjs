@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Oppretter tot-security-headers Response Headers Policy i CloudFront om den ikke finnes.
-// Printer policy-IDen til stdout — brukes av update-cloudfront-csp.mjs.
+// Printer policy-IDen til stdout (siste linje) — kopier til CLOUDFRONT_POLICY_ID for update-cloudfront-csp.mjs.
 import { readFileSync, writeFileSync, rmSync, mkdtempSync, chmodSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
@@ -155,7 +155,7 @@ let id;
 try {
     id = ensurePolicy();
 } catch (err) {
-    console.error(`Kritisk feil: ${err instanceof FatalError ? err.message : err.message}`);
+    console.error(`Kritisk feil: ${err.message}`);
     process.exit(1);
 }
 

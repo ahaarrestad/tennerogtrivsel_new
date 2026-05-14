@@ -151,7 +151,7 @@ try {
 try {
     ensureTable();
 } catch (err) {
-    console.error(`Kritisk feil: ${err instanceof FatalError ? err.message : err.message}`);
+    console.error(`Kritisk feil: ${err.message}`);
     process.exit(1);
 }
 
