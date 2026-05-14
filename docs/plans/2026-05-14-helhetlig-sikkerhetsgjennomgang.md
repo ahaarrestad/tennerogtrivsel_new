@@ -310,7 +310,7 @@ Der brukerens tilgang kreves: planen gir eksakte kommandoer og hva som er forven
 
   Sjekkliste:
   - `ORIGIN_VERIFY_SECRET`: hentes fra env-var, brukes med `timingSafeEqual` via SHA256-hash → ✅ korrekt konstant-tid sammenligning
-  - IP-henting: `event.requestContext?.http?.sourceIp || event.headers?.['x-forwarded-for']` — Lambda Function URL setter alltid `requestContext.http.sourceIp`, så `x-forwarded-for`-fallback er for Lambda bak ALB. **Er det mulig å spofe IP via `x-forwarded-for` i praksis?** Kun hvis `requestContext.http.sourceIp` er `undefined`. Med direkte Function URL er den alltid satt → OK.
+  - IP-henting: **FUNN (HIGH)** — `event.requestContext?.http?.sourceIp` er CloudFront-nodens IP, ikke sluttbrukerens. Siden `sourceIp` alltid er satt (og alltid truthy) nås aldri `x-forwarded-for`-fallbacken. Rate-limiting bruker dermed én delt bucket for alle brukere bak samme CloudFront-node, og er i praksis ubrukelig. **Fikset i separat commit:** bytt rekkefølge — bruk `x-forwarded-for` som primær kilde (CloudFront setter dette til viewer-IP), med `sourceIp` som fallback. `x-origin-verify`-valideringen skjer allerede før IP-lesingen, så `x-forwarded-for` kan stoles på.
   - `sanitize()` og `sanitizeBody()`: fjerner kontrollkarakterer → ✅
   - `validatePayload()`: sjekker felt-lengder, enkel e-post-regex → Regex `^[^\s@]+@[^\s@]+\.[^\s@]+$` er liberal men OK for enkel validering (vi sender til SES, ikke tolker e-post-semantikk)
   - Honeypot: `website`-felt → ✅
