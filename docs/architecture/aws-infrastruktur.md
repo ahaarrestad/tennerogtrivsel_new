@@ -338,3 +338,22 @@ node scripts/setup-s3.mjs
 ```
 
 12. Pek DNS til CloudFront-domenet (CNAME eller ALIAS-record).
+
+---
+
+## 12. Deprecated / opprydding
+
+### CF Function `add-index-html`
+
+- **Status:** Fortsatt aktiv i test-distribusjonen (`E2WXX7ZUR5NNP3`, DefaultCacheBehavior, viewer-request). Ikke lenger i bruk i prod.
+- **Erstattet av:** `sitemap_redirect` (deployes av `setup-cloudfront-functions.mjs`)
+- **Opprydding:** Når test-distribusjonen er oppdatert til å bruke `sitemap_redirect` i stedet for `add-index-html`, kan CF Function `add-index-html` slettes manuelt via AWS-konsollen (CloudFront → Functions → `add-index-html` → Delete). Kan ikke slettes via CLI mens den er tilknyttet en behavior.
+
+### Slettede scripts
+
+Følgende scripts er fjernet fordi de er erstattet av `setup-cloudfront-functions.mjs`:
+
+| Script | Fjernet | Erstattet av |
+|--------|---------|-------------|
+| `scripts/deploy-cloudfront-function.mjs` | 2026-05-14 | `setup-cloudfront-functions.mjs` |
+| `scripts/setup-admin-cloudfront-function.mjs` | 2026-05-14 | `setup-cloudfront-functions.mjs` |
