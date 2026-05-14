@@ -8,7 +8,7 @@ const { dynamoSend, sesSend } = vi.hoisted(() => ({
 
 vi.mock('@aws-sdk/client-dynamodb', () => ({
     DynamoDBClient: class { send = dynamoSend; },
-    GetItemCommand: vi.fn(),
+    GetItemCommand: class { constructor(input) { this.input = input; } },
     PutItemCommand: vi.fn(),
 }));
 
@@ -158,6 +158,33 @@ describe('handler', () => {
             },
         });
         const result = await handler(makeEvent(validPayload));
+        expect(result.statusCode).toBe(429);
+    });
+
+    it('bruker x-forwarded-for som IP for rate limiting nar begge er satt', async () => {
+        dynamoSend.mockImplementation((cmd) => {
+            const key = cmd.input?.Key?.ip?.S;
+            if (key === '203.0.113.1') {
+                return Promise.resolve({
+                    Item: {
+                        ip:    { S: '203.0.113.1' },
+                        count: { N: '3' },
+                        ttl:   { N: String(Math.floor(Date.now() / 1000) + 600) },
+                    },
+                });
+            }
+            return Promise.resolve({ Item: null });
+        });
+
+        const event = {
+            headers: {
+                'x-origin-verify': 'test-secret',
+                'x-forwarded-for': '203.0.113.1',
+            },
+            body: JSON.stringify(validPayload),
+            requestContext: { http: { sourceIp: '10.0.0.1' } },
+        };
+        const result = await handler(event);
         expect(result.statusCode).toBe(429);
     });
 
