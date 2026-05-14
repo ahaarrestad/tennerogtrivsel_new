@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Rett opp Lambda IP-deteksjon i sikkerhetsplan** ([plan](docs/superpowers/plans/archive/2026-05-14-fiks-lambda-ip-deteksjon.md))
+  - `x-forwarded-for` får nå prioritet over `sourceIp` i rate-limiting — CloudFront-noden deler ikke lenger bucket med alle brukere
+  - Sikkerhetsplanen steg 3.4 oppdatert med FUNN (HIGH) og forklaring
+  - Ny test verifiserer at `x-forwarded-for` brukes når begge headere er satt
+
 - [x] **CloudFront redirect-fiks — query-string og doble redirects** ([plan](docs/plans/archive/2026-05-14-cloudfront-redirect-fixes.md))
   - `buildQuerySuffix()` bevarer UTM-parametere og andre query-strings ved www-redirect
   - www-redirect beregner nå endelig mål-URI (host + trailing-slash) i én redirect i stedet for to

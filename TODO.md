@@ -33,10 +33,6 @@
   - Doble redirects: host-fix + trailing-slash gir to round-trips i stedet for én
   - Berører `scripts/cloudfront-trailing-slash.js` og `scripts/cloudfront-trailing-slash.mjs`
 
-- [ ] **Rett opp Lambda IP-deteksjon i sikkerhetsplan** ([plan](docs/superpowers/plans/2026-05-14-fiks-lambda-ip-deteksjon.md))
-  - PR #297 review-funn (HIGH): `docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md` steg 3.4 konkluderer feilaktig med «OK» for rate-limiting
-  - `sourceIp` i Lambda-konteksten er CloudFront-nodens IP, ikke sluttbrukerens — rate-limiting er ubrukelig slik den er
-  - Fix: merk som FUNN, anbefal `x-forwarded-for` med validering av at kilden er CloudFront
 
 - [ ] **Fiks `unsafe-inline` fallback i setup-response-headers-policy.mjs** — *ingen plan ennå*
   - PR #298 review-funn: dersom `scriptHashes` er tom faller scriptet tilbake til `'unsafe-inline'` og kan rulle ut en svakere CSP til prod ved en feil
