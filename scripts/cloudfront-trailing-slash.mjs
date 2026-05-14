@@ -1,4 +1,6 @@
 // Testbar ESM-kopi av CloudFront-funksjonen — deploy-scriptet bruker .js-filen.
+// CloudFront URL-encodes querystring values before delivering them to the function,
+// so v.value and v.multiValue[n].value are already %XX-encoded — no re-encoding needed.
 function buildQuerySuffix(qs) {
     var keys = Object.keys(qs || {});
     if (keys.length === 0) return '';
