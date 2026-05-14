@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **CloudFront redirect-fiks — query-string og doble redirects** ([plan](docs/plans/archive/2026-05-14-cloudfront-redirect-fixes.md))
+  - `buildQuerySuffix()` bevarer UTM-parametere og andre query-strings ved www-redirect
+  - www-redirect beregner nå endelig mål-URI (host + trailing-slash) i én redirect i stedet for to
+  - 9 nye tester dekker query-string-bevaring, multi-verdi-params og kombinerte tilfeller
+
 - [x] **Utvid grep-scope for `repository_dispatch` i sikkerhetsplan**
   - Grep-kommandoen i `docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md` (linje 114) utvidet til å søke alle filtyper, ikke bare JS/TS
   - Ny kommando: `grep -rn "repository_dispatch" . --exclude-dir={node_modules,.worktrees,.claude}`
