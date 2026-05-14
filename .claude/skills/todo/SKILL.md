@@ -61,9 +61,10 @@ Hvis brukeren vil legge til en ny oppgave:
 
 Når en oppgave skal startes:
 
-1. Les `TODO.md`
-2. Flytt oppgaven fra **Backlog** til **Pågående**
-3. Bekreft flyttingen
+1. Invoke `superpowers:using-git-worktrees` — sørger for at en isolert branch/worktree er på plass før arbeidet begynner
+2. Les `TODO.md`
+3. Flytt oppgaven fra **Backlog** til **Pågående**
+4. Bekreft flyttingen (inkl. hvilken branch/worktree som ble opprettet)
 
 ---
 
