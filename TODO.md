@@ -28,6 +28,24 @@
   - Neste: Task 2 (F4): SHA-pin GitHub Actions ([plan](docs/plans/2026-05-06-sha-pin-github-actions.md))
 
 ## Backlog
+- [ ] **Fiks CloudFront www-redirect — query strings og doble redirects** — *ingen plan ennå*
+  - PR #296 review-funn: query-strings (UTM-parametere m.m.) mistes helt ved redirect fra `tennerogtrivsel.no` til `www` — påvirker analytics og markedsføringstracking
+  - Doble redirects: forespørsler som trenger både host-fix og trailing-slash (f.eks. `tennerogtrivsel.no/tjenester`) gir to round-trips i stedet for én
+  - Løsning: beregn endelig mål-URI (rett host + rett path + query string) og utfør én enkelt redirect dersom noe har endret seg
+  - Berører `scripts/cloudfront-trailing-slash.js` og `scripts/cloudfront-trailing-slash.mjs`
+
+- [ ] **Oppdater sikkerhetsplan — Lambda IP-deteksjon bak CloudFront er feil** — *ingen plan ennå*
+  - PR #297 review-funn (HIGH): steg 3.4 i planen konkluderer feilaktig med «OK» for rate-limiting
+  - `sourceIp` i Lambda-konteksten er CloudFront-nodens IP, ikke sluttbrukeren — rate-limiting fungerer derfor ikke
+  - Oppdater `docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md`: merk som FUNN, anbefal `x-forwarded-for` med validering av at kilden er CloudFront
+  - Bonus: juster grep-kommandoen på linje 114 til å søke bredere (ekskluder mapper i stedet for å filtrere på filtype)
+
+- [ ] **Forbedre setup-response-headers-policy.mjs — sikkerhet og robusthet** — *ingen plan ennå*
+  - PR #298 review-funn: tre separate problemer i `scripts/setup-response-headers-policy.mjs`
+  - `unsafe-inline` brukes som fallback dersom `scriptHashes` er tom — kan rulle ut en svakere CSP-policy i prod ved en feil; bør feile hardt med forklarende feilmelding i stedet
+  - Manglende `src/generated/csp-hashes.json` gir generisk Node.js-krasj; legg til eksplisitt sjekk med melding om at prosjektet må bygges først
+  - Scriptet er ikke genuint idempotent: dokumentasjonen lover oppdatering av eksisterende policy, men koden returnerer bare eksisterende ID uten å sjekke innholdet — bør sammenligne og oppdatere ved avvik (som `setup-s3.mjs` gjør)
+
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
   - Dekker: GitHub (secrets, Actions, permissions), AWS (IAM, S3, Lambda, CloudFront, DynamoDB, SES), Google (OAuth, Sheets/Drive API-nøkler, scopes), og hvordan alt er skrudd sammen
@@ -38,8 +56,9 @@
   - Lambda Function URL-proxy som verifiserer Google OAuth-token og kaller GitHub `repository_dispatch`
   - Knapp i admin-dashboard med spinner, statusmelding og siste vellykkede bygg-tidspunkt
 
-- [ ] **Audit trail for admin-panelet** — *ingen plan ennå*
+- [ ] **Audit trail for admin-panelet** ([plan](docs/superpowers/plans/2026-05-14-endringslogg-admin.md)) ([spec](docs/superpowers/specs/2026-05-14-endringslogg-admin-design.md))
   - Logg hvem som gjør hvilke endringer når (oppretter, redigerer, sletter innhold)
+  - Eget Google Sheets-regneark for loggen, synlig som fane i admin-UI
   - Relevant for sporbarhet og feilsøking
 
 - [ ] **i18n — mulighetsstudie** — *ingen plan ennå*
