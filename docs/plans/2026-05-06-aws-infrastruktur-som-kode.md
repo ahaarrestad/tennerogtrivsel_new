@@ -300,7 +300,7 @@ S3-buckets for prod og test opprettes manuelt i dag. Scriptet skal sjekke om buc
 
 `kontakt-rate-limit`-tabellen brukes av Lambda for rate limiting. Den er ikke i kode.
 
-- [ ] **Steg 4.1: Hent nåværende tabell-config fra AWS**
+- [x] **Steg 4.1: Hent nåværende tabell-config fra AWS**
 
   ```bash
   aws dynamodb describe-table --table-name kontakt-rate-limit --region eu-north-1 --output json \
@@ -310,7 +310,7 @@ S3-buckets for prod og test opprettes manuelt i dag. Scriptet skal sjekke om buc
 
   Noter partition key, billing mode (PAY_PER_REQUEST / PROVISIONED) og TTL-attributt-navn.
 
-- [ ] **Steg 4.2: Skriv `scripts/setup-dynamodb.mjs`**
+- [x] **Steg 4.2: Skriv `scripts/setup-dynamodb.mjs`**
 
   Fyll inn verdier fra Steg 4.1 (TTL-attributt og key schema):
 
@@ -363,7 +363,7 @@ S3-buckets for prod og test opprettes manuelt i dag. Scriptet skal sjekke om buc
   await ensureTable();
   ```
 
-- [ ] **Steg 4.3: Kjør mot AWS (read-only verify — tabellen finnes allerede)**
+- [x] **Steg 4.3: Kjør mot AWS (read-only verify — tabellen finnes allerede)**
 
   ```bash
   node scripts/setup-dynamodb.mjs
@@ -371,7 +371,7 @@ S3-buckets for prod og test opprettes manuelt i dag. Scriptet skal sjekke om buc
 
   Forventet: `DynamoDB kontakt-rate-limit: finnes allerede`
 
-- [ ] **Steg 4.4: Commit**
+- [x] **Steg 4.4: Commit**
 
   ```bash
   git add scripts/setup-dynamodb.mjs
@@ -543,7 +543,7 @@ CloudFront distribution-oppsett er komplekst (behaviors, origins, OAC, cache pol
 **Files:**
 - Modify: `scripts/deploy-cloudfront-function.mjs` (evt. slett)
 
-- [ ] **Steg 7.1: Sjekk hvilken function som er knyttet til test-distribusjonen**
+- [x] **Steg 7.1: Sjekk hvilken function som er knyttet til test-distribusjonen**
 
   ```bash
   aws cloudfront get-distribution-config --id E2WXX7ZUR5NNP3 \
@@ -553,7 +553,7 @@ CloudFront distribution-oppsett er komplekst (behaviors, origins, OAC, cache pol
 
   Finn ut om `add-index-html` er aktiv i test. Hvis nei: den er deprecated.
 
-- [ ] **Steg 7.2: Avklar hva `deploy-cloudfront-function.mjs` deployer**
+- [x] **Steg 7.2: Avklar hva `deploy-cloudfront-function.mjs` deployer**
 
   ```bash
   cat scripts/deploy-cloudfront-function.mjs | grep -E "name|FunctionName|function"
@@ -561,11 +561,11 @@ CloudFront distribution-oppsett er komplekst (behaviors, origins, OAC, cache pol
 
   Finn funksjonsnavnet som deployes. Hvis det er `add-index-html` og den er deprecated: oppdater scriptet til å deploye `sitemap_redirect` (eller fjern scriptet og bruk `setup-cloudfront-functions.mjs` fremover).
 
-- [ ] **Steg 7.3: Oppdater CI-referanser**
+- [x] **Steg 7.3: Oppdater CI-referanser**
 
   Sjekk om `deploy-cloudfront-function.mjs` brukes i `deploy.yml`. Erstatt eventuelt med `setup-cloudfront-functions.mjs` eller behold begge i overgangsfasen.
 
-- [ ] **Steg 7.4: Commit eventuelle endringer**
+- [x] **Steg 7.4: Commit eventuelle endringer**
 
   ```bash
   git add scripts/ .github/workflows/deploy.yml
