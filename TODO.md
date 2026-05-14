@@ -28,12 +28,6 @@
   - Neste: Task 2 (F4): SHA-pin GitHub Actions ([plan](docs/plans/2026-05-06-sha-pin-github-actions.md))
 
 ## Backlog
-- [ ] **CloudFront redirect-fiks — query-string og doble redirects** ([plan](docs/plans/2026-05-14-cloudfront-redirect-fixes.md))
-  - Query-string-tap: UTM-parametere mistes ved www-redirect fra `tennerogtrivsel.no` → påvirker analytics
-  - Doble redirects: host-fix + trailing-slash gir to round-trips i stedet for én
-  - Berører `scripts/cloudfront-trailing-slash.js` og `scripts/cloudfront-trailing-slash.mjs`
-
-
 - [ ] **Fiks `unsafe-inline` fallback i setup-response-headers-policy.mjs** — *ingen plan ennå*
   - PR #298 review-funn: dersom `scriptHashes` er tom faller scriptet tilbake til `'unsafe-inline'` og kan rulle ut en svakere CSP til prod ved en feil
   - Siden `unsafe-inline` allerede er fjernet fra prosjektet, bør scriptet heller feile hardt med forklarende feilmelding
