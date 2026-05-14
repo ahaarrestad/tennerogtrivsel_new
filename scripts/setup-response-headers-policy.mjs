@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Oppretter tot-security-headers Response Headers Policy i CloudFront om den ikke finnes.
-// Printer policy-IDen til stdout (siste linje) — kopier til CLOUDFRONT_POLICY_ID for update-cloudfront-csp.mjs.
+// Printer policy-IDen til stdout (siste linje).
+// Bruk: export CLOUDFRONT_POLICY_ID=$(node scripts/setup-response-headers-policy.mjs | tail -1)
 import { readFileSync, writeFileSync, rmSync, mkdtempSync, chmodSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
@@ -64,6 +65,7 @@ function findExistingPolicy() {
         output = execFileSync('aws', [
             '--no-cli-pager', 'cloudfront', 'list-response-headers-policies',
             '--type', 'custom',
+            '--max-items', '1000',
             '--output', 'json',
         ], { encoding: 'utf-8', stdio: 'pipe' });
     } catch (err) {

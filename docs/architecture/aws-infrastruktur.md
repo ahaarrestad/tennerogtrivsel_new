@@ -45,7 +45,7 @@ AWS-konto: `382286755083`
 | Distribusjon | Origin-ID | S3-bucket | OAC-ID |
 |---|---|---|---|
 | Prod | `S3-tennerogtrivsel.no` | `tennerogtrivsel-se.s3.eu-north-1.amazonaws.com` | `E2GYYF9QZ9APXM` |
-| Test | `test2.aarrestad.com.s3-website...` | `test2.aarrestad.com-se.s3.eu-north-1.amazonaws.com` | `E1A0HZ1O0QIWI5` |
+| Test | `test2.aarrestad.com.s3-website.eu-west-1.amazonaws.com-mm2cmlkhd1j` | `test2.aarrestad.com-se.s3.eu-north-1.amazonaws.com` | `E1A0HZ1O0QIWI5` |
 
 S3 bruker **OAC (Origin Access Control)**, ikke OAI. Ingen `OriginAccessIdentity`.
 
