@@ -2,6 +2,10 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Utvid grep-scope for `repository_dispatch` i sikkerhetsplan**
+  - Grep-kommandoen i `docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md` (linje 114) utvidet til å søke alle filtyper, ikke bare JS/TS
+  - Ny kommando: `grep -rn "repository_dispatch" . --exclude-dir={node_modules,.worktrees,.claude}`
+
 - [x] **AWS infrastruktur som kode** ([plan](docs/plans/archive/2026-05-06-aws-infrastruktur-som-kode.md))
   - 6 idempotente setup-scripts: `setup-s3.mjs`, `setup-dynamodb.mjs`, `setup-cloudfront-functions.mjs`, `setup-response-headers-policy.mjs`
   - CF Function `strip-tiles-prefix` reddet fra AWS til kode (`cloudfront-strip-tiles-prefix.js`)
