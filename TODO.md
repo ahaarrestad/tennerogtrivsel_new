@@ -27,21 +27,18 @@
   - ~~Task 7 (F6): admin-token til sessionStorage, rememberMe-flagg, X-Robots-Tag noindex — ferdig 2026-05-06~~
   - Neste: Task 2 (F4): SHA-pin GitHub Actions ([plan](docs/plans/2026-05-06-sha-pin-github-actions.md))
 
+- [ ] **Hardening av setup-response-headers-policy.mjs** ([plan](docs/plans/2026-05-14-setup-response-headers-hardening.md))
+  - PR #298 review-funn, tre fikser i same script:
+  - Problem 1 (linje 22): `unsafe-inline`-fallback — skal feile hardt dersom `scriptHashes` er tom
+  - Problem 2 (linje 18): krasjer med generisk ENOENT om `csp-hashes.json` mangler — gi forklarende feilmelding
+  - Problem 3 (linje 147): `ensurePolicy()` ikke genuint idempotent — sammenlign eksisterende CSP og oppdater ved avvik
+
 ## Backlog
-- [ ] **Fiks `unsafe-inline` fallback i setup-response-headers-policy.mjs** — *ingen plan ennå*
-  - PR #298 review-funn: dersom `scriptHashes` er tom faller scriptet tilbake til `'unsafe-inline'` og kan rulle ut en svakere CSP til prod ved en feil
-  - Siden `unsafe-inline` allerede er fjernet fra prosjektet, bør scriptet heller feile hardt med forklarende feilmelding
-  - Berører `scripts/setup-response-headers-policy.mjs` (linje 22)
 
-- [ ] **Legg til forklarende feilmelding ved manglende csp-hashes.json** — *ingen plan ennå*
-  - PR #298 review-funn: `scripts/setup-response-headers-policy.mjs` krasjer med generisk Node.js-feil dersom `src/generated/csp-hashes.json` mangler (f.eks. ved nyoppsett før første bygg)
-  - Fix: eksplisitt sjekk med melding om at `npm run build` må kjøres først
-  - Berører `scripts/setup-response-headers-policy.mjs` (linje 18)
-
-- [ ] **Gjør setup-response-headers-policy.mjs genuint idempotent** — *ingen plan ennå*
-  - PR #298 review-funn: `docs/architecture/aws-infrastruktur.md` (linje 245) sier scriptet oppretter *og oppdaterer* policy, men koden returnerer bare eksisterende ID uten å verifisere innholdet
-  - Fix: sammenlign eksisterende konfigurasjon (f.eks. CSP-streng) med ønsket tilstand og oppdater ved avvik — slik `setup-s3.mjs` gjør
-  - Berører `scripts/setup-response-headers-policy.mjs` (linje 147)
+- [ ] **CloudFront redirect-fiks — query-string og doble redirects** ([plan](docs/plans/2026-05-14-cloudfront-redirect-fixes.md))
+  - Query-string-tap: UTM-parametere mistes ved www-redirect fra `tennerogtrivsel.no` → påvirker analytics
+  - Doble redirects: host-fix + trailing-slash gir to round-trips i stedet for én
+  - Berører `scripts/cloudfront-trailing-slash.js` og `scripts/cloudfront-trailing-slash.mjs`
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
