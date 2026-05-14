@@ -28,23 +28,39 @@
   - Neste: Task 2 (F4): SHA-pin GitHub Actions ([plan](docs/plans/2026-05-06-sha-pin-github-actions.md))
 
 ## Backlog
-- [ ] **Fiks CloudFront www-redirect — query strings og doble redirects** — *ingen plan ennå*
-  - PR #296 review-funn: query-strings (UTM-parametere m.m.) mistes helt ved redirect fra `tennerogtrivsel.no` til `www` — påvirker analytics og markedsføringstracking
-  - Doble redirects: forespørsler som trenger både host-fix og trailing-slash (f.eks. `tennerogtrivsel.no/tjenester`) gir to round-trips i stedet for én
-  - Løsning: beregn endelig mål-URI (rett host + rett path + query string) og utfør én enkelt redirect dersom noe har endret seg
-  - Berører `scripts/cloudfront-trailing-slash.js` og `scripts/cloudfront-trailing-slash.mjs`
+- [ ] **Fiks query-string-tap i CloudFront www-redirect** — *ingen plan ennå*
+  - PR #296 review-funn: UTM-parametere og andre query-strings mistes ved redirect fra `tennerogtrivsel.no` til `www.tennerogtrivsel.no` — påvirker analytics og markedsføringstracking i prod
+  - Fix: hent `event.request.querystring` og inkluder i `Location`-headeren ved redirect
+  - Berører `scripts/cloudfront-trailing-slash.js` (linje 15) og `scripts/cloudfront-trailing-slash.mjs` (linje 10)
 
-- [ ] **Oppdater sikkerhetsplan — Lambda IP-deteksjon bak CloudFront er feil** — *ingen plan ennå*
-  - PR #297 review-funn (HIGH): steg 3.4 i planen konkluderer feilaktig med «OK» for rate-limiting
-  - `sourceIp` i Lambda-konteksten er CloudFront-nodens IP, ikke sluttbrukeren — rate-limiting fungerer derfor ikke
-  - Oppdater `docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md`: merk som FUNN, anbefal `x-forwarded-for` med validering av at kilden er CloudFront
-  - Bonus: juster grep-kommandoen på linje 114 til å søke bredere (ekskluder mapper i stedet for å filtrere på filtype)
+- [ ] **Fiks doble redirects i CloudFront www-redirect** — *ingen plan ennå*
+  - PR #296 review-funn: forespørsler som trenger både host-fix og trailing-slash (f.eks. `tennerogtrivsel.no/tjenester`) gir to round-trips i stedet for én
+  - Fix: beregn endelig mål-URI (rett host + rett path) og utfør én enkelt redirect dersom noe har endret seg
+  - Berører `scripts/cloudfront-trailing-slash.js` (linje 11)
 
-- [ ] **Forbedre setup-response-headers-policy.mjs — sikkerhet og robusthet** — *ingen plan ennå*
-  - PR #298 review-funn: tre separate problemer i `scripts/setup-response-headers-policy.mjs`
-  - `unsafe-inline` brukes som fallback dersom `scriptHashes` er tom — kan rulle ut en svakere CSP-policy i prod ved en feil; bør feile hardt med forklarende feilmelding i stedet
-  - Manglende `src/generated/csp-hashes.json` gir generisk Node.js-krasj; legg til eksplisitt sjekk med melding om at prosjektet må bygges først
-  - Scriptet er ikke genuint idempotent: dokumentasjonen lover oppdatering av eksisterende policy, men koden returnerer bare eksisterende ID uten å sjekke innholdet — bør sammenligne og oppdatere ved avvik (som `setup-s3.mjs` gjør)
+- [ ] **Rett opp Lambda IP-deteksjon i sikkerhetsplan** — *ingen plan ennå*
+  - PR #297 review-funn (HIGH): `docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md` steg 3.4 konkluderer feilaktig med «OK» for rate-limiting
+  - `sourceIp` i Lambda-konteksten er CloudFront-nodens IP, ikke sluttbrukerens — rate-limiting er ubrukelig slik den er
+  - Fix: merk som FUNN, anbefal `x-forwarded-for` med validering av at kilden er CloudFront
+
+- [ ] **Utvid grep-scope for `repository_dispatch` i sikkerhetsplan** — *ingen plan ennå*
+  - PR #297 review-funn: grep-kommandoen på linje 114 i planen begrenser søk til JS/TS-filer og kan misse referanser i YAML, JSON og andre skriptfiler
+  - Fix: `grep -rn "repository_dispatch" . --exclude-dir={node_modules,.worktrees,.claude}`
+
+- [ ] **Fiks `unsafe-inline` fallback i setup-response-headers-policy.mjs** — *ingen plan ennå*
+  - PR #298 review-funn: dersom `scriptHashes` er tom faller scriptet tilbake til `'unsafe-inline'` og kan rulle ut en svakere CSP til prod ved en feil
+  - Siden `unsafe-inline` allerede er fjernet fra prosjektet, bør scriptet heller feile hardt med forklarende feilmelding
+  - Berører `scripts/setup-response-headers-policy.mjs` (linje 22)
+
+- [ ] **Legg til forklarende feilmelding ved manglende csp-hashes.json** — *ingen plan ennå*
+  - PR #298 review-funn: `scripts/setup-response-headers-policy.mjs` krasjer med generisk Node.js-feil dersom `src/generated/csp-hashes.json` mangler (f.eks. ved nyoppsett før første bygg)
+  - Fix: eksplisitt sjekk med melding om at `npm run build` må kjøres først
+  - Berører `scripts/setup-response-headers-policy.mjs` (linje 18)
+
+- [ ] **Gjør setup-response-headers-policy.mjs genuint idempotent** — *ingen plan ennå*
+  - PR #298 review-funn: `docs/architecture/aws-infrastruktur.md` (linje 245) sier scriptet oppretter *og oppdaterer* policy, men koden returnerer bare eksisterende ID uten å verifisere innholdet
+  - Fix: sammenlign eksisterende konfigurasjon (f.eks. CSP-streng) med ønsket tilstand og oppdater ved avvik — slik `setup-s3.mjs` gjør
+  - Berører `scripts/setup-response-headers-policy.mjs` (linje 147)
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
