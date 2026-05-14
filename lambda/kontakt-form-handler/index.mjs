@@ -103,8 +103,8 @@ export const handler = async (event) => {
     }
 
     // 4. Rate limiting
-    const ip  = event.requestContext?.http?.sourceIp
-             || event.headers?.['x-forwarded-for']?.split(',')[0]?.trim()
+    const ip  = event.headers?.['x-forwarded-for']?.split(',')[0]?.trim()
+             || event.requestContext?.http?.sourceIp
              || 'unknown';
     const now = Math.floor(Date.now() / 1000);
 
