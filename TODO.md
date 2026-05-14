@@ -28,17 +28,12 @@
   - Neste: Task 2 (F4): SHA-pin GitHub Actions ([plan](docs/plans/2026-05-06-sha-pin-github-actions.md))
 
 ## Backlog
-- [ ] **Fiks query-string-tap i CloudFront www-redirect** — *ingen plan ennå*
-  - PR #296 review-funn: UTM-parametere og andre query-strings mistes ved redirect fra `tennerogtrivsel.no` til `www.tennerogtrivsel.no` — påvirker analytics og markedsføringstracking i prod
-  - Fix: hent `event.request.querystring` og inkluder i `Location`-headeren ved redirect
-  - Berører `scripts/cloudfront-trailing-slash.js` (linje 15) og `scripts/cloudfront-trailing-slash.mjs` (linje 10)
+- [ ] **CloudFront redirect-fiks — query-string og doble redirects** ([plan](docs/plans/2026-05-14-cloudfront-redirect-fixes.md))
+  - Query-string-tap: UTM-parametere mistes ved www-redirect fra `tennerogtrivsel.no` → påvirker analytics
+  - Doble redirects: host-fix + trailing-slash gir to round-trips i stedet for én
+  - Berører `scripts/cloudfront-trailing-slash.js` og `scripts/cloudfront-trailing-slash.mjs`
 
-- [ ] **Fiks doble redirects i CloudFront www-redirect** — *ingen plan ennå*
-  - PR #296 review-funn: forespørsler som trenger både host-fix og trailing-slash (f.eks. `tennerogtrivsel.no/tjenester`) gir to round-trips i stedet for én
-  - Fix: beregn endelig mål-URI (rett host + rett path) og utfør én enkelt redirect dersom noe har endret seg
-  - Berører `scripts/cloudfront-trailing-slash.js` (linje 11)
-
-- [ ] **Rett opp Lambda IP-deteksjon i sikkerhetsplan** — *ingen plan ennå*
+- [ ] **Rett opp Lambda IP-deteksjon i sikkerhetsplan** ([plan](docs/superpowers/plans/2026-05-14-fiks-lambda-ip-deteksjon.md))
   - PR #297 review-funn (HIGH): `docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md` steg 3.4 konkluderer feilaktig med «OK» for rate-limiting
   - `sourceIp` i Lambda-konteksten er CloudFront-nodens IP, ikke sluttbrukerens — rate-limiting er ubrukelig slik den er
   - Fix: merk som FUNN, anbefal `x-forwarded-for` med validering av at kilden er CloudFront
