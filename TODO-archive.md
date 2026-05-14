@@ -2,6 +2,13 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **AWS infrastruktur som kode** ([plan](docs/plans/archive/2026-05-06-aws-infrastruktur-som-kode.md))
+  - 6 idempotente setup-scripts: `setup-s3.mjs`, `setup-dynamodb.mjs`, `setup-cloudfront-functions.mjs`, `setup-response-headers-policy.mjs`
+  - CF Function `strip-tiles-prefix` reddet fra AWS til kode (`cloudfront-strip-tiles-prefix.js`)
+  - Deprecated scripts fjernet: `deploy-cloudfront-function.mjs`, `setup-admin-cloudfront-function.mjs`
+  - Komplett arkitekturdokumentasjon med oppsettssteg: `docs/architecture/aws-infrastruktur.md`
+  - Gjenstår manuelt: test-distribusjonen bruker fortsatt deprecated `add-index-html` CF Function (se arkitekturdok)
+
 - [x] **Fjern deprecation-advarsel: apple-mobile-web-app-capable**
   - Lagt til `<meta name="mobile-web-app-capable" content="yes">` i `src/pages/admin/index.astro`
   - Apple-taggen beholdt for iOS-bakoverkompatibilitet

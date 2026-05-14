@@ -12,15 +12,6 @@
 - **Arkivering:** Når en oppgave er fullført, flytt oppgaven fra TODO.md til [TODO-archive.md](TODO-archive.md), planfilen til `docs/plans/archive/` og eventuelle design-docs til `docs/designs/archive/`.
 
 ## Pågående
-- [ ] **AWS infrastruktur som kode** ([plan](docs/plans/2026-05-06-aws-infrastruktur-som-kode.md))
-  - Kartlegg hva som er manuelt oppsatt i AWS vs. hva som allerede er i kode (Lambda, CloudFront Functions, S3, DynamoDB, SES, IAM, CloudFront distributions)
-  - Mål: mest mulig av oppsettet i kode for konsistent og reproduserbart deploy
-  - Vurder verktøy: AWS CDK, Terraform, eller utvidede setup-scripts (allerede brukt for CloudFront Functions)
-  - Referanse: `docs/guides/aws-kontaktskjema-oppsett.md` og eksisterende scripts i `scripts/`
-  - ~~Task 1: Redde strip-tiles-prefix CF Function fra AWS til kode — ferdig 2026-05-06~~
-  - ~~Task 2: Saml alle CF Function-deployscripts i setup-cloudfront-functions.mjs — ferdig 2026-05-09~~
-  - ~~Task 3: Script for S3-buckets — ferdig 2026-05-09~~
-  - Neste: Task 4: Script for DynamoDB-tabell
 
 - [ ] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/2026-04-28-sikkerhetshardening.md))
   - Audit 2026-04-28 fant 2 kritiske, 4 høye og 4 medium funn. Bruker er mest bekymret for supply-chain.

@@ -387,7 +387,7 @@ S3-buckets for prod og test opprettes manuelt i dag. Scriptet skal sjekke om buc
 **Files:**
 - Create: `scripts/setup-response-headers-policy.mjs`
 
-- [ ] **Steg 5.1: Skriv `scripts/setup-response-headers-policy.mjs`**
+- [x] **Steg 5.1: Skriv `scripts/setup-response-headers-policy.mjs`**
 
   ```js
   #!/usr/bin/env node
@@ -452,7 +452,7 @@ S3-buckets for prod og test opprettes manuelt i dag. Scriptet skal sjekke om buc
 
   **Merk:** `security-headers.ts` eksporterer muligens ikke `csp` direkte til CommonJS. Sjekk at importen fungerer, eller hardkod CSP-strengen med en kommentar om at den speiler filen.
 
-- [ ] **Steg 5.2: Kjør og verifiser**
+- [x] **Steg 5.2: Kjør og verifiser**
 
   ```bash
   node scripts/setup-response-headers-policy.mjs
@@ -460,7 +460,7 @@ S3-buckets for prod og test opprettes manuelt i dag. Scriptet skal sjekke om buc
 
   Forventet: `Policy finnes: b0de82e9-73e5-45de-abe2-3d236375b674`
 
-- [ ] **Steg 5.3: Commit**
+- [x] **Steg 5.3: Commit**
 
   ```bash
   git add scripts/setup-response-headers-policy.mjs
@@ -476,7 +476,7 @@ CloudFront distribution-oppsett er komplekst (behaviors, origins, OAC, cache pol
 **Files:**
 - Create: `docs/architecture/aws-infrastruktur.md`
 
-- [ ] **Steg 6.1: Skriv `docs/architecture/aws-infrastruktur.md`**
+- [x] **Steg 6.1: Skriv `docs/architecture/aws-infrastruktur.md`**
 
   Dokumentet skal inneholde:
 
@@ -527,7 +527,7 @@ CloudFront distribution-oppsett er komplekst (behaviors, origins, OAC, cache pol
   8. Alternativt domenenavn: alle aliases
   9. Oppdater S3 bucket policy med ny dist-ARN
 
-- [ ] **Steg 6.2: Commit**
+- [x] **Steg 6.2: Commit**
 
   ```bash
   git add docs/architecture/aws-infrastruktur.md
@@ -592,6 +592,6 @@ Gjennomgås og besluttes i Task 7 eller som egne oppfølgings-PRer.
 
 ## Task 8: Oppdater TODO og arkiver plan
 
-- [ ] **Steg 8.1: Marker oppgaven som fullført i TODO.md og flytt til arkiv**
+- [x] **Steg 8.1: Marker oppgaven som fullført i TODO.md og flytt til arkiv**
 
   Oppdater TODO.md og flytt planfilen til `docs/plans/archive/`.
