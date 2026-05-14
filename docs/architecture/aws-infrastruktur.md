@@ -47,6 +47,8 @@ AWS-konto: `382286755083`
 | Prod | `S3-tennerogtrivsel.no` | `tennerogtrivsel-se.s3.eu-north-1.amazonaws.com` | `E2GYYF9QZ9APXM` |
 | Test | `test2.aarrestad.com.s3-website.eu-west-1.amazonaws.com-mm2cmlkhd1j` | `test2.aarrestad.com-se.s3.eu-north-1.amazonaws.com` | `E1A0HZ1O0QIWI5` |
 
+> **Merk:** Test-origin-ID-en inneholder `eu-west-1` — det er en auto-generert CloudFront-label fra da distribusjonen ble opprettet, ikke region for bucketen. `DomainName` (og OAC-tilkoblingen) peker korrekt til `eu-north-1`.
+
 S3 bruker **OAC (Origin Access Control)**, ikke OAI. Ingen `OriginAccessIdentity`.
 
 ### Kartfliser — `basemaps.cartocdn.com`
