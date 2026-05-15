@@ -22,12 +22,12 @@ export function loadHashData(filePath) {
         return JSON.parse(readFileSync(filePath, 'utf-8'));
     } catch (err) {
         if (err.code === 'ENOENT') {
-            throw new Error(
+            throw new FatalError(
                 `Feil: ${filePath} finnes ikke.\n` +
                 'Kjør "npm run build" for å generere filen før du kjører dette scriptet.'
             );
         }
-        throw new Error(`Klarte ikke lese csp-hashes.json: ${err.message}`);
+        throw new FatalError(`Klarte ikke lese eller tolke ${filePath}: ${err.message}`);
     }
 }
 
@@ -57,7 +57,7 @@ function exitInfo(err) {
     return err.signal ? `signal=${err.signal}` : `exit=${err.status ?? '?'}`;
 }
 
-function checkAccount() {
+export function checkAccount() {
     let output;
     try {
         output = execFileSync('aws', ['--no-cli-pager', 'sts', 'get-caller-identity', '--output', 'json'], { encoding: 'utf-8', stdio: 'pipe' });
@@ -199,8 +199,15 @@ export function ensurePolicy(cspString) {
     return id;
 }
 
-/* v8 ignore next 25 */
+/* v8 ignore start */
 if (import.meta.url === `file://${process.argv[1]}`) {
+    try {
+        checkAccount();
+    } catch (err) {
+        console.error(err.message);
+        process.exit(1);
+    }
+
     let hashData;
     try {
         hashData = loadHashData(join(__dirname, '../src/generated/csp-hashes.json'));
@@ -219,13 +226,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
     const cspString = buildCspString(scriptSrc);
 
-    try {
-        checkAccount();
-    } catch (err) {
-        console.error(err.message);
-        process.exit(1);
-    }
-
     let id;
     try {
         id = ensurePolicy(cspString);
@@ -236,3 +236,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
     process.stdout.write(id + '\n');
 }
+/* v8 ignore stop */
