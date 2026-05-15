@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Hardening av setup-response-headers-policy.mjs** ([plan](docs/plans/archive/2026-05-14-setup-response-headers-hardening.md))
+  - `unsafe-inline`-fallback fjernet — kaster nå `FatalError` ved tom `scriptHashes`
+  - Forklarende feilmelding ved manglende `csp-hashes.json` (ENOENT → instruksjon om `npm run build`)
+  - `ensurePolicy()` genuint idempotent — sammenligner eksisterende CSP og oppdaterer ved avvik
+
 - [x] **Rett opp Lambda IP-deteksjon i sikkerhetsplan** ([plan](docs/superpowers/plans/archive/2026-05-14-fiks-lambda-ip-deteksjon.md))
   - `x-forwarded-for` får nå prioritet over `sourceIp` i rate-limiting — CloudFront-noden deler ikke lenger bucket med alle brukere
   - Sikkerhetsplanen steg 3.4 oppdatert med FUNN (HIGH) og forklaring

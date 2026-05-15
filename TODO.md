@@ -27,18 +27,7 @@
   - ~~Task 7 (F6): admin-token til sessionStorage, rememberMe-flagg, X-Robots-Tag noindex — ferdig 2026-05-06~~
   - Neste: Task 2 (F4): SHA-pin GitHub Actions ([plan](docs/plans/2026-05-06-sha-pin-github-actions.md))
 
-- [ ] **Hardening av setup-response-headers-policy.mjs** ([plan](docs/plans/2026-05-14-setup-response-headers-hardening.md))
-  - PR #298 review-funn, tre fikser i same script:
-  - Problem 1 (linje 22): `unsafe-inline`-fallback — skal feile hardt dersom `scriptHashes` er tom
-  - Problem 2 (linje 18): krasjer med generisk ENOENT om `csp-hashes.json` mangler — gi forklarende feilmelding
-  - Problem 3 (linje 147): `ensurePolicy()` ikke genuint idempotent — sammenlign eksisterende CSP og oppdater ved avvik
-
 ## Backlog
-
-- [ ] **CloudFront redirect-fiks — query-string og doble redirects** ([plan](docs/plans/2026-05-14-cloudfront-redirect-fixes.md))
-  - Query-string-tap: UTM-parametere mistes ved www-redirect fra `tennerogtrivsel.no` → påvirker analytics
-  - Doble redirects: host-fix + trailing-slash gir to round-trips i stedet for én
-  - Berører `scripts/cloudfront-trailing-slash.js` og `scripts/cloudfront-trailing-slash.mjs`
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
