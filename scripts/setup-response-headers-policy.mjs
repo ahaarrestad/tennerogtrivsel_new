@@ -62,17 +62,17 @@ export function checkAccount() {
     try {
         output = execFileSync('aws', ['--no-cli-pager', 'sts', 'get-caller-identity', '--output', 'json'], { encoding: 'utf-8', stdio: 'pipe' });
     } catch (err) {
-        const detail = err.stderr?.toString().trim();
-        throw new Error(`aws sts get-caller-identity feilet — sjekk AWS_PROFILE / SSO-pålogging.${detail ? `\n${detail}` : ''}`);
+        const msg = ((err.stderr?.toString() ?? '') + (err.stdout?.toString() ?? '')).trim();
+        throw new FatalError(`aws sts get-caller-identity feilet (${exitInfo(err)}): ${msg || 'sjekk AWS_PROFILE / SSO-pålogging'}`);
     }
     let identity;
     try {
         identity = JSON.parse(output);
     } catch {
-        throw new Error('Klarte ikke tolke JSON-svar fra AWS STS — uventet output-format.');
+        throw new FatalError('Klarte ikke tolke JSON-svar fra AWS STS — uventet output-format.');
     }
     if (identity.Account !== EXPECTED_ACCOUNT) {
-        throw new Error(`Feil AWS-konto: forventet ${EXPECTED_ACCOUNT}, fikk ${identity.Account}. Sjekk AWS_PROFILE.`);
+        throw new FatalError(`Feil AWS-konto: forventet ${EXPECTED_ACCOUNT}, fikk ${identity.Account}. Sjekk AWS_PROFILE.`);
     }
     console.log(`AWS-konto verifisert: ${identity.Account}`);
 }

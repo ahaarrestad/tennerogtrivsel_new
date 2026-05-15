@@ -111,32 +111,47 @@ describe('checkAccount', () => {
     it('logger bekreftelse ved korrekt AWS-konto', () => {
         vi.mocked(execFileSync).mockReturnValueOnce(JSON.stringify({ Account: EXPECTED_ACCOUNT }));
         const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-        expect(() => checkAccount()).not.toThrow();
-        consoleSpy.mockRestore();
+        try {
+            expect(() => checkAccount()).not.toThrow();
+        } finally {
+            consoleSpy.mockRestore();
+        }
     });
 
-    it('kaster feil ved feil AWS-konto', () => {
+    it('kaster FatalError ved feil AWS-konto', () => {
         vi.mocked(execFileSync).mockReturnValueOnce(JSON.stringify({ Account: '999999999999' }));
-        expect(() => checkAccount()).toThrow(/Feil AWS-konto/);
+        let caught;
+        try { checkAccount(); } catch (e) { caught = e; }
+        expect(caught).toBeInstanceOf(FatalError);
+        expect(caught?.message).toMatch(/Feil AWS-konto/);
     });
 
-    it('kaster feil med stderr-detalj når AWS-kallet feiler', () => {
+    it('kaster FatalError med stderr-detalj når AWS-kallet feiler', () => {
         vi.mocked(execFileSync).mockImplementationOnce(() => {
-            throw Object.assign(new Error('failed'), { stderr: 'NoCredentialsError', status: 1 });
+            throw makeExecError({ stderr: 'NoCredentialsError', status: 1 });
         });
-        expect(() => checkAccount()).toThrow(/NoCredentialsError/);
+        let caught;
+        try { checkAccount(); } catch (e) { caught = e; }
+        expect(caught).toBeInstanceOf(FatalError);
+        expect(caught?.message).toMatch(/NoCredentialsError/);
     });
 
-    it('kaster feil uten ekstra detalj når stderr mangler', () => {
+    it('kaster FatalError med fallback-tekst når stderr mangler', () => {
         vi.mocked(execFileSync).mockImplementationOnce(() => {
-            throw Object.assign(new Error('failed'), { stderr: null, status: 1 });
+            throw makeExecError({ stderr: null, stdout: null, status: 1 });
         });
-        expect(() => checkAccount()).toThrow(/sjekk AWS_PROFILE/);
+        let caught;
+        try { checkAccount(); } catch (e) { caught = e; }
+        expect(caught).toBeInstanceOf(FatalError);
+        expect(caught?.message).toMatch(/sjekk AWS_PROFILE/);
     });
 
-    it('kaster feil ved ugyldig JSON-svar fra STS', () => {
+    it('kaster FatalError ved ugyldig JSON-svar fra STS', () => {
         vi.mocked(execFileSync).mockReturnValueOnce('ikke json');
-        expect(() => checkAccount()).toThrow(/JSON-svar/);
+        let caught;
+        try { checkAccount(); } catch (e) { caught = e; }
+        expect(caught).toBeInstanceOf(FatalError);
+        expect(caught?.message).toMatch(/JSON-svar/);
     });
 });
 
