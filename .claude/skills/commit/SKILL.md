@@ -41,7 +41,7 @@ Use `git add <specific-file>` — never `git add -A` or `git add .`.
 git commit -m "$(cat <<'EOF'
 type: beskrivelse
 
-Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+Co-Authored-By: Claude Code <noreply@anthropic.com>
 EOF
 )"
 ```
@@ -50,7 +50,7 @@ EOF
 
 **Skip if push was NOT requested.**
 
-This step loops until the review is clean.
+This step loops until the review is clean, **max 3 iterations**. Track iteration count starting at 1.
 
 ```bash
 BASE_SHA=$(git rev-parse HEAD~1)
@@ -90,7 +90,7 @@ Dispatch a `general-purpose` Agent with this prompt (fill placeholders):
 **After review:**
 - **No Critical/Important:** Proceed to push.
 - **Only Minor:** Show issues, ask user whether to push anyway.
-- **Critical or Important found:** Fix all, then `HEAD_SHA=$(git rev-parse HEAD)` and re-run review. Loop until clean.
+- **Critical or Important found:** Fix all issues, commit the fixes, then `HEAD_SHA=$(git rev-parse HEAD)` and re-run review. Increment iteration count. If iteration count reaches 3 without a clean review, stop — present remaining issues and ask the user to resolve them manually before retrying.
 
 ## Step 5: Push (Only If Requested)
 
