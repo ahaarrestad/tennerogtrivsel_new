@@ -25,7 +25,8 @@
   - ~~Task 8 steg 8.1–8.2 (F7): ubrukte CDN-er fjernet fra CSP — ferdig 2026-05-03~~
   - ~~Task 8 steg 8.3 (F7): `unsafe-inline` erstattet med SHA256-hashes i script-src — ferdig 2026-05-03~~
   - ~~Task 7 (F6): admin-token til sessionStorage, rememberMe-flagg, X-Robots-Tag noindex — ferdig 2026-05-06~~
-  - Neste: Task 2 (F4): SHA-pin GitHub Actions ([plan](docs/plans/2026-05-06-sha-pin-github-actions.md))
+  - ~~Task 2 (F4): SHA-pin GitHub Actions + Dependabot github-actions-ecosystem — ferdig 2026-05-17~~
+  - Neste: Task 9 (F10): Verifiser PUBLIC_GOOGLE_API_KEY-restriksjoner i Google Cloud Console
 
 ## Backlog
 
