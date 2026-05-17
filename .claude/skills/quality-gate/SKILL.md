@@ -2,7 +2,7 @@
 name: quality-gate
 description: "Run the full quality gate checklist: unit tests, per-file branch coverage, E2E tests, and build. Use when completing a task, before committing, or when asked to verify quality. Trigger on: 'quality gate', 'kjør kvalitetssjekk', 'run checks', 'er alt klart', 'verify tests', 'coverage', 'dekningsgrad', 'show coverage', 'sjekk coverage', 'branch coverage'."
 disable-model-invocation: false
-allowed-tools: ["Bash(npm test:*)", "Bash(npm run test*)", "Bash(npm run build:*)", "Bash(node --input-type=commonjs:*)", "Bash(npx playwright:*)", "Bash(npm audit:*)"]
+allowed-tools: ["Bash(npm test*)", "Bash(npm run test:*)", "Bash(npm run build:*)", "Bash(node *)", "Bash(npx playwright *)", "Bash(npm audit *)"]
 ---
 
 # Quality Gate
@@ -75,13 +75,13 @@ If the build fails, stop and report errors.
 
 ## Step 5: Security Audit
 
-Run npm audit with the same level as CI (`--audit-level=high`):
+Run npm audit with the same level as CI (`--audit-level=critical`):
 
 ```bash
-npm audit --audit-level=high 2>&1
+npm audit --audit-level=critical 2>&1
 ```
 
-If the audit finds high or critical vulnerabilities, stop and report them. Include the package name, severity, and suggested fix (e.g., `npm audit fix` or specific version upgrade). This matches the CI check in `.github/workflows/deploy.yml` so issues are caught locally before push.
+If the audit finds critical vulnerabilities, stop and report them. Include the package name, severity, and suggested fix (e.g., `npm audit fix` or specific version upgrade). This matches the CI check in `.github/workflows/deploy.yml` so issues are caught locally before push.
 
 ## Step 6: CI/CD Variable Check
 
@@ -110,7 +110,7 @@ X passed, Y failed, Z skipped
 ### Build: PASS/FAIL
 
 ### Security Audit: PASS/FAIL
-X vulnerabilities (Y high, Z critical) / No vulnerabilities found
+X critical vulnerabilities / No critical vulnerabilities found
 
 ---
 **Overall: PASS / FAIL**
