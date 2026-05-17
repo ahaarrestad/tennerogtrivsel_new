@@ -20,9 +20,9 @@
 | `actions/download-artifact` | v8.0.1 | `3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c` |
 | `aws-actions/configure-aws-credentials` | v6.1.1 | `d979d5b3a71173a29b74b5b88418bfda9437d885` |
 | `dependabot/fetch-metadata` | v3.1.0 | `25dd0e34f4fe68f24cc83900b1fe3fe149efef98` |
-| `github/codeql-action` | v3.35.3 | `0daab03d71ff584ef619d027a3fd9146679c5d84` |
+| `github/codeql-action` | v4.35.5 | `9e0d7b8d25671d64c341c19c0152d693099fb5ba` |
 
-`github/codeql-action/init` og `github/codeql-action/analyze` er fra samme repo — begge pines til SHA `0daab03d71ff584ef619d027a3fd9146679c5d84`.
+`github/codeql-action/init` og `github/codeql-action/analyze` er fra samme repo — begge pines til SHA `9e0d7b8d25671d64c341c19c0152d693099fb5ba`.
 
 ## Filer som endres
 
