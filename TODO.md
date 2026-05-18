@@ -51,11 +51,6 @@
   - Vurder kostnad/nytte: er det faktisk et behov, og er det verdt arbeidsmengden?
   - Avslutt med en anbefaling: gjør det / gjør det ikke / gjør det men bare X
 
-- [ ] **GDPR: Avklar og dokumenter CloudFront access logging** ([plan](docs/plans/2026-05-18-gdpr-cloudfront-access-logging.md))
-  - Sjekk om CloudFront access logging er aktivert (IP-adresse i logg = personopplysning under GDPR)
-  - Personvernerklæringen hevder absolutt at «ingen personopplysninger samles inn» — dette er unøyaktig dersom serverlogs er på
-  - Tiltak: enten skru av logging, eller legg til avsnitt i personvern med formål, rettslig grunnlag (art. 6 nr. 1 f) og lagringstid
-  - Alvorlighetsnivå: Middels
 
 - [ ] **GDPR: Gjør rettigheter og klagerett ubetinget synlig i personvern** — *ingen plan ennå*
   - Retten til innsyn, retting, sletting og klage til Datatilsynet vises i dag bare når kontaktskjemaet er aktivt

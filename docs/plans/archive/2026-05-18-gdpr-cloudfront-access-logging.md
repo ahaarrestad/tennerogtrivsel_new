@@ -27,11 +27,11 @@ Funnet er dokumentert i denne planen. Ingen endringer i kildekode. Arkiver oppga
 ### Alternativ B — Legg til defensiv setning i personvernerklæringen (anbefalt)
 Gjør det eksplisitt at server-side logging ikke brukes, slik at påstanden er robust også ved fremtidig revisjon eller spørsmål fra brukere/tilsynsmyndighet.
 
-Forslag til tillegg i `src/pages/personvern.astro`, etter setningen om at siden ikke samler inn personopplysninger (ca. linje 35–36):
+Implementert tekst i `src/pages/personvern.astro` (linje 37–38):
 
 ```html
-Vi bruker heller ikke server-side access logging — trafikklogger
-(inkl. IP-adresser) er ikke aktivert i vår skyinfrastruktur.
+Server-side access logging er heller ikke aktivert — trafikklogger (inkludert IP-adresser)
+lagres ikke i vår skyinfrastruktur.
 ```
 
 ---
@@ -40,4 +40,4 @@ Vi bruker heller ikke server-side access logging — trafikklogger
 
 - [x] Diskuter alternativ A vs. B med bruker → valgt B
 - [x] Gjennomfør valgt alternativ — setning lagt til i `src/pages/personvern.astro`
-- [ ] Quality gate + commit
+- [x] Quality gate + commit

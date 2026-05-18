@@ -2,6 +2,10 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **GDPR: Avklar og dokumenter CloudFront access logging** ([plan](docs/plans/archive/2026-05-18-gdpr-cloudfront-access-logging.md))
+  - Verifisert via AWS CLI: begge CloudFront-distribusjoner (prod + test) har logging deaktivert
+  - Lagt til defensiv setning i `src/pages/personvern.astro` som eksplisitt bekrefter at server-side logging ikke er aktivert
+
 - [x] **IndexNow-støtte (Bing)** ([plan](docs/plans/archive/2026-05-18-indexnow.md))
   - Nøkkelfil (`{key}.txt`) genereres i deploy-jobben og landes i S3 via ordinært sync-steg
   - IndexNow POST sendes til `api.indexnow.org` etter CloudFront-invalidering med alle URL-er fra `sitemap-0.xml`
