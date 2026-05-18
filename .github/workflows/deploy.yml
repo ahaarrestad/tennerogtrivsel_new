@@ -165,6 +165,16 @@ jobs:
 #            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_TEST }} \
 #            --paths "/*"
 
+      - name: Create IndexNow key file
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+        run: |
+          if [ -z "$INDEXNOW_KEY" ]; then
+            echo "INDEXNOW_KEY not set — skipping"
+            exit 0
+          fi
+          echo -n "$INDEXNOW_KEY" > dist/${INDEXNOW_KEY}.txt
+
       - name: Generate CSP hashes from build output
         run: node scripts/generate-csp-hashes.mjs
 
@@ -188,6 +198,34 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }} \
             --paths "/*"
+
+      - name: Notify IndexNow
+        continue-on-error: true
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+        run: |
+          if [ -z "$INDEXNOW_KEY" ]; then
+            echo "INDEXNOW_KEY not set — skipping"
+            exit 0
+          fi
+
+          URLS=$(grep -oP '(?<=<loc>)[^<]+' dist/sitemap-0.xml | jq -R . | jq -s .) || true
+
+          if [ -z "$URLS" ] || [ "$URLS" = "[]" ]; then
+            echo "No URLs found in sitemap — skipping IndexNow"
+            exit 0
+          fi
+
+          PAYLOAD=$(jq -n \
+            --arg host "www.tennerogtrivsel.no" \
+            --arg key "$INDEXNOW_KEY" \
+            --arg keyLocation "https://www.tennerogtrivsel.no/${INDEXNOW_KEY}.txt" \
+            --argjson urlList "$URLS" \
+            '{host: $host, key: $key, keyLocation: $keyLocation, urlList: $urlList}')
+
+          curl -Sf -X POST "https://api.indexnow.org/indexnow" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD"
 
       - name: Update CloudFront CSP hashes
         run: node scripts/update-cloudfront-csp.mjs

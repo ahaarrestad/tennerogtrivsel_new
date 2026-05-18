@@ -13,6 +13,10 @@
 
 ## Pågående
 
+- [ ] **IndexNow-støtte (Bing)** ([plan](docs/plans/2026-05-18-indexnow.md))
+  - Implementer støtte for IndexNow-protokollen slik at Bing (og andre søkemotorer som støtter protokollen) varsles umiddelbart når innhold publiseres
+  - Generer og plasser API-nøkkelfil, og kall IndexNow-endepunktet ved deploy
+
 - [ ] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/2026-04-28-sikkerhetshardening.md))
   - Audit 2026-04-28 fant 2 kritiske, 4 høye og 4 medium funn. Bruker er mest bekymret for supply-chain.
   - Kritisk: Dependabot auto-merge for runtime-deps (F1), CSP mangler i CloudFront-prod (F2)
@@ -50,10 +54,6 @@
   - Kartlegg hva Astro 5 tilbyr av i18n-støtte, hva som må oversettes (innhold vs. UI-tekster), og konsekvenser for CMS-flyten (Google Sheets/Drive)
   - Vurder kostnad/nytte: er det faktisk et behov, og er det verdt arbeidsmengden?
   - Avslutt med en anbefaling: gjør det / gjør det ikke / gjør det men bare X
-
-- [ ] **IndexNow-støtte (Bing)** ([plan](docs/plans/2026-05-18-indexnow.md))
-  - Implementer støtte for IndexNow-protokollen slik at Bing (og andre søkemotorer som støtter protokollen) varsles umiddelbart når innhold publiseres
-  - Generer og plasser API-nøkkelfil, og kall IndexNow-endepunktet ved deploy
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
