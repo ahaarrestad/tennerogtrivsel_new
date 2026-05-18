@@ -51,6 +51,35 @@
   - Vurder kostnad/nytte: er det faktisk et behov, og er det verdt arbeidsmengden?
   - Avslutt med en anbefaling: gjør det / gjør det ikke / gjør det men bare X
 
+- [ ] **GDPR: Avklar og dokumenter CloudFront access logging** ([plan](docs/plans/2026-05-18-gdpr-cloudfront-access-logging.md))
+  - Sjekk om CloudFront access logging er aktivert (IP-adresse i logg = personopplysning under GDPR)
+  - Personvernerklæringen hevder absolutt at «ingen personopplysninger samles inn» — dette er unøyaktig dersom serverlogs er på
+  - Tiltak: enten skru av logging, eller legg til avsnitt i personvern med formål, rettslig grunnlag (art. 6 nr. 1 f) og lagringstid
+  - Alvorlighetsnivå: Middels
+
+- [ ] **GDPR: Gjør rettigheter og klagerett ubetinget synlig i personvern** — *ingen plan ennå*
+  - Retten til innsyn, retting, sletting og klage til Datatilsynet vises i dag bare når kontaktskjemaet er aktivt
+  - Ansatte med bilde/navn på siden har disse rettighetene uavhengig av kontaktskjema
+  - Tiltak: flytt generelt avsnitt om registrertes rettigheter og Datatilsynet-lenke ut av den betingede blokken
+  - Alvorlighetsnivå: Lav–Middels
+
+- [ ] **GDPR: Angi rettslig grunnlag for Google OAuth i personvern** — *ingen plan ennå*
+  - Admin-panelet bruker Google OAuth; personvernet forklarer hva som lagres, men GDPR art. 6-grunnlag er ikke nevnt
+  - Tiltak: legg til «berettiget interesse» eller «nødvendig for å oppfylle avtale» som grunnlag i personvern-avsnittet om admin-panelet
+  - Alvorlighetsnivå: Lav
+
+- [ ] **GDPR: Bekreft og dokumenter databehandleravtale med AWS SES** — *ingen plan ennå*
+  - Personvernet nevner AWS SES som databehandler, men bekrefter ikke at DPA er inngått
+  - AWS tilbyr standard Data Processing Addendum — verifiser at dette er akseptert for kontoen
+  - Tiltak: dokumenter DPA-status i internkontrollmappen (relevant når kontaktskjema aktiveres)
+  - Alvorlighetsnivå: Lav
+
+- [ ] **GDPR: Rydd opp i CSP frame-src for Google** — *ingen plan ennå*
+  - CSP tillater frames fra google.com og googleapis.com, men ingen Google Maps-iframe er synlig i koden
+  - Kartet bruker Leaflet/OpenStreetMap; Google Maps åpnes i ny fane, ikke som iframe
+  - Tiltak: fjern unødvendige frame-src-tillatelser, eller bekreft at de er nødvendige og dokumenter hvorfor
+  - Alvorlighetsnivå: Svært lav
+
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
