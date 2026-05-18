@@ -53,7 +53,7 @@ EOF
 This step loops until the review is clean, **max 3 iterations**. Track iteration count starting at 1.
 
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)
+BASE_SHA=$(git merge-base HEAD origin/main || git rev-parse HEAD~1)
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
@@ -90,7 +90,7 @@ Dispatch a `general-purpose` Agent with this prompt (fill placeholders):
 **After review:**
 - **No Critical/Important:** Proceed to push.
 - **Only Minor:** Show issues, ask user whether to push anyway.
-- **Critical or Important found:** Fix all issues, commit the fixes, then `HEAD_SHA=$(git rev-parse HEAD)` and re-run review. Increment iteration count. If iteration count reaches 3 without a clean review, stop — present remaining issues and ask the user to resolve them manually before retrying.
+- **Critical or Important found:** Fix all issues, commit the fixes, then update `HEAD_SHA=$(git rev-parse HEAD)` — **keep BASE_SHA unchanged from the start of Step 4.5** — and re-run review. Increment iteration count. If iteration count reaches 3 without a clean review, stop — present remaining issues and ask the user to resolve them manually before retrying.
 
 ## Step 5: Push (Only If Requested)
 
