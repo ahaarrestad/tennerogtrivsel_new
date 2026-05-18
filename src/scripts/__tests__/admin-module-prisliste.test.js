@@ -351,7 +351,7 @@ describe('loadPrislisteList', () => {
         const printBtn = document.getElementById('btn-print-prisliste');
         printBtn.click();
 
-        expect(openSpy).toHaveBeenCalledWith('/prisliste?print=1', 'prisliste-print', expect.stringContaining('width='));
+        expect(openSpy).toHaveBeenCalledWith('/prisliste/?print=1', 'prisliste-print', expect.stringContaining('width='));
         openSpy.mockRestore();
     });
 
@@ -363,7 +363,7 @@ describe('loadPrislisteList', () => {
         window.printPrisliste();
 
         expect(openSpy).toHaveBeenCalledWith(
-            '/prisliste?print=1',
+            '/prisliste/?print=1',
             'prisliste-print',
             expect.stringContaining('width=')
         );
