@@ -14,7 +14,7 @@ const hasGalleryImages = galleri.some(item => (item.data.type ?? 'galleri') === 
     description={settings.galleriBeskrivelse}
 >
     {hasGalleryImages ? (
-        <GalleriSide variant="white" standalone />
+        <GalleriSide variant="white" standalone as="h1" />
     ) : (
         <section class="section-container bg-white">
             <div class="section-content text-center py-16">

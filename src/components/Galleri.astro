@@ -15,8 +15,8 @@ const sortert = [...galleri]
     .filter(item => (item.data.type ?? 'galleri') === 'galleri')
     .toSorted((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
 
-interface Props { variant?: SectionVariant; standalone?: boolean }
-const { variant = 'white', standalone = false } = Astro.props;
+interface Props { variant?: SectionVariant; standalone?: boolean; as?: 'h1' | 'h2' }
+const { variant = 'white', standalone = false, as: headingTag } = Astro.props;
 const { sectionBg, headerBg } = getSectionClasses(variant);
 const MAX_PREVIEW = 4;
 const visibleImages = standalone ? sortert : sortert.slice(0, MAX_PREVIEW);
@@ -25,7 +25,7 @@ const hasMore = !standalone && sortert.length > MAX_PREVIEW;
 {sortert.length > 0 && (
 <section id="galleri" class={`section-container ${sectionBg}`}>
     <div class="section-content">
-        <SectionHeader title={settings.galleriTittel} intro={settings.galleriTekst} headerBg={headerBg} />
+        <SectionHeader title={settings.galleriTittel} intro={settings.galleriTekst} headerBg={headerBg} as={headingTag} />
 
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
             {visibleImages.map((item, index) => {
