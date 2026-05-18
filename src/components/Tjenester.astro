@@ -34,7 +34,7 @@ const hasMore = limit ? sortedServices.length > limit : false;
                             minHeight="250px"
                             centered={false}
                             isStack={true}
-                            href={`/tjenester/${slugify(service.data.title)}`}
+                            href={`/tjenester/${slugify(service.data.title)}/`}
                     >
                         <p class="card-text line-clamp-3">
                             {service.data.ingress}
@@ -45,7 +45,7 @@ const hasMore = limit ? sortedServices.length > limit : false;
 
         {hasMore && (
             <div class="flex justify-center mt-8">
-                <a href="/tjenester" class="btn-secondary">
+                <a href="/tjenester/" class="btn-secondary">
                     Se alle våre tjenester
                 </a>
             </div>
