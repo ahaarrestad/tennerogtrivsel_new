@@ -173,7 +173,7 @@ jobs:
             echo "INDEXNOW_KEY not set — skipping"
             exit 0
           fi
-          echo -n "$INDEXNOW_KEY" > dist/${INDEXNOW_KEY}.txt
+          echo -n "$INDEXNOW_KEY" > "dist/${INDEXNOW_KEY}.txt"
 
       - name: Generate CSP hashes from build output
         run: node scripts/generate-csp-hashes.mjs
@@ -209,11 +209,22 @@ jobs:
             exit 0
           fi
 
+          if [ ! -f dist/sitemap-0.xml ]; then
+            echo "dist/sitemap-0.xml not found — skipping IndexNow"
+            exit 0
+          fi
+
           URLS=$(grep -oP '(?<=<loc>)[^<]+' dist/sitemap-0.xml | jq -R . | jq -s .) || true
 
           if [ -z "$URLS" ] || [ "$URLS" = "[]" ]; then
             echo "No URLs found in sitemap — skipping IndexNow"
             exit 0
+          fi
+
+          URL_COUNT=$(echo "$URLS" | jq 'length')
+          if [ "$URL_COUNT" -gt 10000 ]; then
+            echo "URL count ($URL_COUNT) exceeds IndexNow limit of 10000 — sending first 10000"
+            URLS=$(echo "$URLS" | jq '.[0:10000]')
           fi
 
           PAYLOAD=$(jq -n \

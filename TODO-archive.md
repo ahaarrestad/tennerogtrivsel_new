@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **IndexNow-støtte (Bing)** ([plan](docs/plans/archive/2026-05-18-indexnow.md))
+  - Nøkkelfil (`{key}.txt`) genereres i deploy-jobben og landes i S3 via ordinært sync-steg
+  - IndexNow POST sendes til `api.indexnow.org` etter CloudFront-invalidering med alle URL-er fra `sitemap-0.xml`
+  - `INDEXNOW_KEY` GitHub Secret satt — begge steg skippes gracefully hvis secret mangler
+  - Guard for 10 000 URL-grense og manglende sitemap-fil
+
 - [x] **Hardening av setup-response-headers-policy.mjs** ([plan](docs/plans/archive/2026-05-14-setup-response-headers-hardening.md))
   - `unsafe-inline`-fallback fjernet — kaster nå `FatalError` ved tom `scriptHashes`
   - Forklarende feilmelding ved manglende `csp-hashes.json` (ENOENT → instruksjon om `npm run build`)
