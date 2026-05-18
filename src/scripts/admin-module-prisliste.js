@@ -248,7 +248,7 @@ async function editPrisRad(rowIndex, data = null) {
 }
 
 function printPrisliste() {
-    const popup = window.open('/prisliste?print=1', 'prisliste-print',
+    const popup = window.open('/prisliste/?print=1', 'prisliste-print',
         'width=1100,height=600,left=100,top=100');
     if (popup) {
         popup.addEventListener('afterprint', () => popup.close());
