@@ -36,14 +36,14 @@ const currentYear = new Date().getFullYear();
                     <p>{settings.adresse1}</p>
                     <p>{settings.adresse2}</p>
                     <p class="pt-2">
-                        <a href={`tel:${settings.phone1?.replace(/\s+/g, '')}`} class="hover:text-white transition-colors lg:pointer-events-none lg:cursor-default">
+                        <a href={`tel:${settings.phone1?.replace(/\s+/g, '')}`} class="text-inherit hover:text-white transition-colors lg:pointer-events-none lg:cursor-default">
                             {settings.phone1}
                         </a>
                     </p>
 
                     {settings.showEmail === "ja" && settings.email && (
                         <p class="pt-2">
-                            <a href={`mailto:${settings.email}`} class="hover:text-white transition-colors">
+                            <a href={`mailto:${settings.email}`} class="text-inherit hover:text-white transition-colors">
                                 {settings.email}
                             </a>
                         </p>
@@ -71,7 +71,7 @@ const currentYear = new Date().getFullYear();
 
         {/* Copyright-linje */}
         <div class="border-t border-accent mt-10 pt-6 text-center text-white/50 text-xs">
-            <p>&copy; {currentYear} Tenner og Trivsel · <a href="/prisliste/" class="hover:text-white transition-colors underline">Prisliste</a> · <a href="/personvern/" class="hover:text-white transition-colors underline">Personvern</a></p>
+            <p>&copy; {currentYear} Tenner og Trivsel · <a href="/prisliste/" class="text-inherit hover:text-white transition-colors underline">Prisliste</a> · <a href="/personvern/" class="text-inherit hover:text-white transition-colors underline">Personvern</a></p>
         </div>
     </div>
 </footer>
