@@ -52,7 +52,7 @@
   - Avslutt med en anbefaling: gjør det / gjør det ikke / gjør det men bare X
 
 
-- [ ] **GDPR: Gjør rettigheter og klagerett ubetinget synlig i personvern** — *ingen plan ennå*
+- [ ] **GDPR: Gjør rettigheter og klagerett ubetinget synlig i personvern** ([plan](docs/plans/2026-05-18-gdpr-rettigheter-ubetinget.md))
   - Retten til innsyn, retting, sletting og klage til Datatilsynet vises i dag bare når kontaktskjemaet er aktivt
   - Ansatte med bilde/navn på siden har disse rettighetene uavhengig av kontaktskjema
   - Tiltak: flytt generelt avsnitt om registrertes rettigheter og Datatilsynet-lenke ut av den betingede blokken
