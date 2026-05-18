@@ -2,7 +2,7 @@
 name: quality-gate
 description: "Run the full quality gate checklist: unit tests, per-file branch coverage, E2E tests, and build. Use when completing a task, before committing, or when asked to verify quality. Trigger on: 'quality gate', 'kjør kvalitetssjekk', 'run checks', 'er alt klart', 'verify tests', 'coverage', 'dekningsgrad', 'show coverage', 'sjekk coverage', 'branch coverage'."
 disable-model-invocation: false
-allowed-tools: ["Bash(npm test*)", "Bash(npm run test*)", "Bash(npm run build*)", "Bash(node *)", "Bash(npx playwright *)", "Bash(npm audit *)"]
+allowed-tools: ["Bash(npm test*)", "Bash(npm run test*)", "Bash(npm run build*)", "Bash(node --input-type=commonjs*)", "Bash(npx playwright*)", "Bash(npm audit*)"]
 ---
 
 # Quality Gate
