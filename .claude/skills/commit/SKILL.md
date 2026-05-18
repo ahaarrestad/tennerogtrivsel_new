@@ -53,7 +53,7 @@ EOF
 This step loops until the review is clean, **max 3 iterations**. Track iteration count starting at 1.
 
 ```bash
-BASE_SHA=$(git merge-base HEAD origin/main || git rev-parse HEAD~1)
+BASE_SHA=$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse HEAD~1)
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
