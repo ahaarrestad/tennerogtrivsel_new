@@ -173,6 +173,10 @@ jobs:
             echo "INDEXNOW_KEY not set — skipping"
             exit 0
           fi
+          if ! [[ "$INDEXNOW_KEY" =~ ^[a-f0-9]{32}$ ]]; then
+            echo "INDEXNOW_KEY is not valid 32-char hex — skipping"
+            exit 0
+          fi
           echo -n "$INDEXNOW_KEY" > "dist/${INDEXNOW_KEY}.txt"
 
       - name: Generate CSP hashes from build output
@@ -208,13 +212,17 @@ jobs:
             echo "INDEXNOW_KEY not set — skipping"
             exit 0
           fi
+          if ! [[ "$INDEXNOW_KEY" =~ ^[a-f0-9]{32}$ ]]; then
+            echo "INDEXNOW_KEY is not valid 32-char hex — skipping"
+            exit 0
+          fi
 
           if [ ! -f dist/sitemap-0.xml ]; then
             echo "dist/sitemap-0.xml not found — skipping IndexNow"
             exit 0
           fi
 
-          URLS=$(grep -oP '(?<=<loc>)[^<]+' dist/sitemap-0.xml | jq -R . | jq -s .) || true
+          URLS=$(grep -oP '(?<=<loc>)[^<]+' dist/sitemap-0.xml | jq -R . | jq -s .) || { echo "URL extraction failed — skipping IndexNow"; exit 0; }
 
           if [ -z "$URLS" ] || [ "$URLS" = "[]" ]; then
             echo "No URLs found in sitemap — skipping IndexNow"
