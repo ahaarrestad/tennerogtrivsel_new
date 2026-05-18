@@ -13,10 +13,6 @@
 
 ## Pågående
 
-- [ ] **IndexNow-støtte (Bing)** ([plan](docs/plans/2026-05-18-indexnow.md))
-  - Implementer støtte for IndexNow-protokollen slik at Bing (og andre søkemotorer som støtter protokollen) varsles umiddelbart når innhold publiseres
-  - Generer og plasser API-nøkkelfil, og kall IndexNow-endepunktet ved deploy
-
 - [ ] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/2026-04-28-sikkerhetshardening.md))
   - Audit 2026-04-28 fant 2 kritiske, 4 høye og 4 medium funn. Bruker er mest bekymret for supply-chain.
   - Kritisk: Dependabot auto-merge for runtime-deps (F1), CSP mangler i CloudFront-prod (F2)
