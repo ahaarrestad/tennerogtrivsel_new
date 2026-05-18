@@ -15,8 +15,8 @@ const sortedServices = allServices
     .toSorted((a, b) => (a.data.priority ?? 99) - (b.data.priority ?? 99) || a.data.title.localeCompare(b.data.title, 'nb'));
 const settings = await getSiteSettings();
 
-interface Props { variant?: SectionVariant; limit?: number }
-const { variant = 'white', limit } = Astro.props;
+interface Props { variant?: SectionVariant; limit?: number; as?: 'h1' | 'h2' }
+const { variant = 'white', limit, as: headingTag } = Astro.props;
 const { sectionBg, headerBg } = getSectionClasses(variant);
 
 const displayServices = limit ? sortedServices.slice(0, limit) : sortedServices;
@@ -24,7 +24,7 @@ const hasMore = limit ? sortedServices.length > limit : false;
 ---
 <section id="tjenester" class={`section-container ${sectionBg}`}>
     <div class="section-content">
-        <SectionHeader title={settings.tjenesterTittel} intro={settings.tjenesteTekst} headerBg={headerBg} sticky />
+        <SectionHeader title={settings.tjenesterTittel} intro={settings.tjenesteTekst} headerBg={headerBg} sticky as={headingTag} />
 
         <div class="card-grid gap-6 md:gap-8">
             {displayServices.map((service, index) => (

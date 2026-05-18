@@ -23,14 +23,14 @@ const businessHours = getBusinessHours(settings, ["Ta kontakt for åpningstider"
 const ksEntry = await getEntry('kontaktskjema', 'kontaktskjema');
 const kontaktskjema = ksEntry?.data ?? { aktiv: false,tittel: '', tekst: '' };
 
-interface Props { variant?: SectionVariant }
-const { variant = 'brand' } = Astro.props;
+interface Props { variant?: SectionVariant; as?: 'h1' | 'h2' }
+const { variant = 'brand', as: headingTag } = Astro.props;
 const { sectionBg, headerBg } = getSectionClasses(variant);
 ---
 <section id="kontakt" class={`section-container ${sectionBg}`}>
     <div class="section-content">
 
-        <SectionHeader title={settings.kontaktTittel} intro={settings.kontaktTekst} headerBg={headerBg} sticky />
+        <SectionHeader title={settings.kontaktTittel} intro={settings.kontaktTekst} headerBg={headerBg} sticky as={headingTag} />
 
         <div class={`grid grid-cols-1 md:grid-cols-2 ${kontaktskjema.aktiv ? 'xl:grid-cols-4' : 'lg:grid-cols-3'} gap-8 mb-24 relative z-10`}>
             {/* Åpningstid-boks */}
