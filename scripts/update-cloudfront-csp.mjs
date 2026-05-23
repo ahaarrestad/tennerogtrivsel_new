@@ -27,7 +27,13 @@ if (!config.SecurityHeadersConfig?.ContentSecurityPolicy) {
     process.exit(1);
 }
 
-const scriptSrc = buildScriptSrc(hashData.scriptHashes);
+let scriptSrc;
+try {
+    scriptSrc = buildScriptSrc(hashData.scriptHashes);
+} catch (err) {
+    console.error(err.message);
+    process.exit(1);
+}
 config.SecurityHeadersConfig.ContentSecurityPolicy.ContentSecurityPolicy = buildCspString(scriptSrc);
 
 const tmpPath = '/tmp/cfn-policy-update.json';
@@ -38,5 +44,4 @@ execSync(
     { stdio: 'inherit' }
 );
 
-const hashCount = hashData.scriptHashes.length;
-console.log(`CloudFront CSP oppdatert (alle direktiver): ${hashCount > 0 ? `${hashCount} build-hash(er) + GAPI runtime-hash` : "'unsafe-inline' (fallback — kjør build + generate-csp-hashes for å aktivere hashes)"}`);
+console.log(`CloudFront CSP oppdatert (alle direktiver): ${hashData.scriptHashes.length} build-hash(er) + GAPI runtime-hash`);
