@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **GDPR: Gjør rettigheter og klagerett ubetinget synlig i personvern** ([plan](docs/plans/archive/2026-05-18-gdpr-rettigheter-ubetinget.md)) ([design](docs/superpowers/specs/archive/2026-05-18-gdpr-rettigheter-ubetinget-design.md))
+  - Rettighetsavsnittet (innsyn, retting, sletting, klage til Datatilsynet) ble flyttet ut av den betingede `visKontaktPersonvern`-blokken i `personvern.astro`
+  - Teksten justert fra «av opplysningene» til «av opplysninger vi behandler om deg»
+  - Vises nå alltid, uavhengig av om kontaktskjemaet er aktivt
+
 - [x] **GDPR: Avklar og dokumenter CloudFront access logging** ([plan](docs/plans/archive/2026-05-18-gdpr-cloudfront-access-logging.md))
   - Verifisert via AWS CLI: begge CloudFront-distribusjoner (prod + test) har logging deaktivert
   - Lagt til defensiv setning i `src/pages/personvern.astro` som eksplisitt bekrefter at server-side logging ikke er aktivert
