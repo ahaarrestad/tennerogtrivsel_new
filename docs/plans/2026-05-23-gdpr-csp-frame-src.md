@@ -5,15 +5,15 @@
 **Goal:** Fjern eller dokumenter unødvendige `frame-src`-tillatelser for Google-domener i CSP. Gjeldende direktiv tillater fire oppføringer; minst én (`https://www.google.com`) ser ut til å ikke ha en tilsvarende bruk i koden.
 
 **Context:**
-Gjeldende `frame-src` i `src/utils/security-headers.ts` linje 13:
+Gjeldende `frame-src` (etter opprydding i denne PR-en):
 ```
-frame-src https://drive.google.com https://accounts.google.com https://www.google.com https://*.googleapis.com
+frame-src https://drive.google.com https://accounts.google.com https://*.googleapis.com
 ```
 
-- `accounts.google.com` — brukes av GSI-biblioteket (`accounts.google.com/gsi/client`) som oppretter skjulte iframes for sign-in-knappen og One Tap-UI. **Nødvendig.**
-- `drive.google.com` — admin bruker `gapi.client.drive` via `apis.google.com/js/api.js`. GAPI-biblioteket kan opprette skjulte iframes mot Drive. Krever verifisering.
-- `https://www.google.com` — ingen bruk av `www.google.com`-frames er identifisert i koden. Eldre Google Sign-In brukte dette; GSI gjør det ikke. **Sannsynligvis unødvendig.**
-- `https://*.googleapis.com` — GAPI-biblioteket bruker `content.googleapis.com` internt for cross-origin kommunikasjon. Krever verifisering om hele wildcard-domenet er nødvendig.
+- `accounts.google.com` — GSI-biblioteket oppretter skjulte iframes for sign-in-knappen og One Tap-UI. **Nødvendig.**
+- `drive.google.com` — GAPI bruker skjulte Drive-iframes ved Drive-operasjoner. **Bekreftet nødvendig.**
+- `https://*.googleapis.com` — GAPI relay bruker `content-sheets.googleapis.com` (wildcard nødvendig; `content.googleapis.com` alene er for snevert, bekreftet med browser-test).
+- `https://www.google.com` — **fjernet**. Ingen identifisert bruk; eldre GSI-bibliotek brukte dette, nåværende gjør det ikke.
 
 **Alvorlighetsnivå:** Svært lav — unødvendige `frame-src`-tillatelser øker angrepsflatens bredde marginalt.
 
@@ -21,67 +21,21 @@ frame-src https://drive.google.com https://accounts.google.com https://www.googl
 
 ---
 
-### Task 1: Verifiser hvilke frame-src-oppføringer som faktisk er i bruk
+### Task 1: Verifiser hvilke frame-src-oppføringer som faktisk er i bruk ✅
 
-**Files:**
-- Read: `src/utils/security-headers.ts`
-- Read: `src/pages/admin/index.astro`
-- Read: `src/scripts/admin-auth.js`
-- Read: `src/scripts/admin-drive.js`
-
-- [ ] **Steg 1.1: Søk etter faktiske iframe-bruk**
-
-  ```bash
-  grep -rn "<iframe\|srcdoc\|createElementNS.*iframe\|createElement.*iframe" src/ --include="*.astro" --include="*.js" --include="*.ts"
-  ```
-
-  Forventet: ingen treff (koden bruker ikke egne iframes; Google-bibliotekene setter dem opp internt).
-
-- [ ] **Steg 1.2: Bekreft at `www.google.com` ikke brukes**
-
-  ```bash
-  grep -rn "www\.google\.com" src/ --include="*.astro" --include="*.js" --include="*.ts" | grep -v "googleapis\|lh3\|img-src\|connect-src\|security-headers"
-  ```
-
-  Forventet: ingen treff som krever `frame-src`-tilgang.
-
-- [ ] **Steg 1.3: Kartlegg googleapis.com-subdomener i bruk**
-
-  ```bash
-  grep -rn "googleapis\.com" src/ --include="*.astro" --include="*.js" --include="*.ts" | grep -v "test\|__tests__"
-  ```
-
-  Dokumenter hvilke subdomener som brukes (forventer `www.googleapis.com`, `content.googleapis.com`, `oauth2.googleapis.com`).
+**Fullført i GDPR/CSP-opprydding PR (2026-05-23).**
+- Ingen egne iframes i koden; Google-bibliotekene setter dem opp internt.
+- `www.google.com` har ingen identifisert bruk med GSI-biblioteket.
+- `content-sheets.googleapis.com` bekreftet nødvendig via browser-test (wildcard beholdt).
 
 ---
 
-### Task 2: Fjern `www.google.com` fra frame-src og stram inn wildcard
+### Task 2: Fjern `www.google.com` fra frame-src og stram inn wildcard ✅
 
-**Files:**
-- Modify: `src/utils/security-headers.ts`
-
-- [ ] **Steg 2.1: Fjern `https://www.google.com` fra frame-src**
-
-  Endre linje 13 fra:
-  ```ts
-  "frame-src https://drive.google.com https://accounts.google.com https://www.google.com https://*.googleapis.com",
-  ```
-  Til:
-  ```ts
-  "frame-src https://drive.google.com https://accounts.google.com https://content.googleapis.com",
-  ```
-
-  **Begrunnelse:**
-  - `www.google.com` fjernes — ingen identifisert bruk med GSI-biblioteket
-  - `*.googleapis.com` snevres inn til `content.googleapis.com` — det eneste subdomenet GAPI-biblioteket bruker for iframe-basert cross-origin kommunikasjon
-  - `drive.google.com` og `accounts.google.com` beholdes inntil manuell verifisering er gjort
-
-- [ ] **Steg 2.2: Bygg og sjekk at CSP er korrekt generert**
-
-  ```bash
-  npm run build 2>&1 | tail -5
-  grep "frame-src" dist/admin/index.html || echo "CSP er i HTTP-header, ikke inline"
-  ```
+**Fullført i GDPR/CSP-opprydding PR (2026-05-23).**
+- `www.google.com` fjernet fra `frame-src` i `security-headers.ts` og `setup-response-headers-policy.mjs`.
+- `*.googleapis.com` wildcard beholdt (browser-test viste at `content.googleapis.com` alene blokkerte `content-sheets.googleapis.com`).
+- CI erstatter nå hele CSP-strengen automatisk ved deploy — ingen manuell sync nødvendig.
 
 ---
 
@@ -138,12 +92,14 @@ frame-src https://drive.google.com https://accounts.google.com https://www.googl
   **Merk:** CI (`update-cloudfront-csp.mjs`) erstatter nå hele CSP-strengen automatisk ved deploy — ingen manuell CloudFront-sync nødvendig. Begge distribusjoner (`test2.aarrestad.com` og `tennerogtrivsel.no`) bruker samme policy (`tot-security-headers`) og oppdateres simultant.
 
   Etter deploy: verifiser TEST:
-     ```bash
-     curl -I https://test2.aarrestad.com/ | grep -i "content-security-policy"
-     ```
-     Test admin-login på `https://test2.aarrestad.com/admin/` — ingen CSP-violations i konsoll
-  6. Verifiser PROD:
-     ```bash
-     curl -I https://tennerogtrivsel.no/ | grep -i "content-security-policy"
-     ```
-  7. Hvis noe bryter (CSP-violations på test eller prod): rollback er umiddelbar — sett `frame-src` tilbake til den gamle verdien i policyen og save.
+  ```bash
+  curl -I https://test2.aarrestad.com/ | grep -i "content-security-policy"
+  ```
+  Test admin-login på `https://test2.aarrestad.com/admin/` — ingen CSP-violations i konsoll.
+
+  Verifiser PROD:
+  ```bash
+  curl -I https://tennerogtrivsel.no/ | grep -i "content-security-policy"
+  ```
+
+  Rollback (ved CSP-violations): kjør `node scripts/setup-response-headers-policy.mjs` med forrige versjon av CSP-strengen.
