@@ -67,11 +67,12 @@ describe('buildScriptSrc', () => {
         expect(() => buildScriptSrc([])).toThrow(/npm run build/);
     });
 
-    it('kaster FatalError med formatfeilmelding når scriptHashes ikke er en liste', () => {
-        expect(() => buildScriptSrc(undefined)).toThrow(FatalError);
-        expect(() => buildScriptSrc(null)).toThrow(FatalError);
-        expect(() => buildScriptSrc('sha256-abc')).toThrow(FatalError);
-    });
+    it.each([undefined, null, 'sha256-abc'])(
+        'kaster FatalError med formatfeilmelding når scriptHashes er %s (ikke en liste)',
+        (input) => {
+            expect(() => buildScriptSrc(input)).toThrow(FatalError);
+        }
+    );
 
     it('returnerer script-src med hashes uten unsafe-inline', () => {
         const result = buildScriptSrc(['sha256-abc', 'sha256-def']);

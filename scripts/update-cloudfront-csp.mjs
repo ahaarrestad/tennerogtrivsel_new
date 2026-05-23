@@ -2,13 +2,17 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildCspString, buildScriptSrc } from './setup-response-headers-policy.mjs';
+import { buildCspString, buildScriptSrc, loadHashData } from './setup-response-headers-policy.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const hashData = JSON.parse(
-    readFileSync(join(__dirname, '../src/generated/csp-hashes.json'), 'utf-8')
-);
+let hashData;
+try {
+    hashData = loadHashData(join(__dirname, '../src/generated/csp-hashes.json'));
+} catch (err) {
+    console.error(err.message);
+    process.exit(1);
+}
 
 const policyId = process.env.CLOUDFRONT_POLICY_ID;
 if (!policyId) {
