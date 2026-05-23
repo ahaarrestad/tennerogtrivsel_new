@@ -17,7 +17,8 @@ export const CSP = [
     "font-src 'self'",
     "img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com",
     // accounts.google.com: GSI sign-in button/One Tap UI — skjulte iframes
-    // *.googleapis.com: GAPI cross-origin relay — content-sheets.googleapis.com bekreftet brukt av Sheets-API
+    // *.googleapis.com: GAPI cross-origin relay — testad med content.googleapis.com alene;
+    //   content-sheets.googleapis.com ble blokkert → wildcard er nødvendig
     // drive.google.com: GAPI intern iframe ved Drive-operasjoner
     "frame-src https://drive.google.com https://accounts.google.com https://*.googleapis.com",
     "connect-src 'self' blob: https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://www.google.com",

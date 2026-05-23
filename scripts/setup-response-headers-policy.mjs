@@ -51,6 +51,7 @@ export function buildCspString(scriptSrc) {
         "style-src 'self' 'unsafe-inline'",
         "font-src 'self'",
         "img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com",
+        // accounts.google.com: GSI iframes; *.googleapis.com: GAPI relay (content-sheets.googleapis.com bekreftet nødvendig); drive.google.com: GAPI Drive-iframes
         "frame-src https://drive.google.com https://accounts.google.com https://*.googleapis.com",
         "connect-src 'self' blob: https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://www.google.com",
     ].join('; ');
