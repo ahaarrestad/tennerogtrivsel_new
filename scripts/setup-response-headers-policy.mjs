@@ -31,6 +31,8 @@ export function loadHashData(filePath) {
     }
 }
 
+const GAPI_RUNTIME_HASHES = ["sha256-Ck+oGpSYXC+PJqw/YXnosEZnlS+j6SnLwb3GZZzgTr8="];
+
 export function buildScriptSrc(scriptHashes) {
     if (scriptHashes.length === 0) {
         throw new FatalError(
@@ -38,7 +40,8 @@ export function buildScriptSrc(scriptHashes) {
             'Kjør "npm run build" for å generere dem før du kjører dette scriptet.'
         );
     }
-    return `'self' ${scriptHashes.map(h => `'${h}'`).join(' ')} https://apis.google.com https://accounts.google.com`;
+    const allHashes = [...scriptHashes, ...GAPI_RUNTIME_HASHES];
+    return `'self' ${allHashes.map(h => `'${h}'`).join(' ')} https://apis.google.com https://accounts.google.com`;
 }
 
 export function buildCspString(scriptSrc) {
@@ -48,7 +51,7 @@ export function buildCspString(scriptSrc) {
         "style-src 'self' 'unsafe-inline'",
         "font-src 'self'",
         "img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com",
-        "frame-src https://drive.google.com https://accounts.google.com https://www.google.com https://*.googleapis.com",
+        "frame-src https://drive.google.com https://accounts.google.com https://*.googleapis.com",
         "connect-src 'self' blob: https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://www.google.com",
     ].join('; ');
 }

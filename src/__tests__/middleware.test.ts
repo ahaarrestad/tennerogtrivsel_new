@@ -60,6 +60,9 @@ describe('src/middleware.ts – HTTP security headers', () => {
         // Fonter er self-hosted — Google Fonts skal ikke være i CSP
         expect(csp).not.toContain('fonts.googleapis.com');
         expect(csp).not.toContain('fonts.gstatic.com');
+        // www.google.com skal ikke være i frame-src (fjernet — kun brukt som lenker, ikke iframes)
+        const frameSrc = csp.split(';').find(d => d.trim().startsWith('frame-src'))!;
+        expect(frameSrc).not.toContain('https://www.google.com');
     });
 
     it('CSP inneholder ikke CDN-er (EasyMDE/Flatpickr/Font Awesome bundles via npm)', async () => {
@@ -154,6 +157,8 @@ describe('src/middleware.ts – script-src hashes', () => {
 
         expect(csp).toContain("'sha256-testHash1=='");
         expect(csp).toContain("'sha256-testHash2=='");
+        // GAPI runtime-hash skal alltid inkluderes (runtime-injisert av apis.google.com/js/api.js)
+        expect(csp).toContain("'sha256-Ck+oGpSYXC+PJqw/YXnosEZnlS+j6SnLwb3GZZzgTr8='");
         const scriptSrcDirective = csp.split(';').find(d => d.trim().startsWith('script-src'))!;
         expect(scriptSrcDirective).not.toContain("'unsafe-inline'");
     });
