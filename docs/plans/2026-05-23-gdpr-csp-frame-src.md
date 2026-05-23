@@ -17,7 +17,7 @@ frame-src https://drive.google.com https://accounts.google.com https://www.googl
 
 **Alvorlighetsnivå:** Svært lav — unødvendige `frame-src`-tillatelser øker angrepsflatens bredde marginalt.
 
-**Architecture:** Endring i én fil (`security-headers.ts`). `frame-src` må manuelt synkroniseres til CloudFront Response Headers Policy etter commit — `script-src` oppdateres automatisk av CI, men alle andre direktiver er manuelle. Full prosedyre i [`docs/architecture/sikkerhet.md`](../architecture/sikkerhet.md).
+**Architecture:** Endring i `security-headers.ts` og `scripts/setup-response-headers-policy.mjs`. CI (`update-cloudfront-csp.mjs`) erstatter hele CSP-strengen automatisk ved deploy — ingen manuell CloudFront-sync nødvendig. Full prosedyre i [`docs/architecture/sikkerhet.md`](../architecture/sikkerhet.md).
 
 ---
 
@@ -133,17 +133,11 @@ frame-src https://drive.google.com https://accounts.google.com https://www.googl
   Bruk `/commit`-skillen. Foreslått melding:
   `fix(csp): fjern www.google.com og stram inn googleapis wildcard i frame-src`
 
-- [ ] **Steg 4.2: Synkroniser `frame-src` til CloudFront manuelt**
+- [ ] **Steg 4.2: Verifiser at CloudFront-deploy er vellykket**
 
-  **Merk:** CI oppdaterer kun `script-src` automatisk. `frame-src` og alle andre direktiver er manuelle.
+  **Merk:** CI (`update-cloudfront-csp.mjs`) erstatter nå hele CSP-strengen automatisk ved deploy — ingen manuell CloudFront-sync nødvendig. Begge distribusjoner (`test2.aarrestad.com` og `tennerogtrivsel.no`) bruker samme policy (`tot-security-headers`) og oppdateres simultant.
 
-  Begge distribusjoner (`test2.aarrestad.com` og `tennerogtrivsel.no`) bruker samme policy (`tot-security-headers`). En policy-oppdatering treffer begge simultant — det finnes ikke en "knytt til test først"-mulighet uten å opprette en separat policy.
-
-  1. AWS Console → CloudFront → Policies → Response headers policies → `tot-security-headers` → Edit
-  2. Finn `Content-Security-Policy`-raden under Custom headers
-  3. Oppdater `frame-src`-delen av CSP-strengen til å matche den nye verdien i `security-headers.ts` (alt på én linje, semikolon-separert med resten av CSP)
-  4. Save — endringen deployes til begge distribusjoner (5–15 min)
-  5. Verifiser TEST:
+  Etter deploy: verifiser TEST:
      ```bash
      curl -I https://test2.aarrestad.com/ | grep -i "content-security-policy"
      ```

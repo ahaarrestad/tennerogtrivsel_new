@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCspString, buildScriptSrc } from './setup-response-headers-policy.mjs';
@@ -17,7 +17,7 @@ if (!policyId) {
 }
 
 const policyResponse = JSON.parse(
-    execSync(`aws cloudfront get-response-headers-policy --id ${policyId}`, { encoding: 'utf-8' })
+    execFileSync('aws', ['--no-cli-pager', 'cloudfront', 'get-response-headers-policy', '--id', policyId, '--output', 'json'], { encoding: 'utf-8' })
 );
 const etag = policyResponse.ETag;
 const config = policyResponse.ResponseHeadersPolicy.ResponseHeadersPolicyConfig;
@@ -39,9 +39,12 @@ config.SecurityHeadersConfig.ContentSecurityPolicy.ContentSecurityPolicy = build
 const tmpPath = '/tmp/cfn-policy-update.json';
 writeFileSync(tmpPath, JSON.stringify(config));
 
-execSync(
-    `aws cloudfront update-response-headers-policy --id ${policyId} --if-match "${etag}" --response-headers-policy-config file://${tmpPath}`,
-    { stdio: 'inherit' }
-);
+execFileSync('aws', [
+    '--no-cli-pager', 'cloudfront', 'update-response-headers-policy',
+    '--id', policyId,
+    '--if-match', etag,
+    '--response-headers-policy-config', `file://${tmpPath}`,
+    '--output', 'json',
+], { stdio: 'inherit' });
 
 console.log(`CloudFront CSP oppdatert (alle direktiver): ${hashData.scriptHashes.length} build-hash(er) + GAPI runtime-hash`);
