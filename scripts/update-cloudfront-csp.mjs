@@ -21,6 +21,8 @@ const policyResponse = JSON.parse(
 const etag = policyResponse.ETag;
 const config = policyResponse.ResponseHeadersPolicy.ResponseHeadersPolicyConfig;
 
+// Runtime-injisert av apis.google.com/js/api.js. Oppdater også i
+// src/utils/security-headers.ts og scripts/setup-response-headers-policy.mjs ved endring.
 const GAPI_RUNTIME_HASHES = ["sha256-Ck+oGpSYXC+PJqw/YXnosEZnlS+j6SnLwb3GZZzgTr8="];
 const allScriptHashes = [...hashData.scriptHashes, ...GAPI_RUNTIME_HASHES];
 
@@ -33,6 +35,8 @@ if (!config.SecurityHeadersConfig?.ContentSecurityPolicy) {
     process.exit(1);
 }
 
+// NB: kun script-src oppdateres automatisk. Endringer i andre direktiver (frame-src m.fl.)
+// krever manuell oppdatering via setup-response-headers-policy.mjs eller AWS Console.
 config.SecurityHeadersConfig.ContentSecurityPolicy.ContentSecurityPolicy =
     config.SecurityHeadersConfig.ContentSecurityPolicy.ContentSecurityPolicy
         .replace(/script-src [^;]+/, `script-src ${scriptSrc}`);

@@ -1,7 +1,8 @@
 import hashData from '../generated/csp-hashes.json';
 
-// Runtime-injisert av apis.google.com/js/api.js (GAPI relay-script). Kan ikke
-// fanges av build-time hash-generatoren — må vedlikeholdes manuelt ved GAPI-oppdatering.
+// Runtime-injisert av apis.google.com/js/api.js (GAPI relay-script). Kan ikke fanges av
+// build-time hash-generatoren. Oppdater også i scripts/update-cloudfront-csp.mjs og
+// scripts/setup-response-headers-policy.mjs ved endring.
 const GAPI_RUNTIME_HASHES = ["sha256-Ck+oGpSYXC+PJqw/YXnosEZnlS+j6SnLwb3GZZzgTr8="];
 
 const allScriptHashes = [...hashData.scriptHashes, ...GAPI_RUNTIME_HASHES];

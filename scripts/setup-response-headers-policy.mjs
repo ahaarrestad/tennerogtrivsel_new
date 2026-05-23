@@ -31,6 +31,8 @@ export function loadHashData(filePath) {
     }
 }
 
+// Runtime-injisert av apis.google.com/js/api.js. Oppdater også i
+// src/utils/security-headers.ts og scripts/update-cloudfront-csp.mjs ved endring.
 const GAPI_RUNTIME_HASHES = ["sha256-Ck+oGpSYXC+PJqw/YXnosEZnlS+j6SnLwb3GZZzgTr8="];
 
 export function buildScriptSrc(scriptHashes) {
