@@ -21,8 +21,11 @@ const policyResponse = JSON.parse(
 const etag = policyResponse.ETag;
 const config = policyResponse.ResponseHeadersPolicy.ResponseHeadersPolicyConfig;
 
+const GAPI_RUNTIME_HASHES = ["sha256-Ck+oGpSYXC+PJqw/YXnosEZnlS+j6SnLwb3GZZzgTr8="];
+const allScriptHashes = [...hashData.scriptHashes, ...GAPI_RUNTIME_HASHES];
+
 const scriptSrc = hashData.scriptHashes.length > 0
-    ? `'self' ${hashData.scriptHashes.map(h => `'${h}'`).join(' ')} https://apis.google.com https://accounts.google.com`
+    ? `'self' ${allScriptHashes.map(h => `'${h}'`).join(' ')} https://apis.google.com https://accounts.google.com`
     : `'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com`;
 
 if (!config.SecurityHeadersConfig?.ContentSecurityPolicy) {

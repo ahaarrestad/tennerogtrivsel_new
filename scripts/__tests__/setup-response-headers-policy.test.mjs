@@ -80,6 +80,11 @@ describe('buildScriptSrc', () => {
         expect(result).toContain('https://apis.google.com');
         expect(result).toContain('https://accounts.google.com');
     });
+
+    it('inkluderer GAPI runtime-hash (runtime-injisert av apis.google.com/js/api.js)', () => {
+        const result = buildScriptSrc(['sha256-abc']);
+        expect(result).toContain("'sha256-Ck+oGpSYXC+PJqw/YXnosEZnlS+j6SnLwb3GZZzgTr8='");
+    });
 });
 
 describe('buildCspString', () => {
@@ -98,7 +103,7 @@ describe('buildCspString', () => {
             "style-src 'self' 'unsafe-inline'; " +
             "font-src 'self'; " +
             "img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://www.google.com; " +
-            "frame-src https://drive.google.com https://accounts.google.com https://www.google.com https://*.googleapis.com; " +
+            "frame-src https://drive.google.com https://accounts.google.com https://*.googleapis.com; " +
             "connect-src 'self' blob: https://www.googleapis.com https://content.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://www.google.com"
         );
     });
