@@ -46,8 +46,9 @@ describe('src/middleware.ts – HTTP security headers', () => {
         expect(csp).toContain('https://apis.google.com');
         // Google Drive (admin)
         expect(csp).toContain('https://drive.google.com');
-        // GAPI iframe-kanaler (content-*.googleapis.com – wildcard dekker alle subdomener)
-        expect(csp).toContain('https://*.googleapis.com');
+        // GAPI iframe-kanaler (content-sheets.googleapis.com bekreftet nødvendig → wildcard)
+        const frameSrcPositive = csp.split(';').find(d => d.trim().startsWith('frame-src'))!;
+        expect(frameSrcPositive).toContain('https://*.googleapis.com');
     });
 
     it('CSP inneholder IKKE fjernede tredjepartsdomener (GDPR)', async () => {
