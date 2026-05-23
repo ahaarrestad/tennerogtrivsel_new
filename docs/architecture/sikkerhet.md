@@ -117,11 +117,11 @@ Repoet har ingen Terraform/CDK i dag. Innføring for ett enkelt CloudFront-objek
 
 ### Automatisk CSP-oppdatering i CI
 
-`script-src`-direktivet i CloudFront-policyen oppdateres automatisk ved hver deploy:
+Hele CSP-strengen i CloudFront-policyen erstattes automatisk ved hver deploy:
 
 1. `scripts/generate-csp-hashes.mjs` scanner `dist/**/*.html` for inline `<script>`-blokker
 2. Beregner SHA256-hashes og skriver til `src/generated/csp-hashes.json`
-3. `scripts/update-cloudfront-csp.mjs` henter gjeldende policy, patcher `script-src` og oppdaterer
+3. `scripts/update-cloudfront-csp.mjs` henter gjeldende policy, bygger ny CSP via `buildCspString` og oppdaterer
 
 **Forutsetninger:**
 - GitHub secret `CLOUDFRONT_CSP_POLICY_ID` — ID-en til Response Headers Policy (ikke distribusjons-ID).
