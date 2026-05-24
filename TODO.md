@@ -13,12 +13,6 @@
 
 ## Pågående
 
-- [ ] **GDPR: Rydd opp i CSP frame-src for Google** ([plan](docs/plans/2026-05-23-gdpr-csp-frame-src.md))
-  - CSP tillater frames fra google.com og googleapis.com, men ingen Google Maps-iframe er synlig i koden
-  - Kartet bruker Leaflet/OpenStreetMap; Google Maps åpnes i ny fane, ikke som iframe
-  - Tiltak: fjern unødvendige frame-src-tillatelser, eller bekreft at de er nødvendige og dokumenter hvorfor
-  - Alvorlighetsnivå: Svært lav
-
 - [ ] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/2026-04-28-sikkerhetshardening.md))
   - Audit 2026-04-28 fant 2 kritiske, 4 høye og 4 medium funn. Bruker er mest bekymret for supply-chain.
   - Kritisk: Dependabot auto-merge for runtime-deps (F1), CSP mangler i CloudFront-prod (F2)
