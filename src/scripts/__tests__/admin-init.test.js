@@ -221,15 +221,6 @@ describe('admin-init', () => {
         });
     });
 
-    it('should try silentLogin when localStorage has remember-me flag but no user', async () => {
-        localStorage.setItem('admin_remember_me', '1');
-        getStoredUser.mockReturnValue(null);
-        await import('../admin-init.js');
-        await vi.waitFor(() => {
-            expect(silentLogin).toHaveBeenCalled();
-        });
-    });
-
     it('should not try silentLogin when no stored token', async () => {
         getStoredUser.mockReturnValue(null);
         await import('../admin-init.js');
@@ -237,6 +228,7 @@ describe('admin-init', () => {
             expect(initGapi).toHaveBeenCalled();
         });
         expect(silentLogin).not.toHaveBeenCalled();
+        expect(showState).toHaveBeenCalledWith('login');
     });
 
     it('should bind login button to call login()', async () => {
@@ -708,16 +700,18 @@ describe('startup flow — ingen token', () => {
         });
     });
 
-    it('should show spinner and call silentLogin when hadRememberMe', async () => {
+    it('should show login with pre-checked remember-me when hadRememberMe', async () => {
         localStorage.setItem('admin_remember_me', '1');
         getStoredUser.mockReturnValue(null);
 
         await import('../admin-init.js');
 
         await vi.waitFor(() => {
-            expect(showState).toHaveBeenCalledWith('loading');
-            expect(silentLogin).toHaveBeenCalled();
+            expect(showState).toHaveBeenCalledWith('login');
         });
+        expect(showState).not.toHaveBeenCalledWith('loading');
+        expect(silentLogin).not.toHaveBeenCalled();
+        expect(document.getElementById('remember-me').checked).toBe(true);
     });
 
     it('should call logout and login when no-access-switch-btn is clicked', async () => {
@@ -733,22 +727,6 @@ describe('startup flow — ingen token', () => {
         expect(login).toHaveBeenCalled();
     });
 
-    it('should show login when admin-auth-failed fires during silent login', async () => {
-        localStorage.setItem('admin_remember_me', '1');
-        getStoredUser.mockReturnValue(null);
-
-        await import('../admin-init.js');
-
-        await vi.waitFor(() => expect(silentLogin).toHaveBeenCalled());
-
-        // Simuler mislykket stille fornyelse
-        window.dispatchEvent(new Event('admin-auth-failed'));
-
-        await vi.waitFor(() => {
-            const calls = showState.mock.calls.map(c => c[0]);
-            expect(calls).toContain('login');
-        });
-    });
 });
 
 describe('admin-init openModule prisliste og kontaktskjema', () => {
