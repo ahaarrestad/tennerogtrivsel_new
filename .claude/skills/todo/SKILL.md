@@ -1,9 +1,9 @@
 ---
 name: todo
 model: sonnet
-description: "Vis og administrer prosjektets TODO-liste (TODO.md). Bruk når brukeren sier 'todo', 'TODO', 'oppgaveliste', 'vis oppgaver', 'backlog', 'hva gjenstår', 'neste oppgave', 'legg til oppgave', 'ny oppgave', 'flytt oppgave', 'marker ferdig', eller spør om status på oppgaver."
+description: "Vis og administrer prosjektets TODO-liste (TODO.md). Bruk når brukeren sier 'todo', 'TODO', 'oppgaveliste', 'vis oppgaver', 'backlog', 'hva gjenstår', 'neste oppgave', 'legg til oppgave', 'ny oppgave', 'flytt oppgave', 'marker ferdig', 'start oppgave', 'begynn på', 'gjenoppta', 'fortsett med', eller spør om status på oppgaver."
 disable-model-invocation: false
-allowed-tools: ["Read(TODO.md)", "Read(TODO-archive.md)", "Edit(TODO.md)", "Edit(TODO-archive.md)", "Glob(docs/**)", "Read(docs/**)", "Bash(mv *)", "Bash(mkdir *)"]
+allowed-tools: ["Read(TODO.md)", "Read(TODO-archive.md)", "Edit(TODO.md)", "Edit(TODO-archive.md)", "Glob(docs/**)", "Read(docs/**)", "Write(docs/**)", "Bash(mv *)", "Bash(mkdir *)", "Bash(git *)"]
 ---
 
 # TODO-liste Skill
@@ -46,34 +46,39 @@ Hold det kort og oversiktlig. Ikke gjenta hele filen. Inkluder alltid plan-lenke
 Hvis brukeren vil legge til en ny oppgave:
 
 1. Les `TODO.md`
-2. Spør om oppgaven skal i **Backlog** eller **Pågående** (om ikke spesifisert)
-3. Legg til oppgaven i riktig seksjon med format:
+2. Legg alltid nye oppgaver i **Backlog** — aldri direkte i Pågående. For å starte en oppgave brukes «Start oppgave fra Backlog»-flyten som krever plan og godkjenning.
+3. Legg til oppgaven med format:
    ```markdown
-   - [ ] **Kort tittel** ([plan](docs/plan-navn.md))
+   - [ ] **Kort tittel** — *ingen plan ennå*
      - Beskrivelse/detaljer som underpunkter
    ```
-   Plan-lenken legges til når planen er opprettet. Oppgaver uten plan ennå utelater lenken.
+   Plan-lenken (`([plan](docs/plans/...))`) legges til når planfilen er opprettet. Utelat den inntil da.
 4. Bekreft at oppgaven er lagt til
 
 ---
 
-### Start oppgave fra Backlog
+### Start oppgave fra Backlog / Flytt oppgave til Pågående
 
-Når brukeren ber om å starte en oppgave fra Backlog — **aldri gå rett til implementasjon**.
+Når brukeren ber om å starte eller flytte en oppgave fra Backlog — **aldri gå rett til implementasjon**.
 
-**Fase 1: Plan (ALLTID først)**
+**Fase 1: Plan (ALLTID først — stopp her til brukeren godkjenner)**
 
 1. Les `TODO.md` og finn oppgaven
 2. Har oppgaven allerede en planfil (lenke i TODO.md)?
-   - **Ja:** Les planfilen og presenter et sammendrag for brukeren. Spør om planen fortsatt er riktig, eller om noe skal justeres.
-   - **Nei:** Lag en plan nå. Still avklarende spørsmål om scope, tilnærming og avgrensninger. Skriv planfilen til `docs/plans/YYYY-MM-DD-<topic>.md` og oppdater lenken i TODO.md.
-3. Presenter planen for brukeren og få eksplisitt godkjenning før du går videre.
-   - Ikke begynn implementasjon uten at brukeren har sagt «ok», «kjør» eller tilsvarende.
-   - Juster planen basert på tilbakemelding om nødvendig.
+   - **Ja:** Les planfilen og presenter et sammendrag. Spør om planen fortsatt er riktig, eller om noe skal justeres.
+   - **Nei:** Lag en plan. Still avklarende spørsmål om scope, tilnærming og avgrensninger. En god plan inneholder minst:
+     - Mål og avgrensninger (hva er ikke med)
+     - Konkrete steg med filer som berøres
+     - Testbehov og definition of done
+     - Kjente risiki eller usikkerheter
+   - Skriv planfilen til `docs/plans/YYYY-MM-DD-<topic>.md` og oppdater oppgaven i TODO.md med lenken.
+3. Presenter planen og vent på eksplisitt godkjenning («ok», «kjør», «ser bra ut» el.l.)
+   - Ikke gå videre til Fase 2 uten godkjenning — ikke anta stilltiende samtykke
+   - Juster og presenter på nytt ved tilbakemelding — gjenta til brukeren godkjenner
 
 **Fase 2: Opprett worktree (etter godkjent plan)**
 
-4. Invoke `superpowers:using-git-worktrees` — sørger for at en isolert branch/worktree er på plass
+4. Invoke `superpowers:using-git-worktrees` — sørger for isolert branch/worktree
 5. Flytt oppgaven fra **Backlog** til **Pågående** i TODO.md
 6. Bekreft hvilken branch/worktree som ble opprettet
 
@@ -109,15 +114,21 @@ Når brukeren vil fortsette på en oppgave som allerede er i **Pågående** (fra
 
 Når en oppgave er ferdig:
 
-1. Les `TODO.md`
-2. Endre `- [ ]` til `- [x]` på oppgaven
-3. Legg til et kort sammendrag av hva som ble gjort (som underpunkter), basert på kontekst fra samtalen
-4. Arkiver oppgaven:
+1. Sjekk at alt er committet og pushet:
+   ```bash
+   git status
+   git log --oneline origin/main..HEAD
+   ```
+   Hvis det finnes uncommittede eller upushede endringer: påminn brukeren om å kjøre `/commit` og `git review` før arkivering.
+2. Les `TODO.md`
+3. Endre `- [ ]` til `- [x]` på oppgaven
+4. Legg til et kort sammendrag av hva som ble gjort (som underpunkter), basert på kontekst fra samtalen
+5. Arkiver oppgaven:
    - Flytt oppgaven fra TODO.md til TODO-archive.md
    - Flytt planfilen til `docs/plans/archive/`
    - Flytt eventuelle design-docs til `docs/designs/archive/`
    - Oppdater lenker i TODO-archive.md til de nye plasseringene
-5. Bekreft oppdateringen
+6. Bekreft oppdateringen
 
 ---
 
