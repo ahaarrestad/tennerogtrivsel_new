@@ -711,6 +711,7 @@ describe('startup flow — ingen token', () => {
         });
         expect(showState).not.toHaveBeenCalledWith('loading');
         expect(silentLogin).not.toHaveBeenCalled();
+        expect(setRememberMe).toHaveBeenCalledWith(true);
         expect(document.getElementById('remember-me').checked).toBe(true);
     });
 
