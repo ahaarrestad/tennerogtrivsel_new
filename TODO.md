@@ -30,10 +30,10 @@
 
 ## Backlog
 
-- [ ] **Fiks GSI silent-refresh popup-feil i admin** — *ingen plan ennå*
+- [ ] **Fiks GSI silent-refresh popup-feil i admin** ([plan](docs/superpowers/plans/2026-05-24-gsi-popup-fix.md)) ([spec](docs/superpowers/specs/2026-05-24-gsi-popup-fix-design.md))
   - `[GSI_LOGGER]: Failed to open popup window` i prod-konsoll — GSI prøver stille token-refresh via `window.open()` uten brukergest, nettleseren blokkerer
-  - Undersøk om COOP-header (`same-origin-allow-popups`) eller GSI-konfigurasjon er årsaken
-  - Vurder om admin sin egen `silentLogin()`-flyt gjør GSI sin automatiske silent-refresh overflødig
+  - Rotårsak: `silentLogin()` kalles på sidelasting i `hadRememberMe`-sti — COOP-header er korrekt
+  - Løsning: fjern `silentLogin()` fra sidelastingsflyten, vis innloggingsskjerm med forhåndskrysset «Husk meg»
   - Alvorlighetsnivå: Lav (støy i logg, potensiell auth-degradering på klienter med strenge popup-blokkere)
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
@@ -68,6 +68,10 @@
   - AWS tilbyr standard Data Processing Addendum — verifiser at dette er akseptert for kontoen
   - Tiltak: dokumenter DPA-status i internkontrollmappen (relevant når kontaktskjema aktiveres)
   - Alvorlighetsnivå: Lav
+
+- [ ] **Footer på prisliste-utskrift med tannlegenavn** — *ingen plan ennå*
+  - Legg til footer i print-visningen av prislisten som viser navnene på alle tannlegene
+  - Hent tannlegenavn dynamisk fra eksisterende datakilde (Google Sheets/tannleger-lista)
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
