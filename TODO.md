@@ -30,6 +30,12 @@
 
 ## Backlog
 
+- [ ] **Fiks GSI silent-refresh popup-feil i admin** — *ingen plan ennå*
+  - `[GSI_LOGGER]: Failed to open popup window` i prod-konsoll — GSI prøver stille token-refresh via `window.open()` uten brukergest, nettleseren blokkerer
+  - Undersøk om COOP-header (`same-origin-allow-popups`) eller GSI-konfigurasjon er årsaken
+  - Vurder om admin sin egen `silentLogin()`-flyt gjør GSI sin automatiske silent-refresh overflødig
+  - Alvorlighetsnivå: Lav (støy i logg, potensiell auth-degradering på klienter med strenge popup-blokkere)
+
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
   - Dekker: GitHub (secrets, Actions, permissions), AWS (IAM, S3, Lambda, CloudFront, DynamoDB, SES), Google (OAuth, Sheets/Drive API-nøkler, scopes), og hvordan alt er skrudd sammen
