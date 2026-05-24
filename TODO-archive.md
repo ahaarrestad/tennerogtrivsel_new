@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Fiks GSI silent-refresh popup-feil i admin** ([plan](docs/superpowers/plans/archive/2026-05-24-gsi-popup-fix.md)) ([spec](docs/superpowers/specs/archive/2026-05-24-gsi-popup-fix-design.md))
+  - Fjernet `silentLogin()` fra `hadRememberMe`-stien i `admin-init.js` — kallet skjedde uten brukergest og fikk GSI til å prøve `window.open()` som nettleseren blokkerte
+  - Innloggingsskjermen vises nå umiddelbart med «Husk meg» forhåndskrysset; `silentLogin()` beholdes i `admin-api-retry.js` for midt-sesjon token-fornyelse
+  - Fikk til en grundig code review med ingen gjenstående funn
+
 - [x] **GDPR: Rydd opp i CSP frame-src for Google** ([plan](docs/plans/archive/2026-05-23-gdpr-csp-frame-src.md))
   - `www.google.com` fjernet fra `frame-src` — ingen identifisert bruk med GSI-biblioteket
   - `*.googleapis.com` wildcard beholdt — browser-test bekreftet at `content-sheets.googleapis.com` blokkeres med snevrere alternativ

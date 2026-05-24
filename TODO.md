@@ -30,11 +30,6 @@
 
 ## Backlog
 
-- [ ] **Fiks GSI silent-refresh popup-feil i admin** ([plan](docs/superpowers/plans/2026-05-24-gsi-popup-fix.md)) ([spec](docs/superpowers/specs/2026-05-24-gsi-popup-fix-design.md))
-  - `[GSI_LOGGER]: Failed to open popup window` i prod-konsoll — GSI prøver stille token-refresh via `window.open()` uten brukergest, nettleseren blokkerer
-  - Rotårsak: `silentLogin()` kalles på sidelasting i `hadRememberMe`-sti — COOP-header er korrekt
-  - Løsning: fjern `silentLogin()` fra sidelastingsflyten, vis innloggingsskjerm med forhåndskrysset «Husk meg»
-  - Alvorlighetsnivå: Lav (støy i logg, potensiell auth-degradering på klienter med strenge popup-blokkere)
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
