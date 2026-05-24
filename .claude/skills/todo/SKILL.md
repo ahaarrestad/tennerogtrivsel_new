@@ -3,7 +3,7 @@ name: todo
 model: sonnet
 description: "Vis og administrer prosjektets TODO-liste (TODO.md). Bruk når brukeren sier 'todo', 'TODO', 'oppgaveliste', 'vis oppgaver', 'backlog', 'hva gjenstår', 'neste oppgave', 'legg til oppgave', 'ny oppgave', 'flytt oppgave', 'marker ferdig', 'start oppgave', 'begynn på', 'gjenoppta', 'fortsett med', eller spør om status på oppgaver."
 disable-model-invocation: false
-allowed-tools: ["Read(TODO.md)", "Read(TODO-archive.md)", "Edit(TODO.md)", "Edit(TODO-archive.md)", "Glob(docs/**)", "Read(docs/**)", "Write(docs/**)", "Bash(mv *)", "Bash(mkdir *)", "Bash(git *)"]
+allowed-tools: ["Read(TODO.md)", "Read(TODO-archive.md)", "Edit(TODO.md)", "Edit(TODO-archive.md)", "Glob(docs/**)", "Read(docs/**)", "Write(docs/**)", "Bash(mv *)", "Bash(mkdir *)", "Bash(git *)", "Skill(superpowers:using-git-worktrees)"]
 ---
 
 # TODO-liste Skill
@@ -125,8 +125,12 @@ Når en oppgave er ferdig:
 4. Legg til et kort sammendrag av hva som ble gjort (som underpunkter), basert på kontekst fra samtalen
 5. Arkiver oppgaven:
    - Flytt oppgaven fra TODO.md til TODO-archive.md
-   - Flytt planfilen til `docs/plans/archive/`
-   - Flytt eventuelle design-docs til `docs/designs/archive/`
+   - Flytt planfilen til `archive/`-mappen under samme katalog som den ligger i:
+     - `docs/plans/` → `docs/plans/archive/`
+     - `docs/superpowers/plans/` → `docs/superpowers/plans/archive/`
+   - Flytt eventuelle spec/design-docs til `archive/`-mappen under samme katalog:
+     - `docs/designs/` → `docs/designs/archive/`
+     - `docs/superpowers/specs/` → `docs/superpowers/specs/archive/`
    - Oppdater lenker i TODO-archive.md til de nye plasseringene
 6. Bekreft oppdateringen
 
