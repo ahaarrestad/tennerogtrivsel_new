@@ -57,14 +57,29 @@ Hvis brukeren vil legge til en ny oppgave:
 
 ---
 
-### Flytt oppgave til Pågående
+### Start oppgave fra Backlog
 
-Når en oppgave skal startes:
+Når brukeren ber om å starte en oppgave fra Backlog — **aldri gå rett til implementasjon**.
 
-1. Invoke `superpowers:using-git-worktrees` — sørger for at en isolert branch/worktree er på plass før arbeidet begynner
-2. Les `TODO.md`
-3. Flytt oppgaven fra **Backlog** til **Pågående**
-4. Bekreft flyttingen (inkl. hvilken branch/worktree som ble opprettet)
+**Fase 1: Plan (ALLTID først)**
+
+1. Les `TODO.md` og finn oppgaven
+2. Har oppgaven allerede en planfil (lenke i TODO.md)?
+   - **Ja:** Les planfilen og presenter et sammendrag for brukeren. Spør om planen fortsatt er riktig, eller om noe skal justeres.
+   - **Nei:** Lag en plan nå. Still avklarende spørsmål om scope, tilnærming og avgrensninger. Skriv planfilen til `docs/plans/YYYY-MM-DD-<topic>.md` og oppdater lenken i TODO.md.
+3. Presenter planen for brukeren og få eksplisitt godkjenning før du går videre.
+   - Ikke begynn implementasjon uten at brukeren har sagt «ok», «kjør» eller tilsvarende.
+   - Juster planen basert på tilbakemelding om nødvendig.
+
+**Fase 2: Opprett worktree (etter godkjent plan)**
+
+4. Invoke `superpowers:using-git-worktrees` — sørger for at en isolert branch/worktree er på plass
+5. Flytt oppgaven fra **Backlog** til **Pågående** i TODO.md
+6. Bekreft hvilken branch/worktree som ble opprettet
+
+**Fase 3: Implementasjon**
+
+7. Start implementasjonen i henhold til godkjent plan
 
 ---
 
