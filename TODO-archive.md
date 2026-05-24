@@ -2,6 +2,12 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **GDPR: Rydd opp i CSP frame-src for Google** ([plan](docs/plans/archive/2026-05-23-gdpr-csp-frame-src.md))
+  - `www.google.com` fjernet fra `frame-src` — ingen identifisert bruk med GSI-biblioteket
+  - `*.googleapis.com` wildcard beholdt — browser-test bekreftet at `content-sheets.googleapis.com` blokkeres med snevrere alternativ
+  - GAPI runtime-injisert hash (`sha256-Ck+...`) lagt til `script-src` — fanges ikke av build-time hash-generator
+  - CI (`update-cloudfront-csp.mjs`) oppdatert til å erstatte hele CSP-strengen automatisk ved deploy (alle direktiver, ikke bare `script-src`)
+
 - [x] **GDPR: Gjør rettigheter og klagerett ubetinget synlig i personvern** ([plan](docs/plans/archive/2026-05-18-gdpr-rettigheter-ubetinget.md)) ([design](docs/superpowers/specs/archive/2026-05-18-gdpr-rettigheter-ubetinget-design.md))
   - Rettighetsavsnittet (innsyn, retting, sletting, klage til Datatilsynet) ble flyttet ut av den betingede `visKontaktPersonvern`-blokken i `personvern.astro`
   - Teksten justert fra «av opplysningene» til «av opplysninger vi behandler om deg»
