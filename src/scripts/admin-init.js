@@ -1,6 +1,6 @@
 import {
     initGapi, initGis, login, logout, tryRestoreSession,
-    silentLogin, getStoredUser, setRememberMe
+    getStoredUser, setRememberMe
 } from './admin-client.js';
 import { showConfirm } from './admin-dialog.js';
 import { initPwaPrompt, showInstallPromptIfEligible } from './pwa-prompt.js';
@@ -129,11 +129,10 @@ const setup = async () => {
         if (user) {
             await handleAuth(user);
         } else if (hadRememberMe) {
-            // Token fantes i localStorage men er utløpt → prøv stille fornyelse
             setRememberMe(true);
-            showState('loading');
-            window.addEventListener('admin-auth-failed', () => showState('login'), { once: true });
-            silentLogin();
+            showState('login');
+            const rememberMeCheckbox = document.getElementById('remember-me');
+            if (rememberMeCheckbox) rememberMeCheckbox.checked = true;
         } else {
             showState('login');
         }
