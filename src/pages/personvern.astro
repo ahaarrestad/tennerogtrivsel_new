@@ -9,7 +9,7 @@ const { sectionBg } = getSectionClasses('brand');
 const ksEntry = await getEntry('kontaktskjema', 'kontaktskjema');
 const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
 ---
-<Layout title="Personvernerklæring – Tenner og Trivsel" description="Personvernerklæring for nettsiden til Tenner og Trivsel">
+<Layout title="Personvernerklæring – Tenner og Trivsel" description={settings.personvernBeskrivelse}>
     <section class={`section-container ${sectionBg}`}>
         <div class="section-content prose prose-brand max-w-3xl mx-auto">
             <h1 class="h2">Personvernerklæring</h1>

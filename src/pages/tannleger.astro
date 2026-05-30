@@ -10,6 +10,7 @@ const settings = await getSiteSettings();
 const tannleger = await getCollection('tannleger');
 const images = import.meta.glob('/src/assets/tannleger/*.{jpeg,jpg,png,webp}');
 const sorterteTannleger = tannleger.toSorted((a, b) => a.data.name.localeCompare(b.data.name, 'nb'));
+
 ---
 <Layout
     title={`${settings.tannlegerTittel} | Tenner og Trivsel`}

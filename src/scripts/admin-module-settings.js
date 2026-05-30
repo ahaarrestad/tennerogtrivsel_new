@@ -45,6 +45,7 @@ const SETTING_HINTS = {
     galleriBeskrivelse: '/galleri — meta-beskrivelse (SEO)',
     tjenesterBeskrivelse: '/tjenester — meta-beskrivelse (SEO)',
     tannlegerBeskrivelse: '/tannleger — meta-beskrivelse (SEO)',
+    personvernBeskrivelse: '/personvern — meta-beskrivelse (SEO)',
 };
 
 let settingsReorderMode = false;

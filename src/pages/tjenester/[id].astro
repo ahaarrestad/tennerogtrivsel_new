@@ -5,6 +5,7 @@ import TelefonKnapp from "../../components/TelefonKnapp.astro";
 import MessageButton from "../../components/MessageButton.astro";
 import KontaktKnapp from "../../components/KontaktKnapp.astro";
 import { slugify } from '../../scripts/slugify';
+import { stripMarkdown, truncateDescription } from '../../scripts/metaDescription';
 
 // 1. Generer stier for alle tjenestene
 export async function getStaticPaths() {
@@ -23,8 +24,11 @@ const {Content} = await render(entry);
 
 const tjenester = (await getCollection('tjenester')).filter(s => s.data.active !== false);
 const currentSlug = slugify(entry.data.title);
+const description = truncateDescription(
+    `${entry.data.ingress} ${stripMarkdown(entry.body ?? '')}`.trim()
+);
 ---
-<Layout title={`${entry.data.title} | Tenner og Trivsel`} description={entry.data.ingress}>
+<Layout title={`${entry.data.title} | Tenner og Trivsel`} description={description}>
     <div class="flex-grow bg-white w-full">
 
         <section class="pt-12 md:pt-20 pb-0">
