@@ -64,13 +64,8 @@
   - Tiltak: dokumenter DPA-status i internkontrollmappen (relevant når kontaktskjema aktiveres)
   - Alvorlighetsnivå: Lav
 
-- [ ] **SEO: Forbedre meta descriptions** — *ingen plan ennå*
-  - Noen sider har for korte meta descriptions, noe som gir lavere synlighet i søkeresultater
-  - Mål: 150–160 tegn per side — gir nok informasjon uten å bli avkuttet i søkeresultater
-  - Gjennomgå alle sider, lag beskrivende meta descriptions og oppdater i Astro-komponentene
-  - Bruk Bing Webmaster Tools for å monitorere klikk-rate og søkeranking etter endringer
 
-- [ ] **Footer på prisliste-utskrift med tannlegenavn** — *ingen plan ennå*
+- [ ] **Footer på prisliste-utskrift med tannlegenavn** ([plan](docs/plans/2026-05-30-prisliste-print-footer.md))
   - Legg til footer i print-visningen av prislisten som viser navnene på alle tannlegene
   - Hent tannlegenavn dynamisk fra eksisterende datakilde (Google Sheets/tannleger-lista)
 
