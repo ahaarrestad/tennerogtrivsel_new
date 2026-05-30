@@ -11,7 +11,7 @@ export const HARD_DEFAULTS: Record<string, string> = {
     latitude: "58.94826272363705",
     longitude: "5.738691380986355",
     siteTitle: "Tenner og Trivsel | Din Tannlege i Stavanger",
-    siteDescription: "Tenner og Trivsel tilbyr moderne tannbehandling i trygge rammer i Kilden Helse. Vi har fokus på din komfort og tannhelse.",
+    siteDescription: "Tannklinikk i Stavanger på Kilden Helse. Tenner og Trivsel tilbyr moderne tannbehandling i trygge rammer med fokus på din komfort og tannhelse.",
     velkomstTekst: "Velkommen til Tenner og Trivsel. Vi tilbyr tannbehandling av høy kvalitet med fokus på din trygghet og komfort.",
     kontaktTekst: "Vi holder til i 5. etasje på Kilden Helse. Det er mest praktisk å benytte parkering P4, hvor det er 1 time gratis kundeparkering. Derfra tar du heisen én etasje opp, og du finner oss innover i gangen til venstre.",
     tannlegerTekst: "Et varmt og erfarent team som setter pasienten i sentrum og tilbyr skreddersydd behandling.",
@@ -26,10 +26,11 @@ export const HARD_DEFAULTS: Record<string, string> = {
     galleriTittel: "Klinikken",
     tjenesterTittel: "Våre Tjenester",
     tannlegerTittel: "Tannlegene",
-    kontaktBeskrivelse: "Kontakt Tenner og Trivsel tannklinikk i Stavanger. Telefon, åpningstider og veibeskrivelse.",
-    galleriBeskrivelse: "Se bilder fra Tenner og Trivsel tannklinikk i Stavanger. Moderne lokaler i Kilden Helse.",
-    tjenesterBeskrivelse: "Oversikt over tannhelsetjenester hos Tenner og Trivsel i Stavanger.",
-    tannlegerBeskrivelse: "Møt tannlegene hos Tenner og Trivsel i Stavanger. Erfarne tannleger med bred kompetanse.",
+    kontaktBeskrivelse: "Kontakt Tenner og Trivsel tannklinikk i Stavanger — Gartnerveien 15, 4016 Stavanger. Se åpningstider, telefonnummer og veibeskrivelse til oss i Kilden Helse.",
+    galleriBeskrivelse: "Se bilder fra Tenner og Trivsel tannklinikk i Stavanger — moderne og lyse lokaler i Kilden Helse med et hyggelig og profesjonelt miljø.",
+    tjenesterBeskrivelse: "Tannhelsetjenester hos Tenner og Trivsel i Stavanger: akuttbehandling, rotbehandling, fyllingsterapi, tannbleking, proteser og mer. Bestill time i dag.",
+    tannlegerBeskrivelse: "Møt tannlegene hos Tenner og Trivsel i Stavanger. Et erfarent og varmt team som setter pasienten i sentrum og tilbyr skreddersydd behandling i Kilden Helse.",
+    personvernBeskrivelse: "Personvernerklæring for tennerogtrivsel.no — les om hvilke data vi samler inn, hvorfor vi behandler dem, og dine rettigheter som bruker av nettsiden.",
 };
 
 export async function getSiteSettings() {

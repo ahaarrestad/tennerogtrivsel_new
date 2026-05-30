@@ -18,6 +18,7 @@ const HARD_DEFAULT_KEYS = [
     'businessHours3', 'businessHours4', 'businessHours5', 'galleriTekst',
     'kontaktTittel', 'galleriTittel', 'tjenesterTittel', 'tannlegerTittel',
     'kontaktBeskrivelse', 'galleriBeskrivelse', 'tjenesterBeskrivelse', 'tannlegerBeskrivelse',
+    'personvernBeskrivelse',
 ];
 
 // --- KONFIGURASJON ---
