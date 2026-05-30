@@ -22,6 +22,7 @@ function buildQuerySuffix(qs) {
 export function handler(event) {
     var uri = event.request.uri;
     var host = event.request.headers && event.request.headers.host && event.request.headers.host.value;
+    var qs = event.request.querystring;
 
     if (host && host !== 'www.tennerogtrivsel.no') {
         var targetUri = uri;
@@ -33,6 +34,33 @@ export function handler(event) {
             statusCode: 301,
             statusDescription: 'Moved Permanently',
             headers: { 'location': { value: 'https://www.tennerogtrivsel.no' + targetUri + buildQuerySuffix(event.request.querystring) } }
+        };
+    }
+
+    // Legacy ?page=-redirects fra gammel jQuery SPA
+    if (qs.page) {
+        var pageMap = {
+            'kontakt': '/kontakt/',
+            'behandlingstilbud': '/tjenester/',
+            'trygdeordninger': '/tjenester/',
+            'omoss': '/tannleger/'
+        };
+        var newPath = pageMap[qs.page.value];
+        if (newPath) {
+            return {
+                statusCode: 301,
+                statusDescription: 'Moved Permanently',
+                headers: { 'location': { value: newPath } }
+            };
+        }
+    }
+
+    // Legacy /index.html og /www/index.html → /
+    if (uri === '/index.html' || uri === '/www/index.html') {
+        return {
+            statusCode: 301,
+            statusDescription: 'Moved Permanently',
+            headers: { 'location': { value: '/' } }
         };
     }
 

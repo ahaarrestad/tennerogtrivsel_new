@@ -188,6 +188,88 @@ describe('cloudfront-trailing-slash', () => {
         });
     });
 
+    describe('legacy ?page=-redirects (gammel jQuery SPA)', () => {
+        it('?page=kontakt → /kontakt/', () => {
+            const event = makeEvent('/', 'www.tennerogtrivsel.no', { page: { value: 'kontakt' } });
+            const response = handler(event);
+            expect(response.statusCode).toBe(301);
+            expect(response.headers.location.value).toBe('/kontakt/');
+        });
+
+        it('?page=behandlingstilbud → /tjenester/', () => {
+            const event = makeEvent('/', 'www.tennerogtrivsel.no', { page: { value: 'behandlingstilbud' } });
+            const response = handler(event);
+            expect(response.statusCode).toBe(301);
+            expect(response.headers.location.value).toBe('/tjenester/');
+        });
+
+        it('?page=trygdeordninger → /tjenester/', () => {
+            const event = makeEvent('/', 'www.tennerogtrivsel.no', { page: { value: 'trygdeordninger' } });
+            const response = handler(event);
+            expect(response.statusCode).toBe(301);
+            expect(response.headers.location.value).toBe('/tjenester/');
+        });
+
+        it('?page=omoss → /tannleger/', () => {
+            const event = makeEvent('/', 'www.tennerogtrivsel.no', { page: { value: 'omoss' } });
+            const response = handler(event);
+            expect(response.statusCode).toBe(301);
+            expect(response.headers.location.value).toBe('/tannleger/');
+        });
+
+        it('path er irrelevant — /www/index.html?page=kontakt → /kontakt/', () => {
+            const event = makeEvent('/www/index.html', 'www.tennerogtrivsel.no', { page: { value: 'kontakt' } });
+            const response = handler(event);
+            expect(response.statusCode).toBe(301);
+            expect(response.headers.location.value).toBe('/kontakt/');
+        });
+
+        it('ukjent ?page=-verdi sendes gjennom (ingen redirect)', () => {
+            const event = makeEvent('/', 'www.tennerogtrivsel.no', { page: { value: 'ukjent' } });
+            expect(handler(event)).not.toHaveProperty('statusCode');
+        });
+
+        it('multi-value ?page= sendes gjennom (ingen redirect)', () => {
+            const event = makeEvent('/', 'www.tennerogtrivsel.no',
+                { page: { multiValue: [{ value: 'kontakt' }, { value: 'omoss' }] } });
+            expect(handler(event)).not.toHaveProperty('statusCode');
+        });
+
+        it('statusCode er 301 og statusDescription er Moved Permanently', () => {
+            const event = makeEvent('/', 'www.tennerogtrivsel.no', { page: { value: 'omoss' } });
+            const response = handler(event);
+            expect(response.statusCode).toBe(301);
+            expect(response.statusDescription).toBe('Moved Permanently');
+        });
+    });
+
+    describe('prioritet: ikke-www-host med ?page= → www-redirect vinner', () => {
+        it('ikke-www-host med ?page= gir www-redirect, ikke page-redirect', () => {
+            const event = makeEvent('/www/index.html', 'tennerogtrivsel.no', { page: { value: 'kontakt' } });
+            const response = handler(event);
+            expect(response.statusCode).toBe(301);
+            expect(response.headers.location.value).toBe(
+                'https://www.tennerogtrivsel.no/www/index.html?page=kontakt'
+            );
+        });
+    });
+
+    describe('legacy path-redirects (uten ?page=)', () => {
+        it('/index.html → /', () => {
+            const event = makeEvent('/index.html', 'www.tennerogtrivsel.no');
+            const response = handler(event);
+            expect(response.statusCode).toBe(301);
+            expect(response.headers.location.value).toBe('/');
+        });
+
+        it('/www/index.html → /', () => {
+            const event = makeEvent('/www/index.html', 'www.tennerogtrivsel.no');
+            const response = handler(event);
+            expect(response.statusCode).toBe(301);
+            expect(response.headers.location.value).toBe('/');
+        });
+    });
+
     describe('sitemap.xml-redirect', () => {
         it('redirecter /sitemap.xml til /sitemap-index.xml', () => {
             const result = handler(makeEvent('/sitemap.xml'));

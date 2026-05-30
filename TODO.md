@@ -28,6 +28,11 @@
   - ~~Task 2 (F4): SHA-pin GitHub Actions + Dependabot github-actions-ecosystem — ferdig 2026-05-17~~
   - Neste: Task 9 (F10): Verifiser PUBLIC_GOOGLE_API_KEY-restriksjoner i Google Cloud Console
 
+- [ ] **Redirects for legacy-URLer fra gammel nettside** ([plan](docs/plans/2026-05-30-legacy-url-redirects.md))
+  - Gamle `?page=X`-URLer (jQuery SPA) gir 404 — logikken gikk tapt ved konsolidering av CloudFront-funksjoner
+  - Løsning: legg til `?page=`-redirect-blokk i `cloudfront-trailing-slash.js` (se plan for URL-mapping og TDD-steg)
+  - Deploy skjer automatisk via CI/CD ved push til `main`
+
 ## Backlog
 
 
@@ -63,11 +68,6 @@
   - AWS tilbyr standard Data Processing Addendum — verifiser at dette er akseptert for kontoen
   - Tiltak: dokumenter DPA-status i internkontrollmappen (relevant når kontaktskjema aktiveres)
   - Alvorlighetsnivå: Lav
-
-- [ ] **Redirects for legacy-URLer fra gammel nettside** ([plan](docs/plans/2026-05-30-legacy-url-redirects.md))
-  - Gamle `?page=X`-URLer (jQuery SPA) gir 404 — logikken gikk tapt ved konsolidering av CloudFront-funksjoner
-  - Løsning: legg til `?page=`-redirect-blokk i `cloudfront-trailing-slash.js` (se plan for URL-mapping og TDD-steg)
-  - Deploy skjer automatisk via CI/CD ved push til `main`
 
 - [ ] **SEO: Forbedre meta descriptions** — *ingen plan ennå*
   - Noen sider har for korte meta descriptions, noe som gir lavere synlighet i søkeresultater
