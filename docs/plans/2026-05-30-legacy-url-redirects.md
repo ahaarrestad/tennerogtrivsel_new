@@ -31,11 +31,15 @@ Ny blokk legges inn **etter** www-redirect-blokken (linje 31–42) og **før** `
 - Etter www-redirect: garanterer at ikke-www-forespørsler med `?page=` alltid sendes til `www.` i ett steg, og at `?page=`-logikken ikke produserer en relativ redirect fra feil domene.
 - Før `hasExtension`: `/www/index.html` har utvidelse `.html`, og ville ellers bli sendt gjennom til S3 (404) uten denne sjekken.
 
-`var qs` deklareres øverst i `handler()` sammen med `uri` og `host` (ikke inline i blokken) for å følge eksisterende stil og unngå implisitt hoisting.
+`var qs = event.request.querystring` deklareres øverst i `handler()` sammen med `uri` og `host` — ikke inline i blokken. To grunner:
+1. Følger eksisterende stil (`uri` og `host` deklareres øverst).
+2. `buildQuerySuffix(event.request.querystring)` i www-redirect-blokken refererer allerede til `event.request.querystring` direkte. Hvis `qs` ikke er deklarert der, vil en fremtidig refaktorering av denne linjen bryte kjeden. Med `var qs` øverst er det én autoritativ referanse.
+
+I CloudFront JS 2.0-runtime er `event.request.querystring` alltid et objekt (aldri `null`/`undefined`) — selv når URL-en ikke har query-parametere er verdien `{}`. Guarden `qs &&` er derfor overflødig; `if (qs.page)` er tilstrekkelig.
 
 ```js
 // Legacy ?page=-redirects fra gammel jQuery SPA
-if (qs && qs.page) {
+if (qs.page) {
     var pageMap = {
         'kontakt': '/kontakt/',
         'behandlingstilbud': '/tjenester/',
@@ -99,9 +103,11 @@ describe('legacy ?page=-redirects (gammel jQuery SPA)', () => {
     it('?page=trygdeordninger → /tjenester/', () => { ... });
     it('?page=omoss → /tannleger/', () => { ... });
     it('path er irrelevant — /www/index.html?page=kontakt → /kontakt/', () => { ... });
-    it('ukjent ?page=-verdi sendes gjennom (ingen redirect)', () => { ... });
+    it('ukjent ?page=-verdi sendes gjennom (ingen redirect)', () => { ... }); // path f.eks. '/'
     it('multi-value ?page= sendes gjennom (ingen redirect)', () => {
-        const event = makeEvent('/www/index.html', 'www.tennerogtrivsel.no',
+        // Bruker '/' som URI — unngår path-redirect-blokken (/index.html, /www/index.html)
+        // og tester kun at multi-value ?page= ikke gir ?page=-redirect.
+        const event = makeEvent('/', 'www.tennerogtrivsel.no',
             { page: { multiValue: [{ value: 'kontakt' }, { value: 'omoss' }] } });
         expect(handler(event)).not.toHaveProperty('statusCode');
     });
