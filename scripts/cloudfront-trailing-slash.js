@@ -1,10 +1,10 @@
 // CloudFront Function (viewer-request): samlet viewer-request-logikk for default behavior.
 // 1. Non-kanoniske domener (ikke www.tennerogtrivsel.no) → https://www.tennerogtrivsel.no (301)
-// 2. /sitemap.xml → /sitemap-index.xml (301)
-// 3. URIer uten avsluttende skråstrek og uten filutvidelse → URI/ (301)
-// 4. URIer med avsluttende skråstrek (unntatt rot) → legg til index.html (S3 REST serverer ikke kataloger)
-// 5. ?page=X → ny sti (legacy jQuery SPA redirects) (301)
-// 6. /index.html, /www/index.html → / (301)
+// 2. ?page=X → ny sti (legacy jQuery SPA redirects) (301)
+// 3. /index.html, /www/index.html → / (301)
+// 4. /sitemap.xml → /sitemap-index.xml (301)
+// 5. URIer uten avsluttende skråstrek og uten filutvidelse → URI/ (301)
+// 6. URIer med avsluttende skråstrek (unntatt rot) → legg til index.html (S3 REST serverer ikke kataloger)
 // Kjøretid: cloudfront-js-2.0 (ES5.1-kompatibel)
 // CloudFront URL-encodes querystring values before delivering them to the function,
 // so v.value and v.multiValue[n].value are already %XX-encoded — no re-encoding needed.
