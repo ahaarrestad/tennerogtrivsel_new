@@ -64,7 +64,7 @@
   - Tiltak: dokumenter DPA-status i internkontrollmappen (relevant når kontaktskjema aktiveres)
   - Alvorlighetsnivå: Lav
 
-- [ ] **Redirects for legacy-URLer fra gammel nettside** — *ingen plan ennå*
+- [ ] **Redirects for legacy-URLer fra gammel nettside** ([plan](docs/plans/2026-05-30-legacy-url-redirects.md))
   - Gamle URLer på formen `/www/index.html?page=trygdeordninger` gir 404 i dag
   - Disse skal redirectes til tilsvarende sider på ny nettside (301 Permanent Redirect)
   - Eksempel: `https://www.tennerogtrivsel.no/www/index.html?page=trygdeordninger` → ny side
