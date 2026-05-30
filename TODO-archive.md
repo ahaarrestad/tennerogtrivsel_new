@@ -2,6 +2,11 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Redirects for legacy-URLer fra gammel nettside** ([plan](docs/plans/archive/2026-05-30-legacy-url-redirects.md))
+  - Lagt til `?page=`-redirect-blokk i `cloudfront-trailing-slash.js` og `.mjs` — mapper kontakt/behandlingstilbud/trygdeordninger/omoss til nye URL-er og /index.html + /www/index.html til /
+  - TDD: 11 nye tester, 47/47 grønne, 97% branch coverage
+  - Verifisert i prod med curl — alle redirects svarer `301` med korrekt `location`-header
+
 - [x] **Fiks GSI silent-refresh popup-feil i admin** ([plan](docs/superpowers/plans/archive/2026-05-24-gsi-popup-fix.md)) ([spec](docs/superpowers/specs/archive/2026-05-24-gsi-popup-fix-design.md))
   - Fjernet `silentLogin()` fra `hadRememberMe`-stien i `admin-init.js` — kallet skjedde uten brukergest og fikk GSI til å prøve `window.open()` som nettleseren blokkerte
   - Innloggingsskjermen vises nå umiddelbart med «Husk meg» forhåndskrysset; `silentLogin()` beholdes i `admin-api-retry.js` for midt-sesjon token-fornyelse
