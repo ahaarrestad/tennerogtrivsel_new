@@ -65,10 +65,9 @@
   - Alvorlighetsnivå: Lav
 
 - [ ] **Redirects for legacy-URLer fra gammel nettside** ([plan](docs/plans/2026-05-30-legacy-url-redirects.md))
-  - Gamle URLer på formen `/www/index.html?page=trygdeordninger` gir 404 i dag
-  - Disse skal redirectes til tilsvarende sider på ny nettside (301 Permanent Redirect)
-  - Eksempel: `https://www.tennerogtrivsel.no/www/index.html?page=trygdeordninger` → ny side
-  - Kartlegg alle kjente legacy-URLer og lag redirect-regler i CloudFront eller som statiske redirect-filer
+  - Gamle `?page=X`-URLer (jQuery SPA) gir 404 — logikken gikk tapt ved konsolidering av CloudFront-funksjoner
+  - Løsning: legg til `?page=`-redirect-blokk i `cloudfront-trailing-slash.js` (se plan for URL-mapping og TDD-steg)
+  - Deploy skjer automatisk via CI/CD ved push til `main`
 
 - [ ] **SEO: Forbedre meta descriptions** — *ingen plan ennå*
   - Noen sider har for korte meta descriptions, noe som gir lavere synlighet i søkeresultater

@@ -42,6 +42,8 @@ if (qs && qs.page) {
         'trygdeordninger': '/tjenester/',
         'omoss': '/tannleger/'
     };
+    // qs.page.value er kun definert for enkelt-verdi — ved multi-value er .value undefined,
+    // pageMap-oppslaget gir undefined, og if (newPath) faller gjennom (ingen redirect).
     var newPath = pageMap[qs.page.value];
     if (newPath) {
         return {
@@ -98,6 +100,11 @@ describe('legacy ?page=-redirects (gammel jQuery SPA)', () => {
     it('?page=omoss → /tannleger/', () => { ... });
     it('path er irrelevant — /www/index.html?page=kontakt → /kontakt/', () => { ... });
     it('ukjent ?page=-verdi sendes gjennom (ingen redirect)', () => { ... });
+    it('multi-value ?page= sendes gjennom (ingen redirect)', () => {
+        const event = makeEvent('/www/index.html', 'www.tennerogtrivsel.no',
+            { page: { multiValue: [{ value: 'kontakt' }, { value: 'omoss' }] } });
+        expect(handler(event)).not.toHaveProperty('statusCode');
+    });
     it('statusCode er 301 og statusDescription er Moved Permanently', () => { ... });
 });
 ```
@@ -136,6 +143,8 @@ CloudFront Functions deployes **automatisk via CI/CD** — ingen manuell AWS Con
 ```
 
 Scriptet kjøres etter at koden er pushet til `main` og alle tester har passert. Det oppdaterer og publiserer funksjonen `sitemap_redirect` idempotent. Endringer i `cloudfront-trailing-slash.js` er altså live etter neste godkjente push.
+
+> **Navneforklaring:** Funksjonen heter `sitemap_redirect` av historiske årsaker — det var det første den håndterte. Den dekker nå all viewer-request-logikk (www-redirect, trailing-slash, legacy-redirects m.m.).
 
 ## Manuelle verifiseringssteg etter deploy
 
