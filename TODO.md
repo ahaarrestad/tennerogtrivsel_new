@@ -65,6 +65,12 @@
   - Alvorlighetsnivå: Lav
 
 
+- [ ] **Target-lengde på innstillinger med live teller** — *ingen plan ennå*
+  - Gjør det mulig å sette en anbefalt mållengde (f.eks. 130–160 tegn) på utvalgte innstillinger (f.eks. `siteDescription`, `tannlegerBeskrivelse`, `galleriBeskrivelse`)
+  - Mållengden lagres i Google Sheets (eget felt per innstilling, f.eks. ekstra kolonne)
+  - Vises i admin-UI med en live tegneller og visuell indikator (grønn/gul/rød) mens brukeren skriver
+  - Relevant for SEO-felter der lengde på meta description har betydning for SERP-visning
+
 - [ ] **Footer på prisliste-utskrift med tannlegenavn** ([plan](docs/plans/2026-05-30-prisliste-print-footer.md))
   - Legg til footer i print-visningen av prislisten som viser navnene på alle tannlegene
   - Hent tannlegenavn dynamisk fra eksisterende datakilde (Google Sheets/tannleger-lista)
