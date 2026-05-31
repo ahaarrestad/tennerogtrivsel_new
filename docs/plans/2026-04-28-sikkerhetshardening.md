@@ -479,10 +479,14 @@ Mange CDN-er er allowlistet i middleware (`cdn.jsdelivr.net`, `unpkg.com`, `cdnj
 
   Verifiser at `PUBLIC_GOOGLE_API_KEY`:
   - Er **HTTP referrer-restricted** til `https://tennerogtrivsel.no/*` og evt. test-domene
-  - Har **API restrictions** til kun de Google APIs den trenger (Drive thumbnails?)
+  - Har **API restrictions** til kun Drive API og Sheets API
   - Har quota-begrensning satt
 
-- [ ] **Steg 9.2: Dokumenter i `docs/architecture/sikkerhet.md`**
+  Se prosedyre og verifiseringskommando i `docs/architecture/sikkerhet.md`.
+
+- [x] **Steg 9.2: Dokumenter i `docs/architecture/sikkerhet.md`**
+
+  Lagt til seksjon «PUBLIC_GOOGLE_API_KEY — klient-side API-nøkkel» med restriksjoner, konfigurasjonsprosedyre og verifiseringskommando.
 
 ---
 
