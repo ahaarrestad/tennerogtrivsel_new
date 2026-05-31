@@ -493,9 +493,9 @@ Mange CDN-er er allowlistet i middleware (`cdn.jsdelivr.net`, `unpkg.com`, `cdnj
 
 Drive-oppdateringer trigger en build som hopper over unit/E2E. Hvis en kompromittert dep snek seg inn mellom siste push og denne triggeren, deployer vi rett til prod.
 
-- [ ] **Steg 10.1: Endre `deploy.yml` til alltid å kreve `unit-tests` og `e2e-tests`**
+- [x] **Steg 10.1: Løst ved arkitekturbeslutning — ingen kodeendring nødvendig**
 
-  Fjern `repository_dispatch`-spesialcasingen i `build`-jobben. Også for Drive-driftet bygg skal tester kjøre.
+  `repository_dispatch` bygger kun kode som allerede er på `main` og har passert alle tester via PR-flyten. Deps endres aldri i en Drive-triggered build — det skjer kun via PRs til main (beskyttet branch). Ekstra testkjøring ville doble byggetiden uten sikkerhetsmessig gevinst. Akseptert risiko dokumentert.
 
 ---
 

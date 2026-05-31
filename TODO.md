@@ -17,7 +17,7 @@
   - Task 1, 4–9 er fullført. Gjenstående tasks:
   - **Task 2:** SHA-pin GitHub Actions i alle workflows + Dependabot github-actions-ecosystem
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
-  - **Task 10:** Kjør unit- og e2e-tester før `repository_dispatch`-builds (Drive-triggered deploys hopper over tester i dag)
+  - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
   - **Task 11:** Audit `innerHTML`-template-strings i admin — klassifiser, wrap risikable med DOMPurify/escapeHtml, lag ESLint-regel
   - **Task 12:** Oppdater `docs/architecture/sikkerhet.md` + lag `docs/runbooks/supply-chain-incident.md`
 
