@@ -13,6 +13,11 @@
 
 ## Pågående
 
+- [ ] **Ustabile E2E-tester: Mobile Safari color-contrast** ([plan](docs/plans/2026-05-31-stabile-e2e-tester.md))
+  - `[Mobile Safari] accessibility.spec.ts › tjeneste-sider` feiler sporadisk med color-contrast-brudd
+  - Root cause: `setViewportSize({ width: 1280, height: 800 })` etter iPhone 14-viewport gir hybridtilstand i WebKit
+  - Fix: fjern unødvendig `setViewportSize`-kall fra testen
+
 - [ ] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/2026-04-28-sikkerhetshardening.md))
   - Audit 2026-04-28 fant 2 kritiske, 4 høye og 4 medium funn. Bruker er mest bekymret for supply-chain.
   - Kritisk: Dependabot auto-merge for runtime-deps (F1), CSP mangler i CloudFront-prod (F2)
