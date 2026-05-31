@@ -2,6 +2,14 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Target-lengde på innstillinger med live teller** ([plan](docs/plans/archive/2026-05-31-settings-target-length.md))
+  - Kolonne E i Innstillinger-arket leses som `targetLength` (streng, f.eks. `"130-160"` eller `"160"`)
+  - `parseTargetLength()` parser formatet til `{ min, max }` — `undefined`/`null`/`0`/ugyldig → `null`
+  - Live tegneller rendres under feltet (både `<input>` og `<textarea>`) med fargeklasse: grå (nøytral), gul (under min), grønn (innenfor), rød (over max)
+  - Ingen teller i reorder-modus eller for innstillinger uten target
+  - Nye CSS-tokens: `--color-admin-ok/warn/error` i `global.css`
+  - TDD: 22 nye tester (admin-sheets + admin-module-settings), 1525/1525 grønne, ≥ 80% branch coverage
+
 - [x] **Footer på prisliste-utskrift med tannlegenavn** ([plan](docs/plans/archive/2026-05-30-prisliste-print-footer.md))
   - `getCollection('tannleger')` i frontmatter, navn jointet med ` · ` (U+00B7)
   - `<div class="prisliste-footer-print">` med `tannleger.length > 0`-guard, skjult i screen, `position: fixed; bottom: 0` i print
