@@ -28,6 +28,10 @@
   - ~~Task 2 (F4): SHA-pin GitHub Actions + Dependabot github-actions-ecosystem — ferdig 2026-05-17~~
   - Neste: Task 9 (F10): Verifiser PUBLIC_GOOGLE_API_KEY-restriksjoner i Google Cloud Console
 
+- [ ] **Footer på prisliste-utskrift med tannlegenavn** ([plan](docs/plans/2026-05-30-prisliste-print-footer.md))
+  - Legg til footer i print-visningen av prislisten som viser navnene på alle tannlegene
+  - Hent tannlegenavn dynamisk fra eksisterende datakilde (Google Sheets/tannleger-lista)
+
 ## Backlog
 
 
@@ -65,15 +69,12 @@
   - Alvorlighetsnivå: Lav
 
 
-- [ ] **Target-lengde på innstillinger med live teller** — *ingen plan ennå*
+- [ ] **Target-lengde på innstillinger med live teller** ([plan](docs/plans/2026-05-31-settings-target-length.md))
   - Gjør det mulig å sette en anbefalt mållengde (f.eks. 130–160 tegn) på utvalgte innstillinger (f.eks. `siteDescription`, `tannlegerBeskrivelse`, `galleriBeskrivelse`)
   - Mållengden lagres i Google Sheets (eget felt per innstilling, f.eks. ekstra kolonne)
   - Vises i admin-UI med en live tegneller og visuell indikator (grønn/gul/rød) mens brukeren skriver
   - Relevant for SEO-felter der lengde på meta description har betydning for SERP-visning
 
-- [ ] **Footer på prisliste-utskrift med tannlegenavn** ([plan](docs/plans/2026-05-30-prisliste-print-footer.md))
-  - Legg til footer i print-visningen av prislisten som viser navnene på alle tannlegene
-  - Hent tannlegenavn dynamisk fra eksisterende datakilde (Google Sheets/tannleger-lista)
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
