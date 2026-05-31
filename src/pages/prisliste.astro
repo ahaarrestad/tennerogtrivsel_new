@@ -8,6 +8,8 @@ import { formatPris } from '../utils/format-pris.js';
 import { findColumnSplitIndex } from '../utils/column-split.js';
 
 const rawPrisliste = await getCollection('prisliste');
+const tannleger = await getCollection('tannleger');
+const tannlegenavn = tannleger.map(t => t.data.name).join(' · ');
 
 const kategoriOrderMap = new Map(
     (prislisteJson.kategoriOrder ?? []).map(k => [k.kategori, k.order])
@@ -147,6 +149,12 @@ if (sistOppdatert) {
                     ))}
                 </div>
             </div>
+
+            {tannleger.length > 0 && (
+                <div class="prisliste-footer-print">
+                    {tannlegenavn}
+                </div>
+            )}
         </div>
     </div>
 </Layout>
@@ -154,6 +162,7 @@ if (sistOppdatert) {
 <style is:global>
     .not-print { display: none; }
     .prisliste-print { display: none; }
+    .prisliste-footer-print { display: none; }
 
     .prisliste-rad {
         display: flex;
@@ -200,7 +209,7 @@ if (sistOppdatert) {
         }
 
         body {
-            padding: 0.5cm 1.2cm !important;
+            padding: 0.5cm 1.2cm 0.9cm !important;
             min-height: auto !important;
             font-size: 8pt;
             line-height: 1.25;
@@ -283,6 +292,19 @@ if (sistOppdatert) {
 
         .print-rad-border {
             border-bottom: 0.5px solid var(--color-brand-border);
+        }
+
+        .prisliste-footer-print {
+            display: block;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0.15cm 1.2cm 0.3cm;
+            font-size: 7pt;
+            color: var(--color-brand-hover);
+            text-align: center;
+            border-top: 0.5px solid var(--color-brand-border);
         }
     }
 </style>
