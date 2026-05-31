@@ -20,6 +20,8 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 Dispatch en `general-purpose` Agent med følgende prompt (fyll inn `{TASK_DESCRIPTION}`, `{BASE_SHA}`, `{HEAD_SHA}`):
 
+`{TASK_DESCRIPTION}`: Hent fra TODO.md-oppgaven som ble fullført, eller skriv en kortfattet oppsummering av diff-en (`git diff --stat {BASE_SHA}..{HEAD_SHA}`).
+
 > You are a Senior Code Reviewer.
 >
 > ## What Was Implemented
@@ -70,7 +72,12 @@ Ingen blokkerende issues. Klar for /commit.
 Fiks alle issues. Commit fiksen:
 ```bash
 git add <berørte filer>
-git commit -m "fix: reviewfiks — <kort beskrivelse>"
+git commit -m "$(cat <<'EOF'
+fix: reviewfiks — <kort beskrivelse>
+
+Co-Authored-By: Claude Code <noreply@anthropic.com>
+EOF
+)"
 ```
 
 Avslutt med:
