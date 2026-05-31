@@ -310,7 +310,7 @@ API-restriksjoner:
 - `sheets.googleapis.com`
 - `drive.googleapis.com`
 
-**Kvotegrenser:** Settes per API under **Google Cloud Console → API-er og tjenester → Kvote og systemgrenser**, ikke per nøkkel. Kvoter er ikke konfigurert utover Google-defaults per 2026-05-31.
+**Kvotegrenser:** Settes per API under **Google Cloud Console → API-er og tjenester → Kvote og systemgrenser**, ikke per nøkkel. Google-defaults er tilstrekkelige for nåværende admin-bruksvolum (akseptert risiko — se tabellen under).
 
 **Oppdatere restriksjoner (ved nye domener o.l.):**
 
@@ -332,7 +332,7 @@ gcloud alpha services api-keys update "$KEY" \
 # Uten gyldig referrer skal svaret være 403:
 curl "https://www.googleapis.com/drive/v3/files?key=<NØKKEL>" \
   -H "Referer: https://evil.com/"
-# Forventet: {"error": {"code": 403, "message": "Requests from referer <empty> are blocked."}}
+# Forventet: {"error": {"code": 403, "message": "Requests from referer 'https://evil.com/' are blocked."}}
 ```
 
 **Hvorfor API-restriksjoner er viktig selv med referrer-sjekk:** En angriper kan forfalske `Referer`-header fra serversiden. API-restriksjoner begrenser hvilke Google-tjenester nøkkelen gir tilgang til — en lekket nøkkel kan da ikke brukes mot andre Google APIs.
