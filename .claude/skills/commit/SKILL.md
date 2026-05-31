@@ -75,12 +75,15 @@ If any file is below 80% → **STOP**. Write tests before committing.
 # som ikke er whitelistet. dev:secure bygger prod, genererer hashes, starter Vite.
 lsof -ti:4321 | xargs kill -9 2>/dev/null; sleep 1
 npm run dev:secure > /tmp/dev-secure.log 2>&1 &
-for i in $(seq 1 30); do
+for i in $(seq 1 45); do
   sleep 2
   curl -s http://localhost:4321/admin -o /dev/null -w "%{http_code}" 2>/dev/null | grep -q "200\|301\|302" && break
 done
 curl -sf http://localhost:4321/admin -o /dev/null || { echo "dev:secure failed to start"; exit 1; }
 npm run test:e2e 2>&1
+E2E_EXIT=$?
+lsof -ti:4321 | xargs kill -9 2>/dev/null || true
+[ $E2E_EXIT -ne 0 ] && exit $E2E_EXIT
 ```
 
 If any E2E test fails → **STOP**. Do not commit.
@@ -100,11 +103,6 @@ npm audit --audit-level=critical 2>&1
 If critical vulnerabilities found → **STOP**.
 
 Only proceed to Step 3 when **all five checks pass**.
-
-After Step 3 (or on any STOP above), clean up the dev server:
-```bash
-lsof -ti:4321 | xargs kill -9 2>/dev/null || true
-```
 
 ## Step 3: Stage Files
 
@@ -179,14 +177,16 @@ Run with `dangerouslyDisableSandbox: true`. Restart dev:secure (may have been cl
 ```bash
 lsof -ti:4321 | xargs kill -9 2>/dev/null; sleep 1
 npm run dev:secure > /tmp/dev-secure.log 2>&1 &
-for i in $(seq 1 30); do
+for i in $(seq 1 45); do
   sleep 2
   curl -s http://localhost:4321/admin -o /dev/null -w "%{http_code}" 2>/dev/null | grep -q "200\|301\|302" && break
 done
 curl -sf http://localhost:4321/admin -o /dev/null || { echo "dev:secure failed to start"; exit 1; }
 npm test 2>&1
 npm run test:e2e 2>&1
+E2E_EXIT=$?
 lsof -ti:4321 | xargs kill -9 2>/dev/null || true
+[ $E2E_EXIT -ne 0 ] && exit $E2E_EXIT
 ```
 
 If any test fails → **STOP**. Do not push. Fix and commit before retrying.
