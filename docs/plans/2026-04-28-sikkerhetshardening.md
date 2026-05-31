@@ -475,14 +475,13 @@ Mange CDN-er er allowlistet i middleware (`cdn.jsdelivr.net`, `unpkg.com`, `cdnj
 
 ## Task 9: Verifiser `PUBLIC_GOOGLE_API_KEY`-restriksjoner (F10)
 
-- [ ] **Steg 9.1: Sjekk Google Cloud Console**
+- [x] **Steg 9.1: Oppdater og verifiser restriksjoner via gcloud (2026-05-31)**
 
-  Verifiser at `PUBLIC_GOOGLE_API_KEY`:
-  - Er **HTTP referrer-restricted** til `https://tennerogtrivsel.no/*` og evt. test-domene
-  - Har **API restrictions** til kun Drive API og Sheets API
-  - Har quota-begrensning satt
-
-  Se prosedyre og verifiseringskommando i `docs/architecture/sikkerhet.md`.
+  Bekreftet og oppdatert via `gcloud alpha services api-keys update`:
+  - 11 referrer-mønstre (alle CloudFront-domener + test + localhost)
+  - API-restriksjoner: kun `sheets.googleapis.com` og `drive.googleapis.com`
+  - Fjernet overflødig `maps-embed-backend.googleapis.com`
+  - Lagt til `https://test3.aarrestad.com/*` som manglet
 
 - [x] **Steg 9.2: Dokumenter i `docs/architecture/sikkerhet.md`**
 

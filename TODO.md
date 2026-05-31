@@ -26,8 +26,8 @@
   - ~~Task 8 steg 8.3 (F7): `unsafe-inline` erstattet med SHA256-hashes i script-src — ferdig 2026-05-03~~
   - ~~Task 7 (F6): admin-token til sessionStorage, rememberMe-flagg, X-Robots-Tag noindex — ferdig 2026-05-06~~
   - ~~Task 2 (F4): SHA-pin GitHub Actions + Dependabot github-actions-ecosystem — ferdig 2026-05-17~~
-  - ~~Task 9 (F10) dokumentasjon: Lagt til PUBLIC_GOOGLE_API_KEY-seksjon i sikkerhet.md — ferdig 2026-05-31~~
-  - Neste: Task 9 (F10) manuell verifisering: Sett HTTP referrer-restriksjoner + API-restriksjoner i Google Cloud Console (se sikkerhet.md)
+  - ~~Task 9 (F10): PUBLIC_GOOGLE_API_KEY verifisert og oppdatert via gcloud — 11 referrer-mønstre, kun Drive+Sheets API, maps-embed fjernet — ferdig 2026-05-31~~
+  - Neste: Task 10 (F11): Kjør tester før repository_dispatch-builds
 
 ## Backlog
 
