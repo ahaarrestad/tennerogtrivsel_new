@@ -291,9 +291,16 @@ OAuth-access-token lagres alltid i `sessionStorage` — aldri i `localStorage`. 
 
 **Nødvendige restriksjoner i Google Cloud Console:**
 
-1. **HTTP referrer-restriksjoner** — kun tillat kall fra:
+1. **HTTP referrer-restriksjoner** — kun tillat kall fra (alle prod-domener fra CloudFront-distribusjonene + lokal dev):
+   - `https://www.tennerogtrivsel.no/*`
    - `https://tennerogtrivsel.no/*`
-   - `https://test2.aarrestad.com/*` (testmiljø)
+   - `https://www.tennerogtrivsel.net/*`
+   - `https://tennerogtrivsel.net/*`
+   - `https://www.tennerogtrivsel.com/*`
+   - `https://tennerogtrivsel.com/*`
+   - `https://test2.aarrestad.com/*`
+   - `https://test3.aarrestad.com/*`
+   - `http://localhost:4321/*`
 
 2. **API-restriksjoner** — begrens til kun:
    - Google Drive API
@@ -305,7 +312,7 @@ OAuth-access-token lagres alltid i `sessionStorage` — aldri i `localStorage`. 
 
 1. Google Cloud Console → **API-er og tjenester → Legitimasjon**
 2. Klikk på nøkkelen som tilsvarer `PUBLIC_GOOGLE_API_KEY`
-3. Under **Nøkkelrestriksjoner → HTTP referrers** — legg til domene-mønstrene over
+3. Under **Nøkkelrestriksjoner → HTTP referrers** — legg til alle domene-mønstrene over
 4. Under **API-restriksjoner** — velg «Begrens nøkkel» og velg Drive API + Sheets API
 5. Lagre
 
@@ -316,10 +323,10 @@ OAuth-access-token lagres alltid i `sessionStorage` — aldri i `localStorage`. 
 curl "https://www.googleapis.com/drive/v3/files?key=<nøkkelen>" \
   -H "Referer: https://evil.com/"
 # Forventet: {"error": {"code": 403, "message": "Requests from referer <empty> are blocked."}}
-# Uten restriksjoner returnerer dette 200 — testen er kun meningsfull etter steg 4 over.
+# Uten restriksjoner returnerer dette 200 — testen er kun meningsfull etter at restriksjonene er satt.
 ```
 
-Admin-funksjonaliteten er upåvirket fordi alle browser-kall fra `tennerogtrivsel.no` sender korrekt `Referer`-header.
+Admin-funksjonaliteten er upåvirket fordi alle browser-kall fra de tillatte domenene sender korrekt `Referer`-header automatisk.
 
 **Hvorfor API-restriksjoner er viktig selv med referrer-sjekk:** En angriper kan forfalske `Referer`-header fra serversiden. API-restriksjoner begrenser hvilke Google-tjenester nøkkelen gir tilgang til — en lekket nøkkel kan da ikke brukes mot andre Google APIs.
 
