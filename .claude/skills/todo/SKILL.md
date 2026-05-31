@@ -72,16 +72,17 @@ Når brukeren ber om å starte eller flytte en oppgave fra Backlog — **aldri g
      - Testbehov og definition of done
      - Kjente risiki eller usikkerheter
    - Skriv planfilen til `docs/plans/YYYY-MM-DD-<topic>.md` og oppdater oppgaven i TODO.md med lenken.
-3. **Plan-review (alltid — uansett om planen er ny eller eksisterende)**
+3. **Plan-review (alltid, ny eller eksisterende)**
 
-   Gjennomgå planen mot disse kriteriene *før* den presenteres for brukeren:
-   - [ ] Mål og avgrensninger er klare (hva er eksplisitt *ikke* med)
-   - [ ] Konkrete steg med navn på filer som berøres
-   - [ ] Testbehov definert (hvilke tester trengs, hva er definition of done)
-   - [ ] Kjente risiki eller usikkerheter er nevnt
-   - [ ] Ingen åpne spørsmål som blokkerer implementasjon
+   Gjennomgå planen mot disse kriteriene *før* den presenteres for brukeren. For hvert punkt: skriv én setning om hvordan planen oppfyller det, eller hva du la til for å oppfylle det.
 
-   Hvis ett eller flere kriterier ikke er oppfylt: fyll gapet i planfilen (eller planforslaget) **nå**. Presenter aldri en ufullstendig plan.
+   1. Mål og avgrensninger er klare (hva er eksplisitt *ikke* med)
+   2. Konkrete steg med navn på filer som berøres
+   3. Testbehov definert (hvilke tester trengs, hva er definition of done)
+   4. Kjente risiki eller usikkerheter er nevnt
+   5. Ingen åpne spørsmål som blokkerer implementasjon
+
+   Hvis ett eller flere kriterier ikke er oppfylt: fyll gapet i planfilen **nå**. Presenter aldri en ufullstendig plan.
 
 4. Presenter planen og vent på eksplisitt godkjenning («ok», «kjør», «ser bra ut» el.l.)
    - Ikke gå videre til Fase 2 uten godkjenning — ikke anta stilltiende samtykke
