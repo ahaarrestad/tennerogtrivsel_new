@@ -70,19 +70,27 @@ process.exit(fail ? 1 : 0);
 If any file is below 80% → **STOP**. Write tests before committing.
 
 ```bash
-# 3. E2E tests — KREVER dev:secure-server med korrekte CSP-hashes
-# En gammel server (npm run dev) gir CSP-feil fordi Vite injiserer inline scripts
-# som ikke er whitelistet. dev:secure bygger prod, genererer hashes, starter Vite.
-lsof -ti:4321 | xargs kill -9 2>/dev/null; sleep 1
-npm run dev:secure > /tmp/dev-secure.log 2>&1 &
-for i in $(seq 1 45); do
-  sleep 2
-  curl -s http://localhost:4321/admin -o /dev/null -w "%{http_code}" 2>/dev/null | grep -q "200\|301\|302" && break
-done
-curl -sf http://localhost:4321/admin -o /dev/null || { echo "dev:secure failed to start"; exit 1; }
-npm run test:e2e 2>&1
+# 3. E2E tests — krever dev:secure med korrekte CSP-hashes.
+# Bruker PORT env var (default 4321). Sett PORT=4322 e.l. per worktree.
+# Dreper IKKE en eksisterende secure server — sjekker CSP-header først.
+PORT=${PORT:-4321}
+STARTED_SERVER=false
+if curl -sf "http://localhost:$PORT/admin" -o /dev/null 2>/dev/null && \
+   curl -s -I "http://localhost:$PORT/" 2>/dev/null | grep -qi "content-security-policy.*sha256-"; then
+  echo "Reusing existing dev:secure on port $PORT"
+else
+  lsof -ti:$PORT | xargs kill -9 2>/dev/null || true; sleep 1
+  PORT=$PORT npm run dev:secure > /tmp/dev-secure.log 2>&1 &
+  STARTED_SERVER=true
+  for i in $(seq 1 45); do
+    sleep 2
+    curl -s "http://localhost:$PORT/admin" -o /dev/null -w "%{http_code}" 2>/dev/null | grep -q "200\|301\|302" && break
+  done
+  curl -sf "http://localhost:$PORT/admin" -o /dev/null || { echo "dev:secure failed to start"; exit 1; }
+fi
+PORT=$PORT npm run test:e2e 2>&1
 E2E_EXIT=$?
-lsof -ti:4321 | xargs kill -9 2>/dev/null || true
+[ "$STARTED_SERVER" = true ] && { lsof -ti:$PORT | xargs kill -9 2>/dev/null || true; }
 [ $E2E_EXIT -ne 0 ] && exit $E2E_EXIT
 ```
 
@@ -172,20 +180,30 @@ Dispatch a `general-purpose` Agent with this prompt (fill placeholders):
 ## Step 5: Push (Only If Requested)
 
 **Before pushing, re-run tests** — code review fixes may have changed code since Step 2.5.
-Run with `dangerouslyDisableSandbox: true`. Restart dev:secure (may have been cleaned up after Step 2.5):
+Run with `dangerouslyDisableSandbox: true`. Uses PORT env var (default 4321), reuses existing secure server if running.
 
 ```bash
-lsof -ti:4321 | xargs kill -9 2>/dev/null; sleep 1
-npm run dev:secure > /tmp/dev-secure.log 2>&1 &
-for i in $(seq 1 45); do
-  sleep 2
-  curl -s http://localhost:4321/admin -o /dev/null -w "%{http_code}" 2>/dev/null | grep -q "200\|301\|302" && break
-done
-curl -sf http://localhost:4321/admin -o /dev/null || { echo "dev:secure failed to start"; exit 1; }
+PORT=${PORT:-4321}
+STARTED_SERVER=false
+if curl -sf "http://localhost:$PORT/admin" -o /dev/null 2>/dev/null && \
+   curl -s -I "http://localhost:$PORT/" 2>/dev/null | grep -qi "content-security-policy.*sha256-"; then
+  echo "Reusing existing dev:secure on port $PORT"
+else
+  lsof -ti:$PORT | xargs kill -9 2>/dev/null || true; sleep 1
+  PORT=$PORT npm run dev:secure > /tmp/dev-secure.log 2>&1 &
+  STARTED_SERVER=true
+  for i in $(seq 1 45); do
+    sleep 2
+    curl -s "http://localhost:$PORT/admin" -o /dev/null -w "%{http_code}" 2>/dev/null | grep -q "200\|301\|302" && break
+  done
+  curl -sf "http://localhost:$PORT/admin" -o /dev/null || { echo "dev:secure failed to start"; exit 1; }
+fi
 npm test 2>&1
-npm run test:e2e 2>&1
+UNIT_EXIT=$?
+PORT=$PORT npm run test:e2e 2>&1
 E2E_EXIT=$?
-lsof -ti:4321 | xargs kill -9 2>/dev/null || true
+[ "$STARTED_SERVER" = true ] && { lsof -ti:$PORT | xargs kill -9 2>/dev/null || true; }
+[ $UNIT_EXIT -ne 0 ] && exit $UNIT_EXIT
 [ $E2E_EXIT -ne 0 ] && exit $E2E_EXIT
 ```
 

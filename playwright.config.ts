@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const PORT = process.env.PORT ?? '4321';
+
 export default defineConfig({
   testDir: './tests',
   testIgnore: ['**/csp-check.spec.ts'],
@@ -9,7 +11,7 @@ export default defineConfig({
   workers: process.env.CI ? 4 : undefined,
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
-    baseURL: 'http://localhost:4321',
+    baseURL: `http://localhost:${PORT}`,
     trace: 'retain-on-failure',
   },
   projects: [
@@ -31,8 +33,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: process.env.CI ? 'npm run preview' : 'npm run dev',
-    url: 'http://localhost:4321/admin',
+    command: process.env.CI ? 'npm run preview' : `PORT=${PORT} npm run dev:secure`,
+    url: `http://localhost:${PORT}/admin`,
     reuseExistingServer: !process.env.CI,
   },
 });
