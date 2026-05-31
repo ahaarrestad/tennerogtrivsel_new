@@ -72,31 +72,42 @@ Når brukeren ber om å starte eller flytte en oppgave fra Backlog — **aldri g
      - Testbehov og definition of done
      - Kjente risiki eller usikkerheter
    - Skriv planfilen til `docs/plans/YYYY-MM-DD-<topic>.md` og oppdater oppgaven i TODO.md med lenken.
-3. Presenter planen og vent på eksplisitt godkjenning («ok», «kjør», «ser bra ut» el.l.)
+3. **Plan-review (alltid — uansett om planen er ny eller eksisterende)**
+
+   Gjennomgå planen mot disse kriteriene *før* den presenteres for brukeren:
+   - [ ] Mål og avgrensninger er klare (hva er eksplisitt *ikke* med)
+   - [ ] Konkrete steg med navn på filer som berøres
+   - [ ] Testbehov definert (hvilke tester trengs, hva er definition of done)
+   - [ ] Kjente risiki eller usikkerheter er nevnt
+   - [ ] Ingen åpne spørsmål som blokkerer implementasjon
+
+   Hvis ett eller flere kriterier ikke er oppfylt: fyll gapet i planfilen (eller planforslaget) **nå**. Presenter aldri en ufullstendig plan.
+
+4. Presenter planen og vent på eksplisitt godkjenning («ok», «kjør», «ser bra ut» el.l.)
    - Ikke gå videre til Fase 2 uten godkjenning — ikke anta stilltiende samtykke
    - Juster og presenter på nytt ved tilbakemelding — gjenta til brukeren godkjenner
 
 **Fase 2: Opprett worktree (etter godkjent plan)**
 
-4. Invoke `superpowers:using-git-worktrees` — sørger for isolert branch/worktree
-5. Flytt oppgaven fra **Backlog** til **Pågående** i TODO.md
-6. Bekreft hvilken branch/worktree som ble opprettet
+5. Invoke `superpowers:using-git-worktrees` — sørger for isolert branch/worktree
+6. Flytt oppgaven fra **Backlog** til **Pågående** i TODO.md
+7. Bekreft hvilken branch/worktree som ble opprettet
 
 **Fase 3: Implementasjon**
 
-7. Start implementasjonen i henhold til godkjent plan
+8. Start implementasjonen i henhold til godkjent plan
 
 **Fase 4: Review-gate (ALLTID etter implementasjon — ingen unntak)**
 
 Etter at implementasjonen er ferdig:
 
-8. Sett følgende `/goal` i neste svar:
+9. Sett følgende `/goal` i neste svar:
    ```
    /goal review-loop rapporterer REVIEW_LOOP: CLEAN
    ```
-9. Invoke `review-loop` — kjører én review-pass, fikser Critical/Important issues og committer fiksen
-10. `/goal`-systemet starter automatisk ny tur og kaller `review-loop` på nytt inntil betingelsen er møtt
-11. Først når `/goal` bekrefter at betingelsen er møtt: foreslå `/commit`
+10. Invoke `review-loop` — kjører én review-pass, fikser Critical/Important issues og committer fiksen
+11. `/goal`-systemet starter automatisk ny tur og kaller `review-loop` på nytt inntil betingelsen er møtt
+12. Først når `/goal` bekrefter at betingelsen er møtt: foreslå `/commit`
 
 **Forbudt:** Foreslå `/commit` før `/goal` har bekreftet at `review-loop` er ren.
 
