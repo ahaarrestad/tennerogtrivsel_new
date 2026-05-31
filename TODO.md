@@ -13,27 +13,6 @@
 
 ## Pågående
 
-- [ ] **Ustabile E2E-tester: Mobile Safari color-contrast** ([plan](docs/plans/2026-05-31-stabile-e2e-tester.md))
-  - `[Mobile Safari] accessibility.spec.ts › tjeneste-sider` feiler sporadisk med color-contrast-brudd
-  - Root cause: `setViewportSize({ width: 1280, height: 800 })` etter iPhone 14-viewport gir hybridtilstand i WebKit
-  - Fix: fjern unødvendig `setViewportSize`-kall fra testen
-
-- [ ] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/2026-04-28-sikkerhetshardening.md))
-  - Audit 2026-04-28 fant 2 kritiske, 4 høye og 4 medium funn. Bruker er mest bekymret for supply-chain.
-  - Kritisk: Dependabot auto-merge for runtime-deps (F1), CSP mangler i CloudFront-prod (F2)
-  - Høy: XSS via `formatInfoText` (F3), GitHub Actions ikke SHA-pinnet (F4), bredt PAT-scope (F5), admin-token i localStorage (F6)
-  - Medium: `unsafe-inline` i CSP (F7), mangler Permissions-Policy/HSTS (F8), ingen `npm audit signatures` (F9), `PUBLIC_GOOGLE_API_KEY` ikke verifisert restricted (F10)
-  - ~~Task 5 (F2, F8): CSP og security-headers til CloudFront — ferdig 2026-05-01~~
-  - ~~Task 1 (F1): Dependabot cooldown 3/7/30 dager og security-advisory splitt i auto-merge — ferdig 2026-05-02~~
-  - ~~Task 6 (F3): XSS-fix i formatInfoText — ferdig 2026-05-02~~
-  - ~~Task 4 (F9): npm audit signatures + critical-gate + --ignore-scripts i CI — ferdig 2026-05-03~~
-  - ~~Task 8 steg 8.1–8.2 (F7): ubrukte CDN-er fjernet fra CSP — ferdig 2026-05-03~~
-  - ~~Task 8 steg 8.3 (F7): `unsafe-inline` erstattet med SHA256-hashes i script-src — ferdig 2026-05-03~~
-  - ~~Task 7 (F6): admin-token til sessionStorage, rememberMe-flagg, X-Robots-Tag noindex — ferdig 2026-05-06~~
-  - ~~Task 2 (F4): SHA-pin GitHub Actions + Dependabot github-actions-ecosystem — ferdig 2026-05-17~~
-  - ~~Task 9 (F10): PUBLIC_GOOGLE_API_KEY verifisert og oppdatert via gcloud — 11 referrer-mønstre, kun Drive+Sheets API, maps-embed fjernet — ferdig 2026-05-31~~
-  - Neste: Task 10 (F11): Kjør tester før repository_dispatch-builds
-
 ## Backlog
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
