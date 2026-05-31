@@ -3,6 +3,8 @@ export function stripMarkdown(text: string): string {
     return text
         .replace(/<!--stackedit_data:[\s\S]*?-->/g, '')
         .replace(/^#{1,6}\s+/gm, '')
+        .replace(/^[\-*+]\s+/gm, '')
+        .replace(/^\d+\.\s+/gm, '')
         .replace(/\*\*([^*]+)\*\*/g, '$1')
         .replace(/__([^_]+)__/g, '$1')
         .replace(/\*([^*]+)\*/g, '$1')

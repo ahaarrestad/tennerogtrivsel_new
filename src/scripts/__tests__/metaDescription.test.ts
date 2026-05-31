@@ -41,6 +41,16 @@ describe('stripMarkdown', () => {
         expect(stripMarkdown('Text  with   extra   spaces')).toBe('Text with extra spaces');
     });
 
+    it('should remove unordered list prefixes', () => {
+        expect(stripMarkdown('- Tannbleking\n- Rotbehandling\n- Fyllinger')).toBe('Tannbleking Rotbehandling Fyllinger');
+        expect(stripMarkdown('* Tannbleking\n* Rotbehandling')).toBe('Tannbleking Rotbehandling');
+        expect(stripMarkdown('+ Tannbleking\n+ Rotbehandling')).toBe('Tannbleking Rotbehandling');
+    });
+
+    it('should remove ordered list prefixes', () => {
+        expect(stripMarkdown('1. Tannbleking\n2. Rotbehandling\n3. Fyllinger')).toBe('Tannbleking Rotbehandling Fyllinger');
+    });
+
     it('should handle combined markdown elements', () => {
         const input = '## Tjenester\n\nVi tilbyr **tannbleking** og _rotbehandling_.\n\n<!--stackedit_data:abc-->';
         expect(stripMarkdown(input)).toBe('Tjenester Vi tilbyr tannbleking og rotbehandling.');
