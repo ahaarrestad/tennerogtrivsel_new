@@ -2,6 +2,21 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/archive/2026-04-28-sikkerhetshardening.md))
+  - Audit 2026-04-28: 2 kritiske, 4 høye og 4 medium funn — alle F1–F10 lukket
+  - F1: Dependabot cooldown 3/7/30 dager + security-advisory splitt i auto-merge
+  - F2+F8: CSP og security-headers (HSTS, Permissions-Policy) til CloudFront-prod via idempotent setup-script
+  - F3: XSS-fix i `formatInfoText` — HTML-escape input før regex-erstatning
+  - F4: GitHub Actions SHA-pinnet i alle workflows + Dependabot github-actions-ecosystem
+  - F6: Admin OAuth-token til sessionStorage, rememberMe-flagg, X-Robots-Tag noindex på admin
+  - F7: `unsafe-inline` erstattet med SHA256-hashes + ubrukte CDN-er fjernet fra CSP
+  - F9: `npm audit signatures` + critical-gate + `--ignore-scripts` i CI
+  - F10: `PUBLIC_GOOGLE_API_KEY` verifisert restricted via gcloud — 11 referrer-mønstre, kun Drive+Sheets API
+
+- [x] **Ustabile E2E-tester: Mobile Safari color-contrast** ([plan](docs/plans/archive/2026-05-31-stabile-e2e-tester.md))
+  - `accessibility.spec.ts:39` satte `setViewportSize({ width: 1280, height: 800 })` etter iPhone 14-viewport — ga hybridtilstand i WebKit som trigget sporadiske color-contrast-avvik
+  - Fix: fjernet `setViewportSize`-kallet fra `tjeneste-sider`-testen
+
 - [x] **Target-lengde på innstillinger med live teller** ([plan](docs/plans/archive/2026-05-31-settings-target-length.md))
   - Kolonne E i Innstillinger-arket leses som `targetLength` (streng, f.eks. `"130-160"` eller `"160"`)
   - `parseTargetLength()` parser formatet til `{ min, max }` — `undefined`/`null`/`0`/ugyldig → `null`
