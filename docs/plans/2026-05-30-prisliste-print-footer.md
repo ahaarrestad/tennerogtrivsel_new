@@ -116,14 +116,14 @@ test.describe('Prisliste print-footer', () => {
     const footer = page.locator('.prisliste-footer-print');
     await expect(footer).toBeVisible();
     await expect(footer).not.toBeEmpty();
-    await expect(footer).toContainText('·');
+    // toContainText('·') kan legges til dersom det er garantert ≥2 tannleger i testdata
   });
 });
 ```
 
-**Merk — `toBeHidden()`:** Playwright's `toBeHidden()` returnerer `true` også når elementet ikke finnes i DOM. Guarden `tannleger.length > 0` i HTML-koden betyr at elementet aldri rendres ved tom samling — begge tester ville da passere (skjult-test korrekt, synlig-test ville feile ved `toBeVisible()`). I praksis vil samlingen alltid ha tannleger, men vær obs på dette i testmiljø med tom/mocka data.
+**Merk — `toBeHidden()`:** Playwright's `toBeHidden()` returnerer `true` også når elementet ikke finnes i DOM. Guarden `tannleger.length > 0` i HTML-koden betyr at elementet aldri rendres ved tom samling — skjult-testen ville da passere av feil grunn. **Anbefaling: aksepter risikoen** — testmiljøet vil alltid ha tannleger fra `src/content/tannleger.json`, og en tom samling ville feile andre steder i bygget lenge før Playwright kjører.
 
-**Merk — `toContainText('·')`:** Separatoren `·` vises kun når det er minst to tannleger. `not.toBeEmpty()` er den reelle minste-grensen. `toContainText('·')` er et tilleggssjekk som bekrefter flernavnsformatering — ikke en erstatning for `not.toBeEmpty()`.
+**Merk — `toContainText('·')`:** Assertionen er utelatt fra koden over fordi den feiler ved nøyaktig én tannlege. Legg den til dersom det er garantert minst to tannleger i testdata. `not.toBeEmpty()` er tilstrekkelig minste-krav.
 
 ## Testbehov
 
