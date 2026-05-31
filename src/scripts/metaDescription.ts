@@ -4,7 +4,7 @@ export function stripMarkdown(text: string): string {
         .replace(/<!--stackedit_data:[\s\S]*?-->/g, '')
         .replace(/^#{1,6}\s+/gm, '')
         .replace(/^[\-*+]\s+/gm, '')
-        .replace(/^\d+\.\s+/gm, '')
+        .replace(/^\d{1,2}\.\s+/gm, '')
         .replace(/\*\*([^*]+)\*\*/g, '$1')
         .replace(/__([^_]+)__/g, '$1')
         .replace(/\*([^*]+)\*/g, '$1')
