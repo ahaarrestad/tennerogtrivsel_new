@@ -8,6 +8,8 @@ test.describe('Prisliste print-footer', () => {
     test('footer er skjult i normal visning', async ({ page }) => {
         await page.goto('/prisliste');
         const footer = page.locator('.prisliste-footer-print');
+        // toBeHidden() er true også når element mangler i DOM.
+        // Det er OK her — testmiljøet har alltid tannleger fra tannleger.json.
         await expect(footer).toBeHidden();
     });
 
