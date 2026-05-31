@@ -86,6 +86,20 @@ Når brukeren ber om å starte eller flytte en oppgave fra Backlog — **aldri g
 
 7. Start implementasjonen i henhold til godkjent plan
 
+**Fase 4: Review-gate (ALLTID etter implementasjon — ingen unntak)**
+
+Etter at implementasjonen er ferdig:
+
+8. Sett følgende `/goal` i neste svar:
+   ```
+   /goal review-loop rapporterer REVIEW_LOOP: CLEAN
+   ```
+9. Invoke `review-loop` — kjører én review-pass, fikser Critical/Important issues og committer fiksen
+10. `/goal`-systemet starter automatisk ny tur og kaller `review-loop` på nytt inntil betingelsen er møtt
+11. Først når `/goal` bekrefter at betingelsen er møtt: foreslå `/commit`
+
+**Forbudt:** Foreslå `/commit` før `/goal` har bekreftet at `review-loop` er ren.
+
 ---
 
 ### Gjenoppta pågående oppgave

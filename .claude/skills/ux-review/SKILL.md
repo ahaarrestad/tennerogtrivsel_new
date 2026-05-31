@@ -1,8 +1,8 @@
 ---
 name: ux-review
-description: "Review a page or component for UX quality, accessibility, responsive design, and visual hierarchy. Use when the user says 'ux review', 'ux-gjennomgang', 'review design', 'sjekk UX', 'tilgjengelighet', 'a11y review', 'responsiv sjekk', or asks about the quality of a page's user experience. Also use when making visual or layout changes and you want to verify the result."
+description: "Use when the user says 'ux review', 'ux-gjennomgang', 'review design', 'sjekk UX', 'tilgjengelighet', 'a11y review', 'responsiv sjekk', or asks about the quality of a page's user experience. Also use when making visual or layout changes and you want to verify the result."
 disable-model-invocation: false
-allowed-tools: ["Read", "Glob", "Grep", "Bash(npx playwright:*)", "Bash(npx axe:*)", "Bash(npm run build:*)"]
+allowed-tools: ["Read", "Glob", "Grep", "Bash(npx playwright*)", "Bash(npx axe*)", "Bash(npm run build*)"]
 ---
 
 # UX Review Skill
