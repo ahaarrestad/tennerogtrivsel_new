@@ -2,6 +2,14 @@
 
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
+- [x] **Footer på prisliste-utskrift med tannlegenavn** ([plan](docs/plans/archive/2026-05-30-prisliste-print-footer.md))
+  - `getCollection('tannleger')` i frontmatter, navn jointet med ` · ` (U+00B7)
+  - `<div class="prisliste-footer-print">` med `tannleger.length > 0`-guard, skjult i screen, `position: fixed; bottom: 0` i print
+  - `padding-bottom: 0.9cm` på `body` i print — unngår overlapp med siste prisrader
+  - `background-color: white` på footer — hindrer innholdsbleed-through
+  - Playwright-test (Chromium only, `emulateMedia({ media: 'print' })`) i `tests/prisliste-print.spec.ts`
+  - Verifisert lokalt: 8 tannlegenavn vises korrekt i print-modus
+
 - [x] **Redirects for legacy-URLer fra gammel nettside** ([plan](docs/plans/archive/2026-05-30-legacy-url-redirects.md))
   - Lagt til `?page=`-redirect-blokk i `cloudfront-trailing-slash.js` og `.mjs` — mapper kontakt/behandlingstilbud/trygdeordninger/omoss til nye URL-er og /index.html + /www/index.html til /
   - TDD: 11 nye tester, 47/47 grønne, 97% branch coverage
