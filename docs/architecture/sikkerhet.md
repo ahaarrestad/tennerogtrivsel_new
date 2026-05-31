@@ -316,10 +316,10 @@ API-restriksjoner:
 
 ```bash
 # Finn nøkkelens ressursnavn:
-KEY=$(gcloud alpha services api-keys list --project=tennerogtrivsel --format='value(name)')
+KEY=$(gcloud api-keys list --project=tennerogtrivsel --format='value(name)')
 # Alternativt: finn i Google Cloud Console → API-er og tjenester → Legitimasjon
 
-gcloud alpha services api-keys update "$KEY" \
+gcloud api-keys update "$KEY" \
   --project=tennerogtrivsel \
   --allowed-referrers="<kommaseparert liste — se over for gjeldende>" \
   --api-target=service=sheets.googleapis.com \
