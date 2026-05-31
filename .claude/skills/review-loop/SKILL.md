@@ -75,7 +75,7 @@ git add <berørte filer>
 git commit -m "$(cat <<'EOF'
 fix: reviewfiks — <kort beskrivelse>
 
-Co-Authored-By: Claude Code <noreply@anthropic.com>
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 EOF
 )"
 ```
