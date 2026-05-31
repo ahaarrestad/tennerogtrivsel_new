@@ -35,9 +35,9 @@ test.describe('Universell utforming (UU)', () => {
   }
 
   test('tjeneste-sider skal ikke ha kritiske UU-feil', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.goto('/tjenester/', { waitUntil: 'domcontentloaded' });
 
-    // Naviger til første tjeneste
+    // Naviger til første tjeneste — #tjenester er skjult på mobil-framsiden (hidden lg:block)
     await page.locator('#tjenester .card-base').first().click();
     await page.waitForLoadState('domcontentloaded');
 
