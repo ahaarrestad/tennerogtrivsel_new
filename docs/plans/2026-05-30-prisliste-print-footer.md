@@ -92,7 +92,7 @@ body {
 
 Ikke rør den første `html, body`-regelen. `0.9cm` = footerens estimerte høyde (`0.15cm` top + én linje `7pt × line-height 1.25 ≈ 0.31cm` + `0.3cm` bunn = `~0.76cm`) med `~0.14cm` margin.
 
-## Steg 4: Playwright-test
+### 4. Playwright-test
 
 Opprett `tests/prisliste-print.spec.ts`. Playwright støtter `page.emulateMedia({ media: 'print' })` som bytter CSS-media til print uten manuell Ctrl+P.
 
@@ -101,7 +101,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Prisliste print-footer', () => {
   test.beforeEach(({}, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium', 'Print-CSS er nettleser-uavhengig');
+    test.skip(testInfo.project.name !== 'chromium', 'Print-atferd er nettleser-avhengig — kun Chromium er primær print-target (Firefox-quirks dokumentert i planen)');
   });
 
   test('footer er skjult i normal visning', async ({ page }) => {
