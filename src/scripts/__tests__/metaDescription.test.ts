@@ -32,6 +32,10 @@ describe('stripMarkdown', () => {
         expect(stripMarkdown('some_long_identifier stays')).toBe('some_long_identifier stays');
     });
 
+    it('should remove italic at start of string', () => {
+        expect(stripMarkdown('_italic_ word')).toBe('italic word');
+    });
+
     it('should replace links with link text', () => {
         expect(stripMarkdown('[les mer](https://example.com)')).toBe('les mer');
         expect(stripMarkdown('Se [vår nettside](https://tennerogtrivsel.no) for info')).toBe('Se vår nettside for info');
