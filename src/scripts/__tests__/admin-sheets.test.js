@@ -39,6 +39,7 @@ const {
     updateKontaktSkjemaField,
     addKontaktTemaRow,
     ensureKontaktSkjemaSheet,
+    getSettingsWithNotes,
 } = await import('../admin-sheets.js');
 
 const SHEET_ID = 'test-sheet-id';
@@ -390,5 +391,76 @@ describe('KontaktSkjema CRUD', () => {
             expect(mockSheets.spreadsheets.batchUpdate).toHaveBeenCalledOnce();
             expect(mockSheets.spreadsheets.values.update).toHaveBeenCalledOnce();
         });
+    });
+});
+
+describe('getSettingsWithNotes', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('should return targetLength from column E as string', async () => {
+        mockSheets.spreadsheets.values.get.mockResolvedValue({
+            result: {
+                values: [
+                    ['ID', 'Verdi', 'Beskrivelse', 'Rekkefølge', 'TargetLengde'],
+                    ['siteDescription', 'Min side', 'Meta desc', 1, '130-160'],
+                ]
+            }
+        });
+        const result = await getSettingsWithNotes(SHEET_ID);
+        expect(result[0].targetLength).toBe('130-160');
+    });
+
+    it('should return empty string when column E is absent', async () => {
+        mockSheets.spreadsheets.values.get.mockResolvedValue({
+            result: {
+                values: [
+                    ['ID', 'Verdi', 'Beskrivelse', 'Rekkefølge'],
+                    ['phone1', '12345678', 'Telefon', 1],
+                ]
+            }
+        });
+        const result = await getSettingsWithNotes(SHEET_ID);
+        expect(result[0].targetLength).toBe('');
+    });
+
+    it('should return empty string when column E is undefined (older rows)', async () => {
+        mockSheets.spreadsheets.values.get.mockResolvedValue({
+            result: {
+                values: [
+                    ['ID', 'Verdi', 'Beskrivelse', 'Rekkefølge', 'TargetLengde'],
+                    ['phone1', '12345678', 'Telefon', 1, undefined],
+                ]
+            }
+        });
+        const result = await getSettingsWithNotes(SHEET_ID);
+        expect(result[0].targetLength).toBe('');
+    });
+
+    it('should normalize numeric 0 in column E to empty string', async () => {
+        mockSheets.spreadsheets.values.get.mockResolvedValue({
+            result: {
+                values: [
+                    ['ID', 'Verdi', 'Beskrivelse', 'Rekkefølge', 'TargetLengde'],
+                    ['phone1', '12345678', 'Telefon', 1, 0],
+                ]
+            }
+        });
+        const result = await getSettingsWithNotes(SHEET_ID);
+        expect(result[0].targetLength).toBe('');
+    });
+
+    it('should use range A:E with UNFORMATTED_VALUE', async () => {
+        mockSheets.spreadsheets.values.get.mockResolvedValue({
+            result: { values: [['ID', 'Verdi', 'Beskrivelse', 'Rekkefølge', 'TargetLengde']] }
+        });
+        await getSettingsWithNotes(SHEET_ID);
+        expect(mockSheets.spreadsheets.values.get).toHaveBeenCalledWith(
+            expect.objectContaining({
+                range: 'Innstillinger!A:E',
+                valueRenderOption: 'UNFORMATTED_VALUE',
+            })
+        );
     });
 });
