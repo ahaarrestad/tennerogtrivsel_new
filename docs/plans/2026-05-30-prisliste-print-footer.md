@@ -75,7 +75,13 @@ Plasser `<div class="prisliste-footer-print">` etter `.prisliste-print`-griden (
 }
 ```
 
-**`padding-bottom` på body:** `@page { margin: 0 }` er allerede satt, og `position: fixed; bottom: 0` plasserer footeren relativt til papirkanten — ikke til body-padding. Uten `padding-bottom` på body vil footeren overlappe siste prisrader. Oppdater eksisterende body-print-regel (linje 202–208):
+**`padding-bottom` på body:** `@page { margin: 0 }` er allerede satt, og `position: fixed; bottom: 0` plasserer footeren relativt til papirkanten — ikke til body-padding. Uten `padding-bottom` på body vil footeren overlappe siste prisrader.
+
+Det finnes to `body`-regler i `@media print`:
+- Linje ~197–200: `html, body { margin: 0 !important; padding: 0 !important; }` — nuller alt
+- Linje ~202–207: `body { padding: 0.5cm 1.2cm !important; ... }` — overstyrer tilbake
+
+Oppdater **den andre** regelen (linje 202–207, `body`-only):
 
 ```css
 body {
@@ -84,26 +90,57 @@ body {
 }
 ```
 
-`0.9cm` = footerens estimerte høyde (`0.15cm` top + én linje `7pt × line-height 1.25 ≈ 0.31cm` + `0.3cm` bunn = `~0.76cm`) med `~0.14cm` margin.
+Ikke rør den første `html, body`-regelen. `0.9cm` = footerens estimerte høyde (`0.15cm` top + én linje `7pt × line-height 1.25 ≈ 0.31cm` + `0.3cm` bunn = `~0.76cm`) med `~0.14cm` margin.
+
+## Steg 4: Playwright-test
+
+Opprett `tests/prisliste-print.spec.ts`. Playwright støtter `page.emulateMedia({ media: 'print' })` som bytter CSS-media til print uten manuell Ctrl+P.
+
+```ts
+import { test, expect } from '@playwright/test';
+
+test.describe('Prisliste print-footer', () => {
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'Print-CSS er nettleser-uavhengig');
+  });
+
+  test('footer er skjult i normal visning', async ({ page }) => {
+    await page.goto('/prisliste');
+    const footer = page.locator('.prisliste-footer-print');
+    await expect(footer).toBeHidden();
+  });
+
+  test('footer vises i print-modus med tannlegenavn', async ({ page }) => {
+    await page.goto('/prisliste');
+    await page.emulateMedia({ media: 'print' });
+    const footer = page.locator('.prisliste-footer-print');
+    await expect(footer).toBeVisible();
+    await expect(footer).not.toBeEmpty();
+    await expect(footer).toContainText('·');
+  });
+});
+```
+
+**Merk — `toBeHidden()`:** Playwright's `toBeHidden()` returnerer `true` også når elementet ikke finnes i DOM. Guarden `tannleger.length > 0` i HTML-koden betyr at elementet aldri rendres ved tom samling — begge tester ville da passere (skjult-test korrekt, synlig-test ville feile ved `toBeVisible()`). I praksis vil samlingen alltid ha tannleger, men vær obs på dette i testmiljø med tom/mocka data.
+
+**Merk — `toContainText('·')`:** Separatoren `·` vises kun når det er minst to tannleger. `not.toBeEmpty()` er den reelle minste-grensen. `toContainText('·')` er et tilleggssjekk som bekrefter flernavnsformatering — ikke en erstatning for `not.toBeEmpty()`.
 
 ## Testbehov
 
-Ingen logikk å enhetsteste — dette er utelukkende HTML/CSS.
-
-Manuell verifisering:
-1. Åpne `/prisliste` i nettleseren
-2. Trykk Ctrl+P — bekreft at footeren vises med alle tannlegenavn
-3. Bekreft at siste prisrader **ikke** er skjult bak footeren
-4. Bekreft at footeren **ikke** vises i normal web-visning
+Ingen enhetslogikk å teste. Playwright-testen (steg 4) dekker:
+- Footer skjult i screen-modus
+- Footer synlig med navn i print-modus
 
 ## Definition of done
 
 - [ ] Footer vises i print med alle tannlegenavn separert med `·`
 - [ ] Footer er usynlig i web-visningen
 - [ ] Siste prisrader ikke skjult bak footer (padding-bottom virker)
+- [ ] Playwright-testen i `tests/prisliste-print.spec.ts` passerer
 - [ ] `npm run build` passerer uten feil
 
 ## Kjente risiki
 
-- **`position: fixed` i Firefox:** Firefox har hatt historiske quirks med `position: fixed` i print — elementet kan opptre som `position: absolute` (vises én gang nederst på siste side, ikke på hver side). For en side som normalt er én side er dette uproblematisk. Siden `?print`-flyten primært brukes i admin (Chromium), er Chromium-atferd det som teller.
+- **`position: fixed` gjentar footeren på hver side (Chromium):** I Chromium sin print-renderer vil `position: fixed; bottom: 0` vises på *hver* side, ikke bare den siste. Dette er korrekt atferd for en enkeltsidig prisliste. Forutsetning: prislisten må forbli på én utskriftsside. Dersom den vokser til to sider vil footeren overlappe innhold på side 1. Akseptert risiko gitt nåværende innholdsmengde.
+- **`position: fixed` i Firefox:** Firefox behandler `position: fixed` i print som `position: absolute` — footeren vises kun én gang, nederst på siste side. Uproblematisk siden print-flyten primært brukes i admin (Chromium).
 - **Bygg-tid vs. runtime:** Tannlegerlisten er bygget statisk inn ved `astro build`, ikke hentet dynamisk. Endringer i `tannleger.json` krever nybygg for å reflekteres i prislisten — dette er konsistent med resten av siden.
