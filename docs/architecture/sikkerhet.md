@@ -285,6 +285,44 @@ OAuth-access-token lagres alltid i `sessionStorage` — aldri i `localStorage`. 
 
 **Expiry-margin:** `getStoredUser()` og `tryRestoreSession()` regner token som utløpt 5 min *før* Google-expiry (`Date.now() < expiry - 300000`). Dette reduserer vinduet for et stjålet token.
 
+## PUBLIC_GOOGLE_API_KEY — klient-side API-nøkkel
+
+`PUBLIC_GOOGLE_API_KEY` initialiserer Google API Client Library (gapi) i admin-panelet (`admin-auth.js:43`). Nøkkelen eksponeres i klient-side JavaScript (Astro `PUBLIC_`-prefix) og brukes til å laste **Drive v3** og **Sheets v4**.
+
+**Nødvendige restriksjoner i Google Cloud Console:**
+
+1. **HTTP referrer-restriksjoner** — kun tillat kall fra:
+   - `https://tennerogtrivsel.no/*`
+   - `https://test2.aarrestad.com/*` (testmiljø)
+
+2. **API-restriksjoner** — begrens til kun:
+   - Google Drive API
+   - Google Sheets API
+
+3. **Kvotegrenser** — sett rimelig daglig grense (f.eks. 1 000 requests/dag) for å begrense misbruk ved lekket nøkkel.
+
+**Slik setter du restriksjoner:**
+
+1. Google Cloud Console → **API-er og tjenester → Legitimasjon**
+2. Klikk på nøkkelen som tilsvarer `PUBLIC_GOOGLE_API_KEY`
+3. Under **Nøkkelrestriksjoner → HTTP referrers** — legg til domene-mønstrene over
+4. Under **API-restriksjoner** — velg «Begrens nøkkel» og velg Drive API + Sheets API
+5. Lagre
+
+**Verifisering etter konfigurering** (kjør dette etter at referrer-restriksjoner er aktivert i Google Cloud Console):
+
+```bash
+# Uten gyldig referrer skal svaret være 403:
+curl "https://www.googleapis.com/drive/v3/files?key=<nøkkelen>" \
+  -H "Referer: https://evil.com/"
+# Forventet: {"error": {"code": 403, "message": "Requests from referer <empty> are blocked."}}
+# Uten restriksjoner returnerer dette 200 — testen er kun meningsfull etter steg 4 over.
+```
+
+Admin-funksjonaliteten er upåvirket fordi alle browser-kall fra `tennerogtrivsel.no` sender korrekt `Referer`-header.
+
+**Hvorfor API-restriksjoner er viktig selv med referrer-sjekk:** En angriper kan forfalske `Referer`-header fra serversiden. API-restriksjoner begrenser hvilke Google-tjenester nøkkelen gir tilgang til — en lekket nøkkel kan da ikke brukes mot andre Google APIs.
+
 ## Akseptert risiko
 
 | Funn | Begrunnelse |
