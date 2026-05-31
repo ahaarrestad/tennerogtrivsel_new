@@ -13,10 +13,13 @@
 
 ## Pågående
 
-- [ ] **Mobil: framsiden og meny ikke i sync** ([plan](docs/plans/2026-05-31-mobil-framsiden-meny-sync.md))
-  - **Tjenester + Tannleger:** vises på framsiden på mobil, men burde være skjult (`hidden lg:block` e.l.) — de nås via mobilmenyen som egne sider (`/tjenester/`, `/tannleger/`). `hidden md:block`-wrapperen ble fjernet under redesign mars 2026 og aldri lagt tilbake.
-  - **Galleri («Klinikken vår»):** 4 bildene vises som preview på framsiden på mobil — det er riktig og ønsket. Men mobilmenyen lenker til `/galleri/` (separat side) i stedet for `/#galleri` (ankerpunkt på framsiden). Endre `mobileHref` for galleri til `/#galleri`.
-  - Berørte filer: `src/pages/index.astro` (skjul Tjenester/Tannleger på mobil), `src/components/Navbar.astro` (endre galleri `mobileHref`)
+- [ ] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/2026-04-28-sikkerhetshardening.md))
+  - Task 1, 4–9 er fullført. Gjenstående tasks:
+  - **Task 2:** SHA-pin GitHub Actions i alle workflows + Dependabot github-actions-ecosystem
+  - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
+  - **Task 10:** Kjør unit- og e2e-tester før `repository_dispatch`-builds (Drive-triggered deploys hopper over tester i dag)
+  - **Task 11:** Audit `innerHTML`-template-strings i admin — klassifiser, wrap risikable med DOMPurify/escapeHtml, lag ESLint-regel
+  - **Task 12:** Oppdater `docs/architecture/sikkerhet.md` + lag `docs/runbooks/supply-chain-incident.md`
 
 ## Backlog
 
