@@ -13,6 +13,11 @@
 
 ## Pågående
 
+- [ ] **Mobil: framsiden og meny ikke i sync** ([plan](docs/plans/2026-05-31-mobil-framsiden-meny-sync.md))
+  - **Tjenester + Tannleger:** vises på framsiden på mobil, men burde være skjult (`hidden lg:block` e.l.) — de nås via mobilmenyen som egne sider (`/tjenester/`, `/tannleger/`). `hidden md:block`-wrapperen ble fjernet under redesign mars 2026 og aldri lagt tilbake.
+  - **Galleri («Klinikken vår»):** 4 bildene vises som preview på framsiden på mobil — det er riktig og ønsket. Men mobilmenyen lenker til `/galleri/` (separat side) i stedet for `/#galleri` (ankerpunkt på framsiden). Endre `mobileHref` for galleri til `/#galleri`.
+  - Berørte filer: `src/pages/index.astro` (skjul Tjenester/Tannleger på mobil), `src/components/Navbar.astro` (endre galleri `mobileHref`)
+
 ## Backlog
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
@@ -40,6 +45,12 @@
   - Admin-panelet bruker Google OAuth; personvernet forklarer hva som lagres, men GDPR art. 6-grunnlag er ikke nevnt
   - Tiltak: legg til «berettiget interesse» eller «nødvendig for å oppfylle avtale» som grunnlag i personvern-avsnittet om admin-panelet
   - Alvorlighetsnivå: Lav
+
+- [ ] **Admin: styr mobil-visning av seksjoner og menylenker** — *ingen plan ennå*
+  - Fra admin-panelet skal man kunne velge om en seksjon vises på framsiden på mobil, og om tilhørende menylenke skal gå til ankerpunkt på framsiden (`/#seksjon`) eller til en separat side (`/seksjon/`)
+  - Gjelder seksjonene Galleri, Tjenester og Tannleger — Forside og Kontakt er alltid synlige
+  - Innstillingene lagres i Google Sheets og leses via `getSiteSettings()` på byggetid
+  - Avhengig av at «Mobil: framsiden og meny ikke i sync»-oppgaven er løst først (hardkodet fix som baseline)
 
 - [ ] **GDPR: Bekreft og dokumenter databehandleravtale med AWS SES** — *ingen plan ennå*
   - Personvernet nevner AWS SES som databehandler, men bekrefter ikke at DPA er inngått

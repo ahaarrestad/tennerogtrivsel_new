@@ -22,6 +22,10 @@ const tannlegerVariant = galleriSynlig ? 'white' : 'brand';
     <Forside/>
     <Kontakt variant="brand" />
     <Galleri variant="white" />
-    <Tjenester variant={tjenesterVariant} limit={6} />
-    <Tannleger variant={tannlegerVariant} />
+    <div class="hidden lg:block">
+        <Tjenester variant={tjenesterVariant} limit={6} />
+    </div>
+    <div class="hidden lg:block">
+        <Tannleger variant={tannlegerVariant} />
+    </div>
 </Layout>
