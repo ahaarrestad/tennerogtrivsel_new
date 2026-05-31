@@ -27,6 +27,11 @@ describe('stripMarkdown', () => {
         expect(stripMarkdown('This is _italic_ text')).toBe('This is italic text');
     });
 
+    it('should not strip underscores in snake_case identifiers', () => {
+        expect(stripMarkdown('my_variable_name')).toBe('my_variable_name');
+        expect(stripMarkdown('some_long_identifier stays')).toBe('some_long_identifier stays');
+    });
+
     it('should replace links with link text', () => {
         expect(stripMarkdown('[les mer](https://example.com)')).toBe('les mer');
         expect(stripMarkdown('Se [vår nettside](https://tennerogtrivsel.no) for info')).toBe('Se vår nettside for info');
@@ -47,8 +52,12 @@ describe('stripMarkdown', () => {
         expect(stripMarkdown('+ Tannbleking\n+ Rotbehandling')).toBe('Tannbleking Rotbehandling');
     });
 
-    it('should remove ordered list prefixes', () => {
+    it('should remove ordered list prefixes (1–99)', () => {
         expect(stripMarkdown('1. Tannbleking\n2. Rotbehandling\n3. Fyllinger')).toBe('Tannbleking Rotbehandling Fyllinger');
+    });
+
+    it('should not strip ordered list prefixes above 99', () => {
+        expect(stripMarkdown('100. Tannbleking')).toBe('100. Tannbleking');
     });
 
     it('should handle combined markdown elements', () => {
