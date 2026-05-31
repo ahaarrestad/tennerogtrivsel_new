@@ -23,6 +23,9 @@
 
 ## Backlog
 
+- [ ] **galleri seksjonen skal enten være 4x1 eller 2x2**
+  - i dag blir den plutselig 3 bildet på en rad og 1 på siste når skjermen blir mindre. det er feil!
+
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
   - Dekker: GitHub (secrets, Actions, permissions), AWS (IAM, S3, Lambda, CloudFront, DynamoDB, SES), Google (OAuth, Sheets/Drive API-nøkler, scopes), og hvordan alt er skrudd sammen
