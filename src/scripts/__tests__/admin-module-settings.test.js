@@ -463,4 +463,228 @@ describe('loadSettingsModule', () => {
         expect(container).not.toBeNull();
         expect(container.classList.contains('cursor-pointer')).toBe(true);
     });
+
+    it('should render counter element for textarea with targetLength', async () => {
+        const longVal = 'a'.repeat(61);
+        const mockSettings = [
+            { id: 'siteDescription', value: longVal, description: 'Meta', order: 1, row: 2, targetLength: '130-160' },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue(mockSettings);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        expect(document.getElementById('counter-0')).not.toBeNull();
+    });
+
+    it('should render counter element for input with targetLength', async () => {
+        const mockSettings = [
+            { id: 'phone1', value: '123', description: 'Telefon', order: 1, row: 2, targetLength: '160' },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue(mockSettings);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        expect(document.getElementById('counter-0')).not.toBeNull();
+    });
+
+    it('should not render counter when targetLength is absent', async () => {
+        const mockSettings = [
+            { id: 'phone1', value: '123', description: 'Telefon', order: 1, row: 2 },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue(mockSettings);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        expect(document.getElementById('counter-0')).toBeNull();
+    });
+
+    it('should not render counter in reorder mode', async () => {
+        const mockSettings = [
+            { id: 'siteDescription', value: 'val', description: 'Meta', order: 1, row: 2, targetLength: '130-160' },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue([...mockSettings]);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        // Enter reorder mode
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue([...mockSettings]);
+        document.getElementById('settings-reorder-toggle').click();
+
+        await vi.waitFor(() => {
+            expect(getSettingsWithNotes).toHaveBeenCalledTimes(2);
+        });
+
+        expect(document.getElementById('counter-0')).toBeNull();
+    });
+
+    it('should initialize counter text with current value length', async () => {
+        const mockSettings = [
+            { id: 'phone1', value: 'hei', description: 'Telefon', order: 1, row: 2, targetLength: '160' },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue(mockSettings);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        const text = document.getElementById('counter-text-0');
+        expect(text.textContent).toBe('3 / 160');
+    });
+
+    it('should update counter text and apply warn class when under min', async () => {
+        const mockSettings = [
+            { id: 'phone1', value: '', description: 'Telefon', order: 1, row: 2, targetLength: '130-160' },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue(mockSettings);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        const input = document.getElementById('setting-input-0');
+        input.value = 'a'.repeat(50);
+        input.dispatchEvent(new Event('input'));
+
+        const text = document.getElementById('counter-text-0');
+        expect(text.textContent).toBe('50 / 130–160');
+        expect(text.classList.contains('text-admin-warn')).toBe(true);
+    });
+
+    it('should apply ok class when within range', async () => {
+        const mockSettings = [
+            { id: 'phone1', value: '', description: 'Telefon', order: 1, row: 2, targetLength: '130-160' },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue(mockSettings);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        const input = document.getElementById('setting-input-0');
+        input.value = 'a'.repeat(140);
+        input.dispatchEvent(new Event('input'));
+
+        const text = document.getElementById('counter-text-0');
+        expect(text.classList.contains('text-admin-ok')).toBe(true);
+    });
+
+    it('should apply error class when over max', async () => {
+        const mockSettings = [
+            { id: 'phone1', value: '', description: 'Telefon', order: 1, row: 2, targetLength: '130-160' },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue(mockSettings);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        const input = document.getElementById('setting-input-0');
+        input.value = 'a'.repeat(180);
+        input.dispatchEvent(new Event('input'));
+
+        const text = document.getElementById('counter-text-0');
+        expect(text.classList.contains('text-admin-error')).toBe(true);
+    });
+
+    it('should keep muted class when only max set and under max', async () => {
+        const mockSettings = [
+            { id: 'phone1', value: '', description: 'Telefon', order: 1, row: 2, targetLength: '160' },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue(mockSettings);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        const input = document.getElementById('setting-input-0');
+        input.value = 'a'.repeat(50);
+        input.dispatchEvent(new Event('input'));
+
+        const text = document.getElementById('counter-text-0');
+        expect(text.classList.contains('text-admin-muted-light')).toBe(true);
+        expect(text.classList.contains('text-admin-error')).toBe(false);
+    });
+
+    it('should apply error class when only max set and over max', async () => {
+        const mockSettings = [
+            { id: 'phone1', value: '', description: 'Telefon', order: 1, row: 2, targetLength: '160' },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue(mockSettings);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        const input = document.getElementById('setting-input-0');
+        input.value = 'a'.repeat(170);
+        input.dispatchEvent(new Event('input'));
+
+        const text = document.getElementById('counter-text-0');
+        expect(text.classList.contains('text-admin-error')).toBe(true);
+    });
+
+    it('should place counter after field element', async () => {
+        const mockSettings = [
+            { id: 'phone1', value: '123', description: 'Telefon', order: 1, row: 2, targetLength: '160' },
+        ];
+        getSettingsWithNotes.mockResolvedValue(mockSettings);
+        mergeSettingsWithDefaults.mockReturnValue(mockSettings);
+
+        const loadSettingsModule = await getLoadSettingsModule();
+        await loadSettingsModule();
+
+        const container = document.getElementById('setting-container-0');
+        const field = container.querySelector('.setting-field');
+        const counter = document.getElementById('counter-0');
+        expect(field).not.toBeNull();
+        expect(counter).not.toBeNull();
+        // counter should come after field in DOM
+        expect(field.compareDocumentPosition(counter) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+});
+
+async function getParseTargetLength() {
+    const mod = await import('../admin-module-settings.js');
+    return mod.parseTargetLength;
+}
+
+describe('parseTargetLength', () => {
+    it('parses "130-160" as { min: 130, max: 160 }', async () => {
+        const parseTargetLength = await getParseTargetLength();
+        expect(parseTargetLength('130-160')).toEqual({ min: 130, max: 160 });
+    });
+
+    it('parses "160" as { min: null, max: 160 }', async () => {
+        const parseTargetLength = await getParseTargetLength();
+        expect(parseTargetLength('160')).toEqual({ min: null, max: 160 });
+    });
+
+    it('returns null for empty string', async () => {
+        const parseTargetLength = await getParseTargetLength();
+        expect(parseTargetLength('')).toBeNull();
+    });
+
+    it('returns null for "0"', async () => {
+        const parseTargetLength = await getParseTargetLength();
+        expect(parseTargetLength('0')).toBeNull();
+    });
+
+    it('returns null for "-10-160" (negative min)', async () => {
+        const parseTargetLength = await getParseTargetLength();
+        expect(parseTargetLength('-10-160')).toBeNull();
+    });
+
+    it('returns null for "130-" (missing max)', async () => {
+        const parseTargetLength = await getParseTargetLength();
+        expect(parseTargetLength('130-')).toBeNull();
+    });
 });

@@ -439,7 +439,7 @@ describe('admin-client.js', () => {
             await getSettingsWithNotes('sheet-123');
 
             expect(gapi.client.sheets.spreadsheets.values.get).toHaveBeenCalledWith(expect.objectContaining({
-                range: 'Innstillinger!A:D',
+                range: 'Innstillinger!A:E',
                 valueRenderOption: 'UNFORMATTED_VALUE'
             }));
         });

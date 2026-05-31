@@ -8,12 +8,13 @@ import { parseImageConfig } from './image-config.js';
  * Kolonne B: Verdi
  * Kolonne C: Beskrivelse (vises som tittel i Admin)
  * Kolonne D: Rekkefølge (order)
+ * Kolonne E: Target-lengde (f.eks. "130-160" eller "160")
  */
 export async function getSettingsWithNotes(spreadsheetId) {
     try {
         const response = await gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId: spreadsheetId,
-            range: 'Innstillinger!A:D',
+            range: 'Innstillinger!A:E',
             valueRenderOption: 'UNFORMATTED_VALUE',
         });
 
@@ -25,13 +26,16 @@ export async function getSettingsWithNotes(spreadsheetId) {
             const rawOrder = row[3];
             const order = parseInt(rawOrder);
             const orderMissing = rawOrder === undefined || rawOrder === null || rawOrder === '';
+            const rawTarget = row[4];
+            const targetLength = (rawTarget === undefined || rawTarget === null || rawTarget === '' || rawTarget === 0) ? '' : String(rawTarget);
             return {
                 row: index + 2,
                 id: (row[0] || '') + '',
                 value: (row[1] ?? '') + '',
                 description: (row[2] || '') + '',
                 order: isNaN(order) ? index + 1 : order,
-                _orderMissing: orderMissing
+                _orderMissing: orderMissing,
+                targetLength,
             };
         }).filter(item => item.id);
 

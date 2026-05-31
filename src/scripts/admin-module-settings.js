@@ -50,6 +50,39 @@ const SETTING_HINTS = {
 
 let settingsReorderMode = false;
 
+export function parseTargetLength(str) {
+    if (!str) return null;
+    const single = /^(\d+)$/.exec(str);
+    if (single) {
+        const max = parseInt(single[1]);
+        return max > 0 ? { min: null, max } : null;
+    }
+    const range = /^(\d+)-(\d+)$/.exec(str);
+    if (range) {
+        const min = parseInt(range[1]);
+        const max = parseInt(range[2]);
+        return min > 0 && max > 0 && min < max ? { min, max } : null;
+    }
+    return null;
+}
+
+function updateCounter(i, length, target) {
+    const textEl = document.getElementById(`counter-text-${i}`);
+    if (!textEl) return;
+    const label = target.min ? `${target.min}–${target.max}` : `${target.max}`;
+    textEl.textContent = `${length} / ${label}`;
+    textEl.classList.remove('text-admin-muted-light', 'text-admin-warn', 'text-admin-ok', 'text-admin-error');
+    if (length > target.max) {
+        textEl.classList.add('text-admin-error');
+    } else if (target.min && length < target.min) {
+        textEl.classList.add('text-admin-warn');
+    } else if (target.min && length >= target.min) {
+        textEl.classList.add('text-admin-ok');
+    } else {
+        textEl.classList.add('text-admin-muted-light');
+    }
+}
+
 function renderSkeletonSettings(count = 4) {
     const field = `
         <div class="admin-field-container">
@@ -104,6 +137,8 @@ export async function loadSettingsModule() {
             const hint = SETTING_HINTS[setting.id] || '';
             const isFirst = i === 0;
             const isLast = i === allSettings.length - 1;
+            const target = parseTargetLength(setting.targetLength || '');
+            const counterLabel = target ? (target.min ? `${target.min}–${target.max}` : `${target.max}`) : '';
             html += `
                 <div class="admin-field-container ${settingsReorderMode ? '' : 'cursor-pointer'}" id="setting-container-${i}">
                     <div class="flex justify-between items-start gap-4">
@@ -126,6 +161,7 @@ export async function loadSettingsModule() {
                         `<textarea id="setting-input-${i}" data-index="${i}" class="setting-field admin-input resize-none overflow-hidden"></textarea>` :
                         `<input type="text" id="setting-input-${i}" data-index="${i}" value="" class="setting-field admin-input">`
                     )}
+                    ${(!settingsReorderMode && target) ? `<div class="flex justify-end mt-1 text-xs" id="counter-${i}"><span id="counter-text-${i}" class="text-admin-muted-light">0 / ${counterLabel}</span></div>` : ''}
                 </div>`;
         });
         inner.innerHTML = html + `</div>`;
@@ -135,6 +171,10 @@ export async function loadSettingsModule() {
             allSettings.forEach((setting, i) => {
                 const el = document.getElementById(`setting-input-${i}`);
                 if (el) el.value = setting.value;
+                const target = parseTargetLength(setting.targetLength || '');
+                if (target) {
+                    updateCounter(i, setting.value.length, target);
+                }
             });
         }
 
@@ -192,6 +232,11 @@ export async function loadSettingsModule() {
                     input.addEventListener('input', (e) => autoResizeTextarea(e.target));
                 }
                 input.addEventListener('blur', (e) => saveSingleSetting(parseInt(e.target.dataset.index), e.target, allSettings, SHEET_ID, loadSettingsModule));
+                const idx = parseInt(input.dataset.index);
+                const target = parseTargetLength(allSettings[idx]?.targetLength || '');
+                if (target) {
+                    input.addEventListener('input', (e) => updateCounter(idx, e.target.value.length, target));
+                }
             });
             allSettings.forEach((_, i) => {
                 document.getElementById(`setting-container-${i}`)?.addEventListener('click', () => {

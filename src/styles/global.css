@@ -85,6 +85,9 @@
     --color-admin-border: #e2e8f0;      /* slate-200 — kanter, delere */
     --color-admin-muted: #475569;       /* slate-600 — sekundærtekst */
     --color-admin-muted-light: #94a3b8; /* slate-400 — tertiærtekst */
+    --color-admin-ok: #15803d;          /* = --color-success — innenfor target */
+    --color-admin-warn: #b45309;        /* = --color-warning — under min */
+    --color-admin-error: #b91c1c;       /* = --color-error — over max */
 
     /* SPACING TOKENS */
     --spacing-section-py: calc(var(--spacing) * 16);     /* 64px mobil */
