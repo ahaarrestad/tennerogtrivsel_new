@@ -28,9 +28,7 @@
   - ~~Task 2 (F4): SHA-pin GitHub Actions + Dependabot github-actions-ecosystem — ferdig 2026-05-17~~
   - Neste: Task 9 (F10): Verifiser PUBLIC_GOOGLE_API_KEY-restriksjoner i Google Cloud Console
 
-
 ## Backlog
-
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
@@ -53,7 +51,6 @@
   - Vurder kostnad/nytte: er det faktisk et behov, og er det verdt arbeidsmengden?
   - Avslutt med en anbefaling: gjør det / gjør det ikke / gjør det men bare X
 
-
 - [ ] **GDPR: Angi rettslig grunnlag for Google OAuth i personvern** — *ingen plan ennå*
   - Admin-panelet bruker Google OAuth; personvernet forklarer hva som lagres, men GDPR art. 6-grunnlag er ikke nevnt
   - Tiltak: legg til «berettiget interesse» eller «nødvendig for å oppfylle avtale» som grunnlag i personvern-avsnittet om admin-panelet
@@ -64,9 +61,6 @@
   - AWS tilbyr standard Data Processing Addendum — verifiser at dette er akseptert for kontoen
   - Tiltak: dokumenter DPA-status i internkontrollmappen (relevant når kontaktskjema aktiveres)
   - Alvorlighetsnivå: Lav
-
-
-
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
