@@ -1,8 +1,8 @@
 ---
 name: security-audit
-description: "Scan the codebase for security vulnerabilities: XSS, injection, CSP issues, authentication flaws, exposed secrets, and unsafe data handling. Use when the user says 'security audit', 'sikkerhetssjekk', 'security check', 'sjekk sikkerhet', 'scan for vulnerabilities', 'XSS check', or asks about the security posture of the project. Also trigger when reviewing admin panel code or authentication flows."
+description: "Use when the user says 'security audit', 'sikkerhetssjekk', 'security check', 'sjekk sikkerhet', 'scan for vulnerabilities', 'XSS check', or asks about the security posture of the project. Also trigger when reviewing admin panel code or authentication flows."
 disable-model-invocation: false
-allowed-tools: ["Read", "Glob", "Grep", "Bash(npm audit:*)", "Bash(git log:*)", "Bash(git diff:*)"]
+allowed-tools: ["Read", "Glob", "Grep", "Bash(npm audit*)", "Bash(git log*)", "Bash(git diff*)"]
 ---
 
 # Security Audit Skill

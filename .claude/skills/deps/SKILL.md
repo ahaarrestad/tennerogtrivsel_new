@@ -1,6 +1,6 @@
 ---
 name: deps
-description: "Analyze project dependencies for size, security, unused packages, and misplaced devDependencies. Use when the user says 'deps', 'dependencies', 'avhengigheter', 'dependency check', 'sjekk avhengigheter', 'npm audit', 'package size', 'bundle size', or asks about reducing node_modules size or cleaning up packages."
+description: "Use when the user says 'deps', 'dependencies', 'avhengigheter', 'dependency check', 'sjekk avhengigheter', 'npm audit', 'package size', 'bundle size', or asks about reducing node_modules size or cleaning up packages."
 disable-model-invocation: false
 allowed-tools: ["Read", "Glob", "Grep", "Bash(npm *)", "Bash(du *)", "Bash(node *)"]
 ---
@@ -11,11 +11,11 @@ Analyze dependencies in this Astro project for bloat, security issues, misplacem
 
 ## Context
 
-This project has known dependency issues documented in TODO.md:
-- `googleapis` is ~196 MB but only `sheets` and `drive` are used
-- `dotenv` may be replaceable with built-in `.env` support
-- `@types/dompurify` is in `dependencies` instead of `devDependencies`
-- `sharp` is used in `sync-data.js` but not in `package.json`
+This is an Astro 5 static site with Google Sheets/Drive as CMS. Pay special attention to these historically problematic patterns (verify current state before reporting):
+- `googleapis` (full SDK, ~196 MB) — check if lighter alternatives like `@googleapis/sheets` + `@googleapis/drive` would suffice
+- `dotenv` — Node 20+ has built-in `.env` support; check if it's still needed
+- `@types/*` packages — verify they're in `devDependencies`, not `dependencies`
+- Packages imported in `sync-data.js` — verify they're declared in `package.json`
 
 ## Audit Process
 
