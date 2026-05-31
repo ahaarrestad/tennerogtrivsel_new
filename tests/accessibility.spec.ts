@@ -36,7 +36,6 @@ test.describe('Universell utforming (UU)', () => {
 
   test('tjeneste-sider skal ikke ha kritiske UU-feil', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await page.setViewportSize({ width: 1280, height: 800 });
 
     // Naviger til første tjeneste
     await page.locator('#tjenester .card-base').first().click();
