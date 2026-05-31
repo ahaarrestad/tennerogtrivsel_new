@@ -79,6 +79,7 @@ for i in $(seq 1 30); do
   sleep 2
   curl -s http://localhost:4321/admin -o /dev/null -w "%{http_code}" 2>/dev/null | grep -q "200\|301\|302" && break
 done
+curl -sf http://localhost:4321/admin -o /dev/null || { echo "dev:secure failed to start"; exit 1; }
 npm run test:e2e 2>&1
 ```
 
@@ -99,6 +100,11 @@ npm audit --audit-level=critical 2>&1
 If critical vulnerabilities found → **STOP**.
 
 Only proceed to Step 3 when **all five checks pass**.
+
+After Step 3 (or on any STOP above), clean up the dev server:
+```bash
+lsof -ti:4321 | xargs kill -9 2>/dev/null || true
+```
 
 ## Step 3: Stage Files
 
@@ -168,11 +174,19 @@ Dispatch a `general-purpose` Agent with this prompt (fill placeholders):
 ## Step 5: Push (Only If Requested)
 
 **Before pushing, re-run tests** — code review fixes may have changed code since Step 2.5.
-Run with `dangerouslyDisableSandbox: true`. Dev:secure server is already running from Step 2.5.
+Run with `dangerouslyDisableSandbox: true`. Restart dev:secure (may have been cleaned up after Step 2.5):
 
 ```bash
+lsof -ti:4321 | xargs kill -9 2>/dev/null; sleep 1
+npm run dev:secure > /tmp/dev-secure.log 2>&1 &
+for i in $(seq 1 30); do
+  sleep 2
+  curl -s http://localhost:4321/admin -o /dev/null -w "%{http_code}" 2>/dev/null | grep -q "200\|301\|302" && break
+done
+curl -sf http://localhost:4321/admin -o /dev/null || { echo "dev:secure failed to start"; exit 1; }
 npm test 2>&1
 npm run test:e2e 2>&1
+lsof -ti:4321 | xargs kill -9 2>/dev/null || true
 ```
 
 If any test fails → **STOP**. Do not push. Fix and commit before retrying.
