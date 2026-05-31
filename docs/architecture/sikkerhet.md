@@ -289,11 +289,9 @@ OAuth-access-token lagres alltid i `sessionStorage` — aldri i `localStorage`. 
 
 `PUBLIC_GOOGLE_API_KEY` initialiserer Google API Client Library (gapi) i admin-panelet (`admin-auth.js:43`). Nøkkelen eksponeres i klient-side JavaScript (Astro `PUBLIC_`-prefix) og brukes til å laste **Drive v3** og **Sheets v4**.
 
-**Nødvendige restriksjoner i Google Cloud Console:**
-
 **Gjeldende konfigurasjon (satt via gcloud 2026-05-31):**
 
-Referrer-restriksjoner (11 mønstre — prod bruker wildcards for subdomener):
+Referrer-restriksjoner — 11 mønstre, prod bruker wildcards for subdomener:
 ```
 https://*.tennerogtrivsel.no/*
 https://tennerogtrivsel.no/*
@@ -312,22 +310,27 @@ API-restriksjoner:
 - `sheets.googleapis.com`
 - `drive.googleapis.com`
 
+**Kvotegrenser:** Settes per API under **Google Cloud Console → API-er og tjenester → Kvote og systemgrenser**, ikke per nøkkel. Kvoter er ikke konfigurert utover Google-defaults per 2026-05-31.
+
 **Oppdatere restriksjoner (ved nye domener o.l.):**
 
 ```bash
-KEY="projects/154065630672/locations/global/keys/481c5c92-e2af-4420-bd54-429ed534dea6"
+# Finn nøkkelens ressursnavn:
+KEY=$(gcloud alpha services api-keys list --project=tennerogtrivsel --format='value(name)')
+# Alternativt: finn i Google Cloud Console → API-er og tjenester → Legitimasjon
+
 gcloud alpha services api-keys update "$KEY" \
   --project=tennerogtrivsel \
-  --allowed-referrers="<kommaseparert liste>" \
+  --allowed-referrers="<kommaseparert liste — se over for gjeldende>" \
   --api-target=service=sheets.googleapis.com \
   --api-target=service=drive.googleapis.com
 ```
 
-**Verifisering:**
+**Verifisering** (erstatt `<NØKKEL>` med faktisk nøkkelverdi fra Google Cloud Console):
 
 ```bash
 # Uten gyldig referrer skal svaret være 403:
-curl "https://www.googleapis.com/drive/v3/files?key=<nøkkelen>" \
+curl "https://www.googleapis.com/drive/v3/files?key=<NØKKEL>" \
   -H "Referer: https://evil.com/"
 # Forventet: {"error": {"code": 403, "message": "Requests from referer <empty> are blocked."}}
 ```
