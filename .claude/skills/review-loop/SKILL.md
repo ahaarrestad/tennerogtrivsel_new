@@ -69,13 +69,13 @@ Ingen blokkerende issues. Klar for /commit.
 
 **Critical eller Important issues funnet:**
 
-Fiks alle issues. Commit fiksen:
+Fiks alle issues. Stage og commit kun de berørte filene (aldri `git add .` eller `git add -A` — aldri `.env*`, credentials, `node_modules/`, `coverage/`):
 ```bash
-git add <berørte filer>
+git add <spesifikke filer — én og én>
 git commit -m "$(cat <<'EOF'
 fix: reviewfiks — <kort beskrivelse>
 
-Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+Co-Authored-By: Claude Code <noreply@anthropic.com>
 EOF
 )"
 ```
