@@ -291,42 +291,46 @@ OAuth-access-token lagres alltid i `sessionStorage` — aldri i `localStorage`. 
 
 **Nødvendige restriksjoner i Google Cloud Console:**
 
-1. **HTTP referrer-restriksjoner** — kun tillat kall fra (alle prod-domener fra CloudFront-distribusjonene + lokal dev):
-   - `https://www.tennerogtrivsel.no/*`
-   - `https://tennerogtrivsel.no/*`
-   - `https://www.tennerogtrivsel.net/*`
-   - `https://tennerogtrivsel.net/*`
-   - `https://www.tennerogtrivsel.com/*`
-   - `https://tennerogtrivsel.com/*`
-   - `https://test2.aarrestad.com/*`
-   - `https://test3.aarrestad.com/*`
-   - `http://localhost:4321/*`
+**Gjeldende konfigurasjon (satt via gcloud 2026-05-31):**
 
-2. **API-restriksjoner** — begrens til kun:
-   - Google Drive API
-   - Google Sheets API
+Referrer-restriksjoner (11 mønstre — prod bruker wildcards for subdomener):
+```
+https://*.tennerogtrivsel.no/*
+https://tennerogtrivsel.no/*
+https://*.tennerogtrivsel.net/*
+https://tennerogtrivsel.net/*
+https://*.tennerogtrivsel.com/*
+https://tennerogtrivsel.com/*
+https://test2.aarrestad.com/*
+http://test2.aarrestad.com/*
+https://test3.aarrestad.com/*
+http://test3.aarrestad.com/*
+http://localhost:4321/*
+```
 
-3. **Kvotegrenser** — sett rimelig daglig grense (f.eks. 1 000 requests/dag) for å begrense misbruk ved lekket nøkkel.
+API-restriksjoner:
+- `sheets.googleapis.com`
+- `drive.googleapis.com`
 
-**Slik setter du restriksjoner:**
+**Oppdatere restriksjoner (ved nye domener o.l.):**
 
-1. Google Cloud Console → **API-er og tjenester → Legitimasjon**
-2. Klikk på nøkkelen som tilsvarer `PUBLIC_GOOGLE_API_KEY`
-3. Under **Nøkkelrestriksjoner → HTTP referrers** — legg til alle domene-mønstrene over
-4. Under **API-restriksjoner** — velg «Begrens nøkkel» og velg Drive API + Sheets API
-5. Lagre
+```bash
+KEY="projects/154065630672/locations/global/keys/481c5c92-e2af-4420-bd54-429ed534dea6"
+gcloud alpha services api-keys update "$KEY" \
+  --project=tennerogtrivsel \
+  --allowed-referrers="<kommaseparert liste>" \
+  --api-target=service=sheets.googleapis.com \
+  --api-target=service=drive.googleapis.com
+```
 
-**Verifisering etter konfigurering** (kjør dette etter at referrer-restriksjoner er aktivert i Google Cloud Console):
+**Verifisering:**
 
 ```bash
 # Uten gyldig referrer skal svaret være 403:
 curl "https://www.googleapis.com/drive/v3/files?key=<nøkkelen>" \
   -H "Referer: https://evil.com/"
 # Forventet: {"error": {"code": 403, "message": "Requests from referer <empty> are blocked."}}
-# Uten restriksjoner returnerer dette 200 — testen er kun meningsfull etter at restriksjonene er satt.
 ```
-
-Admin-funksjonaliteten er upåvirket fordi alle browser-kall fra de tillatte domenene sender korrekt `Referer`-header automatisk.
 
 **Hvorfor API-restriksjoner er viktig selv med referrer-sjekk:** En angriper kan forfalske `Referer`-header fra serversiden. API-restriksjoner begrenser hvilke Google-tjenester nøkkelen gir tilgang til — en lekket nøkkel kan da ikke brukes mot andre Google APIs.
 
