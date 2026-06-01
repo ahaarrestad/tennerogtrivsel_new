@@ -11,7 +11,36 @@ Run all quality checks sequentially. Stop early if any step fails.
 
 IMPORTANT: All Bash commands in this skill MUST run with `dangerouslyDisableSandbox: true` because Vitest and Playwright need to write to temp directories, coverage output, and browser caches that the sandbox blocks.
 
-## Step 1: Unit Tests
+## Step 0: Worktree-forberedelse
+
+Sjekk om vi er i en worktree. Hvis ja, kopier manglende gitignorerte filer fra main automatisk — ellers feiler build og E2E.
+
+```bash
+GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
+GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
+if [ "$GIT_DIR" != "$GIT_COMMON" ]; then
+  MAIN=$(git rev-parse --git-common-dir); MAIN=${MAIN%/.git}
+  for f in galleri.json innstillinger.json prisliste.json tannleger.json kontaktskjema.json; do
+    [ ! -f "src/content/$f" ] && [ -f "$MAIN/src/content/$f" ] && cp "$MAIN/src/content/$f" "src/content/$f" && echo "Kopierte $f"
+  done
+  cp -rn "$MAIN/src/assets/galleri/." src/assets/galleri/ 2>/dev/null || true
+  [ ! -f src/assets/hovedbilde.png ] && [ -f "$MAIN/src/assets/hovedbilde.png" ] && cp "$MAIN/src/assets/hovedbilde.png" src/assets/hovedbilde.png && echo "Kopierte hovedbilde.png"
+  [ ! -f .env ] && [ -f "$MAIN/.env" ] && cp "$MAIN/.env" .env && echo "Kopierte .env"
+  echo "Worktree-forberedelse ferdig"
+fi
+```
+
+## Step 1: ESLint
+
+Run ESLint before tests:
+
+```bash
+npm run lint 2>&1
+```
+
+If ESLint reports any **errors** (not warnings), stop and fix them before continuing. Warnings are acceptable.
+
+## Step 2: Unit Tests
 
 Run unit tests with coverage (disable sandbox):
 
@@ -21,7 +50,7 @@ npm test 2>&1
 
 Note the test results (passed/failed/total) from the output. If any test FAILS, stop — report the failures and skip all remaining steps.
 
-## Step 2: Per-File Branch Coverage
+## Step 3: Per-File Branch Coverage
 
 After tests pass, check that every file has at least 80% branch coverage. Run:
 
@@ -53,7 +82,7 @@ process.exit(fail ? 1 : 0);
 
 If exit code is non-zero (any file below 80%), stop and report which files need more tests. Do not continue.
 
-## Step 3: E2E Tests
+## Step 4: E2E Tests
 
 Run Playwright E2E tests:
 
@@ -63,7 +92,7 @@ npm run test:e2e 2>&1
 
 Note passed/failed/skipped counts. If any E2E test fails, stop and report.
 
-## Step 4: Build
+## Step 5: Build
 
 Verify the project compiles:
 
@@ -73,7 +102,7 @@ npm run build 2>&1
 
 If the build fails, stop and report errors.
 
-## Step 5: Security Audit
+## Step 6: Security Audit
 
 Run npm audit with the same level as CI (`--audit-level=critical`):
 
@@ -83,16 +112,19 @@ npm audit --audit-level=critical 2>&1
 
 If the audit finds critical vulnerabilities, stop and report them. Include the package name, severity, and suggested fix (e.g., `npm audit fix` or specific version upgrade). This matches the CI check in `.github/workflows/deploy.yml` so issues are caught locally before push.
 
-## Step 6: CI/CD Variable Check
+## Step 7: CI/CD Variable Check
 
 If this session added new environment variables (in `.env`, `src/env.d.ts`, or `sync-data.js`), verify they are present in `.github/workflows/` for both test and build steps. Flag any missing variables.
 
-## Step 7: Report
+## Step 8: Report
 
 Present a single consolidated report:
 
 ```
 ## Quality Gate Report
+
+### ESLint: PASS/FAIL
+X errors, Y warnings
 
 ### Unit Tests: PASS/FAIL
 X passed, Y failed, Z total
