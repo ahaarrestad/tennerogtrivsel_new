@@ -42,6 +42,8 @@ const forsideStyle = buildImageStyle(forsideEntry?.data.imageConfig);
                     <Image
                             src={hovedBilde}
                             alt="Tenner og Trivsel"
+                            widths={[960, 1440, 1920]}
+                            sizes="(min-width: 1024px) 50vw, 100vw"
                             class="w-full h-full object-cover"
                             style={forsideStyle}
                             loading="eager"

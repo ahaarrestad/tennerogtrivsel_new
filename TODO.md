@@ -21,6 +21,9 @@
   - **Task 11:** Audit `innerHTML`-template-strings i admin — klassifiser, wrap risikable med DOMPurify/escapeHtml, lag ESLint-regel
   - **Task 12:** Oppdater `docs/architecture/sikkerhet.md` + lag `docs/runbooks/supply-chain-incident.md`
 
+- [ ] **Sjekk bildeoppløsning — bilder er hakkete** ([plan](docs/plans/2026-06-01-bildeopplosning.md))
+  - Bildene på siden ser hakkete/pixelerte ut, spesielt galleri på stor skjerm
+
 ## Backlog
 
 - [ ] **galleri seksjonen skal enten være 4x1 eller 2x2**
@@ -29,10 +32,6 @@
 - [ ] **Galleri: «klikk for å vise større bilde»** — *ingen plan ennå*
   - Bør vi støtte at brukere kan klikke på et bilde i galleriet for å se en forstørret versjon?
   - Vurder lightbox-funksjonalitet eller fullskjerm-visning, og hva som passer best for dette nettstedet
-
-- [ ] **Sjekk bildeoppløsning — bilder er hakkete** ([plan](docs/plans/2026-06-01-bildeopplosning.md))
-  - Bildene på siden ser hakkete/pixelerte ut, spesielt galleri på stor skjerm
-  - Kartlegg hvilke bilder dette gjelder, sjekk oppløsning på kildene i Google Drive og `srcset`/`sizes`-oppsett
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner

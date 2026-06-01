@@ -32,6 +32,8 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
                 <Image
                     src={images[fellesbildePath]()}
                     alt={fellesbildeEntry?.data.altText || 'Gruppebilde av teamet hos Tenner og Trivsel'}
+                    widths={[768, 1152, 1600]}
+                    sizes="(min-width: 1024px) calc(100vw - 4rem), 100vw"
                     class="absolute inset-0 w-full h-full object-cover"
                     style={fellesbildeStyle}
                 />
