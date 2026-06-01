@@ -39,6 +39,8 @@ const hasMore = !standalone && sortert.length > MAX_PREVIEW;
                             <Image
                                 src={images[imgPath]()}
                                 alt={item.data.altText || item.data.title}
+                                widths={[400, 600, 800, 1200, 1600]}
+                                sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
                                 class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                                 style={imgStyle}
                                 loading="lazy"
