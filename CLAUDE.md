@@ -40,6 +40,20 @@ Retningslinjer for testskriving finnes i [`docs/guides/test-guide.md`](docs/guid
 
 Tester som sammenligner datoer mot "nå" **SKAL** bruke `vi.useFakeTimers({ now: ... })` i `beforeEach` + `vi.useRealTimers()` i `afterEach`. Aldri hardkodede fremtidsdatoer. For enkelt-tester som trenger annen tid: `vi.setSystemTime()` (ikke `vi.useFakeTimers` på nytt).
 
+## Worktree-oppsett (prosjektspesifikt)
+
+Etter `npm install` i en ny worktree mangler gitignorerte filer. Kopier disse fra main **før** build eller tester kjøres:
+
+```bash
+MAIN=$(git rev-parse --git-common-dir); MAIN=${MAIN%/.git}
+for f in galleri.json innstillinger.json prisliste.json tannleger.json kontaktskjema.json; do
+  [ ! -f "src/content/$f" ] && [ -f "$MAIN/src/content/$f" ] && cp "$MAIN/src/content/$f" "src/content/$f"
+done
+cp -rn "$MAIN/src/assets/galleri/." src/assets/galleri/ 2>/dev/null || true
+[ ! -f src/assets/hovedbilde.png ] && [ -f "$MAIN/src/assets/hovedbilde.png" ] && cp "$MAIN/src/assets/hovedbilde.png" src/assets/hovedbilde.png
+[ ! -f .env ] && [ -f "$MAIN/.env" ] && cp "$MAIN/.env" .env
+```
+
 ## Arkitekturdokumentasjon
 
 Detaljert arkitekturdokumentasjon for spesifikke subsystemer finnes i `docs/architecture/`:
