@@ -21,9 +21,6 @@
   - **Task 11:** Audit `innerHTML`-template-strings i admin — klassifiser, wrap risikable med DOMPurify/escapeHtml, lag ESLint-regel
   - **Task 12:** Oppdater `docs/architecture/sikkerhet.md` + lag `docs/runbooks/supply-chain-incident.md`
 
-- [ ] **Sjekk bildeoppløsning — bilder er hakkete** ([plan](docs/plans/2026-06-01-bildeopplosning.md))
-  - Bildene på siden ser hakkete/pixelerte ut, spesielt galleri på stor skjerm
-
 ## Backlog
 
 - [ ] **galleri seksjonen skal enten være 4x1 eller 2x2**

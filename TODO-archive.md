@@ -3,6 +3,11 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Sjekk bildeoppløsning — bilder er hakkete** ([plan](docs/plans/archive/2026-06-01-bildeopplosning.md))
+  - `widths`/`sizes`-props lagt til på `<Image>` i `Forside.astro`, `Galleri.astro` og `Tannleger.astro`
+  - Astro genererer nå riktig `srcset` med flere størrelser — nettleseren velger optimal variant på HiDPI/stor skjerm
+  - Merget til `origin/main` og deployet til prod
+
 - [x] **Mobil: framsiden og meny ikke i sync** ([plan](docs/plans/archive/2026-05-31-mobil-framsiden-meny-sync.md))
   - `hidden lg:block`-wrapper lagt tilbake rundt `<Tjenester>` og `<Tannleger>` i `src/pages/index.astro`
   - Galleri `mobileHref` endret fra `/galleri/` til `/#galleri` i `src/components/Navbar.astro`
