@@ -179,7 +179,7 @@ Dette erstatter den tidligere planen om å splitte runtime/dev og whiteliste pak
 
 Pin alle eksterne actions til full commit-SHA med kommentar på versjon. Dependabot støtter SHA-pinning for actions hvis du legger til `package-ecosystem: github-actions` (sjekk om dette mangler).
 
-- [ ] **Steg 2.1: Generer SHA-tabell**
+- [x] **Steg 2.1: Generer SHA-tabell**
 
   For hver action i bruk (`actions/checkout@v6`, `actions/setup-node@v6`, `actions/upload-artifact@v7`, `actions/download-artifact@v8`, `aws-actions/configure-aws-credentials@v6`, `dependabot/fetch-metadata@v2`, `github/codeql-action/init@v3`, `github/codeql-action/analyze@v3`), kjør:
   ```bash
@@ -187,7 +187,7 @@ Pin alle eksterne actions til full commit-SHA med kommentar på versjon. Dependa
   ```
   Lag en lookup-tabell.
 
-- [ ] **Steg 2.2: Erstatt alle `@vN` med `@<sha>  # vN.M.K` og rydd opp inkonsistens**
+- [x] **Steg 2.2: Erstatt alle `@vN` med `@<sha>  # vN.M.K` og rydd opp inkonsistens**
 
   Format:
   ```yaml
@@ -196,7 +196,7 @@ Pin alle eksterne actions til full commit-SHA med kommentar på versjon. Dependa
 
   Samtidig: `actions/checkout` er i dag `@v4` i `auto-pr.yml` og `codeql.yml`, men `@v6` i `deploy.yml`. Bring alle til samme major (siste stabile) før SHA-pinning, slik at Dependabot ikke gir tre parallelle bumps senere.
 
-- [ ] **Steg 2.3: Legg til Dependabot for github-actions med cooldown**
+- [x] **Steg 2.3: Legg til Dependabot for github-actions med cooldown**
 
   I `.github/dependabot.yml`:
   ```yaml
@@ -503,7 +503,7 @@ Drive-oppdateringer trigger en build som hopper over unit/E2E. Hvis en kompromit
 
 50+ steder i admin-modulene gjør `element.innerHTML = \`...\`` med template-strings. De fleste er statiske ikoner og labels — men hvis noen senere interpolerer en variabel uten DOMPurify, blir det XSS uten at noen merker det. Risikoen er lav i dag, men verdien er at vi gjør det vanskelig å gjøre feil senere.
 
-- [ ] **Steg 11.1: Klassifiser hver `innerHTML =`-bruk**
+- [x] **Steg 11.1: Klassifiser hver `innerHTML =`-bruk**
 
   Kjør `grep -rn "innerHTML\s*=" src/scripts/ | grep -v __tests__`. For hver treff, marker:
   - **Statisk** (kun konstante template-litteraler, ingen `${...}` med eksterne data) → OK
@@ -511,21 +511,59 @@ Drive-oppdateringer trigger en build som hopper over unit/E2E. Hvis en kompromit
   - **Sanitert** (allerede DOMPurify) → OK
   - **Risiko** (interpolerer variabel uten DOMPurify/escapeHtml) → fix
 
-- [ ] **Steg 11.2: Wrap risikable steder med DOMPurify eller escapeHtml**
+- [x] **Steg 11.2: Wrap risikable steder med DOMPurify eller escapeHtml**
 
   For hvert risikabelt treff: enten `DOMPurify.sanitize(...)` på hele HTML-strengen, eller `escapeHtml(verdi)` på hver interpolasjon. Foretrekk `escapeHtml` for enkle tilfeller (bedre ytelse, færre avhengigheter).
 
-- [ ] **Steg 11.3: Lag en lint-regel som flagger `innerHTML =` uten sanitering**
+- [x] **Steg 11.3: Sett opp ESLint og lag en lint-regel som flagger `innerHTML`/`outerHTML =` uten sanitering**
 
-  Velg ESLint (ikke CodeQL) — vi vil ha rask lokal feedback i editor og pre-commit, ikke bare i CI.
+  Velg ESLint (ikke CodeQL) — vi vil ha rask lokal feedback i editor og pre-commit, ikke bare i CI. Prosjektet har ingen ESLint fra før — sett opp fra scratch med ESLint 9 flat config.
 
-  Bruk `eslint-plugin-security` (`detect-non-literal-html`-regelen som baseline) supplert med en liten egendefinert regel: warn ved `AssignmentExpression` der `left` er `MemberExpression` med property `innerHTML` og `right` er en `TemplateLiteral` med `${...}`-uttrykk, med mindre uttrykket er wrappet i `DOMPurify.sanitize(`, `escapeHtml(`, eller linja har `// safe: <reason>`-kommentar.
+  **Installér:** `eslint`, `@eslint/js`, `typescript-eslint`, `eslint-plugin-security`, `globals`
 
-  Kjør i CI som blokkerende step. CodeQL beholdes for bredere semantisk analyse — vi dupliserer ikke regelen der.
+  **`eslint.config.js` (flat config):**
+  - `@eslint/js` recommended for `.js`-filer — fanger reelle bugs (ubrukte variabler, udefinererte referanser, osv.)
+  - `typescript-eslint` recommended for `.ts`-filer
+  - `eslint-plugin-security` for alle filer — merk: `detect-non-literal-html` finnes **ikke** i pluginen; inkluder øvrige regler (unsafe-regex, non-literal-fs-filename osv.)
+  - Egendefinert `no-unsafe-inner-html`-regel (**error**) for `src/scripts/**/*.js`:
+    - Flagger `AssignmentExpression` der `left` er `MemberExpression` med property `innerHTML` **eller** `outerHTML` og `right` er `TemplateLiteral` med `${...}`-uttrykk
+    - Unntak: template-innholdet inneholder `DOMPurify.sanitize(` eller `escapeHtml(`
+    - Unntak: `// safe: <begrunnelse>`-kommentar på linjen **før** noden (leading comment) — dette er den enkleste ESLint AST-tilnærmingen via `context.getCommentsBefore(node)`; trailing comment på samme linje er mulig men krever ekstra `sourceCode`-oppslag og er ikke nødvendig
+    - **Ekskluder `src/scripts/__tests__/**`** fra denne regelen — test-fixtures bruker `document.body.innerHTML` med interpolasjon strukturelt sikkert
+  - Scope: `src/**` — ekskluderer `node_modules`, `dist`, `.claude/worktrees`
+  - `.astro`-filer er bevisst utenfor scope (krever `eslint-plugin-astro`, eget oppsett)
 
-- [ ] **Steg 11.4: Oppdater `docs/guides/test-guide.md` eller en ny `docs/guides/security-guide.md`**
+  **`package.json`:** legg til `"lint": "eslint ."` i scripts.
 
-  Dokumenter regelen: `innerHTML` med interpolasjon krever sanitering eller eksplisitt `// safe:`-kommentar.
+  **CI (`deploy.yml`):**
+  - Nytt `lint`-job parallelt med `unit-tests` og `e2e-tests`
+  - `if: github.event_name != 'repository_dispatch' && github.event.pull_request.head.repo.fork != true` — fork-guard bevisst inkludert for konsistens med `unit-tests`/`e2e-tests`-mønsteret (lint bruker ingen secrets, men fork-PR-er trenger heller ikke å kjøre lint mot ubekreftet kode)
+  - `build`-jobben utvides med `lint` i `needs`-listen og full `if`-blokk (inkl. `always()`):
+    ```yaml
+    needs: [unit-tests, e2e-tests, lint]
+    if: |
+      always() &&
+      (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped') &&
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
+      (needs.lint.result == 'success' || needs.lint.result == 'skipped')
+    ```
+    `always()` er påkrevd — uten det vil `repository_dispatch`-builds (der `lint` er skippet) blokkeres
+
+  **`// safe:`-kommentarer som legges til:**
+  - `admin-dashboard.js:285` — `// safe: context er alltid en hardkodet norsk streng-literal på alle kallsteder`
+  - `admin-dashboard.js:343` — `// safe: formatTimestamp returnerer formatert dato med siffer, norske månedsforkortelser, mellomrom og kolon — ingen HTML-spesialtegn`
+
+  Kjør `eslint --fix` for auto-fiksbare problemer etter oppsett. Eventuelle gjenværende violations evalueres og fikses eller nedgraderes til warn med begrunnelse.
+
+  CodeQL beholdes for bredere semantisk analyse — vi dupliserer ikke regelen der.
+
+- [x] **Steg 11.4: Oppdater `docs/guides/test-guide.md` eller en ny `docs/guides/security-guide.md`**
+
+  Dokumenter regelen: `innerHTML`/`outerHTML` med template-interpolasjon krever enten `DOMPurify.sanitize()`, `escapeHtml()`, eller en `// safe: <begrunnelse>`-kommentar. Spesifiser eksplisitt at kommentaren **må stå på linjen før** assignment — ikke på samme linje (trailing comment sees ikke av regelen). Eksempel:
+  ```js
+  // safe: context er alltid en hardkodet norsk streng-literal på alle kallsteder
+  container.innerHTML = `<div>❌ ${message}</div>`;
+  ```
 
 ---
 

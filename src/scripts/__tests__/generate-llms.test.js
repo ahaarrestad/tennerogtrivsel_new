@@ -126,7 +126,6 @@ describe('generateLlmsFullTxt', () => {
     it('skal sortere prisliste-kategorier etter kategoriOrder', () => {
         const result = generateLlmsFullTxt(baseData);
         const konservIndex = result.indexOf('Konserverende behandling');
-        const protetikkIndex = result.indexOf('Protetikk');
         // Protetikk-seksjonen er tom (alt filtrert bort), bare sjekk Konserverende er først
         expect(konservIndex).toBeGreaterThan(-1);
         expect(konservIndex).toBeLessThan(result.indexOf('Fylling 1 flate'));

@@ -7,7 +7,7 @@ import { formatDate, stripStackEditData, slugify } from './textFormatter.js';
 import { loadMeldingerModule } from './admin-dashboard.js';
 import {
     getAdminConfig, showDeletionToast, initEditors,
-    createAutoSaver, showSaveBar, handleSaveError, handleDeleteError
+    createAutoSaver, handleSaveError, handleDeleteError
 } from './admin-editor-helpers.js';
 
 async function deleteMelding(id, name) {
@@ -47,6 +47,7 @@ async function editMelding(id, name) {
             : `<button id="btn-save-melding" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Opprett melding</button>
                     <button onclick="window.loadMeldingerModule()" class="admin-btn-cancel">Avbryt</button>`;
 
+        // safe: formatDate returnerer norsk datostreng uten HTML-spesialtegn; resten er hardkodet HTML
         inner.innerHTML = `
             <div class="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div class="grid grid-cols-1 gap-6">

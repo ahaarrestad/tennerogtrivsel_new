@@ -1,11 +1,11 @@
 // src/scripts/admin-dashboard.js
 import {
-    listFiles, getFileContent, saveFile, createFile, deleteFile,
-    parseMarkdown, stringifyMarkdown, updateSettings, getSettingsWithNotes,
-    checkMultipleAccess, login, getTannlegerRaw, updateTannlegeRow,
-    addTannlegeRow, getGalleriRaw, updateGalleriRow, findFileByName, getDriveImageBlob, getPrislisteRaw,
+    listFiles, getFileContent,
+    parseMarkdown, updateSettings, getSettingsWithNotes,
+    checkMultipleAccess, login, getTannlegerRaw,
+    getGalleriRaw, updateGalleriRow, findFileByName, getDriveImageBlob, getPrislisteRaw,
     updatePrislisteRow, updateSettingByKey, updateSettingOrder,
-    getKategoriRekkefølge, updateKategoriOrder, addKategoriRekkefølge
+    updateKategoriOrder
 } from './admin-client.js';
 import { withRetry, classifyError } from './admin-api-retry.js';
 import { showAuthExpired } from './admin-dialog.js';
@@ -282,6 +282,7 @@ export function handleModuleError(err, context, container, onRetry) {
     const message = kind === 'retryable'
         ? 'Nettverksfeil — sjekk internettforbindelsen og prøv igjen.'
         : `Noe gikk galt med ${context}. Prøv igjen eller kontakt administrator.`;
+    // safe: context er alltid en hardkodet norsk streng-literal på alle kallsteder
     container.innerHTML = `<div class="admin-alert-error">❌ ${message}</div>
         <button class="retry-btn btn-primary text-xs py-2 px-4 mt-3">Prøv igjen</button>`;
     container.querySelector('.retry-btn')?.addEventListener('click', onRetry);
@@ -340,6 +341,7 @@ export async function saveSingleSetting(index, inputEl, currentSettings, sheetId
         }
 
         const ts = formatTimestamp(savedTime);
+        // safe: formatTimestamp returnerer formatert dato med siffer, norske månedsforkortelser, mellomrom og kolon — ingen HTML-spesialtegn
         statusEl.innerHTML = `<span class="admin-save-ok" title="Publiseres automatisk om noen minutter">✅ ${ts}</span>`;
         setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 5000);
     } catch (e) {
@@ -356,6 +358,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
 
+    // safe: ICON_ADD er en hardkodet SVG-konstantstreng
     actions.innerHTML = `<button id="btn-new-melding" class="btn-primary p-2.5 shadow-md rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center" title="Heng opp nytt oppslag" aria-label="Heng opp nytt oppslag">${ICON_ADD}</button>`;
     inner.innerHTML = renderSkeletonCards(3);
 
@@ -478,6 +481,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
 
+    // safe: ICON_ADD er en hardkodet SVG-konstantstreng
     actions.innerHTML = `<button id="btn-new-tjeneste" class="btn-primary p-2.5 shadow-md rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center" title="Legg til behandling" aria-label="Legg til behandling">${ICON_ADD}</button>`;
     inner.innerHTML = renderSkeletonCards(3);
 
@@ -560,6 +564,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
 
+    // safe: ICON_ADD er en hardkodet SVG-konstantstreng
     actions.innerHTML = `<button id="btn-new-tannlege" class="btn-primary p-2.5 shadow-md rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center" title="Legg til team-medlem" aria-label="Legg til team-medlem">${ICON_ADD}</button>`;
     inner.innerHTML = renderSkeletonCards(3, { withThumbnail: true });
 

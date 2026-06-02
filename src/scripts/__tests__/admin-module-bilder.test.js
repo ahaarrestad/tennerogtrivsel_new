@@ -72,13 +72,13 @@ vi.mock('../admin-api-retry.js', () => ({
 import {
     getSheetParentFolder, getGalleriRaw, updateGalleriRow, addGalleriRow,
     deleteGalleriRowPermanently, setForsideBildeInGalleri, setFellesBildeInGalleri, migrateForsideBildeToGalleri,
-    getDriveImageBlob, findFileByName, deleteFile, listImages
+    findFileByName, deleteFile, listImages
 } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadGallery, setupUploadHandler } from '../admin-gallery.js';
 import { loadGalleriListeModule, reorderGalleriItem } from '../admin-dashboard.js';
 import { animateSwap, disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
-import { getAdminConfig, showDeletionToast, bindSliderStepButtons, bindWheelPrevent, showSaveBar, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave, checkDriveConsistency } from '../admin-editor-helpers.js';
+import { getAdminConfig, showDeletionToast, bindSliderStepButtons, bindWheelPrevent, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave, checkDriveConsistency } from '../admin-editor-helpers.js';
 import { loadBilderModule } from '../admin-module-bilder.js';
 
 beforeEach(() => {
@@ -376,7 +376,7 @@ describe('handleReorder (via loadBilderModule callback)', () => {
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
 
-        const { container, card1, card2 } = createReorderCards();
+        const { card1, card2 } = createReorderCards();
 
         getGalleriRaw.mockResolvedValue([
             { rowIndex: 2, type: 'galleri', order: 2 },
@@ -423,7 +423,7 @@ describe('handleReorder (via loadBilderModule callback)', () => {
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
 
-        const { container, card1, card2 } = createReorderCards();
+        const { card1, card2 } = createReorderCards();
 
         getGalleriRaw.mockResolvedValue([
             { rowIndex: 2, type: 'galleri', order: 2 },
@@ -447,7 +447,7 @@ describe('handleReorder (via loadBilderModule callback)', () => {
         migrateForsideBildeToGalleri.mockResolvedValue();
         await loadBilderModule();
 
-        const { container, card1, card2 } = createReorderCards();
+        const { card1, card2 } = createReorderCards();
 
         getGalleriRaw.mockRejectedValueOnce(new Error('fail'));
 

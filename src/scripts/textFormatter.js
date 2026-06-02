@@ -124,8 +124,8 @@ export function slugify(text) {
         .replace(/[æ]/g, 'ae')          // Håndter norske tegn
         .replace(/[ø]/g, 'oe')
         .replace(/[å]/g, 'aa')
-        .replace(/[^\w\-]+/g, '')       // Fjern alt som ikke er ord eller -
-        .replace(/\-\-+/g, '-')         // Bytt ut flere - med en enkel -
+        .replace(/[^\w-]+/g, '')        // Fjern alt som ikke er ord eller -
+        .replace(/--+/g, '-')           // Bytt ut flere - med en enkel -
         .replace(/^-+/, '')             // Fjern - fra start
         .replace(/-+$/, '');            // Fjern - fra slutt
 }

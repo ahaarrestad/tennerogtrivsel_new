@@ -43,7 +43,7 @@ describe('isTouchDevice', () => {
     afterEach(() => {
         // Clean up ontouchstart if added
         if ('ontouchstart' in window) {
-            delete (window as any).ontouchstart;
+            delete (window as Record<string, unknown>).ontouchstart;
         }
         // Restore navigator
         if (originalNavigator) {
@@ -52,14 +52,14 @@ describe('isTouchDevice', () => {
     });
 
     it('returns true when ontouchstart is in window', () => {
-        (window as any).ontouchstart = null;
+        (window as Record<string, unknown>).ontouchstart = null;
         expect(isTouchDevice()).toBe(true);
     });
 
     it('returns true when navigator.maxTouchPoints > 0', () => {
         // Ensure ontouchstart is NOT present
         if ('ontouchstart' in window) {
-            delete (window as any).ontouchstart;
+            delete (window as Record<string, unknown>).ontouchstart;
         }
         Object.defineProperty(window, 'navigator', {
             value: { ...navigator, maxTouchPoints: 2 },
@@ -71,7 +71,7 @@ describe('isTouchDevice', () => {
 
     it('returns false when neither ontouchstart nor maxTouchPoints', () => {
         if ('ontouchstart' in window) {
-            delete (window as any).ontouchstart;
+            delete (window as Record<string, unknown>).ontouchstart;
         }
         Object.defineProperty(window, 'navigator', {
             value: { ...navigator, maxTouchPoints: 0 },
@@ -200,7 +200,7 @@ describe('initMap', () => {
         document.body.innerHTML = '';
         // Ensure non-touch device by default
         if ('ontouchstart' in window) {
-            delete (window as any).ontouchstart;
+            delete (window as Record<string, unknown>).ontouchstart;
         }
         Object.defineProperty(window, 'navigator', {
             value: { ...navigator, maxTouchPoints: 0 },
@@ -289,7 +289,7 @@ describe('initMap', () => {
     });
 
     it('calls setupTouchOverlay on touch device', () => {
-        (window as any).ontouchstart = null;
+        (window as Record<string, unknown>).ontouchstart = null;
 
         const mapEl = document.createElement('div');
         mapEl.id = 'map';
@@ -304,7 +304,7 @@ describe('initMap', () => {
         expect(overlay).not.toBeNull();
 
         // Clean up
-        delete (window as any).ontouchstart;
+        delete (window as Record<string, unknown>).ontouchstart;
     });
 
     it('uses empty string for name when data-name is not set', () => {

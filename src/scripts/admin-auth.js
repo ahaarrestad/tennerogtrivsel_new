@@ -1,8 +1,6 @@
 // src/scripts/admin-auth.js — Autentisering: token, GIS, login/logout, sesjonshåndtering
 
 let tokenClient;
-let gapiInited = false;
-let gisInited = false;
 let _rememberMe = false;
 
 export function setRememberMe(val) {
@@ -59,7 +57,6 @@ export async function initGapi() {
                     loadApi('sheets', 'v4')
                 ]);
 
-                gapiInited = true;
                 resolve(true);
             } catch (err) {
                 console.error("[GAPI] Init kritisk feil:", err);
@@ -109,7 +106,6 @@ export function initGis(callback) {
             window.dispatchEvent(new Event('admin-auth-refreshed'));
         },
     });
-    gisInited = true;
     console.log("[GIS] Initialisert");
 }
 

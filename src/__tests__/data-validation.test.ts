@@ -2,24 +2,33 @@ import { describe, it, expect, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 
+type ZMock = Record<string, (...args: unknown[]) => ZMock> & {
+    coerce: { date: (...args: unknown[]) => ZMock };
+    safeParse: (data: unknown) => { success: boolean; data: unknown };
+};
+
 // Mock astro:content med en funksjonell zod-liknende mock
 vi.mock('astro:content', () => {
-    const zMock: any = {
-        object: vi.fn(() => zMock),
-        string: vi.fn(() => zMock),
-        number: vi.fn(() => zMock),
-        boolean: vi.fn(() => zMock),
-        array: vi.fn(() => zMock),
-        union: vi.fn(() => zMock),
-        optional: vi.fn(() => zMock),
-        default: vi.fn(() => zMock),
-        coerce: {
-            date: vi.fn(() => zMock),
-        },
-        safeParse: vi.fn((data) => ({ success: true, data })),
-    };
+    const zMock = {
+        object: vi.fn(),
+        string: vi.fn(),
+        number: vi.fn(),
+        boolean: vi.fn(),
+        array: vi.fn(),
+        union: vi.fn(),
+        optional: vi.fn(),
+        default: vi.fn(),
+        coerce: { date: vi.fn() },
+        safeParse: vi.fn((data: unknown) => ({ success: true, data })),
+    } as unknown as ZMock;
+    Object.entries(zMock).forEach(([key, v]) => {
+        if (key !== 'safeParse' && key !== 'coerce' && typeof v === 'function') {
+            vi.mocked(v).mockReturnValue(zMock);
+        }
+    });
+    vi.mocked(zMock.coerce.date).mockReturnValue(zMock);
     return {
-        defineCollection: vi.fn((config) => config),
+        defineCollection: vi.fn((config: unknown) => config),
         z: zMock,
     };
 });
@@ -39,7 +48,7 @@ describe('Datavalidering (Synkroniserte filer)', () => {
 
         const data = JSON.parse(fs.readFileSync(tannlegerFile, 'utf-8'));
         
-        data.forEach((tannlege: any) => {
+        (data as Array<Record<string, unknown>>).forEach((tannlege) => {
             if (tannlege.image) {
                 const imagePath = path.join(assetsPath, tannlege.image);
                 expect(fs.existsSync(imagePath), `Bilde ${tannlege.image} for ${tannlege.name} mangler i assets`).toBe(true);

@@ -46,12 +46,12 @@ vi.mock('../admin-editor-helpers.js', () => ({
 import {
     getPrislisteRaw, addPrislisteRow, updatePrislisteRow,
     deletePrislisteRowPermanently, backupToSlettetSheet,
-    getKategoriRekkefølge, addKategoriRekkefølge,
+    getKategoriRekkefølge,
 } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { createAutoSaver, verifySave } from '../admin-editor-helpers.js';
 import { reorderPrislisteItem, reorderPrislisteKategori } from '../admin-dashboard.js';
-import { animateSwap, disableReorderButtons, enableReorderButtons, updateReorderButtonVisibility } from '../admin-reorder.js';
+import { animateSwap, disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
 import { initPrislisteModule, reloadPrisliste } from '../admin-module-prisliste.js';
 
 beforeEach(() => {

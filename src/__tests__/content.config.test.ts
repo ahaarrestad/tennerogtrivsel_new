@@ -1,25 +1,36 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import fs from 'fs';
 
+type CollectionWithLoader = { loader: () => Promise<Record<string, unknown>[]> };
+
+type ZMock = Record<string, (...args: unknown[]) => ZMock> & {
+    coerce: { date: (...args: unknown[]) => ZMock };
+    safeParse: (data: unknown) => { success: boolean; data: unknown };
+};
+
 // Mock astro:content
 vi.mock('astro:content', () => {
-    const zMock: any = {
-        object: vi.fn(() => zMock),
-        string: vi.fn(() => zMock),
-        number: vi.fn(() => zMock),
-        boolean: vi.fn(() => zMock),
-        array: vi.fn(() => zMock),
-        union: vi.fn(() => zMock),
-        optional: vi.fn(() => zMock),
-        default: vi.fn(() => zMock),
-        describe: vi.fn(() => zMock),
-        coerce: {
-            date: vi.fn(() => zMock),
-        },
-        safeParse: vi.fn((data) => ({ success: true, data })),
-    };
+    const zMock = {
+        object: vi.fn(),
+        string: vi.fn(),
+        number: vi.fn(),
+        boolean: vi.fn(),
+        array: vi.fn(),
+        union: vi.fn(),
+        optional: vi.fn(),
+        default: vi.fn(),
+        describe: vi.fn(),
+        coerce: { date: vi.fn() },
+        safeParse: vi.fn((data: unknown) => ({ success: true, data })),
+    } as unknown as ZMock;
+    Object.entries(zMock).forEach(([key, v]) => {
+        if (key !== 'safeParse' && key !== 'coerce' && typeof v === 'function') {
+            vi.mocked(v).mockReturnValue(zMock);
+        }
+    });
+    vi.mocked(zMock.coerce.date).mockReturnValue(zMock);
     return {
-        defineCollection: vi.fn((config) => config),
+        defineCollection: vi.fn((config: unknown) => config),
         z: zMock,
     };
 });
@@ -53,10 +64,10 @@ describe('content.config.ts - Loaders', () => {
                 { id: 'phone1', value: '12345678' },
             ];
 
-            (fs.existsSync as any).mockReturnValue(true);
-            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockInnstillinger));
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockInnstillinger));
 
-            const loader = (collections.innstillinger as any).loader;
+            const loader = (collections.innstillinger as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result).toHaveLength(1);
@@ -64,9 +75,9 @@ describe('content.config.ts - Loaders', () => {
         });
 
         it('bør returnere tom liste hvis filen ikke finnes', async () => {
-            (fs.existsSync as any).mockReturnValue(false);
+            vi.mocked(fs.existsSync).mockReturnValue(false);
 
-            const loader = (collections.innstillinger as any).loader;
+            const loader = (collections.innstillinger as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result).toEqual([]);
@@ -78,10 +89,10 @@ describe('content.config.ts - Loaders', () => {
                 { value: 'bare-verdi' },
             ];
 
-            (fs.existsSync as any).mockReturnValue(true);
-            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockInnstillinger));
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockInnstillinger));
 
-            const loader = (collections.innstillinger as any).loader;
+            const loader = (collections.innstillinger as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result[0]).toEqual({ id: 'phone1', value: '' });
@@ -95,10 +106,10 @@ describe('content.config.ts - Loaders', () => {
                 { id: 'bilde-1', title: 'Venterom', image: 'venterom.jpg' },
             ];
 
-            (fs.existsSync as any).mockReturnValue(true);
-            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockGalleri));
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockGalleri));
 
-            const loader = (collections.galleri as any).loader;
+            const loader = (collections.galleri as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result).toEqual(mockGalleri);
@@ -109,19 +120,19 @@ describe('content.config.ts - Loaders', () => {
                 { title: 'Uten ID' },
             ];
 
-            (fs.existsSync as any).mockReturnValue(true);
-            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockGalleri));
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockGalleri));
 
-            const loader = (collections.galleri as any).loader;
+            const loader = (collections.galleri as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result[0].id).toBe('galleri-0');
         });
 
         it('bør returnere tom liste hvis filen ikke finnes', async () => {
-            (fs.existsSync as any).mockReturnValue(false);
+            vi.mocked(fs.existsSync).mockReturnValue(false);
 
-            const loader = (collections.galleri as any).loader;
+            const loader = (collections.galleri as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result).toEqual([]);
@@ -134,10 +145,10 @@ describe('content.config.ts - Loaders', () => {
                 { id: 'ola-nordmann', name: 'Ola Nordmann' },
             ];
 
-            (fs.existsSync as any).mockReturnValue(true);
-            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockTannleger));
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockTannleger));
 
-            const loader = (collections.tannleger as any).loader;
+            const loader = (collections.tannleger as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result).toEqual(mockTannleger);
@@ -148,19 +159,19 @@ describe('content.config.ts - Loaders', () => {
                 { name: 'Kari Nordmann' },
             ];
 
-            (fs.existsSync as any).mockReturnValue(true);
-            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockTannleger));
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockTannleger));
 
-            const loader = (collections.tannleger as any).loader;
+            const loader = (collections.tannleger as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result[0].id).toBe('tannlege-0');
         });
 
         it('bør returnere tom liste hvis filen ikke finnes', async () => {
-            (fs.existsSync as any).mockReturnValue(false);
+            vi.mocked(fs.existsSync).mockReturnValue(false);
 
-            const loader = (collections.tannleger as any).loader;
+            const loader = (collections.tannleger as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result).toEqual([]);
@@ -169,9 +180,9 @@ describe('content.config.ts - Loaders', () => {
 
     describe('kontaktskjema loader', () => {
         it('returnerer standardverdier når filen ikke finnes', async () => {
-            (fs.existsSync as any).mockReturnValue(false);
+            vi.mocked(fs.existsSync).mockReturnValue(false);
 
-            const loader = (collections.kontaktskjema as any).loader;
+            const loader = (collections.kontaktskjema as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result).toEqual([{
@@ -181,10 +192,10 @@ describe('content.config.ts - Loaders', () => {
 
         it('leser data fra fil og beholder aktiv som boolsk', async () => {
             const mockData = { aktiv: true, tittel: 'Ta kontakt', tekst: 'Svar raskt.', tema: ['Timebooking'] };
-            (fs.existsSync as any).mockReturnValue(true);
-            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockData));
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockData));
 
-            const loader = (collections.kontaktskjema as any).loader;
+            const loader = (collections.kontaktskjema as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result[0]).toMatchObject({
@@ -202,10 +213,10 @@ describe('content.config.ts - Loaders', () => {
                 ],
             };
 
-            (fs.existsSync as any).mockReturnValue(true);
-            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockPrisliste));
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockPrisliste));
 
-            const loader = (collections.prisliste as any).loader;
+            const loader = (collections.prisliste as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result).toHaveLength(1);
@@ -219,10 +230,10 @@ describe('content.config.ts - Loaders', () => {
                 { kategori: 'Undersokelser', behandling: 'Vanlig undersokelse', pris: 850 },
             ];
 
-            (fs.existsSync as any).mockReturnValue(true);
-            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockPrisliste));
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockPrisliste));
 
-            const loader = (collections.prisliste as any).loader;
+            const loader = (collections.prisliste as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result).toHaveLength(1);
@@ -232,9 +243,9 @@ describe('content.config.ts - Loaders', () => {
         });
 
         it('should return empty array if file does not exist', async () => {
-            (fs.existsSync as any).mockReturnValue(false);
+            vi.mocked(fs.existsSync).mockReturnValue(false);
 
-            const loader = (collections.prisliste as any).loader;
+            const loader = (collections.prisliste as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result).toEqual([]);
@@ -249,10 +260,10 @@ describe('content.config.ts - Loaders', () => {
                 ],
             };
 
-            (fs.existsSync as any).mockReturnValue(true);
-            (fs.readFileSync as any).mockReturnValue(JSON.stringify(mockPrisliste));
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockPrisliste));
 
-            const loader = (collections.prisliste as any).loader;
+            const loader = (collections.prisliste as unknown as CollectionWithLoader).loader;
             const result = await loader();
 
             expect(result[0].order).toBe(3);
