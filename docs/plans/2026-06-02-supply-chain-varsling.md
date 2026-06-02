@@ -64,7 +64,7 @@ Bruker offisielt reusable workflow fra `google/osv-scanner-action` — den direk
 jobs:
   osv-scan:
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8
-    permissions:
+    permissions:        # job-scoped, ikke workflow-nivå — bare denne jobben får disse rettighetene
       security-events: write
       contents: read
       actions: read
