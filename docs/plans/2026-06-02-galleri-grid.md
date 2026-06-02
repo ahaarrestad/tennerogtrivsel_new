@@ -17,7 +17,7 @@
 **Files:**
 - Modify: `src/components/Galleri.astro:30,43`
 
-- [ ] **Steg 1: Endre grid-klassen (linje 30)**
+- [x] **Steg 1: Endre grid-klassen (linje 30)**
 
   Fra:
   ```
@@ -28,7 +28,7 @@
   grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4
   ```
 
-- [ ] **Steg 2: Oppdater sizes-attributtet (linje 43)**
+- [x] **Steg 2: Oppdater sizes-attributtet (linje 43)**
 
   Fra:
   ```
@@ -39,7 +39,7 @@
   sizes="(min-width: 1024px) 25vw, 50vw"
   ```
 
-- [ ] **Steg 3: Visuell verifikasjon**
+- [x] **Steg 3: Visuell verifikasjon**
 
   Kjør dev-server:
   ```bash
@@ -52,7 +52,7 @@
 
   Sjekk også `/galleri/`-siden ved samme breakpoints.
 
-- [ ] **Steg 4: Commit**
+- [x] **Steg 4: Commit**
 
   ```bash
   git add src/components/Galleri.astro
