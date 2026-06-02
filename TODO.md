@@ -18,9 +18,6 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
-- [ ] **galleri seksjonen skal enten være 4x1 eller 2x2** ([plan](docs/plans/2026-06-02-galleri-grid.md))
-  - i dag blir den plutselig 3 bildet på en rad og 1 på siste når skjermen blir mindre. det er feil!
-
 ## Backlog
 
 - [ ] **Varsling ved supply chain-angrep** ([plan](docs/plans/2026-06-02-supply-chain-varsling.md))
