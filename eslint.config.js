@@ -119,15 +119,15 @@ export default [
       ...Object.fromEntries(
         Object.entries(security.configs.recommended.rules).map(([k]) => [k, 'warn'])
       ),
-      'security/detect-object-injection': 'off',
-      'security/detect-non-literal-fs-filename': 'off',
-      'security/detect-possible-timing-attacks': 'off',
+      'security/detect-object-injection': 'off', // falsk positiv på vanlig bracket-notasjon
+      'security/detect-non-literal-fs-filename': 'off', // forventet mønster i build-scripts
+      'security/detect-possible-timing-attacks': 'off', // falsk positiv på null-sjekker (ikke krypto-sammenligning)
     },
   },
 
   // Egendefinert innerHTML/outerHTML-regel — kun src/scripts, ikke tester
   {
-    files: ['src/scripts/**/*.js'],
+    files: ['src/scripts/**/*.{js,ts}'],
     ignores: ['src/scripts/__tests__/**'],
     plugins: { local: { rules: { 'no-unsafe-inner-html': noUnsafeInnerHtml } } },
     rules: {

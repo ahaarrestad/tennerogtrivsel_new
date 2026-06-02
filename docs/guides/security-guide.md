@@ -57,6 +57,10 @@ el.innerHTML = `<img src="${escapeHtml(url)}" alt="${rawVar}">`;
 
 Regelen er en heuristikk, ikke en fullstendig analyse. Konsekvens: **alle** interpolasjoner i en template som bruker escaping skal escapes — ikke bare én.
 
+## .astro-filer
+
+`.astro`-filer er **ikke** dekket av `local/no-unsafe-inner-html`-regelen (krever `eslint-plugin-astro`, ikke satt opp). Bruk `DOMPurify.sanitize()` manuelt ved `innerHTML`-bruk i `.astro` script-blokker.
+
 ## Testfiler
 
 I testfiler (`src/scripts/__tests__/**`) er `local/no-unsafe-inner-html`-regelen deaktivert. `document.body.innerHTML = ...` brukes til å sette opp testfixtures og er strukturelt trygt.
