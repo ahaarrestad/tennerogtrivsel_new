@@ -245,6 +245,47 @@ Auto-merge av Dependabot-PR-er fungerer trygt kun fordi vi har en **cooldown**-p
 
 **Security-advisory-splitting i `dependabot-auto-merge.yml`:** `dependabot/fetch-metadata` eksponerer `alert-state`-output — tom streng for ordinære version-updates, satt (f.eks. `OPEN`) for GHSA-advisory-PR-er. Auto-merge kjøres kun når `alert-state == ''` og `update-type != 'version-update:semver-major'`. Security-PR-er går alltid til manuell review.
 
+### SHA-pinning av GitHub Actions
+
+Alle eksterne actions i `.github/workflows/` er pinnet til full commit-SHA med versjonskомmentar:
+
+```yaml
+- uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+```
+
+**Hvorfor SHA og ikke tag:** En tag (`@v4`) kan flyttes av action-eieren til en annen commit uten varsel. En kompromittert publisher kan dermed injisere ondsinnet kode i CI-pipelinen — og hente ut alle hemmeligheter i `env`-blokken — uten at noe i repoet endres. SHA er immutabel.
+
+**Dependabot holder SHA-pinnene oppdatert** via `package-ecosystem: github-actions` i `.github/dependabot.yml`. Dependabot oppretter PR med ny SHA + kommentar når en nyere versjon av en action er tilgjengelig. Samme cooldown-regler som for npm gjelder.
+
+### npm-pakkesignatur-verifisering og audit-gate
+
+To separate CI-sjekker i `deploy.yml` (kjøres i `e2e-tests`-, `build`- og `update-lambda`-jobbene):
+
+```yaml
+- name: Verify npm package signatures
+  run: npm audit signatures
+
+- name: Check for critical vulnerabilities
+  run: npm audit --audit-level=critical
+```
+
+**`npm audit signatures`** verifiserer at alle installerte pakker er signert av npm-registryet med nøkkelen som matcher publisert metadata. Dette fanger pakkeforfalskning der innholdet er byttet ut uten å oppdatere registrert signatur.
+
+**`npm audit --audit-level=critical`** feiler bygget ved kjente kritiske CVE-er i avhengighetstreet. Nivået er satt til `critical` (ikke `high`) for å unngå at hyppige `high`-CVE-er i dev-only transitive deps gjør CI flaky uten reell prod-impact.
+
+### PAT-rotering (`MY_GITHUB_PAT`)
+
+`MY_GITHUB_PAT` brukes i `dependabot-auto-merge.yml` og `auto-pr.yml` for å trigge workflows etter Dependabot-merge (standard `GITHUB_TOKEN` har en anti-loop-sikring som blokkerer dette).
+
+**Gjeldende token-scope:** `Contents: read/write`, `Pull requests: write` — begrenset til dette repoet.
+
+**Roteringsrutine:**
+1. Gå til `github.com/settings/personal-access-tokens` → finn token → generer ny
+2. Oppdater GitHub-secret `MY_GITHUB_PAT` i repoets Settings → Secrets and variables → Actions
+3. Verifiser at neste Dependabot-PR auto-merges korrekt
+
+Token bør roteres minst én gang i året, eller umiddelbart ved mistanke om lekkasje (se runbook `docs/runbooks/supply-chain-incident.md`).
+
 ## Drive API query-escaping
 
 Alle Drive API `q`-strenger der verdier interpoleres bruker `escapeDriveQuery()` som escaper backslash og enkle anførselstegn. Dette beskytter mot query-injeksjon fra spesialtegn i filnavn eller mappe-IDer.
@@ -354,8 +395,5 @@ curl "https://www.googleapis.com/drive/v3/files?key=<NØKKEL>" \
 
 - Når kode under test bruker Web Storage, SKAL **begge** `localStorage.clear()` og
   `sessionStorage.clear()` kalles i `beforeEach` – ikke bare én av dem.
-- `admin-client.js` har modul-nivå-variabler (`tokenClient`, `_rememberMe`, `gapiInited`,
-  `gisInited`) som **ikke** nullstilles av `vi.clearAllMocks()`. Tester som er sensitive
-  for denne tilstanden MÅ eksplisitt kalle de eksporterte setter-funksjonene
-  (f.eks. `setRememberMe(false)`) i `beforeEach`.
+- `admin-auth.js` har modul-nivå-variabelen `_rememberMe` som **ikke** nullstilles av `vi.clearAllMocks()`. Tester som er sensitive for denne tilstanden MÅ eksplisitt kalle `setRememberMe(false)` i `beforeEach`.
 - Nøkkelnavnet for "husk meg"-flagget er `admin_remember_me` i `localStorage` (ikke `admin_google_token` som tidligere). Token lagres utelukkende i `sessionStorage`.
