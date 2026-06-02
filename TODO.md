@@ -23,6 +23,11 @@
 
 ## Backlog
 
+- [ ] **Varsling ved supply chain-angrep** — *ingen plan ennå*
+  - Hvordan få varsel hvis en av prosjektets avhengigheter (npm, GitHub Actions) er kompromittert?
+  - Kartlegg aktuelle varslings-kanaler: GitHub Dependabot alerts, npm audit, OSV/OSSF-feeds, Socket.dev e.l.
+  - Vurder hva som gir reell nytte vs. støy for et prosjekt av denne størrelsen
+
 - [ ] **galleri seksjonen skal enten være 4x1 eller 2x2**
   - i dag blir den plutselig 3 bildet på en rad og 1 på siste når skjermen blir mindre. det er feil!
 
