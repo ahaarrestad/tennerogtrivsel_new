@@ -3,6 +3,11 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Galleri-grid: alltid 2×2 eller 4×1** ([plan](docs/plans/archive/2026-06-02-galleri-grid.md))
+  - Fjernet `md:grid-cols-3` fra `Galleri.astro` — grid hopper nå direkte fra 2 til 4 kolonner
+  - Oppdatert `sizes`-attributt tilsvarende
+  - Merget til `origin/main`
+
 - [x] **Sjekk bildeoppløsning — bilder er hakkete** ([plan](docs/plans/archive/2026-06-01-bildeopplosning.md))
   - `widths`/`sizes`-props lagt til på `<Image>` i `Forside.astro`, `Galleri.astro` og `Tannleger.astro`
   - Astro genererer nå riktig `srcset` med flere størrelser — nettleseren velger optimal variant på HiDPI/stor skjerm
