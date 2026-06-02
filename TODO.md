@@ -14,10 +14,9 @@
 ## Pågående
 
 - [ ] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/2026-04-28-sikkerhetshardening.md))
-  - Task 1, 2, 4–9, 11 er fullført. Gjenstående tasks:
+  - Task 1, 2, 4–9, 11, 12 er fullført. Gjenstående tasks:
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
-  - **Task 12:** Oppdater `docs/architecture/sikkerhet.md` + lag `docs/runbooks/supply-chain-incident.md`
 
 ## Backlog
 

@@ -569,7 +569,7 @@ Drive-oppdateringer trigger en build som hopper over unit/E2E. Hvis en kompromit
 
 ## Task 12: Oppdater dokumentasjon
 
-- [ ] **Steg 12.1: Oppdater `docs/architecture/sikkerhet.md`**
+- [x] **Steg 12.1: Oppdater `docs/architecture/sikkerhet.md`**
 
   Legg til seksjoner om:
   - Supply-chain kontroller (auto-merge-policy, SHA-pinning, audit signatures)
@@ -577,7 +577,7 @@ Drive-oppdateringer trigger en build som hopper over unit/E2E. Hvis en kompromit
   - Token-lifecycle og storage-rasjonale
   - PAT-rotering
 
-- [ ] **Steg 12.2: Lag `docs/runbooks/supply-chain-incident.md`**
+- [x] **Steg 12.2: Lag `docs/runbooks/supply-chain-incident.md`**
 
   Hva gjør vi hvis en npm-pakke i produksjon viser seg å være kompromittert? Steg: rull tilbake S3, identifiser pakke fra lockfile, bytt all secrets, varsle.
 
