@@ -64,3 +64,7 @@ Detaljert arkitekturdokumentasjon for spesifikke subsystemer finnes i `docs/arch
 - [Sikkerhet](docs/architecture/sikkerhet.md) — DOMPurify, CSP, middleware, test-gotchas
 
 Les relevant arkitekturdokument **før** du gjør endringer i et subsystem.
+
+## Sikkerhetsregler for innerHTML
+
+`innerHTML`/`outerHTML` med template-interpolasjon krever `DOMPurify.sanitize()`, `escapeHtml()`, eller en `// safe: <begrunnelse>`-kommentar på linjen **før** assignment. ESLint-regelen `local/no-unsafe-inner-html` håndhever dette i `src/scripts/`. Se [`docs/guides/security-guide.md`](docs/guides/security-guide.md) for mønstre og kjente begrensninger.
