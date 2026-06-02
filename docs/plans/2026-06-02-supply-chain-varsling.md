@@ -32,16 +32,19 @@ Prosjektet har allerede:
 Fil som opprettes/endres: ingen (API-kall, idempotente)
 
 ```bash
-# Sjekk status (204 = aktivert, ikke-null exit = ikke aktivert)
+# Sjekk status — merk: de to endepunktene returnerer ulike statuskoder
 gh api --include repos/ahaarrestad/tennerogtrivsel_new/vulnerability-alerts
-gh api --include repos/ahaarrestad/tennerogtrivsel_new/automated-security-fixes
+# → HTTP 204 No Content = aktivert, HTTP 404 = ikke aktivert
+
+gh api repos/ahaarrestad/tennerogtrivsel_new/automated-security-fixes
+# → HTTP 200 + JSON {"enabled": true, "paused": false} = aktivert
 
 # Aktiver (begge idempotente — trygt å kjøre selv om allerede aktivert)
 gh api --method PUT repos/ahaarrestad/tennerogtrivsel_new/vulnerability-alerts
 gh api --method PUT repos/ahaarrestad/tennerogtrivsel_new/automated-security-fixes
 ```
 
-`--include` viser HTTP-statuslinjen så man ser tydelig om det er 204 (aktivert) eller 404 (ikke aktivert). Disse kalles én gang manuelt og dokumenteres som «aktivert» i sikkerhet.md.
+Disse kalles én gang manuelt og dokumenteres som «aktivert» i sikkerhet.md.
 
 ### Steg 2: Scheduled audit-workflow
 
@@ -61,7 +64,15 @@ Legges inn i samme `scheduled-audit.yml` som Steg 2, som eget job.
 Bruker offisielt reusable workflow fra `google/osv-scanner-action` — den direkte action-filen (`action.yml`) har ikke `runs:`-seksjon og skal ikke brukes direkte.
 
 ```yaml
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # mandag 06:00 UTC
+  workflow_dispatch:        # manuell dispatch for testing (kreves av Testbehov)
+
 jobs:
+  npm-audit:
+    # ... (npm audit --audit-level=high, se Steg 2)
+
   osv-scan:
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8
     permissions:        # job-scoped, ikke workflow-nivå — bare denne jobben får disse rettighetene
@@ -99,9 +110,10 @@ Fil: `docs/architecture/sikkerhet.md` — legg til nytt avsnitt «Supply chain v
 - `npm audit --audit-level=high` kan gi støy ved moderate sårbarheter i dev-avhengigheter — se Steg 2 for justeringsstrategi
 - osv-scanner er nytt verktøy: første kjøring kan avdekke funn som allerede er håndtert av `npm audit`; disse må vurderes manuelt
 - Workflow-jobben for osv-scanner krever `permissions: security-events: write` for SARIF-opplasting — mangler dette feiler opplastingen stille
+- **GitHub deaktiverer scheduled workflows etter 60 dager uten repo-aktivitet** — for en statisk side som kan gå måneder uten push vil varslingen stilne uten varsel. Reaktiveres manuelt via Actions-fanen. Akseptabel risiko gitt prosjektets størrelse
 
 ## Definition of done
 
-- `gh api`-kallene er kjørt og Dependabot alerts/auto-fix er bekreftet aktivert (HTTP 204)
+- `gh api`-kallene er kjørt og Dependabot alerts (HTTP 204) + auto-fix (`"enabled": true`) er bekreftet aktivert
 - `scheduled-audit.yml` kjører clean på main via manuell dispatch
 - `docs/architecture/sikkerhet.md` er oppdatert med supply chain-avsnittet
