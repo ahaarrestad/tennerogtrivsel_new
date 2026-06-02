@@ -6,7 +6,7 @@ import {
 } from './admin-client.js';
 import { showToast, showConfirm } from './admin-dialog.js';
 import { loadGallery, setupUploadHandler } from './admin-gallery.js';
-import { loadTannlegerModule, formatTimestamp } from './admin-dashboard.js';
+import { loadTannlegerModule } from './admin-dashboard.js';
 import {
     getAdminConfig, renderToggleHtml, attachToggleClick,
     showDeletionToast, renderImageCropSliders, createAutoSaver,

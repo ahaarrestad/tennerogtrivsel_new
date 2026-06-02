@@ -8,10 +8,10 @@ const innstillinger = defineCollection({
         const filePath = path.join(process.cwd(), 'src/content/innstillinger.json');
         if (!fs.existsSync(filePath)) return [];
         const content = fs.readFileSync(filePath, 'utf-8');
-        const data = JSON.parse(content);
-        return data.map((item: any) => ({
-            id: item.id || '',
-            value: item.value || ''
+        const data = JSON.parse(content) as Array<Record<string, unknown>>;
+        return data.map((item) => ({
+            id: (item.id as string) || '',
+            value: (item.value as string) || ''
         }));
     },
     schema: z.object({
@@ -25,9 +25,9 @@ const tannleger = defineCollection({
         const filePath = path.join(process.cwd(), 'src/content/tannleger.json');
         if (!fs.existsSync(filePath)) return [];
         const content = fs.readFileSync(filePath, 'utf-8');
-        const data = JSON.parse(content);
-        return data.map((t: any, index: number) => ({
-            id: t.id || `tannlege-${index}`,
+        const data = JSON.parse(content) as Array<Record<string, unknown>>;
+        return data.map((t, index) => ({
+            id: (t.id as string) || `tannlege-${index}`,
             ...t
         }));
     },
@@ -70,9 +70,9 @@ const galleri = defineCollection({
         const filePath = path.join(process.cwd(), 'src/content/galleri.json');
         if (!fs.existsSync(filePath)) return [];
         const content = fs.readFileSync(filePath, 'utf-8');
-        const data = JSON.parse(content);
-        return data.map((g: any, index: number) => ({
-            id: g.id || `galleri-${index}`,
+        const data = JSON.parse(content) as Array<Record<string, unknown>>;
+        return data.map((g, index) => ({
+            id: (g.id as string) || `galleri-${index}`,
             ...g
         }));
     },
@@ -96,9 +96,9 @@ const prisliste = defineCollection({
         const filePath = path.join(process.cwd(), 'src/content/prisliste.json');
         if (!fs.existsSync(filePath)) return [];
         const content = fs.readFileSync(filePath, 'utf-8');
-        const data = JSON.parse(content);
-        const items = Array.isArray(data) ? data : (data.items || []);
-        return items.map((item: any, index: number) => ({
+        const raw = JSON.parse(content) as Record<string, unknown> | Array<Record<string, unknown>>;
+        const items = Array.isArray(raw) ? raw : ((raw.items as Array<Record<string, unknown>>) || []);
+        return items.map((item, index) => ({
             id: `prisliste-${index}`,
             ...item,
         }));

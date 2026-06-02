@@ -12,7 +12,7 @@ import {
     getAdminConfig, renderToggleHtml, setToggleState, attachToggleClick,
     showDeletionToast, renderImageCropSliders, createAutoSaver,
     bindSliderStepButtons, bindWheelPrevent,
-    showSaveBar, hideSaveBar, resolveImagePreview, handleImageSelected, verifySave,
+    resolveImagePreview, handleImageSelected, verifySave,
     checkDriveConsistency
 } from './admin-editor-helpers.js';
 
@@ -23,6 +23,7 @@ export async function loadBilderModule() {
     const actions = document.getElementById('module-actions');
     if (!inner || !actions) return;
 
+    // safe: ICON_ADD er en hardkodet SVG-konstantstreng
     actions.innerHTML = `<button id="btn-new-galleribilde" class="btn-primary p-2.5 shadow-md rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center" title="Legg til bilde" aria-label="Legg til bilde">${ICON_ADD}</button>`;
     inner.innerHTML = '<div class="text-admin-muted italic text-sm animate-pulse">Henter bildeinnstillinger...</div>';
 

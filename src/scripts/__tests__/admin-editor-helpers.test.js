@@ -23,7 +23,7 @@ vi.mock('../admin-dashboard.js', () => ({
 }));
 
 import {
-    getAdminConfig, getRefreshAuth, setToggleState, renderToggleHtml,
+    getAdminConfig, setToggleState, renderToggleHtml,
     attachToggleClick, showDeletionToast, initMarkdownEditor, initEditors,
     renderImageCropSliders, createAutoSaver, bindSliderStepButtons, bindWheelPrevent,
     showSaveBar, hideSaveBar, resolveImagePreview, handleImageSelected, verifySave,

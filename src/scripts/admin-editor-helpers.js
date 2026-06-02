@@ -88,6 +88,7 @@ export function showDeletionToast(deletedName, recoveryText) {
     const toast = document.createElement('div');
     toast.id = 'deletion-toast';
     toast.className = 'fixed bottom-6 right-6 z-50 max-w-sm w-full';
+    // safe: ICON_CLOSE er en hardkodet SVG-konstantstreng; brukerdata settes via .textContent, ikke interpolasjon
     toast.innerHTML = `
         <div class="bg-white rounded-2xl shadow-2xl border border-admin-hover p-5 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div class="flex items-start gap-3">

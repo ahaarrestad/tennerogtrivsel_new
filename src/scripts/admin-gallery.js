@@ -38,7 +38,7 @@ export async function loadGallery(folderId, onSelect) {
 
             if (img.thumbnailLink) {
                 el.innerHTML = `
-                    <img src="${img.thumbnailLink}" referrerpolicy="no-referrer" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
+                    <img src="${escapeHtml(img.thumbnailLink)}" referrerpolicy="no-referrer" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
                     <div class="absolute inset-0 admin-overlay opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2 text-center">
                         <span class="text-white text-[10px] font-bold break-all line-clamp-2">${escapeHtml(img.name)}</span>
                     </div>

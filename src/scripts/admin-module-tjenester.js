@@ -9,7 +9,7 @@ import { stripStackEditData, slugify } from './textFormatter.js';
 import { loadTjenesterModule } from './admin-dashboard.js';
 import {
     getAdminConfig, getRefreshAuth, renderToggleHtml, attachToggleClick,
-    showDeletionToast, initMarkdownEditor, createAutoSaver, showSaveBar,
+    showDeletionToast, initMarkdownEditor, createAutoSaver,
     handleSaveError, handleDeleteError
 } from './admin-editor-helpers.js';
 
@@ -61,6 +61,7 @@ async function editTjeneste(id, name) {
             : `<button id="btn-save-tjeneste" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Opprett tjeneste</button>
                     <button onclick="window.loadTjenesterModule()" class="admin-btn-cancel">Avbryt</button>`;
 
+        // safe: renderToggleHtml bruker hardkodet id og boolean isActive; buttonHtml er hardkodet HTML-streng
         inner.innerHTML = `
             <div class="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div class="grid grid-cols-1 gap-6">

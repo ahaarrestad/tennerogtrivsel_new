@@ -48,7 +48,7 @@ vi.mock('../admin-api-retry.js', () => ({
 }));
 
 import { deleteFile, getFileContent, parseMarkdown, saveFile, createFile, stringifyMarkdown } from '../admin-client.js';
-import { showConfirm, showToast } from '../admin-dialog.js';
+import { showConfirm } from '../admin-dialog.js';
 import { loadMeldingerModule } from '../admin-dashboard.js';
 import { showDeletionToast, initEditors, showSaveBar, createAutoSaver, handleSaveError, handleDeleteError } from '../admin-editor-helpers.js';
 import { initMeldingerModule, reloadMeldinger } from '../admin-module-meldinger.js';

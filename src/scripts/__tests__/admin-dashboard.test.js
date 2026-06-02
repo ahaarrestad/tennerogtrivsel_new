@@ -1921,7 +1921,7 @@ describe('admin-dashboard.js', () => {
             const config = { SHEET_ID: 's' };
             adminClient.checkMultipleAccess.mockResolvedValue({ 's': true });
 
-            const result = await enforceAccessControl(config);
+            await enforceAccessControl(config);
 
             expect(document.getElementById('card-settings').style.display).toBe('flex');
             expect(document.getElementById('card-bilder').style.display).toBe('flex');
@@ -1936,7 +1936,7 @@ describe('admin-dashboard.js', () => {
             const config = { TJENESTER_FOLDER: 'tj', MELDINGER_FOLDER: 'm', TANNLEGER_FOLDER: 'ta' };
             adminClient.checkMultipleAccess.mockResolvedValue({ 'tj': true, 'm': true, 'ta': true });
 
-            const result = await enforceAccessControl(config);
+            await enforceAccessControl(config);
 
             expect(document.getElementById('card-tjenester').style.display).toBe('flex');
             expect(document.getElementById('card-meldinger').style.display).toBe('flex');

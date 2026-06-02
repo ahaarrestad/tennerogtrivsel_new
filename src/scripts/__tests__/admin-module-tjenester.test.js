@@ -61,8 +61,8 @@ vi.mock('../admin-api-retry.js', () => ({
 import { deleteFile, getFileContent, parseMarkdown, saveFile, createFile, stringifyMarkdown, listFiles } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { withRetry } from '../admin-api-retry.js';
-import { loadTjenesterModule, formatTimestamp } from '../admin-dashboard.js';
-import { animateSwap, disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
+import { loadTjenesterModule } from '../admin-dashboard.js';
+import { disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
 import { showDeletionToast, initMarkdownEditor, attachToggleClick, showSaveBar, createAutoSaver, getRefreshAuth, handleSaveError, handleDeleteError } from '../admin-editor-helpers.js';
 import { initTjenesterModule, reloadTjenester } from '../admin-module-tjenester.js';
 
@@ -153,7 +153,6 @@ describe('editTjeneste', () => {
 
         await window.editTjeneste('id1', 'Tannbleking');
 
-        const inner = document.getElementById('module-inner');
         // Values are now set programmatically, not in innerHTML
         expect(document.getElementById('edit-title').value).toBe('Tannbleking');
         expect(document.getElementById('edit-ingress').value).toBe('Fin');

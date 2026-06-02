@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockAutoSaver, mockAdminDialog, setupModuleDOM } from './test-helpers.js';
 
 vi.mock('dompurify');
@@ -62,11 +62,11 @@ vi.mock('../admin-api-retry.js', () => ({
 
 import {
     updateTannlegeRow, addTannlegeRow, deleteTannlegeRowPermanently, getTannlegerRaw,
-    backupToSlettetSheet, getDriveImageBlob, findFileByName, deleteFile
+    backupToSlettetSheet, findFileByName, deleteFile
 } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadTannlegerModule } from '../admin-dashboard.js';
-import { showDeletionToast, attachToggleClick, bindSliderStepButtons, bindWheelPrevent, showSaveBar, hideSaveBar, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave, checkDriveConsistency } from '../admin-editor-helpers.js';
+import { showDeletionToast, attachToggleClick, bindSliderStepButtons, bindWheelPrevent, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave, checkDriveConsistency } from '../admin-editor-helpers.js';
 import { initTannlegerModule, reloadTannleger } from '../admin-module-tannleger.js';
 
 beforeEach(() => {
