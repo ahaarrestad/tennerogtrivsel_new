@@ -31,6 +31,8 @@ Prosjektet har allerede:
 
 Fil som opprettes/endres: ingen (API-kall, idempotente)
 
+**Verifiser repo-slug først:** `gh repo view --json nameWithOwner -q .nameWithOwner` — bekreft at det matcher `ahaarrestad/tennerogtrivsel_new` før du kjører kallene under.
+
 ```bash
 # Sjekk status — merk: de to endepunktene returnerer ulike statuskoder
 gh api --include repos/ahaarrestad/tennerogtrivsel_new/vulnerability-alerts
@@ -76,9 +78,9 @@ jobs:
   osv-scan:
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8
     permissions:        # job-scoped, ikke workflow-nivå — bare denne jobben får disse rettighetene
-      security-events: write
-      contents: read
-      actions: read
+      security-events: write  # laste opp SARIF til GitHub Security-fanen
+      contents: read          # lese kildekoden for skanning
+      actions: read           # nødvendig for artifact-håndtering i den reusable workflowen
     with:
       scan-args: |-
         -r
