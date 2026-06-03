@@ -286,6 +286,25 @@ To separate CI-sjekker i `deploy.yml` (kjøres i `e2e-tests`-, `build`- og `upda
 
 Token bør roteres minst én gang i året, eller umiddelbart ved mistanke om lekkasje (se runbook `docs/runbooks/supply-chain-incident.md`).
 
+### Kontinuerlig varsling — scheduled audit
+
+Dependabot og CI-audit ved push dekker bare kjente CVE-er og nye avhengighetsversjoner. **Gapet:** en ny CVE for en pakke som allerede er installert oppdages ikke før neste push.
+
+**Oppsettet (`scheduled-audit.yml`):**
+
+| Komponent | Hva det gjør |
+|-----------|--------------|
+| `npm-audit` (jobb) | Kjører `npm audit --audit-level=high` på root og `lambda/kontakt-form-handler` ukentlig mandag 06:00 UTC. Feiler ved high/critical → GitHub sender e-post. |
+| `osv-scan` (jobb) | Kjører Google OSV Scanner via reusable workflow, scanner begge `package-lock.json` rekursivt, laster opp SARIF til GitHub Security-fanen. |
+
+**Nivå-forskjell:** `--audit-level=high` her vs. `--audit-level=critical` i `deploy.yml`. Scheduled-workflow er et tidlig varslingssystem; deploy.yml er den harde CI-gaten. Juster ned til `--audit-level=critical` ved for mye støy fra dev-avhengigheter.
+
+**Dependabot alerts og automated security fixes:** Verifisert aktivert via `gh api` (HTTP 204 og `{"enabled":true,"paused":false}`). Disse supplerer scheduled-audit ved å åpne PR-er automatisk ved kjente CVE-er i avhengigheter.
+
+**OSV Scanner vs. npm audit:** OSV-databasen er bredere enn npm Advisory Database — fanger sårbarheter som ennå ikke er meldt inn til npm-registryet. SARIF-resultater er synlige i GitHub Security-fanen.
+
+**Kjent begrensning:** GitHub deaktiverer scheduled workflows etter 60 dager uten repo-aktivitet. For en statisk side som kan gå måneder uten push betyr dette at varslingen stilner uten varsel. Reaktiveres manuelt i Actions-fanen. Akseptert risiko gitt prosjektets størrelse.
+
 ## Drive API query-escaping
 
 Alle Drive API `q`-strenger der verdier interpoleres bruker `escapeDriveQuery()` som escaper backslash og enkle anførselstegn. Dette beskytter mot query-injeksjon fra spesialtegn i filnavn eller mappe-IDer.
