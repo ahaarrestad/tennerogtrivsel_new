@@ -3,6 +3,13 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Varsling ved supply chain-angrep** ([plan](docs/plans/archive/2026-06-02-supply-chain-varsling.md))
+  - Dependabot alerts og automated security fixes verifisert aktivert via `gh api`
+  - `scheduled-audit.yml` opprettet — kjører ukentlig `npm audit --audit-level=high` på root og lambda
+  - Google OSV Scanner lagt til som eget job i samme workflow — scanner begge `package-lock.json` rekursivt, laster opp SARIF til GitHub Security-fanen
+  - `docs/architecture/sikkerhet.md` oppdatert med avsnitt «Kontinuerlig varsling — scheduled audit»
+  - Merget til `origin/main`
+
 - [x] **Galleri-grid: alltid 2×2 eller 4×1** ([plan](docs/plans/archive/2026-06-02-galleri-grid.md))
   - Fjernet `md:grid-cols-3` fra `Galleri.astro` — grid hopper nå direkte fra 2 til 4 kolonner
   - Oppdatert `sizes`-attributt tilsvarende
