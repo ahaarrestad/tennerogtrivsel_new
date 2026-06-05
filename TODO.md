@@ -21,9 +21,9 @@
 
 ## Backlog
 
-- [ ] **Galleri: «klikk for å vise større bilde»** — *ingen plan ennå*
-  - Bør vi støtte at brukere kan klikke på et bilde i galleriet for å se en forstørret versjon?
-  - Vurder lightbox-funksjonalitet eller fullskjerm-visning, og hva som passer best for dette nettstedet
+- [ ] **Galleri: «klikk for å vise større bilde»** ([plan](docs/superpowers/plans/2026-06-05-galleri-lightbox.md)) ([spec](docs/superpowers/specs/2026-06-05-galleri-lightbox-design.md))
+  - Full lightbox med navigasjon (piler, piltaster, Esc, klikk-utenfor, swipe), mobil + desktop
+  - Klikk på preview på forsiden blar gjennom hele galleriet; tittel + teller nederst
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
