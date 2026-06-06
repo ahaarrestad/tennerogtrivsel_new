@@ -38,7 +38,7 @@ export function initGalleryLightbox() {
         lastTrigger = trigger || null;
         render();
         root.hidden = false;
-        root.setAttribute('aria-hidden', 'false');
+        root.removeAttribute('aria-hidden');
         document.body.style.overflow = 'hidden';
         root.querySelector('[data-lightbox-close]')?.focus();
     }
