@@ -1,0 +1,21 @@
+---
+// Singleton overlay for galleri-lightbox. Inkluderes én gang fra Galleri.astro.
+// All styling ligger i global.css (.lightbox*). Ingen inline-styling her.
+---
+<div id="galleri-lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Bildevisning" aria-hidden="true" hidden>
+    <button type="button" class="lightbox-close" data-lightbox-close aria-label="Lukk">&times;</button>
+    <button type="button" class="lightbox-nav-btn lightbox-nav-btn--prev" data-lightbox-prev aria-label="Forrige">&lsaquo;</button>
+    <button type="button" class="lightbox-nav-btn lightbox-nav-btn--next" data-lightbox-next aria-label="Neste">&rsaquo;</button>
+    <div class="lightbox-stage" data-lightbox-stage>
+        <img class="lightbox-img" data-lightbox-img alt="" sizes="100vw" />
+    </div>
+    <div class="lightbox-info image-overlay-gradient">
+        <p class="lightbox-title" data-lightbox-title></p>
+        <p class="lightbox-count" data-lightbox-count></p>
+    </div>
+</div>
+<script>
+    import { initGalleryLightbox } from '../scripts/gallery-lightbox.js';
+    document.addEventListener('astro:page-load', initGalleryLightbox);
+    initGalleryLightbox();
+</script>
