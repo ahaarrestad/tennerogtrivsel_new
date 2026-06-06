@@ -572,6 +572,35 @@
     .admin-overlay { @apply bg-black/50; }
     .image-overlay-gradient { @apply bg-gradient-to-t from-black/60 to-transparent; }
     .image-overlay-gradient-full { @apply bg-gradient-to-t from-black/60 via-black/20 to-transparent; }
+
+    /* Galleri-lightbox */
+    .lightbox {
+        @apply fixed inset-0 z-50 hidden items-center justify-center bg-brand-dark/90;
+        backdrop-filter: blur(2px);
+    }
+    .lightbox:not([hidden]) { @apply flex; }
+    .lightbox-stage {
+        @apply relative w-full h-full flex items-center justify-center;
+        padding: 3.5rem 1rem 5.25rem;
+    }
+    @media (min-width: 768px) {
+        .lightbox-stage { padding: 3.5rem 5rem 5.75rem; }
+    }
+    .lightbox-img { @apply max-w-full max-h-full object-contain rounded-md select-none; }
+    .lightbox-info { @apply absolute inset-x-0 bottom-0 z-10 text-center px-5 pt-6 pb-5 pointer-events-none; }
+    .lightbox-title { @apply text-brand-light text-sm md:text-base font-semibold mb-1; }
+    .lightbox-count { @apply text-brand-light/70 text-xs tracking-wide; }
+    .lightbox-nav-btn {
+        @apply absolute top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-12 h-12 rounded-full bg-brand-light/15 hover:bg-brand-light/25 text-brand-light text-2xl leading-none cursor-pointer transition-colors;
+        backdrop-filter: blur(4px);
+    }
+    .lightbox-nav-btn--prev { @apply left-3 md:left-5; }
+    .lightbox-nav-btn--next { @apply right-3 md:right-5; }
+    .lightbox-close {
+        @apply absolute top-3 right-3 z-20 flex items-center justify-center w-11 h-11 rounded-full bg-brand-light/15 hover:bg-brand-light/25 text-brand-light text-xl cursor-pointer transition-colors;
+        backdrop-filter: blur(4px);
+    }
+
     .admin-btn-install { @apply text-xs font-bold text-green-700 bg-green-100 hover:bg-green-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer; }
     .admin-btn-dismiss { @apply text-xs text-admin-muted hover:text-brand px-3 py-1.5 rounded-lg transition-colors cursor-pointer; }
 
