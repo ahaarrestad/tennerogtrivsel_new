@@ -1,10 +1,11 @@
 ---
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import { getSiteSettings } from '../scripts/getSettings';
 import { getSectionClasses, type SectionVariant } from '../scripts/sectionVariant';
 import { buildImageStyle } from '../scripts/image-config.js';
 import SectionHeader from './SectionHeader.astro';
+import Lightbox from './Lightbox.astro';
 
 const galleri = await getCollection('galleri');
 const settings = await getSiteSettings();
@@ -21,6 +22,30 @@ const { sectionBg, headerBg } = getSectionClasses(variant);
 const MAX_PREVIEW = 4;
 const visibleImages = standalone ? sortert : sortert.slice(0, MAX_PREVIEW);
 const hasMore = !standalone && sortert.length > MAX_PREVIEW;
+
+// Lightbox: hele galleriet (ikke bare preview). Indeks holdes 1:1 med tiles via indexById.
+const lightboxImages = [];
+const indexById = new Map();
+for (const item of sortert) {
+    const imgPath = `/src/assets/galleri/${item.data.image}`;
+    const loader = item.data.image ? images[imgPath] : undefined;
+    if (!loader) continue;
+    const mod = await loader();
+    // Klamp bredder til kildens width så Sharp ikke oppskalerer/advarer for små bilder
+    const maxWidth = mod.default.width;
+    const widths = [1024, 1600, 2016].filter((w) => w <= maxWidth);
+    if (widths.length === 0) widths.push(maxWidth);
+    const optimized = await getImage({ src: mod.default, widths, format: 'webp' });
+    indexById.set(item.id, lightboxImages.length);
+    lightboxImages.push({
+        src: optimized.src,
+        srcset: optimized.srcSet?.attribute ?? '',
+        title: item.data.title ?? '',
+        alt: item.data.altText || item.data.title || '',
+    });
+}
+// Escape "<" så JSON er trygt inne i <script>.
+const lightboxJson = JSON.stringify(lightboxImages).replace(/</g, '\\u003c');
 ---
 {sortert.length > 0 && (
 <section id="galleri" class={`section-container ${sectionBg}`}>
@@ -32,10 +57,17 @@ const hasMore = !standalone && sortert.length > MAX_PREVIEW;
                 const imgPath = `/src/assets/galleri/${item.data.image}`;
                 const hasImage = item.data.image && images[imgPath];
                 const imgStyle = buildImageStyle(item.data.imageConfig);
+                const lbIndex = indexById.get(item.id);
+                const tileClass = "rounded-xl overflow-hidden shadow-sm aspect-[4/3] bg-brand-active relative group transition-all duration-300 hover:shadow-md";
 
-                return (
-                    <div class="rounded-xl overflow-hidden shadow-sm aspect-[4/3] bg-brand-active relative group transition-all duration-300 hover:shadow-md">
-                        {hasImage ? (
+                if (hasImage && lbIndex !== undefined) {
+                    return (
+                        <button
+                            type="button"
+                            data-lightbox-index={lbIndex}
+                            aria-label={`Vis større: ${item.data.title || item.data.altText || 'galleribilde'}`}
+                            class={`${tileClass} block w-full p-0 border-0 appearance-none cursor-zoom-in text-left`}
+                        >
                             <Image
                                 src={images[imgPath]()}
                                 alt={item.data.altText || item.data.title}
@@ -45,16 +77,20 @@ const hasMore = !standalone && sortert.length > MAX_PREVIEW;
                                 style={imgStyle}
                                 loading="lazy"
                             />
-                        ) : (
-                            <div class="w-full h-full flex items-center justify-center text-brand-hover">
-                                Bilde mangler
-                            </div>
-                        )}
-                        {item.data.title && (
-                            <div class="absolute bottom-0 inset-x-0 image-overlay-gradient p-3 md:p-4">
-                                <p class="text-white text-xs md:text-sm font-bold">{item.data.title}</p>
-                            </div>
-                        )}
+                            {item.data.title && (
+                                <div class="absolute bottom-0 inset-x-0 image-overlay-gradient p-3 md:p-4">
+                                    <p class="text-white text-xs md:text-sm font-bold">{item.data.title}</p>
+                                </div>
+                            )}
+                        </button>
+                    );
+                }
+
+                return (
+                    <div class={tileClass}>
+                        <div class="w-full h-full flex items-center justify-center text-brand-hover">
+                            Bilde mangler
+                        </div>
                     </div>
                 );
             })}
@@ -67,6 +103,8 @@ const hasMore = !standalone && sortert.length > MAX_PREVIEW;
                 </a>
             </div>
         )}
+        <script type="application/json" id="galleri-lightbox-data" set:html={lightboxJson}></script>
+        <Lightbox />
     </div>
 </section>
 )}
