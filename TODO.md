@@ -18,12 +18,12 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
-
-## Backlog
-
 - [ ] **Galleri: «klikk for å vise større bilde»** ([plan](docs/superpowers/plans/2026-06-05-galleri-lightbox.md)) ([spec](docs/superpowers/specs/2026-06-05-galleri-lightbox-design.md))
   - Full lightbox med navigasjon (piler, piltaster, Esc, klikk-utenfor, swipe), mobil + desktop
   - Klikk på preview på forsiden blar gjennom hele galleriet; tittel + teller nederst
+
+
+## Backlog
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
