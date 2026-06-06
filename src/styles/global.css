@@ -574,8 +574,12 @@
     .image-overlay-gradient-full { @apply bg-gradient-to-t from-black/60 via-black/20 to-transparent; }
 
     /* Galleri-lightbox */
+    /* z-[110]: lightbox er en fullskjerm-modal og skal ligge over all sticky
+       page-chrome — InfoBanner (z-[60]), navbar (z-50) og skip-link (z-[100]).
+       (admin-nav z-[100] er et separat, admin-only kontekst uten galleri.)
+       Banneret er dato-styrt, så fiksen må gjelde uavhengig av om det vises. */
     .lightbox {
-        @apply fixed inset-0 z-50 hidden items-center justify-center bg-brand-dark/90;
+        @apply fixed inset-0 z-[110] hidden items-center justify-center bg-brand-dark/90;
         backdrop-filter: blur(2px);
     }
     .lightbox:not([hidden]) { @apply flex; }
