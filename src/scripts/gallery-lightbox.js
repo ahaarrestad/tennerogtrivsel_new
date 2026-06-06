@@ -33,6 +33,7 @@ export function initGalleryLightbox() {
     }
 
     function open(index, trigger) {
+        if (index < 0 || index >= images.length) return;
         current = index;
         lastTrigger = trigger || null;
         render();
