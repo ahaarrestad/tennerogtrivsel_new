@@ -132,6 +132,14 @@ describe('gallery-lightbox – kjerne', () => {
         tile.click();
         expect(root().hidden).toBe(true);
     });
+
+    it('ignorerer out-of-bounds indeks i open()', () => {
+        initGalleryLightbox();
+        const tile = document.getElementById('tile-0');
+        tile.setAttribute('data-lightbox-index', '99');
+        tile.click();
+        expect(root().hidden).toBe(true);
+    });
 });
 
 describe('gallery-lightbox – input', () => {
