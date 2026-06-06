@@ -3,6 +3,14 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Galleri: «klikk for å vise større bilde»** ([plan](docs/superpowers/plans/archive/2026-06-05-galleri-lightbox.md)) ([spec](docs/superpowers/specs/archive/2026-06-05-galleri-lightbox-design.md))
+  - Singleton `Lightbox.astro`-overlay med navigasjon (piler, piltaster, Esc, klikk-utenfor, swipe) — mobil + desktop
+  - `gallery-lightbox.js` — vanilla JS-modul med idempotent `initGalleryLightbox()`, focus-trap, scroll-lås, fokus-retur
+  - `getImage()` i `Galleri.astro` genererer webp-varianter for alle galleribilder; tiles omgjort til `<button data-lightbox-index>`
+  - Dark-launch-mønster: commit 1–4 inert, kun aktiveringscommit (Task 5) endrer prod-oppførsel
+  - 25 enhetstester — 88.23% branch coverage; lint og build grønn
+  - Merget til `origin/main`
+
 - [x] **Varsling ved supply chain-angrep** ([plan](docs/plans/archive/2026-06-02-supply-chain-varsling.md))
   - Dependabot alerts og automated security fixes verifisert aktivert via `gh api`
   - `scheduled-audit.yml` opprettet — kjører ukentlig `npm audit --audit-level=high` på root og lambda
