@@ -133,3 +133,112 @@ describe('gallery-lightbox – kjerne', () => {
         expect(root().hidden).toBe(true);
     });
 });
+
+describe('gallery-lightbox – input', () => {
+    function fireTouch(el, type, x) {
+        const ev = new Event(type, { bubbles: true });
+        ev.touches = x === null ? [] : [{ clientX: x }];
+        el.dispatchEvent(ev);
+    }
+
+    // keydown-handleren ligger på root (se impl), så testene dispatcher på root().
+    it('piltaster blar og Esc lukker', () => {
+        initGalleryLightbox();
+        document.getElementById('tile-0').click();
+        root().dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        expect(count().textContent).toBe('2 / 3');
+        root().dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+        expect(count().textContent).toBe('1 / 3');
+        root().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(root().hidden).toBe(true);
+    });
+
+    it('ignorerer piltaster når lightbox er lukket', () => {
+        initGalleryLightbox();
+        root().dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        expect(root().hidden).toBe(true);
+    });
+
+    it('klikk på overlay utenfor bildet lukker', () => {
+        initGalleryLightbox();
+        document.getElementById('tile-0').click();
+        root().click();
+        expect(root().hidden).toBe(true);
+    });
+
+    it('klikk på bildet lukker ikke', () => {
+        initGalleryLightbox();
+        document.getElementById('tile-0').click();
+        img().click();
+        expect(root().hidden).toBe(false);
+    });
+
+    it('klikk på scenen (utenfor bildet) lukker', () => {
+        initGalleryLightbox();
+        document.getElementById('tile-0').click();
+        document.querySelector('[data-lightbox-stage]').click();
+        expect(root().hidden).toBe(true);
+    });
+
+    it('swipe forbi terskel blar til neste', () => {
+        initGalleryLightbox();
+        document.getElementById('tile-0').click();
+        const stage = document.querySelector('[data-lightbox-stage]');
+        fireTouch(stage, 'touchstart', 200);
+        fireTouch(stage, 'touchmove', 120);
+        fireTouch(stage, 'touchend', null);
+        expect(count().textContent).toBe('2 / 3');
+    });
+
+    it('swipe under terskel blar ikke', () => {
+        initGalleryLightbox();
+        document.getElementById('tile-0').click();
+        const stage = document.querySelector('[data-lightbox-stage]');
+        fireTouch(stage, 'touchstart', 200);
+        fireTouch(stage, 'touchmove', 180);
+        fireTouch(stage, 'touchend', null);
+        expect(count().textContent).toBe('1 / 3');
+    });
+
+    it('swipe mot høyre blar til forrige (wrap)', () => {
+        initGalleryLightbox();
+        document.getElementById('tile-0').click();
+        const stage = document.querySelector('[data-lightbox-stage]');
+        fireTouch(stage, 'touchstart', 120);
+        fireTouch(stage, 'touchmove', 220);
+        fireTouch(stage, 'touchend', null);
+        expect(count().textContent).toBe('3 / 3');
+    });
+
+    it('Tab med fokus i midten beholder standard tab-oppførsel', () => {
+        initGalleryLightbox();
+        document.getElementById('tile-0').click();
+        const buttons = root().querySelectorAll('button');
+        buttons[1].focus(); // verken første eller siste
+        const ev = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true, bubbles: true });
+        root().dispatchEvent(ev);
+        expect(ev.defaultPrevented).toBe(false);
+    });
+
+    it('Tab fra siste knapp går til første (focus-trap)', () => {
+        initGalleryLightbox();
+        document.getElementById('tile-0').click();
+        const buttons = root().querySelectorAll('button');
+        buttons[buttons.length - 1].focus();
+        const ev = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true, bubbles: true });
+        root().dispatchEvent(ev);
+        expect(document.activeElement).toBe(buttons[0]);
+        expect(ev.defaultPrevented).toBe(true);
+    });
+
+    it('Shift+Tab fra første knapp går til siste (focus-trap)', () => {
+        initGalleryLightbox();
+        document.getElementById('tile-0').click();
+        const buttons = root().querySelectorAll('button');
+        buttons[0].focus();
+        const ev = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, cancelable: true, bubbles: true });
+        root().dispatchEvent(ev);
+        expect(document.activeElement).toBe(buttons[buttons.length - 1]);
+        expect(ev.defaultPrevented).toBe(true);
+    });
+});
