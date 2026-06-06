@@ -53,7 +53,7 @@ const lightboxJson = JSON.stringify(lightboxImages).replace(/</g, '\\u003c');
         <SectionHeader title={settings.galleriTittel} intro={settings.galleriTekst} headerBg={headerBg} as={headingTag} />
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-            {visibleImages.map((item, index) => {
+            {visibleImages.map((item) => {
                 const imgPath = `/src/assets/galleri/${item.data.image}`;
                 const hasImage = item.data.image && images[imgPath];
                 const imgStyle = buildImageStyle(item.data.imageConfig);
