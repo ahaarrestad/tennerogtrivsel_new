@@ -7,7 +7,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export function extractInlineScripts(html) {
     const results = [];
-    const regex = /<script(?![^>]*\bsrc=)(?![^>]*type="application\/ld\+json")[^>]*>([\s\S]*?)<\/script>/gi;
+    const regex = /<script(?![^>]*\bsrc=)(?![^>]*type="application\/ld\+json")(?![^>]*type="application\/json")[^>]*>([\s\S]*?)<\/script>/gi;
     let match;
     while ((match = regex.exec(html)) !== null) {
         const content = match[1];

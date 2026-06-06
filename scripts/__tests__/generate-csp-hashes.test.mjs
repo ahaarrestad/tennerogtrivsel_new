@@ -21,6 +21,11 @@ describe('extractInlineScripts', () => {
         expect(extractInlineScripts(html)).toEqual([]);
     });
 
+    it('ignorerer application/json scripts (lightbox-data og lignende)', () => {
+        const html = '<script type="application/json" id="galleri-lightbox-data">[{"src":"/img/a.webp"}]</script>';
+        expect(extractInlineScripts(html)).toEqual([]);
+    });
+
     it('ekstraherer is:inline script uten type-attributt', () => {
         const html = '<script is:inline>var x = 1;</script>';
         expect(extractInlineScripts(html)).toEqual(['var x = 1;']);
