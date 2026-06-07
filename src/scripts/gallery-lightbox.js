@@ -5,6 +5,18 @@ let docKeydownHandler = null;
 
 export function initGalleryLightbox() {
     const root = document.getElementById('galleri-lightbox');
+    // Rydd opp forrige keydown-lytter FØR de tidlige return-ene: ved navigasjon til en
+    // side uten lightbox (root mangler) eller til en ny, uinitialisert root (view
+    // transition erstattet elementet). Ellers ville lytteren blitt liggende på document
+    // med en closure-referanse til den gamle root-en — minnelekkasje, og tastetrykk på
+    // andre sider ville trigget den gamle handleren.
+    if (!root || root.dataset.bound !== 'true') {
+        if (docKeydownHandler) {
+            document.removeEventListener('keydown', docKeydownHandler);
+            docKeydownHandler = null;
+        }
+    }
+
     const dataEl = document.getElementById('galleri-lightbox-data');
     if (!root || !dataEl) return;
     if (root.dataset.bound === 'true') return;
@@ -82,9 +94,7 @@ export function initGalleryLightbox() {
     // keydown bindes til document, ikke root: et klikk på det ikke-fokuserbare bildet
     // kan flytte fokus til document.body, og da bobler ikke tastetrykk inn i root —
     // Esc/piltaster ville sluttet å virke. document fanger uansett hvor fokus havner.
-    // Siden init() kjøres per astro:page-load og document persisterer på tvers av view
-    // transitions, fjernes forrige lytter (modul-scoped) før ny legges til mot lekkasje.
-    if (docKeydownHandler) document.removeEventListener('keydown', docKeydownHandler);
+    // Forrige lytter er allerede ryddet opp på toppen av init(), så her tildeler vi bare.
     docKeydownHandler = (e) => {
         if (root.hidden) return;
         if (e.key === 'Escape') { close(); return; }
