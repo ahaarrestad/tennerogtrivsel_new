@@ -289,6 +289,17 @@ describe('gallery-lightbox – robusthet og sikkerhet', () => {
         removeSpy.mockRestore();
     });
 
+    it('fjerner keydown-lytter ved navigasjon til en side uten lightbox', () => {
+        // Regresjon (PR #375-review): opprydningen må skje før de tidlige return-ene,
+        // ellers blir lytteren liggende på document og lekker den gamle root-en.
+        initGalleryLightbox();
+        const removeSpy = vi.spyOn(document, 'removeEventListener');
+        document.getElementById('galleri-lightbox').remove(); // navigerer bort: ingen root
+        initGalleryLightbox();
+        expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
+        removeSpy.mockRestore();
+    });
+
     it('kaster ikke når et DOM-barn mangler', () => {
         setupDOM();
         document.querySelector('[data-lightbox-img]').remove();
