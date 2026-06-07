@@ -3,6 +3,14 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Byggytelse: parallelliser galleri-bildeprosessering** ([plan](docs/plans/archive/2026-06-07-galleri-bildeprosessering-parallell.md))
+  - `Galleri.astro`: lightbox-bildeløkka endret fra sekvensiell `for...of` til `Promise.all` over `sortert.map()` + rekkefølgebevarende rebuild av `indexById`/`lightboxImages`
+  - Rekkefølge og indeksering bevart 1:1 (Promise.all garanterer rekkefølge); atferd verifisert mot fire fokuspunkter i review-loop (indeksrekkefølge, hopp over manglende bilder, width-clamping, JSON-escaping)
+  - Gevinst er moderat — Astro køer Sharp-encodingen internt; parallelliteten gjelder per-fil `loader()`-metadatalesing. Skalerer med galleristørrelse (PR #369-review)
+  - 1558 unit-tester, alle filer ≥80% branch, 69 E2E, build og audit grønn
+  - Sidefunn: pre-eksisterende drift i `csp-hashes.json` (egen backlog-oppgave) — urelatert til denne endringen
+  - Pushet via `git review` (rebaset på lokal main)
+
 - [x] **Galleri-lightbox: robusthet, tilgjengelighet og sikkerhet** ([plan](docs/plans/archive/2026-06-07-galleri-lightbox-robusthet.md))
   - Oppfølging av PR-review (#369/#370) på `src/scripts/gallery-lightbox.js`
   - **Tastatur/fokus:** `keydown` flyttet fra `root` til `document` med modul-scoped handler-swap — Esc/piltaster virker uansett hvor fokus havner, uten lytter-lekkasje ved Astro view transitions
