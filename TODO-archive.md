@@ -3,6 +3,14 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Galleri-lightbox: robusthet, tilgjengelighet og sikkerhet** ([plan](docs/plans/archive/2026-06-07-galleri-lightbox-robusthet.md))
+  - Oppfølging av PR-review (#369/#370) på `src/scripts/gallery-lightbox.js`
+  - **Tastatur/fokus:** `keydown` flyttet fra `root` til `document` med modul-scoped handler-swap — Esc/piltaster virker uansett hvor fokus havner, uten lytter-lekkasje ved Astro view transitions
+  - **Sikkerhet:** defense-in-depth `javascript:`-guard i `render()`; CodeQL-alert #4 (`js/xss-through-dom`) dismisset som falsk positiv (byggetids-data fra eier-kontrollert Sheets/Drive, `<img src>` eksekverer ikke skript)
+  - **Robusthet:** null-guard for manglende DOM-barn + guard mot tom `e.touches` i `touchstart`/`touchmove`
+  - 5 nye enhetstester (31 totalt), 92.75% branch coverage; lint, build og full E2E grønn
+  - Merget til `origin/main` (PR #375)
+
 - [x] **Galleri: «klikk for å vise større bilde»** ([plan](docs/superpowers/plans/archive/2026-06-05-galleri-lightbox.md)) ([spec](docs/superpowers/specs/archive/2026-06-05-galleri-lightbox-design.md))
   - Singleton `Lightbox.astro`-overlay med navigasjon (piler, piltaster, Esc, klikk-utenfor, swipe) — mobil + desktop
   - `gallery-lightbox.js` — vanilla JS-modul med idempotent `initGalleryLightbox()`, focus-trap, scroll-lås, fokus-retur
