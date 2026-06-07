@@ -18,6 +18,13 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
+- [ ] **Galleri-lightbox: robusthet, tilgjengelighet og sikkerhet** ([plan](docs/plans/2026-06-07-galleri-lightbox-robusthet.md))
+  - Oppfølging av PR-review (#369/#370) på `src/scripts/gallery-lightbox.js`
+  - **Sikkerhet:** CodeQL-alert #4 (`js/xss-through-dom`, linje ~26) står åpen. `im.src` kommer fra byggetidsdata (`JSON.parse(textContent)`) — sannsynlig falsk positiv, men bør verifiseres og enten dismisses med begrunnelse eller hardnes (f.eks. avvise `javascript:`-URLer)
+  - **Tastatur/fokus:** `keydown` er bundet til `root`. Klikk på bildet kan flytte fokus til `document.body` slik at Esc/piltaster slutter å virke. Verifiser faktisk oppførsel; vurder å binde til `document` og rydde lytteren via `astro:before-swap`
+  - **Robusthet:** legg til guard `if (!imgEl || !titleEl || !countEl || !stage) return;` mot `TypeError` hvis DOM-strukturen endres
+  - **Robusthet:** guard mot tom/udefinert `e.touches` i `touchstart`/`touchmove` (touch-avbrudd, testmiljø)
+
 ## Backlog
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
@@ -64,13 +71,6 @@
   - Vurder global `clearMocks`/`restoreMocks` i `vitest.config.ts` mot mock-lekkasje (PR #371-review)
   - Playwright: mock API via `page.route` i stedet for `waitForLoadState('networkidle')` + manuell DOM-manipulasjon — gjelder bl.a. `tests/galleri-lightbox.spec.ts` (PR #372-review)
   - Mål: null flaky tester i CI
-
-- [ ] **Galleri-lightbox: robusthet, tilgjengelighet og sikkerhet** ([plan](docs/plans/2026-06-07-galleri-lightbox-robusthet.md))
-  - Oppfølging av PR-review (#369/#370) på `src/scripts/gallery-lightbox.js`
-  - **Sikkerhet:** CodeQL-alert #4 (`js/xss-through-dom`, linje ~26) står åpen. `im.src` kommer fra byggetidsdata (`JSON.parse(textContent)`) — sannsynlig falsk positiv, men bør verifiseres og enten dismisses med begrunnelse eller hardnes (f.eks. avvise `javascript:`-URLer)
-  - **Tastatur/fokus:** `keydown` er bundet til `root`. Klikk på bildet kan flytte fokus til `document.body` slik at Esc/piltaster slutter å virke. Verifiser faktisk oppførsel; vurder å binde til `document` og rydde lytteren via `astro:before-swap`
-  - **Robusthet:** legg til guard `if (!imgEl || !titleEl || !countEl || !stage) return;` mot `TypeError` hvis DOM-strukturen endres
-  - **Robusthet:** guard mot tom/udefinert `e.touches` i `touchstart`/`touchmove` (touch-avbrudd, testmiljø)
 
 - [ ] **Byggytelse: parallelliser galleri-bildeprosessering** — *ingen plan ennå*
   - `src/components/Galleri.astro` prosesserer bilder sekvensielt med `await` i en `for...of`-løkke
