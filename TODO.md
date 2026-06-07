@@ -61,7 +61,25 @@
 - [ ] **Fikse flaky tester** — *ingen plan ennå*
   - Identifiser og stabiliser tester som feiler ikke-deterministisk (timing, dato-avhengighet, mock-lekkasje e.l.)
   - Bruk `vi.useFakeTimers` for dato-avhengige tester, sjekk at mocks resettes mellom tester
+  - Vurder global `clearMocks`/`restoreMocks` i `vitest.config.ts` mot mock-lekkasje (PR #371-review)
+  - Playwright: mock API via `page.route` i stedet for `waitForLoadState('networkidle')` + manuell DOM-manipulasjon — gjelder bl.a. `tests/galleri-lightbox.spec.ts` (PR #372-review)
   - Mål: null flaky tester i CI
+
+- [ ] **Galleri-lightbox: robusthet, tilgjengelighet og sikkerhet** ([plan](docs/plans/2026-06-07-galleri-lightbox-robusthet.md))
+  - Oppfølging av PR-review (#369/#370) på `src/scripts/gallery-lightbox.js`
+  - **Sikkerhet:** CodeQL-alert #4 (`js/xss-through-dom`, linje ~26) står åpen. `im.src` kommer fra byggetidsdata (`JSON.parse(textContent)`) — sannsynlig falsk positiv, men bør verifiseres og enten dismisses med begrunnelse eller hardnes (f.eks. avvise `javascript:`-URLer)
+  - **Tastatur/fokus:** `keydown` er bundet til `root`. Klikk på bildet kan flytte fokus til `document.body` slik at Esc/piltaster slutter å virke. Verifiser faktisk oppførsel; vurder å binde til `document` og rydde lytteren via `astro:before-swap`
+  - **Robusthet:** legg til guard `if (!imgEl || !titleEl || !countEl || !stage) return;` mot `TypeError` hvis DOM-strukturen endres
+  - **Robusthet:** guard mot tom/udefinert `e.touches` i `touchstart`/`touchmove` (touch-avbrudd, testmiljø)
+
+- [ ] **Byggytelse: parallelliser galleri-bildeprosessering** — *ingen plan ennå*
+  - `src/components/Galleri.astro` prosesserer bilder sekvensielt med `await` i en `for...of`-løkke
+  - Bytt til `Promise.all` slik at Sharp kan optimalisere bildene i parallell — kutter byggetid når galleriet vokser (PR #369-review)
+
+- [ ] **Norsk rettskriving i dokumentasjon** — *ingen plan ennå*
+  - Småfiks fra PR-review (#367/#368), rent kosmetisk/konsistens
+  - `docs/architecture/sikkerhet.md`: «scanner» → «skanner» (linje 122, 298), «på root» → «i rotmappen» (297), «begge package-lock.json» → «…-filene» (298), «Nivå-forskjell» → «Nivåforskjell» og «Scheduled-workflow» → bestemt form (300)
+  - `TODO-archive.md`: «eget job» → «egen jobb», «scanner» → «skanner» (linje 17)
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
