@@ -18,10 +18,6 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
-- [ ] **Byggytelse: parallelliser galleri-bildeprosessering** ([plan](docs/plans/2026-06-07-galleri-bildeprosessering-parallell.md))
-  - `src/components/Galleri.astro` prosesserer bilder sekvensielt med `await` i en `for...of`-løkke
-  - Bytt til `Promise.all` slik at metadata-lesing/oppsett skjer parallelt — moderat byggetidsgevinst som skalerer med galleristørrelse (PR #369-review)
-
 ## Backlog
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
@@ -73,6 +69,12 @@
   - Telefonnummeret i navigasjonen/headeren får fokus ved tabbing på stor skjerm, selv om det ikke er en klikkbar lenke der
   - Bør ikke være i tab-rekkefølgen med mindre det er et interaktivt element (f.eks. `<a href="tel:...">`)
   - Sjekk `tabindex`-attributter og HTML-struktur, og fikse slik at tab-rekkefølgen kun inkluderer faktisk interaktive elementer
+
+- [ ] **Vurder drift i `csp-hashes.json`** — *ingen plan ennå*
+  - `src/generated/csp-hashes.json` (committet på main) matcher ikke det `npm run generate-csp-hashes` produserer — én inline-script-hash avviker, uavhengig av kodeendringer
+  - Reproduserbart: regenerering på ren `origin/main` gir samme avvik. Avklar om committet fil er utdatert, eller om genereringen er ikke-deterministisk/miljøavhengig
+  - Konsekvens hvis utdatert: CSP kan blokkere et inline-script i prod. Sjekk hvilket script hashen tilhører og hvor genereringen kjøres i deploy-pipelinen
+  - Funnet under galleri-bildeprosessering-oppgaven (2026-06-07)
 
 - [ ] **Norsk rettskriving i dokumentasjon** — *ingen plan ennå*
   - Småfiks fra PR-review (#367/#368), rent kosmetisk/konsistens
