@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { initGalleryLightbox } from '../gallery-lightbox.js';
 
 const IMAGES = [
@@ -248,5 +248,68 @@ describe('gallery-lightbox – input', () => {
         root().dispatchEvent(ev);
         expect(document.activeElement).toBe(buttons[buttons.length - 1]);
         expect(ev.defaultPrevented).toBe(true);
+    });
+});
+
+describe('gallery-lightbox – robusthet og sikkerhet', () => {
+    it('render() hopper over bilde med javascript:-src (defense-in-depth)', () => {
+        setupDOM([{ src: 'javascript:alert(1)', srcset: '', title: 'Ond', alt: 'Ond' }]);
+        initGalleryLightbox();
+        document.getElementById('tile-0').click();
+        // render() returnerer før setAttribute, så src settes aldri til javascript:-verdien.
+        expect(img().getAttribute('src')).toBeNull();
+    });
+
+    it('keydown virker selv når fokus er på document.body (binding på document)', () => {
+        initGalleryLightbox();
+        document.getElementById('tile-0').click();
+        // Simuler at fokus forlater dialogen (f.eks. klikk på det ikke-fokuserbare bildet).
+        document.activeElement?.blur();
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        expect(count().textContent).toBe('2 / 3');
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(root().hidden).toBe(true);
+    });
+
+    it('re-init etter at root er erstattet fjerner forrige keydown-lytter (ingen lekkasje)', () => {
+        // Simulerer Astro view transition: #galleri-lightbox erstattes per navigasjon,
+        // mens document persisterer. Uten dedup ville hver init lekke én lytter.
+        initGalleryLightbox();
+        const addSpy = vi.spyOn(document, 'addEventListener');
+        const removeSpy = vi.spyOn(document, 'removeEventListener');
+        setupDOM(); // ny root, bound-flagget nullstilt
+        initGalleryLightbox();
+        const added = addSpy.mock.calls.find(([type]) => type === 'keydown')?.[1];
+        const removed = removeSpy.mock.calls.find(([type]) => type === 'keydown')?.[1];
+        // Den nye init-en fjernet forrige handler før den la til en ny.
+        expect(removed).toBeTypeOf('function');
+        expect(added).toBeTypeOf('function');
+        expect(removed).not.toBe(added);
+        addSpy.mockRestore();
+        removeSpy.mockRestore();
+    });
+
+    it('kaster ikke når et DOM-barn mangler', () => {
+        setupDOM();
+        document.querySelector('[data-lightbox-img]').remove();
+        expect(() => initGalleryLightbox()).not.toThrow();
+        // Klikk skal ikke åpne (init returnerte tidlig).
+        document.getElementById('tile-0').click();
+        expect(root().hidden).toBe(true);
+    });
+
+    it('touch-handlere kaster ikke når touches-arrayen er tom', () => {
+        initGalleryLightbox();
+        document.getElementById('tile-0').click();
+        const stage = document.querySelector('[data-lightbox-stage]');
+        const fire = (type) => {
+            const ev = new Event(type, { bubbles: true });
+            ev.touches = [];
+            return () => stage.dispatchEvent(ev);
+        };
+        expect(fire('touchstart')).not.toThrow();
+        expect(fire('touchmove')).not.toThrow();
+        // Ingen swipe registrert → fortsatt på første bilde.
+        expect(count().textContent).toBe('1 / 3');
     });
 });

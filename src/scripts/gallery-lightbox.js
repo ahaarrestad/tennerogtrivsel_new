@@ -1,3 +1,8 @@
+// Modul-scoped referanse til den aktive keydown-lytteren på document. init() kjøres
+// på hver astro:page-load, og document persisterer på tvers av view transitions — så
+// vi fjerner forrige lytter før vi legger til en ny for å unngå akkumulert lekkasje.
+let docKeydownHandler = null;
+
 export function initGalleryLightbox() {
     const root = document.getElementById('galleri-lightbox');
     const dataEl = document.getElementById('galleri-lightbox-data');
@@ -17,12 +22,18 @@ export function initGalleryLightbox() {
     const titleEl = root.querySelector('[data-lightbox-title]');
     const countEl = root.querySelector('[data-lightbox-count]');
     const stage = root.querySelector('[data-lightbox-stage]');
+    // Guard mot TypeError hvis DOM-strukturen i Lightbox.astro endres.
+    if (!imgEl || !titleEl || !countEl || !stage) return;
 
     let current = 0;
     let lastTrigger = null;
 
     function render() {
         const im = images[current];
+        // Defense-in-depth mot CodeQL js/xss-through-dom (alert #4). src kommer fra
+        // byggetids-JSON som eier kontrollerer, og <img src> eksekverer aldri skript
+        // — dette er belt-and-suspenders, ikke eneste forsvar.
+        if (/^javascript:/i.test(im.src)) return;
         imgEl.setAttribute('src', im.src);
         if (im.srcset) imgEl.setAttribute('srcset', im.srcset);
         else imgEl.removeAttribute('srcset');
@@ -68,10 +79,13 @@ export function initGalleryLightbox() {
         if (e.target === root || e.target === stage) close();
     });
 
-    // keydown bindes til root (ikke document): fokus er fanget inni dialogen når
-    // den er åpen, så Esc/piltaster/Tab bobler hit. Da unngår vi en listener-lekkasje
-    // ved Astro view transitions, der #galleri-lightbox re-initialiseres per navigasjon.
-    root.addEventListener('keydown', (e) => {
+    // keydown bindes til document, ikke root: et klikk på det ikke-fokuserbare bildet
+    // kan flytte fokus til document.body, og da bobler ikke tastetrykk inn i root —
+    // Esc/piltaster ville sluttet å virke. document fanger uansett hvor fokus havner.
+    // Siden init() kjøres per astro:page-load og document persisterer på tvers av view
+    // transitions, fjernes forrige lytter (modul-scoped) før ny legges til mot lekkasje.
+    if (docKeydownHandler) document.removeEventListener('keydown', docKeydownHandler);
+    docKeydownHandler = (e) => {
         if (root.hidden) return;
         if (e.key === 'Escape') { close(); return; }
         if (e.key === 'ArrowRight') { next(); return; }
@@ -89,12 +103,20 @@ export function initGalleryLightbox() {
                 first.focus();
             }
         }
-    });
+    };
+    document.addEventListener('keydown', docKeydownHandler);
 
     let startX = null;
     let deltaX = 0;
-    stage.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; deltaX = 0; }, { passive: true });
-    stage.addEventListener('touchmove', (e) => { if (startX !== null) deltaX = e.touches[0].clientX - startX; }, { passive: true });
+    stage.addEventListener('touchstart', (e) => {
+        if (!e.touches?.length) return;
+        startX = e.touches[0].clientX;
+        deltaX = 0;
+    }, { passive: true });
+    stage.addEventListener('touchmove', (e) => {
+        if (startX === null || !e.touches?.length) return;
+        deltaX = e.touches[0].clientX - startX;
+    }, { passive: true });
     stage.addEventListener('touchend', () => {
         if (startX !== null && Math.abs(deltaX) > 50) {
             if (deltaX < 0) next(); else prev();
