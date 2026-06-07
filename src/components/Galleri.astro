@@ -24,25 +24,35 @@ const visibleImages = standalone ? sortert : sortert.slice(0, MAX_PREVIEW);
 const hasMore = !standalone && sortert.length > MAX_PREVIEW;
 
 // Lightbox: hele galleriet (ikke bare preview). Indeks holdes 1:1 med tiles via indexById.
+// Bildene prosesseres parallelt med Promise.all — rekkefølgen bevares, så indekseringen
+// blir identisk med en sekvensiell løkke.
 const lightboxImages = [];
 const indexById = new Map();
-for (const item of sortert) {
-    const imgPath = `/src/assets/galleri/${item.data.image}`;
-    const loader = item.data.image ? images[imgPath] : undefined;
-    if (!loader) continue;
-    const mod = await loader();
-    // Klamp bredder til kildens width så Sharp ikke oppskalerer/advarer for små bilder
-    const maxWidth = mod.default.width;
-    const widths = [1024, 1600, 2016].filter((w) => w <= maxWidth);
-    if (widths.length === 0) widths.push(maxWidth);
-    const optimized = await getImage({ src: mod.default, widths, format: 'webp' });
-    indexById.set(item.id, lightboxImages.length);
-    lightboxImages.push({
-        src: optimized.src,
-        srcset: optimized.srcSet?.attribute ?? '',
-        title: item.data.title ?? '',
-        alt: item.data.altText || item.data.title || '',
-    });
+const processed = await Promise.all(
+    sortert.map(async (item) => {
+        const imgPath = `/src/assets/galleri/${item.data.image}`;
+        const loader = item.data.image ? images[imgPath] : undefined;
+        if (!loader) return null;
+        const mod = await loader();
+        // Klamp bredder til kildens width så Sharp ikke oppskalerer/advarer for små bilder
+        const maxWidth = mod.default.width;
+        const widths = [1024, 1600, 2016].filter((w) => w <= maxWidth);
+        if (widths.length === 0) widths.push(maxWidth);
+        const optimized = await getImage({ src: mod.default, widths, format: 'webp' });
+        return {
+            id: item.id,
+            src: optimized.src,
+            srcset: optimized.srcSet?.attribute ?? '',
+            title: item.data.title ?? '',
+            alt: item.data.altText || item.data.title || '',
+        };
+    })
+);
+for (const result of processed) {
+    if (!result) continue;
+    const { id, ...img } = result;
+    indexById.set(id, lightboxImages.length);
+    lightboxImages.push(img);
 }
 // Escape "<" så JSON er trygt inne i <script>.
 const lightboxJson = JSON.stringify(lightboxImages).replace(/</g, '\\u003c');
