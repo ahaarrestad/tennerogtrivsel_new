@@ -65,6 +65,11 @@
   - Playwright: mock API via `page.route` i stedet for `waitForLoadState('networkidle')` + manuell DOM-manipulasjon — gjelder bl.a. `tests/galleri-lightbox.spec.ts` (PR #372-review)
   - Mål: null flaky tester i CI
 
+- [ ] **Bug: tab-rekkefølge — telefonnummer fokuserbart på stor skjerm** — *ingen plan ennå*
+  - Telefonnummeret i navigasjonen/headeren får fokus ved tabbing på stor skjerm, selv om det ikke er en klikkbar lenke der
+  - Bør ikke være i tab-rekkefølgen med mindre det er et interaktivt element (f.eks. `<a href="tel:...">`)
+  - Sjekk `tabindex`-attributter og HTML-struktur, og fikse slik at tab-rekkefølgen kun inkluderer faktisk interaktive elementer
+
 - [ ] **Byggytelse: parallelliser galleri-bildeprosessering** — *ingen plan ennå*
   - `src/components/Galleri.astro` prosesserer bilder sekvensielt med `await` i en `for...of`-løkke
   - Bytt til `Promise.all` slik at Sharp kan optimalisere bildene i parallell — kutter byggetid når galleriet vokser (PR #369-review)
