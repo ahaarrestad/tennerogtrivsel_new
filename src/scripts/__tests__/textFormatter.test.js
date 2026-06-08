@@ -27,37 +27,37 @@ describe('formatInfoText', () => {
 
     it('should correctly linkify a single 8-digit Norwegian phone number', () => {
         const text = 'Call us at 98765432.';
-        const expected = 'Call us at <a href="tel:98765432" class="text-brand hover:text-brand-hover hover:no-underline lg:pointer-events-none lg:cursor-default lg:text-inherit lg:no-underline whitespace-nowrap">98765432</a>.';
+        const expected = 'Call us at <a href="tel:98765432" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap lg:hidden">98765432</a><span class="whitespace-nowrap hidden lg:inline">98765432</span>.';
         expect(formatInfoText(text)).toBe(expected);
     });
 
     it('should correctly linkify a Norwegian phone number with +47 prefix and spaces', () => {
         const text = 'Call us at +47 23 45 67 89.';
-        const expected = 'Call us at <a href="tel:+4723456789" class="text-brand hover:text-brand-hover hover:no-underline lg:pointer-events-none lg:cursor-default lg:text-inherit lg:no-underline whitespace-nowrap">+47 23 45 67 89</a>.';
+        const expected = 'Call us at <a href="tel:+4723456789" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap lg:hidden">+47 23 45 67 89</a><span class="whitespace-nowrap hidden lg:inline">+47 23 45 67 89</span>.';
         expect(formatInfoText(text)).toBe(expected);
     });
 
     it('should correctly linkify a Norwegian phone number with 0047 prefix and spaces', () => {
         const text = 'Call us at 0047 23 45 67 89.';
-        const expected = 'Call us at <a href="tel:004723456789" class="text-brand hover:text-brand-hover hover:no-underline lg:pointer-events-none lg:cursor-default lg:text-inherit lg:no-underline whitespace-nowrap">0047 23 45 67 89</a>.';
+        const expected = 'Call us at <a href="tel:004723456789" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap lg:hidden">0047 23 45 67 89</a><span class="whitespace-nowrap hidden lg:inline">0047 23 45 67 89</span>.';
         expect(formatInfoText(text)).toBe(expected);
     });
 
     it('should correctly linkify multiple Norwegian phone numbers', () => {
         const text = 'Numbers: 22334455 and 99887766.';
-        const expected = 'Numbers: <a href="tel:22334455" class="text-brand hover:text-brand-hover hover:no-underline lg:pointer-events-none lg:cursor-default lg:text-inherit lg:no-underline whitespace-nowrap">22334455</a> and <a href="tel:99887766" class="text-brand hover:text-brand-hover hover:no-underline lg:pointer-events-none lg:cursor-default lg:text-inherit lg:no-underline whitespace-nowrap">99887766</a>.';
+        const expected = 'Numbers: <a href="tel:22334455" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap lg:hidden">22334455</a><span class="whitespace-nowrap hidden lg:inline">22334455</span> and <a href="tel:99887766" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap lg:hidden">99887766</a><span class="whitespace-nowrap hidden lg:inline">99887766</span>.';
         expect(formatInfoText(text)).toBe(expected);
     });
 
     it('should correctly linkify both email and phone number in the same text', () => {
         const text = 'Contact support@example.com or call 21223344.';
-        const expected = 'Contact <a href="mailto:support@example.com" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap">support@example.com</a> or call <a href="tel:21223344" class="text-brand hover:text-brand-hover hover:no-underline lg:pointer-events-none lg:cursor-default lg:text-inherit lg:no-underline whitespace-nowrap">21223344</a>.';
+        const expected = 'Contact <a href="mailto:support@example.com" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap">support@example.com</a> or call <a href="tel:21223344" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap lg:hidden">21223344</a><span class="whitespace-nowrap hidden lg:inline">21223344</span>.';
         expect(formatInfoText(text)).toBe(expected);
     });
 
     it('should handle email and phone number at the beginning and end of the string', () => {
         const text = 'test@start.com and 55667788';
-        const expected = '<a href="mailto:test@start.com" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap">test@start.com</a> and <a href="tel:55667788" class="text-brand hover:text-brand-hover hover:no-underline lg:pointer-events-none lg:cursor-default lg:text-inherit lg:no-underline whitespace-nowrap">55667788</a>';
+        const expected = '<a href="mailto:test@start.com" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap">test@start.com</a> and <a href="tel:55667788" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap lg:hidden">55667788</a><span class="whitespace-nowrap hidden lg:inline">55667788</span>';
         expect(formatInfoText(text)).toBe(expected);
     });
 
@@ -73,7 +73,7 @@ describe('formatInfoText', () => {
 
     it('should correctly linkify a Norwegian phone number with internal spaces (DD DD DD DD format)', () => {
         const text = 'Ring oss på 22 44 22 33 for spørsmål.';
-        const expected = 'Ring oss på <a href="tel:22442233" class="text-brand hover:text-brand-hover hover:no-underline lg:pointer-events-none lg:cursor-default lg:text-inherit lg:no-underline whitespace-nowrap">22 44 22 33</a> for spørsmål.';
+        const expected = 'Ring oss på <a href="tel:22442233" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap lg:hidden">22 44 22 33</a><span class="whitespace-nowrap hidden lg:inline">22 44 22 33</span> for spørsmål.';
         expect(formatInfoText(text)).toBe(expected);
     });
 
@@ -81,7 +81,8 @@ describe('formatInfoText', () => {
         const text = 'Email: test@example.com, Phone: 21234567';
         const result = formatInfoText(text);
         expect(result).toContain('class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap"'); // for email
-        expect(result).toContain('class="text-brand hover:text-brand-hover hover:no-underline lg:pointer-events-none lg:cursor-default lg:text-inherit lg:no-underline whitespace-nowrap"'); // for phone
+        expect(result).toContain('<a href="tel:21234567" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap lg:hidden">'); // mobil tel-lenke
+        expect(result).toContain('<span class="whitespace-nowrap hidden lg:inline">21234567</span>'); // desktop ren tekst
     });
 
     it('should handle text with markdown-like syntax without processing it', () => {
@@ -104,6 +105,17 @@ describe('formatInfoText', () => {
             .toContain('<a href="tel:22334455"');
         expect(formatInfoText('Ring 22 33 44 55 eller post@example.com'))
             .toContain('<a href="mailto:post@example.com"');
+    });
+
+    it('telefon: tel-lenke kun synlig på mobil, desktop-tekst er ikke-fokuserbar span', () => {
+        const result = formatInfoText('Ring 22 33 44 55');
+        // Mobil: ekte tel:-lenke som skjules på lg (≥1024px)
+        expect(result).toMatch(/<a href="tel:22334455"[^>]*\blg:hidden\b/);
+        // Desktop: <span> uten href → ikke i tab-rekkefølgen, skjult under lg
+        expect(result).toContain('<span class="whitespace-nowrap hidden lg:inline">22 33 44 55</span>');
+        // Ingen tel-lenke skal være synlig på desktop (dvs. ingen tel-<a> uten lg:hidden)
+        const telLinks = result.match(/<a href="tel:[^>]*>/g) || [];
+        expect(telLinks.every(tag => tag.includes('lg:hidden'))).toBe(true);
     });
 });
 

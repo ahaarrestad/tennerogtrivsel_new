@@ -8,11 +8,13 @@ interface Props {
     'aria-label'?: string;
     type?: 'button' | 'submit' | 'reset';
     disabled?: boolean;
+    /** Sett til false for å rendre et ikke-interaktivt, ikke-fokuserbart <span>. */
+    interactive?: boolean;
 }
 
-const { href, class: className, variant = 'primary', ...rest } = Astro.props;
+const { href, class: className, variant = 'primary', interactive = true, ...rest } = Astro.props;
 
-const Tag = href ? 'a' : 'button';
+const Tag = !interactive ? 'span' : href ? 'a' : 'button';
 const variantClasses: Record<string, string> = {
     primary: 'btn-primary',
     secondary: 'btn-secondary',

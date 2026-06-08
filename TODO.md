@@ -18,6 +18,11 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
+- [ ] **Bug: tab-rekkefølge — telefonnummer fokuserbart på stor skjerm** ([plan](docs/plans/2026-06-07-tab-rekkefolge-telefon.md))
+  - Telefonnummeret i navigasjonen/headeren får fokus ved tabbing på stor skjerm, selv om det ikke er en klikkbar lenke der
+  - Bør ikke være i tab-rekkefølgen med mindre det er et interaktivt element (f.eks. `<a href="tel:...">`)
+  - Sjekk `tabindex`-attributter og HTML-struktur, og fikse slik at tab-rekkefølgen kun inkluderer faktisk interaktive elementer
+
 ## Backlog
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
@@ -64,11 +69,6 @@
   - Vurder global `clearMocks`/`restoreMocks` i `vitest.config.ts` mot mock-lekkasje (PR #371-review)
   - Playwright: mock API via `page.route` i stedet for `waitForLoadState('networkidle')` + manuell DOM-manipulasjon — gjelder bl.a. `tests/galleri-lightbox.spec.ts` (PR #372-review)
   - Mål: null flaky tester i CI
-
-- [ ] **Bug: tab-rekkefølge — telefonnummer fokuserbart på stor skjerm** — *ingen plan ennå*
-  - Telefonnummeret i navigasjonen/headeren får fokus ved tabbing på stor skjerm, selv om det ikke er en klikkbar lenke der
-  - Bør ikke være i tab-rekkefølgen med mindre det er et interaktivt element (f.eks. `<a href="tel:...">`)
-  - Sjekk `tabindex`-attributter og HTML-struktur, og fikse slik at tab-rekkefølgen kun inkluderer faktisk interaktive elementer
 
 - [ ] **Vurder drift i `csp-hashes.json`** — *ingen plan ennå*
   - `src/generated/csp-hashes.json` (committet på main) matcher ikke det `npm run generate-csp-hashes` produserer — én inline-script-hash avviker, uavhengig av kodeendringer

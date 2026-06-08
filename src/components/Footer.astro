@@ -36,9 +36,11 @@ const currentYear = new Date().getFullYear();
                     <p>{settings.adresse1}</p>
                     <p>{settings.adresse2}</p>
                     <p class="pt-2">
-                        <a href={`tel:${settings.phone1?.replace(/\s+/g, '')}`} class="text-white/70 hover:text-white transition-colors lg:pointer-events-none lg:cursor-default">
+                        {/* Mobil: tap-to-call. Desktop: ren tekst utenfor tab-rekkefølgen. */}
+                        <a href={`tel:${settings.phone1?.replace(/\s+/g, '')}`} class="text-white/70 hover:text-white transition-colors lg:hidden">
                             {settings.phone1}
                         </a>
+                        <span class="hidden lg:inline text-white/70">{settings.phone1}</span>
                     </p>
 
                     {settings.showEmail === "ja" && settings.email && (
