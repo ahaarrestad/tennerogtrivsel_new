@@ -35,7 +35,10 @@ export function formatInfoText(rawText) {
 
     formattedText = formattedText.replace(combinedPhoneRegex, (match, p1) => { // p1 will be the matched phone number string
         const cleanNumber = p1.replace(/\s+/g, '');
-        return `<a href="tel:${cleanNumber}" class="text-brand hover:text-brand-hover hover:no-underline lg:pointer-events-none lg:cursor-default lg:text-inherit lg:no-underline whitespace-nowrap">${p1}</a>`;
+        // Mobil: tap-to-call-lenke. Desktop: ren tekst (<span>) utenfor tab-rekkefølgen,
+        // siden nummeret kun er informativt der og ikke skal være fokuserbart.
+        return `<a href="tel:${cleanNumber}" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap lg:hidden">${p1}</a>` +
+            `<span class="whitespace-nowrap hidden lg:inline">${p1}</span>`;
     });
 
     return formattedText;
