@@ -20,6 +20,11 @@
 
 ## Backlog
 
+- [ ] **Konsolidering av arbeidsflyt (skills, hooks, memory)** ([plan](docs/plans/2026-06-08-arbeidsflyt-konsolidering.md))
+  - Gjør TODO-oppgaveflyten selvgående og deterministisk — én håndhevet sannhetskilde i stedet for regler spredt over todo-skill + commit-skill + ~10 feedback-minner
+  - Nytt: synk lokal main før worktree, «ship it» (rebase → merge --ff-only → ExitWorktree → git-review) i /commit Step 5, hook som blokkerer rå `git push` + advarer ved commit på main
+  - Deduplisering: delt reviewer-prompt, uttrukket dev:secure-oppstart; memory-opprydding (10 → ~6 minner); `/fewer-permission-prompts` til slutt
+
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
   - Dekker: GitHub (secrets, Actions, permissions), AWS (IAM, S3, Lambda, CloudFront, DynamoDB, SES), Google (OAuth, Sheets/Drive API-nøkler, scopes), og hvordan alt er skrudd sammen
