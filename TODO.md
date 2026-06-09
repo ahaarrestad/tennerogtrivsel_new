@@ -63,6 +63,12 @@
   - Tiltak: dokumenter DPA-status i internkontrollmappen (relevant når kontaktskjema aktiveres)
   - Alvorlighetsnivå: Lav
 
+- [ ] **Gjennomgå tester for avhengighet til synkronisert data** — *ingen plan ennå*
+  - Sjekk alle tester for bruk av data som synkroniseres inn fra Google Drive/Sheets (galleri.json, innstillinger.json, prisliste.json, tannleger.json osv.)
+  - Tester kan ikke basere seg på reelt innhold fra Google Drive — det er ikke tilgjengelig i CI og kan endre seg
+  - Erstatt eventuelle avhengigheter med fixtures eller mocks med kontrollert testdata
+  - Mål: alle tester er deterministiske og uavhengige av eksternt synkronisert innhold
+
 - [ ] **Fikse flaky tester** — *ingen plan ennå*
   - Identifiser og stabiliser tester som feiler ikke-deterministisk (timing, dato-avhengighet, mock-lekkasje e.l.)
   - Bruk `vi.useFakeTimers` for dato-avhengige tester, sjekk at mocks resettes mellom tester
