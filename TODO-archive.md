@@ -3,6 +3,14 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Bug: tab-rekkefølge — telefonnummer fokuserbart på stor skjerm** ([plan](docs/plans/archive/2026-06-07-tab-rekkefolge-telefon.md))
+  - Telefonnummeret var en `tel:`-lenke med `lg:pointer-events-none` på stor skjerm — klikk var deaktivert, men elementet lå fortsatt i tab-rekkefølgen
+  - Løsning: render to elementer per breakpoint — mobil = ekte `tel:`-lenke (`lg:hidden`), desktop = ikke-fokuserbart `<span>` (`hidden lg:inline`). Tre forekomster fikset: `TelefonKnapp.astro`, `Footer.astro`, `textFormatter.js` (telefon-autolenking i Kontakt)
+  - `Button.astro`: ny additiv `interactive`-prop (`false` → `<span>` i stedet for `<a>`/`<button>`, ingen `href`)
+  - Oppfølging: SVG-ikon trukket ut til egen `PhoneIcon.astro` (fjernet duplisering); href-gard på ikke-interaktiv Button
+  - Ny E2E `tests/telefon-tab-rekkefolge.spec.ts` (desktop + mobil, 8/8 på fire prosjekter) + oppdaterte/nye `textFormatter`-tester; 1559 unit, alle filer ≥80% branch, build og audit grønn
+  - Pushet via `git review` (rebaset på lokal main)
+
 - [x] **Byggytelse: parallelliser galleri-bildeprosessering** ([plan](docs/plans/archive/2026-06-07-galleri-bildeprosessering-parallell.md))
   - `Galleri.astro`: lightbox-bildeløkka endret fra sekvensiell `for...of` til `Promise.all` over `sortert.map()` + rekkefølgebevarende rebuild av `indexById`/`lightboxImages`
   - Rekkefølge og indeksering bevart 1:1 (Promise.all garanterer rekkefølge); atferd verifisert mot fire fokuspunkter i review-loop (indeksrekkefølge, hopp over manglende bilder, width-clamping, JSON-escaping)
