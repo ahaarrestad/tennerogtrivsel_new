@@ -24,7 +24,7 @@ const variantClass = variantClasses[variant] ?? 'btn-primary';
 ---
 
 <Tag
-        href={href}
+        href={interactive ? href : undefined}
         class:list={[variantClass, className]}
         {...rest}
 >
