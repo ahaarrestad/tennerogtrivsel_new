@@ -3,6 +3,16 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Konsolidering av arbeidsflyt (skills, hooks, memory)** ([plan](docs/plans/archive/2026-06-08-arbeidsflyt-konsolidering.md))
+  - Gjorde TODO-oppgaveflyten selvgående og deterministisk — flyttet «hvordan/rekkefølge» fra ~10 feedback-minner inn i skills + hook, så håndhevingen ikke lenger hviler på at agenten husker
+  - **todo-skill:** Fase 2 synker lokal main før worktree (med fallback-rebase når lokal main ligger foran origin); Fase 5 gjør TODO-arkivering til eksplisitt gate FØR `/commit`; Fase 6 delegerer all git-mekanikk til `/commit`
+  - **commit-skill Step 5 «ship it»:** rebase på lokal main → `merge --ff-only` fra primær-tre (`git -C`) → `git review` → opprydding (`ExitWorktree` med `git worktree remove`-fallback). Rekkefølge merge-før-fjerning verifisert mot `ExitWorktree`-kontraktet (nekter ved commits ikke på opphavsbranch). Bygger på at `auto-pr.yml` auto-merger med `--rebase` (ikke squash)
+  - **git-guard hook** (`.claude/hooks/git-guard.sh`, PreToolUse Bash): blokkerer rå `git push`, advarer ved `git commit` på main. Testet 6 tilfeller. Wiring i gitignorert `settings.local.json` (dokumentert i `.claude/hooks/README.md`)
+  - **Deduplisering:** delt `_shared/reviewer-prompt.md` (commit Step 4.5 + review-loop) og `_shared/start-secure-server.sh` (dev:secure-boot, commit Step 2.5 + Step 5)
+  - **Memory:** 10 → 6 feedback-minner (slått sammen git- og worktree-minner, slettet e2e-minne), MEMORY.md-indeks oppdatert, ingen døde lenker
+  - Review-loop fant 2 Critical (ship-it-rekkefølge mot `ExitWorktree`) + flere Minor — alle fikset. Meta-tooling: 80%-coverage-porten gjelder ikke (ingen kjernekode endret)
+  - Gjenstår som egen etterprosess: `/fewer-permission-prompts` (rører kun gitignorert settings)
+
 - [x] **Bug: tab-rekkefølge — telefonnummer fokuserbart på stor skjerm** ([plan](docs/plans/archive/2026-06-07-tab-rekkefolge-telefon.md))
   - Telefonnummeret var en `tel:`-lenke med `lg:pointer-events-none` på stor skjerm — klikk var deaktivert, men elementet lå fortsatt i tab-rekkefølgen
   - Løsning: render to elementer per breakpoint — mobil = ekte `tel:`-lenke (`lg:hidden`), desktop = ikke-fokuserbart `<span>` (`hidden lg:inline`). Tre forekomster fikset: `TelefonKnapp.astro`, `Footer.astro`, `textFormatter.js` (telefon-autolenking i Kontakt)
