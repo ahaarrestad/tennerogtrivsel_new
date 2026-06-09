@@ -88,29 +88,54 @@ Når brukeren ber om å starte eller flytte en oppgave fra Backlog — **aldri g
    - Ikke gå videre til Fase 2 uten godkjenning — ikke anta stilltiende samtykke
    - Juster og presenter på nytt ved tilbakemelding — gjenta til brukeren godkjenner
 
-**Fase 2: Opprett worktree (etter godkjent plan)**
+**Fase 2: Synk main + opprett worktree (etter godkjent plan)**
 
-5. Invoke `superpowers:using-git-worktrees` — sørger for isolert branch/worktree
-6. Flytt oppgaven fra **Backlog** til **Pågående** i TODO.md
-7. Bekreft hvilken branch/worktree som ble opprettet
+5. **Synk lokal main FØR worktree.** `EnterWorktree` brancher fra `origin/main` (baseRef
+   `fresh`), og lokal main må være oppdatert for den senere `merge --ff-only` i `/commit`
+   Step 5:
+   ```bash
+   git checkout main && git pull --rebase origin main
+   git log --oneline origin/main..main   # skal være tom
+   ```
+   - `git pull --rebase` gjør basen fersk *og* holder lokal main i sync for `--ff-only`.
+   - Hvis `origin/main..main` **ikke** er tom (upushede main-commits, f.eks. en plan-commit):
+     de mangler i worktreet, siden `EnterWorktree` brancher fra `origin/main`. Rebase
+     worktree-branchen på lokal main rett etter opprettelse (`git rebase main`) så de blir
+     med — ev. push dem først.
+6. Invoke `superpowers:using-git-worktrees` — sørger for isolert branch/worktree
+7. Flytt oppgaven fra **Backlog** til **Pågående** i TODO.md
+8. Bekreft hvilken branch/worktree som ble opprettet
 
 **Fase 3: Implementasjon**
 
-8. Start implementasjonen i henhold til godkjent plan
+9. Start implementasjonen i henhold til godkjent plan
 
 **Fase 4: Review-gate (ALLTID etter implementasjon — ingen unntak)**
 
 Etter at implementasjonen er ferdig:
 
-9. Sett følgende `/goal` i neste svar:
-   ```
-   /goal review-loop rapporterer REVIEW_LOOP: CLEAN
-   ```
-10. Invoke `review-loop` — kjører én review-pass, fikser Critical/Important issues og committer fiksen
-11. `/goal`-systemet starter automatisk ny tur og kaller `review-loop` på nytt inntil betingelsen er møtt
-12. Først når `/goal` bekrefter at betingelsen er møtt: foreslå `/commit`
+10. Sett følgende `/goal` i neste svar:
+    ```
+    /goal review-loop rapporterer REVIEW_LOOP: CLEAN
+    ```
+11. Invoke `review-loop` — kjører én review-pass, fikser Critical/Important issues og committer fiksen
+12. `/goal`-systemet starter automatisk ny tur og kaller `review-loop` på nytt inntil betingelsen er møtt
 
-**Forbudt:** Foreslå `/commit` før `/goal` har bekreftet at `review-loop` er ren.
+**Fase 5: Arkiver TODO (FØR commit — eksplisitt gate)**
+
+13. Når `review-loop` er ren: marker oppgaven ferdig og arkiver den **før** `/commit`
+    foreslås. Følg «Marker oppgave som fullført» nedenfor (sett `[x]`, flytt til
+    `TODO-archive.md`, arkiver plan/spec, oppdater lenker). Arkivering er ikke et
+    etterskritt — det er en del av å fullføre oppgaven.
+
+**Fase 6: Commit + «ship it»**
+
+14. Foreslå `/commit`. Commit-skillen eier all git-mekanikk: kvalitetsport → commit →
+    code-review-loop → (ved godkjent push) «ship it»-sekvensen i Step 5 (rebase på lokal
+    main → `ExitWorktree` → `merge --ff-only` → `git-review` fra main).
+
+**Forbudt:** Foreslå `/commit` før (a) `/goal` har bekreftet at `review-loop` er ren **og**
+(b) oppgaven er arkivert (Fase 5).
 
 ---
 
@@ -140,12 +165,18 @@ Når brukeren vil fortsette på en oppgave som allerede er i **Pågående** (fra
 
 Når en oppgave er ferdig:
 
-1. Sjekk at alt er committet og pushet:
-   ```bash
-   git status
-   git log --oneline origin/main..HEAD
-   ```
-   Hvis det finnes uncommittede eller upushede endringer: påminn brukeren om å kjøre `/commit` og `git review` før arkivering.
+1. **Avhengig av kontekst:**
+   - **Som del av den løpende flyten (Fase 5):** arkiver *nå*, før `/commit`. Arkiv-endringene
+     (TODO.md, flyttede plan/spec-filer) committes sammen med resten i den påfølgende
+     `/commit`. Uncommittede endringer er forventet her — ikke blokker.
+   - **Frittstående (oppgave fullført i en tidligere sesjon):** sjekk først at alt er
+     committet og pushet:
+     ```bash
+     git status
+     git log --oneline origin/main..HEAD
+     ```
+     Hvis det finnes uncommittede eller upushede endringer: påminn brukeren om å kjøre
+     `/commit` (som inkluderer «ship it») før arkivering.
 2. Les `TODO.md`
 3. Endre `- [ ]` til `- [x]` på oppgaven
 4. Legg til et kort sammendrag av hva som ble gjort (som underpunkter), basert på kontekst fra samtalen

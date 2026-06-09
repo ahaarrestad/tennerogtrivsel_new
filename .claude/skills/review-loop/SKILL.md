@@ -18,36 +18,12 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 ## Steg 2: Kjør review-agent
 
-Dispatch en `general-purpose` Agent med følgende prompt (fyll inn `{TASK_DESCRIPTION}`, `{BASE_SHA}`, `{HEAD_SHA}`):
+Dispatch en `general-purpose` Agent med den delte reviewer-prompten i
+[`../_shared/reviewer-prompt.md`](../_shared/reviewer-prompt.md). Fyll inn
+`{WHAT_WAS_IMPLEMENTED}`, `{BASE_SHA}` og `{HEAD_SHA}`.
 
-`{TASK_DESCRIPTION}`: Hent fra TODO.md-oppgaven som ble fullført, eller skriv en kortfattet oppsummering av diff-en (`git diff --stat {BASE_SHA}..{HEAD_SHA}`).
-
-> You are a Senior Code Reviewer.
->
-> ## What Was Implemented
-> {TASK_DESCRIPTION}
->
-> ## Project-Specific Rules (violations = Critical)
-> Read CLAUDE.md. Extra checks:
-> - **CSS tokens:** Only variables from `src/styles/global.css` — no hardcoded hex or Tailwind color classes
-> - **Sheets API:** Numeric `sheets.values.get` calls MUST use `valueRenderOption: 'UNFORMATTED_VALUE'`
-> - **Architecture:** Changes to images/messages/section-backgrounds/security must follow `docs/architecture/`
-> - **Security:** No XSS, injection, exposed secrets, or unsafe innerHTML without DOMPurify
->
-> ## Git Range
-> ```bash
-> git diff --stat {BASE_SHA}..{HEAD_SHA}
-> git diff {BASE_SHA}..{HEAD_SHA}
-> ```
->
-> ## Output
-> ### Issues
-> #### Critical (Must Fix)
-> #### Important (Should Fix)
-> #### Minor (Nice to Have)
-> Each issue: file:line — what's wrong — why it matters — how to fix.
-> ### Assessment
-> **Clean?** Yes / No
+`{WHAT_WAS_IMPLEMENTED}`: Hent fra TODO.md-oppgaven som ble fullført, eller skriv en
+kortfattet oppsummering av diff-en (`git diff --stat {BASE_SHA}..{HEAD_SHA}`).
 
 ## Steg 3: Evaluer og avslutt
 

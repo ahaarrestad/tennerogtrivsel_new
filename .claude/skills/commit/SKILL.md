@@ -3,7 +3,7 @@ name: commit
 model: sonnet
 description: "Use when the user says 'commit', 'committ', 'lagre endringer', 'push', 'send til review', or asks to save/commit their work."
 disable-model-invocation: false
-allowed-tools: ["Bash(git *)", "Bash(cat *)", "Bash(npm test*)", "Bash(npm run test*)", "Bash(npm run build*)", "Bash(node --input-type=commonjs*)", "Bash(npx playwright*)", "Bash(npm audit*)", "Bash(lsof *)", "Bash(kill *)", "Bash(curl *)", "Bash(sleep *)", "Agent"]
+allowed-tools: ["Bash(git *)", "Bash(cat *)", "Bash(source *)", "Bash(npm test*)", "Bash(npm run test*)", "Bash(npm run build*)", "Bash(node --input-type=commonjs*)", "Bash(npx playwright*)", "Bash(npm audit*)", "Bash(lsof *)", "Bash(kill *)", "Bash(curl *)", "Bash(sleep *)", "Agent", "ExitWorktree"]
 ---
 
 # Commit Skill
@@ -71,26 +71,12 @@ If any file is below 80% → **STOP**. Write tests before committing.
 
 ```bash
 # 3. E2E tests — krever dev:secure med korrekte CSP-hashes.
-# Bruker PORT env var (default 4321). Sett PORT=4322 e.l. per worktree.
-# Dreper IKKE en eksisterende secure server — sjekker CSP-header først.
-PORT=${PORT:-4321}
-STARTED_SERVER=false
-if curl -sf "http://localhost:$PORT/admin" -o /dev/null 2>/dev/null && \
-   curl -s -I "http://localhost:$PORT/" 2>/dev/null | grep -qi "content-security-policy.*sha256-"; then
-  echo "Reusing existing dev:secure on port $PORT"
-else
-  lsof -ti:$PORT | xargs kill -9 2>/dev/null || true; sleep 1
-  PORT=$PORT npm run dev:secure > /tmp/dev-secure.log 2>&1 &
-  STARTED_SERVER=true
-  for i in $(seq 1 45); do
-    sleep 2
-    curl -s "http://localhost:$PORT/admin" -o /dev/null -w "%{http_code}" 2>/dev/null | grep -q "200\|301\|302" && break
-  done
-  curl -sf "http://localhost:$PORT/admin" -o /dev/null || { echo "dev:secure failed to start"; exit 1; }
-fi
-PORT=$PORT npm run test:e2e 2>&1
+# Boot-/gjenbruk-logikken ligger i delt script (jf. Step 5).
+source "$(git rev-parse --show-toplevel)/.claude/skills/_shared/start-secure-server.sh"
+ensure_secure_server || exit 1
+PORT=${PORT:-4321} npm run test:e2e 2>&1
 E2E_EXIT=$?
-[ "$STARTED_SERVER" = true ] && { lsof -ti:$PORT | xargs kill -9 2>/dev/null || true; }
+stop_secure_server
 [ $E2E_EXIT -ne 0 ] && exit $E2E_EXIT
 ```
 
@@ -142,78 +128,95 @@ BASE_SHA=$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse HEAD~1)
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-Dispatch a `general-purpose` Agent with this prompt (fill placeholders):
-
-> You are a Senior Code Reviewer.
->
-> ## What Was Implemented
-> {COMMIT_MESSAGE}
->
-> ## Project-Specific Rules (violations = Critical)
-> Read CLAUDE.md. Extra checks:
-> - **CSS tokens:** Only variables from `src/styles/global.css` — no hardcoded hex or Tailwind color classes
-> - **Sheets API:** Numeric `sheets.values.get` calls MUST use `valueRenderOption: 'UNFORMATTED_VALUE'`
-> - **Architecture:** Changes to images/messages/section-backgrounds/security must follow `docs/architecture/`
-> - **Security:** No XSS, injection, exposed secrets, or unsafe innerHTML without DOMPurify
->
-> ## Git Range
-> ```bash
-> git diff --stat {BASE_SHA}..{HEAD_SHA}
-> git diff {BASE_SHA}..{HEAD_SHA}
-> ```
->
-> ## Output
-> ### Strengths
-> ### Issues
-> #### Critical (Must Fix)
-> #### Important (Should Fix)
-> #### Minor (Nice to Have)
-> Each issue: file:line — what's wrong — why it matters — how to fix.
-> ### Assessment
-> **Ready to merge?** Yes / No / With fixes — [1-2 sentence reasoning]
+Dispatch a `general-purpose` Agent med den delte reviewer-prompten i
+[`../_shared/reviewer-prompt.md`](../_shared/reviewer-prompt.md). Fyll inn
+`{WHAT_WAS_IMPLEMENTED}` (commit-meldingen), `{BASE_SHA}` og `{HEAD_SHA}`.
 
 **After review:**
 - **No Critical/Important:** Proceed to push.
 - **Only Minor:** Show issues, ask user whether to push anyway.
 - **Critical or Important found:** Fix all issues, commit the fixes, then update `HEAD_SHA=$(git rev-parse HEAD)` — **keep BASE_SHA unchanged from the start of Step 4.5** — and re-run review. Increment iteration count. If iteration count reaches 3 without a clean review, stop — present remaining issues and ask the user to resolve them manually before retrying.
 
-## Step 5: Push (Only If Requested)
+## Step 5: Push / «Ship it» (Only If Requested)
+
+### 5a. Re-run tests
 
 **Before pushing, re-run tests** — code review fixes may have changed code since Step 2.5.
-Run with `dangerouslyDisableSandbox: true`. Uses PORT env var (default 4321), reuses existing secure server if running.
+Run with `dangerouslyDisableSandbox: true`. Bruker delt boot-script (samme som Step 2.5).
 
 ```bash
-PORT=${PORT:-4321}
-STARTED_SERVER=false
-if curl -sf "http://localhost:$PORT/admin" -o /dev/null 2>/dev/null && \
-   curl -s -I "http://localhost:$PORT/" 2>/dev/null | grep -qi "content-security-policy.*sha256-"; then
-  echo "Reusing existing dev:secure on port $PORT"
-else
-  lsof -ti:$PORT | xargs kill -9 2>/dev/null || true; sleep 1
-  PORT=$PORT npm run dev:secure > /tmp/dev-secure.log 2>&1 &
-  STARTED_SERVER=true
-  for i in $(seq 1 45); do
-    sleep 2
-    curl -s "http://localhost:$PORT/admin" -o /dev/null -w "%{http_code}" 2>/dev/null | grep -q "200\|301\|302" && break
-  done
-  curl -sf "http://localhost:$PORT/admin" -o /dev/null || { echo "dev:secure failed to start"; exit 1; }
-fi
+source "$(git rev-parse --show-toplevel)/.claude/skills/_shared/start-secure-server.sh"
+ensure_secure_server || exit 1
 npm test 2>&1
 UNIT_EXIT=$?
-PORT=$PORT npm run test:e2e 2>&1
+PORT=${PORT:-4321} npm run test:e2e 2>&1
 E2E_EXIT=$?
-[ "$STARTED_SERVER" = true ] && { lsof -ti:$PORT | xargs kill -9 2>/dev/null || true; }
+stop_secure_server
 [ $UNIT_EXIT -ne 0 ] && exit $UNIT_EXIT
 [ $E2E_EXIT -ne 0 ] && exit $E2E_EXIT
 ```
 
 If any test fails → **STOP**. Do not push. Fix and commit before retrying.
 
-**NEVER use `git push`.** Always:
+### 5b. Brukergodkjenning før push
 
+Spør eksplisitt: **«Vil du at jeg pusher?»** og VENT på svar. Ikke anta stilltiende
+samtykke — selv om brukeren sa «push» i utgangspunktet, kjøres review (Step 4.5) først,
+funn presenteres, og brukeren godkjenner push eksplisitt etterpå.
+
+### 5c. «Ship it»-sekvens
+
+Når push er godkjent. Forutsetning: arbeidet er gjort i en worktree (jf. `/todo`-flyten).
+Modellen er **merge til lokal main, kjør `git-review` derfra** — gir lineær historikk og
+clean tree.
+
+> **Hvorfor dette er trygt:** `auto-pr.yml` auto-merger PR-en med `gh pr merge --auto
+> --rebase` (ikke squash). Når `origin/main` ikke har beveget seg, blir rebase en
+> fast-forward som bevarer commits; om den har beveget seg, selv-heler `git pull --rebase`
+> i synk-steget (start av neste `/todo`-oppgave) ev. divergens via patch-id.
+
+> **Rekkefølgen er kritisk:** merge til main MÅ skje *før* worktreet fjernes. `ExitWorktree
+> (action: remove)` **nekter** å fjerne et worktree som har commits som ikke ligger på
+> opphavsbranchen (main) — og det er nettopp tilstanden inntil `merge --ff-only` er kjørt.
+> `ExitWorktree` er dessuten **no-op** hvis worktreet ble laget med `git worktree add` eller
+> i en tidligere sesjon — derfor `git worktree remove` som fallback.
+
+Fang stier og branch-navn først (kjøres i worktreet):
 ```bash
-git review
+PRIMARY=$(git rev-parse --git-common-dir); PRIMARY=${PRIMARY%/.git}   # primær-treets rot
+WT=$(git rev-parse --show-toplevel)                                   # worktreets sti
+BRANCH=$(git branch --show-current)
 ```
+
+1. **Rebase feature-branchen på LOKAL main** (i worktreet — fanger opp commits som ligger
+   på lokal main men ikke er pushet ennå; dette er det autoritative siste synk-punktet):
+   ```bash
+   git rebase main
+   ```
+   Forvent mulig konflikt der både main-commit og worktree-commit rører samme fil (typisk
+   `TODO.md`) — løs manuelt, så `git rebase --continue`.
+2. **Fast-forward lokal main til branchen** — fra primær-treet (`main` er utsjekket der;
+   `--ff-only` lykkes fordi rebasen i steg 1 gjorde main til stamfar). **Før** opprydding,
+   så branchens commits ligger på main og `ExitWorktree`/`worktree remove` ikke nekter:
+   ```bash
+   git -C "$PRIMARY" merge --ff-only "$BRANCH"
+   ```
+   Hvis `--ff-only` feiler: main har beveget seg siden rebasen — kjør `git rebase main` på
+   nytt i worktreet og prøv igjen. Aldri en ekte merge-commit her.
+3. **Send til review.** `git-review` pusher `origin/main..HEAD` til en `review/<slug>`-branch
+   og lager PR-en — den pusher **ikke** `main` selv (origin/main oppdateres når PR-en
+   auto-merges). Kan kjøres fra worktreet (HEAD == main-tipp nå). **NEVER use `git push`:**
+   ```bash
+   git review
+   ```
+4. **Rydd opp worktreet** (commits ligger nå på main, så fjerning er trygg):
+   - Opprettet denne sesjonen worktreet via `EnterWorktree`? Kall verktøyet `ExitWorktree`
+     (action: `remove`) — det sletter worktree-katalog og branch og setter cwd tilbake til
+     primær-treet.
+   - Ellers (`git worktree add` eller tidligere sesjon → `ExitWorktree` er no-op):
+     ```bash
+     git -C "$PRIMARY" worktree remove "$WT" && git -C "$PRIMARY" branch -d "$BRANCH"
+     ```
 
 ## Step 6: Report
 
