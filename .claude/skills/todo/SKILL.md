@@ -132,7 +132,8 @@ Etter at implementasjonen er ferdig:
 
 14. Foreslå `/commit`. Commit-skillen eier all git-mekanikk: kvalitetsport → commit →
     code-review-loop → (ved godkjent push) «ship it»-sekvensen i Step 5 (rebase på lokal
-    main → `ExitWorktree` → `merge --ff-only` → `git-review` fra main).
+    main → `merge --ff-only` → `git-review` fra main → opprydding med `ExitWorktree`).
+    Rekkefølgen er kritisk: merge MÅ skje før worktreet fjernes — se `/commit` Step 5c.
 
 **Forbudt:** Foreslå `/commit` før (a) `/goal` har bekreftet at `review-loop` er ren **og**
 (b) oppgaven er arkivert (Fase 5).

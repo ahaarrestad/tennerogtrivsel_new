@@ -28,6 +28,8 @@ scriptet. Etter en fersk klone: legg til denne `hooks`-blokken i `.claude/settin
 
 ### Test
 
+Kjør fra repo-roten (relativ sti til scriptet):
+
 ```bash
 echo '{"tool_input":{"command":"git push origin main"},"cwd":"'"$PWD"'"}' | .claude/hooks/git-guard.sh
 # → permissionDecision: deny

@@ -10,6 +10,9 @@
 #
 # Bruker PORT (default 4321). Sett PORT=4322 e.l. per worktree.
 # Dreper IKKE en eksisterende secure server — sjekker CSP-header først og gjenbruker den.
+#
+# MÅ kjøres under `dangerouslyDisableSandbox: true` (samme som /commit Step 2.5/5):
+# readiness-loopen bruker foreground `sleep`, som er blokkert i sandkassen.
 
 ensure_secure_server() {
   PORT=${PORT:-4321}
@@ -26,7 +29,13 @@ ensure_secure_server() {
     sleep 2
     curl -s "http://localhost:$PORT/admin" -o /dev/null -w "%{http_code}" 2>/dev/null | grep -q "200\|301\|302" && break
   done
-  curl -sf "http://localhost:$PORT/admin" -o /dev/null || { echo "dev:secure failed to start"; return 1; }
+  curl -sf "http://localhost:$PORT/admin" -o /dev/null || {
+    echo "dev:secure failed to start"
+    # Drep den nettopp spawnede serveren — kalleren gjør `|| exit 1` og når aldri
+    # stop_secure_server, så uten denne ryddingen lekker prosessen og holder PORT.
+    lsof -ti:$PORT | xargs kill -9 2>/dev/null || true
+    return 1
+  }
 }
 
 stop_secure_server() {
