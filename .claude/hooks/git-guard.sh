@@ -19,7 +19,9 @@ cwd=$(printf '%s' "$input" | jq -r '.cwd // empty')
 [ -z "$command" ] && exit 0
 
 # 1. Blokker rå `git push` (matcher «git push» som token-sekvens; «git review» og
-#    «git-review» matcher ikke — egne kommandoer uten «push»).
+#    «git-review» matcher ikke — egne kommandoer uten «push»). Merk: matcher også «git push»
+#    inni en streng/kommentar (f.eks. `echo "ikke kjør git push"`) — bevisst safe-by-default
+#    (heller over- enn underblokkere); slike tilfeller er sjeldne i praksis.
 if printf '%s' "$command" | grep -Eq '(^|[^[:alnum:]_-])git[[:space:]]+push([[:space:]]|$)'; then
   jq -n '{
     hookSpecificOutput: {
