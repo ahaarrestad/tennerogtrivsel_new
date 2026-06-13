@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Delt dev:secure-oppstart for /commit (Step 2.5 E2E + Step 5 push).
+# Bruker dev:secure:fixtures — E2E kjører mot syntetiske fixtures (ikke live Drive),
+# samme som playwright.config.ts lokalt og CI. Slik er testdata deterministiske.
 # Kilde (source) denne, ikke kjør den: den setter STARTED_SERVER i kallerens scope
 # slik at stop_secure_server kan rydde opp riktig.
 #
@@ -23,7 +25,7 @@ ensure_secure_server() {
     return 0
   fi
   lsof -ti:$PORT | xargs kill -9 2>/dev/null || true; sleep 1
-  PORT=$PORT npm run dev:secure > /tmp/dev-secure.log 2>&1 &
+  PORT=$PORT npm run dev:secure:fixtures > /tmp/dev-secure.log 2>&1 &
   STARTED_SERVER=true
   for i in $(seq 1 45); do
     sleep 2

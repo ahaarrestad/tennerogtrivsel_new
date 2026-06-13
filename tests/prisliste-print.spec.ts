@@ -8,8 +8,8 @@ test.describe('Prisliste print-footer', () => {
     test('footer er skjult i normal visning', async ({ page }) => {
         await page.goto('/prisliste');
         const footer = page.locator('.prisliste-footer-print');
-        // toBeHidden() er true også når element mangler i DOM.
-        // Det er OK her — testmiljøet har alltid tannleger fra tannleger.json.
+        // toBeHidden() er true også når element mangler i DOM. Det er OK her — det
+        // syntetiske fixture-settet har alltid tannleger, så footeren rendres.
         await expect(footer).toBeHidden();
     });
 
@@ -18,6 +18,8 @@ test.describe('Prisliste print-footer', () => {
         await page.emulateMedia({ media: 'print' });
         const footer = page.locator('.prisliste-footer-print');
         await expect(footer).toBeVisible();
-        await expect(footer).not.toBeEmpty();
+        // Verifiser mot kjent fixture-tannlege (tests/fixtures/content/tannleger.json),
+        // ikke bare «ikke tom» — beviser at navn faktisk rendres uavhengig av Drive.
+        await expect(footer).toContainText('Tannlege Test Testesen');
     });
 });

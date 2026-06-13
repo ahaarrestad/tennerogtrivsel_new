@@ -1,0 +1,12 @@
+{
+  "sistOppdatert": "2026-01-01T00:00:00.000Z",
+  "kategoriOrder": [
+    { "kategori": "Testkategori A", "order": 1 },
+    { "kategori": "Testkategori B", "order": 2 }
+  ],
+  "items": [
+    { "kategori": "Testkategori A", "behandling": "Testbehandling 1", "pris": 100, "sistOppdatert": "2026-01-01T00:00:00.000Z", "order": 0 },
+    { "kategori": "Testkategori A", "behandling": "Testbehandling 2", "pris": 250, "sistOppdatert": "2026-01-01T00:00:00.000Z", "order": 1 },
+    { "kategori": "Testkategori B", "behandling": "Testbehandling 3", "pris": "Etter avtale", "sistOppdatert": "2026-01-01T00:00:00.000Z", "order": 2 }
+  ]
+}

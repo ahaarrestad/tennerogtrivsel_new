@@ -3,6 +3,15 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Drive-uavhengige tester (syntetiske fixtures)** ([plan](docs/plans/archive/2026-06-11-drive-uavhengige-tester.md))
+  - Bakgrunn: hele E2E-suiten ble bygget fra live Google Drive (`npm run sync` → build → Playwright), så endring av Drive-innhold kunne knekke tester. Verre: deploy-artefakten ble bygget i e2e-jobben fra ekte Drive — sammenblanding av test- og deploy-bygg. Slo sammen tidligere backlog-oppgave 8.
+  - **Fixture-datasett** (`tests/fixtures/`): syntetiske innstillinger/tannleger/galleri/prisliste/kontaktskjema-JSON, 3 tjenester, 1 alltid-aktiv melding, 8 minimale committede bildefiler. Åpenbart syntetiske navn.
+  - **Seed-script** (`scripts/seed-test-fixtures.mjs`): kopierer fixtures → `src/content/` + `src/assets/` (tømmer mål, bevarer `.gitkeep`, idempotent). Nye scripts `seed:fixtures` + `dev:secure:fixtures`.
+  - **Deploy-separasjon** (`deploy.yml`): e2e-jobben seeder fixtures + bygger KUN for testing (laster ikke opp artefakt); `build`-jobben bygger ALLTID fra ekte Drive (`npm run sync`) og leverer deploy-artefakten — for både push og repository_dispatch; hoppes over på PR. Fjernet sync-only service-account-secrets fra e2e (beholdt `PUBLIC_*` admin-build trenger). **Resultat: syntetiske data kan aldri deployes til prod.**
+  - **Tester:** `data-validation.test.ts` validerer nå fixtures (deterministisk, ingen skips); `prisliste-print.spec.ts` asserterer kjent fixture-tannlegenavn. accessibility/seo/sitemap/links/galleri-lightbox verifisert strukturelt dekket av fixtures — ingen endring nødvendig.
+  - **Verifisert:** Vitest 1559 ✓ (branch 88.9%), lint ✓, chromium-E2E 41/41 ✓; DoD-bevis: tømte `src/content` → re-seed → grønt. csp-hashes.json revertert (skal reflektere ekte-data-bygg). Review-loop: CLEAN.
+  - Iterasjon 2 (egen backlog-post): rene flaky-fikser (galleri-lightbox networkidle→`page.route`, `clearMocks`-vurdering, orphaned Mobile Safari setViewportSize-fix).
+
 - [x] **Konsolidering av arbeidsflyt (skills, hooks, memory)** ([plan](docs/plans/archive/2026-06-08-arbeidsflyt-konsolidering.md))
   - Gjorde TODO-oppgaveflyten selvgående og deterministisk — flyttet «hvordan/rekkefølge» fra ~10 feedback-minner inn i skills + hook, så håndhevingen ikke lenger hviler på at agenten husker
   - **todo-skill:** Fase 2 synker lokal main før worktree (med fallback-rebase når lokal main ligger foran origin); Fase 5 gjør TODO-arkivering til eksplisitt gate FØR `/commit`; Fase 6 delegerer all git-mekanikk til `/commit`

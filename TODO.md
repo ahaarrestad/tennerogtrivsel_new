@@ -58,17 +58,11 @@
   - Tiltak: dokumenter DPA-status i internkontrollmappen (relevant når kontaktskjema aktiveres)
   - Alvorlighetsnivå: Lav
 
-- [ ] **Gjennomgå tester for avhengighet til synkronisert data** — *ingen plan ennå*
-  - Sjekk alle tester for bruk av data som synkroniseres inn fra Google Drive/Sheets (galleri.json, innstillinger.json, prisliste.json, tannleger.json osv.)
-  - Tester kan ikke basere seg på reelt innhold fra Google Drive — det er ikke tilgjengelig i CI og kan endre seg
-  - Erstatt eventuelle avhengigheter med fixtures eller mocks med kontrollert testdata
-  - Mål: alle tester er deterministiske og uavhengige av eksternt synkronisert innhold
-
-- [ ] **Fikse flaky tester** — *ingen plan ennå*
-  - Identifiser og stabiliser tester som feiler ikke-deterministisk (timing, dato-avhengighet, mock-lekkasje e.l.)
-  - Bruk `vi.useFakeTimers` for dato-avhengige tester, sjekk at mocks resettes mellom tester
+- [ ] **Fikse flaky tester (timing/mock-lekkasje)** — *ingen plan ennå* — iterasjon 2 etter Drive-uavhengighet
+  - Rene ikke-data flaky-fikser, tas etter at fixture-infrastrukturen er på plass
+  - `galleri-lightbox.spec.ts`: `waitForLoadState('networkidle')` → `page.route` (PR #372-review)
   - Vurder global `clearMocks`/`restoreMocks` i `vitest.config.ts` mot mock-lekkasje (PR #371-review)
-  - Playwright: mock API via `page.route` i stedet for `waitForLoadState('networkidle')` + manuell DOM-manipulasjon — gjelder bl.a. `tests/galleri-lightbox.spec.ts` (PR #372-review)
+  - Orphaned accessibility-fix i worktree `fix/e2e-stabile-tester` (fjern unødvendig `setViewportSize`, Mobile Safari color-contrast) — merge eller forkast
   - Mål: null flaky tester i CI
 
 - [ ] **Vurder drift i `csp-hashes.json`** — *ingen plan ennå*

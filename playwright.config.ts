@@ -33,7 +33,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: process.env.CI ? 'npm run preview' : `PORT=${PORT} npm run dev:secure`,
+    // Lokalt seedes syntetiske fixtures (dev:secure:fixtures) i stedet for live Drive-sync,
+    // slik at E2E-testene er uavhengige av Google Drive-innhold. I CI bygges dist/ fra
+    // fixtures i et eget steg (npm run seed:fixtures) før preview serverer det.
+    command: process.env.CI ? 'npm run preview' : `PORT=${PORT} npm run dev:secure:fixtures`,
     url: `http://localhost:${PORT}/admin`,
     reuseExistingServer: !process.env.CI,
   },
