@@ -53,6 +53,7 @@
   },
   "overrides": {
     "rimraf": "^6.1.3",
-    "vite": "^7"
+    "vite": "^7",
+    "esbuild": "^0.28.1"
   }
 }
