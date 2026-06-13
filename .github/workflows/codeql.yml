@@ -10,13 +10,21 @@ on:
 
 jobs:
   analyze:
-    name: Analyze
+    name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
       actions: read
       contents: read
       security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # javascript-typescript: app-/scriptkode. actions: GitHub Actions-workflows
+        # (script injection, usikre triggere, ufiksede actions). actions-skanningen
+        # var av siden 2026-02-15 — slått på igjen her.
+        language: [ javascript-typescript, actions ]
 
     steps:
     - name: Checkout repository
@@ -25,7 +33,7 @@ jobs:
     - name: Initialize CodeQL
       uses: github/codeql-action/init@9e0d7b8d25671d64c341c19c0152d693099fb5ba  # v4.35.5
       with:
-        languages: javascript-typescript
+        languages: ${{ matrix.language }}
         config: |
           paths-ignore:
             - 'node_modules'
@@ -37,4 +45,4 @@ jobs:
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@9e0d7b8d25671d64c341c19c0152d693099fb5ba  # v4.35.5
       with:
-        category: "/language:javascript-typescript"
+        category: "/language:${{ matrix.language }}"
