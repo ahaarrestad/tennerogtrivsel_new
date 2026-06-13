@@ -44,9 +44,10 @@ jobs:
   e2e-tests:
     if: github.event_name != 'repository_dispatch' && github.event.pull_request.head.repo.fork != true
     runs-on: ubuntu-latest
+    # E2E-bygget bruker syntetiske fixtures (ikke live Drive), så service-account-
+    # secretene for sync trengs ikke her. De PUBLIC_*-variablene beholdes fordi
+    # admin-siden baker dem inn ved `astro build`.
     env:
-      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-      GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
       PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.PUBLIC_GOOGLE_CLIENT_ID }}
       PUBLIC_GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
       PUBLIC_GOOGLE_DRIVE_TJENESTER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TJENESTER_FOLDER_ID }}
@@ -68,10 +69,13 @@ jobs:
       - name: Check for critical vulnerabilities
         run: npm audit --audit-level=critical
 
-      - name: Sync data
-        run: npm run sync
+      # Seeder syntetiske fixtures i stedet for live Drive — gjør E2E uavhengig av
+      # Google Drive-innhold. Dette bygget er KUN for testing og lastes IKKE opp som
+      # deploy-artefakt (deploy-bygget skjer i build-jobben med ekte Drive-data).
+      - name: Seed test fixtures
+        run: npm run seed:fixtures
 
-      - name: Build Astro site
+      - name: Build Astro site (fixtures)
         run: npm run build:ci
 
       - name: Run E2E tests
@@ -79,16 +83,13 @@ jobs:
         env:
           HOME: /root
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
-        with:
-          name: build-output
-          path: dist/
-
   build:
     needs: [unit-tests, e2e-tests, lint]
+    # Bygger deploy-artefakten. Hoppes over på pull_request (deploy skjer aldri på PR,
+    # og fork-PR-er mangler Drive-secrets) — PR-er dekkes av unit/e2e/lint-jobbene.
     if: |
       always() &&
+      github.event_name != 'pull_request' &&
       (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped') &&
       (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
       (needs.lint.result == 'success' || needs.lint.result == 'skipped')
@@ -103,39 +104,29 @@ jobs:
       PUBLIC_GOOGLE_DRIVE_TANNLEGER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_TANNLEGER_FOLDER_ID }}
       PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_BILDER_FOLDER_ID }}
       PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
+    # Bygger ALLTID deploy-artefakten fra ekte Drive-data (`npm run sync`), for både
+    # normal push og repository_dispatch. E2E-jobben bygger separat fra fixtures og
+    # laster ikke opp noe — slik at det aldri er syntetiske testdata som deployes.
     steps:
-      # For repository_dispatch: full build (tests skipped)
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-        if: github.event_name == 'repository_dispatch'
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6.4.0
-        if: github.event_name == 'repository_dispatch'
         with:
           node-version: '24'
           cache: 'npm'
       - run: npm ci --ignore-scripts
-        if: github.event_name == 'repository_dispatch'
       - name: Verify npm package signatures
-        if: github.event_name == 'repository_dispatch'
         run: npm audit signatures
       - name: Check for critical vulnerabilities
-        if: github.event_name == 'repository_dispatch'
         run: npm audit --audit-level=critical
       - name: Sync data
-        if: github.event_name == 'repository_dispatch'
         run: npm run sync
       - name: Build Astro site
-        if: github.event_name == 'repository_dispatch'
         run: npm run build:ci
       - name: Upload build artifact
-        if: github.event_name == 'repository_dispatch'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: build-output
           path: dist/
-      # For normal flow: build already done in e2e-tests job
-      - name: Build completed in E2E job
-        if: github.event_name != 'repository_dispatch'
-        run: echo "Build artifact uploaded by e2e-tests job"
 
   deploy:
     needs: build

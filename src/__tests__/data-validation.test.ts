@@ -33,24 +33,20 @@ vi.mock('astro:content', () => {
     };
 });
 
-describe('Datavalidering (Synkroniserte filer)', () => {
-    const contentPath = path.join(process.cwd(), 'src/content');
-    const assetsPath = path.join(process.cwd(), 'src/assets/tannleger');
+// Validerer det syntetiske fixture-settet (tests/fixtures/), IKKE live Drive-data.
+// Fixtures er committet og alltid til stede, så testene er deterministiske og kjører
+// uavhengig av om Google Drive-innhold er synket inn. Drive-data kan byttes fritt.
+describe('Datavalidering (syntetiske fixtures)', () => {
+    const contentPath = path.join(process.cwd(), 'tests/fixtures/content');
+    const assetsPath = path.join(process.cwd(), 'tests/fixtures/assets/tannleger');
 
     it('hver tannlege bør ha et bilde som eksisterer i assets', () => {
         const tannlegerFile = path.join(contentPath, 'tannleger.json');
-        
-        // Hopp over hvis filen ikke er generert enda (f.eks. i nytt miljø)
-        if (!fs.existsSync(tannlegerFile)) {
-            console.warn('tannleger.json finnes ikke, hopper over test.');
-            return;
-        }
-
         const data = JSON.parse(fs.readFileSync(tannlegerFile, 'utf-8'));
-        
+
         (data as Array<Record<string, unknown>>).forEach((tannlege) => {
             if (tannlege.image) {
-                const imagePath = path.join(assetsPath, tannlege.image);
+                const imagePath = path.join(assetsPath, tannlege.image as string);
                 expect(fs.existsSync(imagePath), `Bilde ${tannlege.image} for ${tannlege.name} mangler i assets`).toBe(true);
             }
         });
@@ -58,17 +54,13 @@ describe('Datavalidering (Synkroniserte filer)', () => {
 
     it('hver tjeneste bør ha påkrevde frontmatter-felter', () => {
         const tjenesterPath = path.join(contentPath, 'tjenester');
-        
-        if (!fs.existsSync(tjenesterPath)) {
-            console.warn('src/content/tjenester finnes ikke, hopper over test.');
-            return;
-        }
-
         const files = fs.readdirSync(tjenesterPath).filter(f => f.endsWith('.md'));
-        
+
+        expect(files.length, 'fixture-settet skal ha minst én tjeneste').toBeGreaterThan(0);
+
         files.forEach(file => {
             const content = fs.readFileSync(path.join(tjenesterPath, file), 'utf-8');
-            
+
             // Enkel sjekk for frontmatter uten å bruke tunge bibs
             expect(content, `Filen ${file} mangler start-frontmatter (---)`).toMatch(/^---/);
             expect(content, `Filen ${file} mangler tittel i frontmatter`).toMatch(/title:/);

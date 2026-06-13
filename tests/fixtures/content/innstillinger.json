@@ -1,0 +1,21 @@
+[
+  { "id": "phone1", "value": "99 99 99 99" },
+  { "id": "adresse1", "value": "Testveien 1" },
+  { "id": "adresse2", "value": "0000 Testby" },
+  { "id": "latitude", "value": "59.0" },
+  { "id": "longitude", "value": "10.0" },
+  { "id": "sentralbordTekst", "value": "Sentralbordet er åpent (syntetisk testdata)" },
+  { "id": "businessHours1", "value": "Mandag: 08:00 - 16:00" },
+  { "id": "businessHours2", "value": "Tirsdag: 08:00 - 16:00" },
+  { "id": "businessHours3", "value": "Onsdag: 08:00 - 16:00" },
+  { "id": "businessHours4", "value": "Torsdag: 08:00 - 16:00" },
+  { "id": "businessHours5", "value": "Fredag: 08:00 - 16:00" },
+  { "id": "siteTitle", "value": "Tenner og Trivsel | Testklinikk" },
+  { "id": "siteDescription", "value": "Syntetisk testbeskrivelse for E2E-bygg. Ikke ekte innhold." },
+  { "id": "kontaktTittel", "value": "Kontakt oss" },
+  { "id": "galleriTittel", "value": "Klinikken" },
+  { "id": "tjenesterTittel", "value": "Våre Tjenester" },
+  { "id": "tannlegerTittel", "value": "Tannlegene" },
+  { "id": "velkomstTittel1", "value": "Tannhelse i" },
+  { "id": "velkomstTittel2", "value": "trygge rammer" }
+]

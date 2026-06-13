@@ -1,0 +1,47 @@
+[
+  {
+    "id": "forside",
+    "title": "Forsidebilde (testdata)",
+    "image": "forside.jpg",
+    "altText": "Syntetisk forsidebilde",
+    "order": 1,
+    "type": "forsidebilde",
+    "imageConfig": { "scale": 1, "positionX": 50, "positionY": 50 }
+  },
+  {
+    "id": "fellesbilde",
+    "title": "Fellesbilde (testdata)",
+    "image": "fellesbilde.jpg",
+    "altText": "Syntetisk fellesbilde",
+    "order": 2,
+    "type": "fellesbilde",
+    "imageConfig": { "scale": 1, "positionX": 50, "positionY": 50 }
+  },
+  {
+    "id": "galleri-en",
+    "title": "Galleribilde en (testdata)",
+    "image": "galleri-en.jpg",
+    "altText": "Syntetisk galleribilde en",
+    "order": 3,
+    "type": "galleri",
+    "imageConfig": { "scale": 1, "positionX": 50, "positionY": 50 }
+  },
+  {
+    "id": "galleri-to",
+    "title": "Galleribilde to (testdata)",
+    "image": "galleri-to.jpg",
+    "altText": "Syntetisk galleribilde to",
+    "order": 4,
+    "type": "galleri",
+    "imageConfig": { "scale": 1, "positionX": 50, "positionY": 50 }
+  },
+  {
+    "id": "galleri-tre",
+    "title": "Galleribilde tre (testdata)",
+    "image": "galleri-tre.jpg",
+    "altText": "Syntetisk galleribilde tre",
+    "order": 5,
+    "type": "galleri",
+    "imageConfig": { "scale": 1, "positionX": 50, "positionY": 50 }
+  }
+]

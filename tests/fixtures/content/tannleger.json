@@ -1,0 +1,18 @@
+[
+  {
+    "id": "tannlege-en",
+    "name": "Tannlege Test Testesen",
+    "title": "Allmennpraksis",
+    "description": "Syntetisk testbeskrivelse for tannlege en.",
+    "image": "tannlege-en.png",
+    "imageConfig": { "scale": 1, "positionX": 50, "positionY": 50 }
+  },
+  {
+    "id": "tannlege-to",
+    "name": "Tannlege Prøve Prøvesen",
+    "title": "Spesialist (testdata)",
+    "description": "Syntetisk testbeskrivelse for tannlege to.",
+    "image": "tannlege-to.png",
+    "imageConfig": { "scale": 1, "positionX": 50, "positionY": 50 }
+  }
+]
