@@ -5,6 +5,9 @@ test.describe('Universell utforming (UU)', () => {
   test('forsiden skal ikke ha kritiske UU-feil', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('main');
+    // networkidle lar Vite-dep-reloads fullføre FØR axe starter (dev-modus);
+    // i prod/preview-bygg løser dette umiddelbart.
+    await page.waitForLoadState('networkidle');
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -25,6 +28,7 @@ test.describe('Universell utforming (UU)', () => {
     test(`${name} (${path}) skal ikke ha kritiske UU-feil`, async ({ page }) => {
       await page.goto(path, { waitUntil: 'domcontentloaded' });
       await page.waitForSelector('main');
+      await page.waitForLoadState('networkidle');
 
       const results = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -40,6 +44,7 @@ test.describe('Universell utforming (UU)', () => {
     // Naviger til første tjeneste — #tjenester er skjult på mobil-framsiden (hidden lg:block)
     await page.locator('#tjenester .card-base').first().click();
     await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
