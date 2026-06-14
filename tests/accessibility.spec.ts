@@ -5,8 +5,8 @@ test.describe('Universell utforming (UU)', () => {
   test('forsiden skal ikke ha kritiske UU-feil', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('main');
-    // networkidle lar Vite-dep-reloads fullføre FØR axe starter (dev-modus);
-    // i prod/preview-bygg løser dette umiddelbart.
+    // Venter til siden er stabil før axe starter; løser umiddelbart mot
+    // preview-bygg (CI), gir Vite-dep-reloads tid til å fullføre i dev-modus.
     await page.waitForLoadState('networkidle');
 
     const accessibilityScanResults = await new AxeBuilder({ page })
