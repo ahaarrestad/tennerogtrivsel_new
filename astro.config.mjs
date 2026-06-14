@@ -7,7 +7,11 @@ export default defineConfig({
         plugins: [tailwindcss()],
         optimizeDeps: {
             entries: ['src/pages/admin/index.astro'],
-            include: ['easymde', 'flatpickr', 'flatpickr/dist/l10n/no.js'],
+            // marked + dompurify lastes klient-side via InfoBanner på alle sider.
+            // Uten pre-bundling oppdager Vite dem on-demand ved første sidelast og
+            // tvinger en full page-reload — som under last kan rive ned axe-core sin
+            // execution context midt i UU-skann (flaky E2E). Pre-bundling fjerner racet.
+            include: ['easymde', 'flatpickr', 'flatpickr/dist/l10n/no.js', 'marked', 'dompurify'],
         },
         server: {
             proxy: {

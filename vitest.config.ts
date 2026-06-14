@@ -3,6 +3,9 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node', // or 'jsdom' if you need browser APIs
+    // Nullstill mock-historikk (mock.calls/results) før hver test mot lekkasje
+    // mellom tester. Påvirker ikke implementasjoner (vi.mock-factories består).
+    clearMocks: true,
     include: [
       'src/**/__tests__/**/*.{ts,js}',
       'lambda/**/__tests__/**/*.mjs',

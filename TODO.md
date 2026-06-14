@@ -58,13 +58,6 @@
   - Tiltak: dokumenter DPA-status i internkontrollmappen (relevant når kontaktskjema aktiveres)
   - Alvorlighetsnivå: Lav
 
-- [ ] **Fikse flaky tester (timing/mock-lekkasje)** — *ingen plan ennå* — iterasjon 2 etter Drive-uavhengighet
-  - Rene ikke-data flaky-fikser, tas etter at fixture-infrastrukturen er på plass
-  - `galleri-lightbox.spec.ts`: `waitForLoadState('networkidle')` → `page.route` (PR #372-review)
-  - Vurder global `clearMocks`/`restoreMocks` i `vitest.config.ts` mot mock-lekkasje (PR #371-review)
-  - Orphaned accessibility-fix i worktree `fix/e2e-stabile-tester` (fjern unødvendig `setViewportSize`, Mobile Safari color-contrast) — merge eller forkast
-  - Mål: null flaky tester i CI
-
 - [ ] **Vurder drift i `csp-hashes.json`** — *ingen plan ennå*
   - `src/generated/csp-hashes.json` (committet på main) matcher ikke det `npm run generate-csp-hashes` produserer — én inline-script-hash avviker, uavhengig av kodeendringer
   - Reproduserbart: regenerering på ren `origin/main` gir samme avvik. Avklar om committet fil er utdatert, eller om genereringen er ikke-deterministisk/miljøavhengig

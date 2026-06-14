@@ -2,28 +2,31 @@ import { test, expect } from '@playwright/test';
 
 // Regresjon: lightboxens lukkeknapp ble dekket av det dato-styrte InfoBanneret
 // (banner z-[60] > tidligere lightbox z-50). Banneret vises/skjules basert på
-// dato, så testen tvinger det synlig for å verifisere stacking deterministisk —
-// uavhengig av om en melding faktisk er aktiv akkurat nå.
+// dato, så testen mocker en aktiv melding for å verifisere stacking
+// deterministisk — uavhengig av om en melding faktisk er aktiv akkurat nå.
 test.describe('Galleri-lightbox stacking', () => {
   test('lukkeknappen ligger over et synlig InfoBanner', async ({ page }) => {
-    await page.goto('/galleri/', { waitUntil: 'domcontentloaded' });
+    // Returner en deterministisk aktiv melding (datoer spenner over enhver
+    // systemklokke), så InfoBanner-scriptet selv viser banneret via ekte
+    // kodesti. Dette eliminerer racet der et sent /api/active-messages.json-svar
+    // ellers kunne re-skjule et manuelt synliggjort banner (false positive) —
+    // erstatter den tidligere waitForLoadState('networkidle').
+    await page.route('**/api/active-messages.json', (route) =>
+      route.fulfill({
+        json: [
+          { title: 'Testmelding', content: 'Test', startDate: '2000-01-01', endDate: '2100-01-01' },
+        ],
+      }),
+    );
 
-    // Banner-scriptet fetcher /api/active-messages.json og re-skjuler banneret
-    // hvis ingen melding er aktiv. Vent til nettverket er rolig FØR vi tvinger
-    // banneret synlig, ellers kan et sent svar skjule det igjen (false positive).
-    await page.waitForLoadState('networkidle');
+    await page.goto('/galleri/', { waitUntil: 'domcontentloaded' });
 
     const firstTile = page.locator('[data-lightbox-index]').first();
     await firstTile.waitFor();
 
-    // Simuler dato-aktivt banner (sticky top-0, z-[60]).
+    // Banneret (sticky top-0, z-[60]) vises nå av appen selv basert på den
+    // mockede aktive meldingen — initBanner() kjører remove('hidden').
     const banner = page.locator('#banner-root');
-    await page.evaluate(() => {
-      const b = document.getElementById('banner-root');
-      const t = document.getElementById('banner-title');
-      if (t) t.textContent = 'Testmelding';
-      b?.classList.remove('hidden');
-    });
     await expect(banner).toBeVisible();
 
     // Mål lukkeknappens senter (krever åpen lightbox), lukk så igjen.

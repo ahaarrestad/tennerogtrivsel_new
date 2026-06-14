@@ -3,6 +3,13 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Fikse flaky tester (timing/mock-lekkasje)** ([plan](docs/plans/archive/2026-06-14-flaky-tester.md)) — iterasjon 2 etter Drive-uavhengighet
+  - **galleri-lightbox.spec.ts:** erstattet `waitForLoadState('networkidle')` + manuell DOM-poke med `page.route` som leverer en deterministisk *aktiv* melding (datoer 2000→2100). Appen viser banneret via ekte `initBanner()`-kodesti; ingen kodesti re-skjuler det → ingen falsk positiv. Bevist: `--repeat-each=10` = 40/40 på alle 4 prosjekter.
+  - **vitest.config.ts:** `clearMocks: true` mot call-historikk-lekkasje (nullstiller kun historikk, ikke `vi.mock`-implementasjoner). Full suite 1559/1559 — ingen fallout. `csp-check` (CI-ignored) og `mockReset`/`restoreMocks` (9-filers churn uten påvist gevinst) bevisst droppet etter avklaring.
+  - **Accessibility-flake oppdaget under full-suite-verifisering:** axe-skann på `/tannleger/`+`/tjenester/` feilet («Execution context destroyed») under parallell last. Trace-analyse: dev-server-navigasjon midt i skann. **Bevist dev-only** — 70/70 grønn mot `npm run preview` (CI-stien). Tiltak: `astro.config.mjs` pre-bundler `marked`+`dompurify` i `optimizeDeps.include` (fjernet dep-optimaliserings-reload, dev-only, null prod-effekt); sjelden residual dev-race dokumentert i testkommentar — `networkidle` bevisst *ikke* gjeninnført.
+  - ~~setViewportSize/Mobile Safari color-contrast~~ allerede løst i main; orphaned worktree forkastet.
+  - **Verifisert:** vitest 1559 ✓ (branch 88.9 %); galleri-lightbox 40/40 ✓; full Playwright mot preview (CI-sti) 77 passed / 0 failed ✓. Review-loop: CLEAN.
+
 - [x] **Drive-uavhengige tester (syntetiske fixtures)** ([plan](docs/plans/archive/2026-06-11-drive-uavhengige-tester.md))
   - Bakgrunn: hele E2E-suiten ble bygget fra live Google Drive (`npm run sync` → build → Playwright), så endring av Drive-innhold kunne knekke tester. Verre: deploy-artefakten ble bygget i e2e-jobben fra ekte Drive — sammenblanding av test- og deploy-bygg. Slo sammen tidligere backlog-oppgave 8.
   - **Fixture-datasett** (`tests/fixtures/`): syntetiske innstillinger/tannleger/galleri/prisliste/kontaktskjema-JSON, 3 tjenester, 1 alltid-aktiv melding, 8 minimale committede bildefiler. Åpenbart syntetiske navn.
