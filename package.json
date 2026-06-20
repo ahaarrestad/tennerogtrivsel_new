@@ -28,7 +28,7 @@
     "@googleapis/sheets": "^13.0.2",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^6.4.6",
-    "dompurify": "^3.4.9",
+    "dompurify": "^3.4.11",
     "easymde": "^2.21.0",
     "flatpickr": "^4.6.13",
     "google-auth-library": "^10.7.0",
