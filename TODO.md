@@ -71,6 +71,11 @@
   - Konsekvens hvis utdatert: CSP kan blokkere et inline-script i prod. Sjekk hvilket script hashen tilhører og hvor genereringen kjøres i deploy-pipelinen
   - Funnet under galleri-bildeprosessering-oppgaven (2026-06-07)
 
+- [ ] **Tannleger-siden: visuelt løft** — *ingen plan ennå*
+  - Siden er for kjedelig/flat visuelt sett — trenger mer personlighet og liv
+  - Mulige retninger: bedre kortdesign for hver tannlege, profilbilde-behandling, typografi-hierarki, bakgrunnsvariasjon, animasjoner/hover-effekter
+  - Følg design-guide (`docs/designs/design-guide.md`) og token-systemet
+
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
