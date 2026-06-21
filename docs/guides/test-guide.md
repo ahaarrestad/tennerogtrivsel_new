@@ -75,7 +75,7 @@ afterEach(() => {
 });
 ```
 
-Trenger én test en annen tid? Bruk `vi.setSystemTime(new Date('...'))` inne i testen.
+Trenger én test en annen tid? Bruk `vi.setSystemTime(new Date('...'))` inne i testen (ikke `vi.useFakeTimers` på nytt). Bruk **aldri** hardkodede fremtidsdatoer som sammenlignes mot en ufrosset «nå».
 
 ### Console-suppression
 

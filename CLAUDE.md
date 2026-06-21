@@ -15,11 +15,9 @@ Fullstendig prosedyre finnes i `/quality-gate`-skill. Kjernekrav:
 
 ## Design-system
 
-Token-drevet design-guide i [`docs/designs/design-guide.md`](docs/designs/design-guide.md). Alle visuelle endringer skal følge denne.
+Alle visuelle endringer SKAL følge den token-drevne design-guiden i [`docs/designs/design-guide.md`](docs/designs/design-guide.md) (farger, typografi, knapper, spacing). **Les den før du gjør visuelle endringer.**
 
-- **Farger:** Kun CSS-variabler fra `src/styles/global.css` (`@theme`-blokken). Token-klasser (`text-brand`, `bg-accent`) — aldri hardkodede hex eller Tailwind-fargeklasser.
-- **Fonter:** Montserrat (headings) og Inter (body), begge self-hosted woff2. `--font-heading` / `--font-body`.
-- **Knapper:** `btn-primary` (fylt), `btn-secondary` (outline), `btn-accent` (mørk CTA). Maks én accent-knapp per viewport-seksjon.
+Ufravikelig kjerneregel: bruk kun semantiske token-klasser (`text-brand`, `bg-accent`) — aldri hardkodede hex eller Tailwind-fargeklasser (`text-slate-600`).
 
 ## Sheets API: valueRenderOption
 
@@ -34,24 +32,14 @@ Alle `sheets.values.get`-kall med numeriske felter **SKAL** bruke `valueRenderOp
 
 ## Test-guide
 
-Retningslinjer for testskriving finnes i [`docs/guides/test-guide.md`](docs/guides/test-guide.md). Dekker Test Desiderata-prinsipper, auto-mocks, test-helpers, `it.each`-konvensjoner og coverage-policy.
-
-## Dato-avhengige tester
-
-Tester som sammenligner datoer mot "nå" **SKAL** bruke `vi.useFakeTimers({ now: ... })` i `beforeEach` + `vi.useRealTimers()` i `afterEach`. Aldri hardkodede fremtidsdatoer. For enkelt-tester som trenger annen tid: `vi.setSystemTime()` (ikke `vi.useFakeTimers` på nytt).
+Retningslinjer for testskriving finnes i [`docs/guides/test-guide.md`](docs/guides/test-guide.md). Dekker Test Desiderata-prinsipper, auto-mocks, test-helpers, `it.each`-konvensjoner, fake timers for dato-avhengige tester, og coverage-policy.
 
 ## Worktree-oppsett (prosjektspesifikt)
 
-Etter `npm install` i en ny worktree mangler gitignorerte filer. Kopier disse fra main **før** build eller tester kjøres:
+Etter `npm install` i en ny worktree mangler gitignorerte filer (innhold, bilder, `.env`). Kopier dem fra main **før** build eller tester kjøres:
 
 ```bash
-MAIN=$(git rev-parse --git-common-dir); MAIN=${MAIN%/.git}
-for f in galleri.json innstillinger.json prisliste.json tannleger.json kontaktskjema.json; do
-  [ ! -f "src/content/$f" ] && [ -f "$MAIN/src/content/$f" ] && cp "$MAIN/src/content/$f" "src/content/$f"
-done
-cp -rn "$MAIN/src/assets/galleri/." src/assets/galleri/ 2>/dev/null || true
-[ ! -f src/assets/hovedbilde.png ] && [ -f "$MAIN/src/assets/hovedbilde.png" ] && cp "$MAIN/src/assets/hovedbilde.png" src/assets/hovedbilde.png
-[ ! -f .env ] && [ -f "$MAIN/.env" ] && cp "$MAIN/.env" .env
+bash scripts/setup-worktree.sh
 ```
 
 ## Arkitekturdokumentasjon
