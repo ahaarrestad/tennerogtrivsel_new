@@ -71,6 +71,16 @@
   - Konsekvens hvis utdatert: CSP kan blokkere et inline-script i prod. Sjekk hvilket script hashen tilhører og hvor genereringen kjøres i deploy-pipelinen
   - Funnet under galleri-bildeprosessering-oppgaven (2026-06-07)
 
+- [ ] **TelefonKnapp.astro: manglende fallback for `settings.phone1`** — *ingen plan ennå*
+  - Gemini-review på PR #380 flagget at `settings.phone1` kan være `undefined`. Footer.astro fikk `?.`-guard, men `TelefonKnapp.astro` ble glemt: `const phone = settings.phone1; phone.replace(...)` kaster `TypeError` på byggetid hvis telefon mangler i CMS
+  - Tiltak: legg til fallback (`settings.phone1 ?? ''`) eller guard, konsistent med Footer.astro
+  - Alvorlighetsnivå: Lav (krasj kun hvis phone1 faktisk mangler), men inkonsistent med søsterkomponent
+
+- [ ] **Button.astro: attributt-lekkasje til `<span>`** — *ingen plan ennå*
+  - Gemini-review på PR #380 (medium): `...rest` videresender interaktive attributter (`type`, `disabled`, `target`, `rel`) til `<span>`-elementet når `interactive={false}` → ugyldig HTML
+  - Tiltak: destrukturer disse propene eksplisitt fra `Astro.props`, og sett dem kun på taggene som støtter dem (`type`/`disabled` på `<button>`, `target`/`rel` på `<a>`)
+  - Alvorlighetsnivå: Lav (ingen kjente kall trigger dette i dag), men gjør komponenten robust
+
 - [ ] **Tannleger-siden: visuelt løft** — *ingen plan ennå*
   - Siden er for kjedelig/flat visuelt sett — trenger mer personlighet og liv
   - Mulige retninger: bedre kortdesign for hver tannlege, profilbilde-behandling, typografi-hierarki, bakgrunnsvariasjon, animasjoner/hover-effekter

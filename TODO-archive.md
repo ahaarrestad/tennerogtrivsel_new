@@ -3,6 +3,11 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **setup-worktree.sh: robust utledning av `MAIN`** ([plan](docs/plans/archive/2026-06-21-setup-worktree-robust-main.md))
+  - PR-review-funn (#399, Gemini): kjørt fra hovedrepoet ga `git rev-parse --git-common-dir` relativ `.git`; `${MAIN%/.git}` matcher ikke den bare strengen → `MAIN` ble `.git`, så `"$MAIN/src/..."` ble `.git/src/...` (feil relativ kilde) og kopieringen no-op-et stille. Reell impact lav (skriptet kjøres normalt kun fra worktree der git-common-dir er absolutt).
+  - **Fiks** (`scripts/setup-worktree.sh`): `MAIN=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)` — resolver alltid absolutt sti til hovedrepoet uansett kjørested. La til `mkdir -p src/content src/assets/galleri` så galleri-kopieringen (som svelger feil med `|| true`) ikke stille hopper over manglende målmappe.
+  - **Verifisert:** `bash -n` ✓; kjørt fra worktree → `MAIN` peker korrekt på hovedrepo + «Worktree-oppsett fullført.»; demonstrert gammel vs. ny logikk fra hovedrepo (`.git/src` → absolutt sti). Review-loop: CLEAN (én minor doc-unøyaktighet om feilmekanismen rettet — gammel `MAIN` var `.git`, ikke tom streng).
+
 - [x] **Norsk rettskriving i dokumentasjon** ([plan](docs/plans/archive/2026-06-14-norsk-rettskriving.md))
   - Småfiks fra PR-review (#367/#368), rent kosmetisk/konsistens — fem bokmål-rettelser i to filer
   - `docs/architecture/sikkerhet.md`: «scanner» → «skanner» (2×), «på root» → «i rotmappen», «begge `package-lock.json`» → «…-filene», «Nivå-forskjell» → «Nivåforskjell» (sammensatt ord), «Scheduled-workflow er» → «Scheduled-workflowen er» (bestemt form)
