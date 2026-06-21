@@ -20,6 +20,13 @@
 
 ## Backlog
 
+- [ ] **Dev-modus a11y-flake: rot-årsak-fiks** — *ingen plan ennå*
+  - Forrige oppgaves networkidle-fiks reduserte, men eliminerte ikke flaken i `tests/accessibility.spec.ts` under `astro dev` (lokal e2e). Slo til på 2 tester i en kvalitetsport-kjøring (2026-06-21), altså mer enn de «~1%» som ble dokumentert.
+  - Årsak: dev-serveren gjør en andre dokument-navigasjon (Vite dep-reload) *under* axe-skannet → «Execution context was destroyed». `networkidle` lar siden roe seg før skann, men hindrer ikke en reload som starter *etter* at networkidle har løst.
+  - Reproduserer IKKE mot `npm run preview` (prod-bygget CI kjører) — alltid 77/0. Ren dev-artefakt, når aldri CI.
+  - Mulige tilnærminger å vurdere: (a) la lokal e2e kjøre mot `npm run preview` i stedet for `dev:secure:fixtures` (fjerner Vite-reload helt, men mister hot-reload-nytte lokalt); (b) retry-wrapper rundt axe-skannet ved «context destroyed»; (c) vente på at Vite-optimaliseringen er ferdig før skann starter. Diskuter trade-offs før valg.
+  - Mål: stabil lokal e2e i begge moduser, ikke bare mot CI-stien
+
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
   - Dekker: GitHub (secrets, Actions, permissions), AWS (IAM, S3, Lambda, CloudFront, DynamoDB, SES), Google (OAuth, Sheets/Drive API-nøkler, scopes), og hvordan alt er skrudd sammen
