@@ -7,7 +7,7 @@
 - Planen skrives som notater under oppgaven før implementering begynner.
 - Flytt oppgaven til «Pågående» når planen er godkjent og arbeidet starter.
 - **Lever i små, iterative forbedringer** — minst én commit per oppgave. Store oppgaver brytes ned i deloppgaver som hver committes for seg. **Alt skal gå via PR** (`git review`).
-- **Planer** lagres i `docs/plans/YYYY-MM-DD-<topic>.md`. **Design-docs** lagres i `docs/designs/YYYY-MM-DD-<topic>.md`. Oppgaven skal alltid ha lenke til plan (og design om relevant).
+- **Spec/design-docs** lagres i `docs/designs/YYYY-MM-DD-<topic>.md`. **Planer** lagres i `docs/plans/YYYY-MM-DD-<topic>.md`. Hver oppgave skal alltid ha **både** spec og plan, og begge reviewes før arbeidet starter. (For veldig små, trivielle oppgaver kan spec og plan slås sammen til noen linjer i én planfil — bruk hodet.)
 - Flytt oppgaven til «Fullført» når den er ferdig.
 - **Arkivering:** Når en oppgave er fullført, flytt oppgaven fra TODO.md til [TODO-archive.md](TODO-archive.md), planfilen til `docs/plans/archive/` og eventuelle design-docs til `docs/designs/archive/`.
 

@@ -3,20 +3,34 @@ name: todo
 model: sonnet
 description: "Vis og administrer prosjektets TODO-liste (TODO.md). Bruk når brukeren sier 'todo', 'TODO', 'oppgaveliste', 'vis oppgaver', 'backlog', 'hva gjenstår', 'neste oppgave', 'legg til oppgave', 'ny oppgave', 'flytt oppgave', 'marker ferdig', 'start oppgave', 'begynn på', 'gjenoppta', 'fortsett med', eller spør om status på oppgaver."
 disable-model-invocation: false
-allowed-tools: ["Read(TODO.md)", "Read(TODO-archive.md)", "Edit(TODO.md)", "Edit(TODO-archive.md)", "Glob(docs/**)", "Read(docs/**)", "Write(docs/**)", "Bash(mv *)", "Bash(mkdir *)", "Bash(git *)", "Skill(superpowers:using-git-worktrees)", "Skill(review-loop)"]
+allowed-tools: ["Read(TODO.md)", "Read(TODO-archive.md)", "Edit(TODO.md)", "Edit(TODO-archive.md)", "Glob(docs/**)", "Read(docs/**)", "Write(docs/**)", "Read(.claude/skills/todo/references/**)", "Bash(mv *)", "Bash(mkdir *)", "Bash(git *)", "Skill(superpowers:brainstorming)", "Skill(superpowers:using-git-worktrees)", "Skill(review-loop)"]
 ---
 
 # TODO-liste Skill
 
 Administrer prosjektets TODO-liste i `TODO.md`. Listen følger et Kanban-mønster med tre seksjoner: **Pågående**, **Backlog** og **Fullført**.
 
-## Kommandoer
+## Ruting — finn riktig handling
 
-Brukeren kan be om ulike handlinger. Finn ut hva de ønsker og utfør riktig steg.
+Finn ut hva brukeren vil, og følg riktig rad. De tunge flytene ligger i egne referansefiler
+for å holde denne skillen lett ved vanlig statusbruk.
+
+| Brukeren vil … | Gjør |
+|----------------|------|
+| Se status / oversikt (standard) | Følg «Vis status» nedenfor (inline) |
+| Legge til ny oppgave | Følg «Legg til oppgave» nedenfor (inline) |
+| Oppdatere/endre en oppgave | Følg «Oppdater oppgave» nedenfor (inline) |
+| **Starte / flytte oppgave fra Backlog** | **Du MÅ først `Read references/start-oppgave.md`** og følge hele flyten der — ikke gå rett til implementasjon, ikke gjengi flyten fra hukommelsen |
+| **Markere oppgave som fullført / arkivere** | **Du MÅ først `Read references/start-oppgave.md`** (delen «Marker oppgave som fullført») |
+| **Gjenoppta pågående oppgave** | **Du MÅ først `Read references/gjenoppta.md`** og følge worktree-sjekken der |
+
+Referansefilene er den autoritative kilden for disse flytene. Når en rad sier «Read … MÅ»,
+les fila *før* du gjør noe annet — disse flytene har disiplin-gates (spec+plan-review,
+worktree før impl., arkiver før commit) som ikke kan utføres riktig fra hukommelsen.
 
 ---
 
-### Vis status (standard)
+## Vis status (standard)
 
 Hvis brukeren bare sier "todo", "oppgaveliste" eller lignende uten spesifikk handling:
 
@@ -41,12 +55,12 @@ Hold det kort og oversiktlig. Ikke gjenta hele filen. Inkluder alltid plan-lenke
 
 ---
 
-### Legg til oppgave
+## Legg til oppgave
 
 Hvis brukeren vil legge til en ny oppgave:
 
 1. Les `TODO.md`
-2. Legg alltid nye oppgaver i **Backlog** — aldri direkte i Pågående. For å starte en oppgave brukes «Start oppgave fra Backlog»-flyten som krever plan og godkjenning.
+2. Legg alltid nye oppgaver i **Backlog** — aldri direkte i Pågående. For å starte en oppgave brukes «Start oppgave fra Backlog»-flyten (`references/start-oppgave.md`) som krever spec, plan og godkjenning.
 3. Legg til oppgaven med format:
    ```markdown
    - [ ] **Kort tittel** — *ingen plan ennå*
@@ -57,144 +71,7 @@ Hvis brukeren vil legge til en ny oppgave:
 
 ---
 
-### Start oppgave fra Backlog / Flytt oppgave til Pågående
-
-Når brukeren ber om å starte eller flytte en oppgave fra Backlog — **aldri gå rett til implementasjon**.
-
-**Fase 1: Plan (ALLTID først — stopp her til brukeren godkjenner)**
-
-1. Les `TODO.md` og finn oppgaven
-2. Har oppgaven allerede en planfil (lenke i TODO.md)?
-   - **Ja:** Les planfilen og presenter et sammendrag. Spør om planen fortsatt er riktig, eller om noe skal justeres.
-   - **Nei:** Lag en plan. Still avklarende spørsmål om scope, tilnærming og avgrensninger. En god plan inneholder minst:
-     - Mål og avgrensninger (hva er ikke med)
-     - Konkrete steg med filer som berøres
-     - Testbehov og definition of done
-     - Kjente risiki eller usikkerheter
-   - Skriv planfilen til `docs/plans/YYYY-MM-DD-<topic>.md` og oppdater oppgaven i TODO.md med lenken.
-3. **Plan-review (alltid, ny eller eksisterende)**
-
-   Gjennomgå planen mot disse kriteriene *før* den presenteres for brukeren. For hvert punkt: skriv én setning om hvordan planen oppfyller det, eller hva du la til for å oppfylle det.
-
-   1. Mål og avgrensninger er klare (hva er eksplisitt *ikke* med)
-   2. Konkrete steg med navn på filer som berøres
-   3. Testbehov definert (hvilke tester trengs, hva er definition of done)
-   4. Kjente risiki eller usikkerheter er nevnt
-   5. Ingen åpne spørsmål som blokkerer implementasjon
-
-   Hvis ett eller flere kriterier ikke er oppfylt: fyll gapet i planfilen **nå**. Presenter aldri en ufullstendig plan.
-
-4. Presenter planen og vent på eksplisitt godkjenning («ok», «kjør», «ser bra ut» el.l.)
-   - Ikke gå videre til Fase 2 uten godkjenning — ikke anta stilltiende samtykke
-   - Juster og presenter på nytt ved tilbakemelding — gjenta til brukeren godkjenner
-
-**Fase 2: Synk main + opprett worktree (etter godkjent plan)**
-
-5. **Synk lokal main FØR worktree.** `EnterWorktree` brancher fra `origin/main` (baseRef
-   `fresh`), og lokal main må være oppdatert for den senere `merge --ff-only` i `/commit`
-   Step 5:
-   ```bash
-   git checkout main && git pull --rebase origin main
-   git log --oneline origin/main..main   # skal være tom
-   ```
-   - `git pull --rebase` gjør basen fersk *og* holder lokal main i sync for `--ff-only`.
-   - Hvis `origin/main..main` **ikke** er tom (upushede main-commits, f.eks. en plan-commit):
-     de mangler i worktreet, siden `EnterWorktree` brancher fra `origin/main`. Rebase
-     worktree-branchen på lokal main rett etter opprettelse (`git rebase main`) så de blir
-     med — ev. push dem først.
-6. Invoke `superpowers:using-git-worktrees` — sørger for isolert branch/worktree
-7. Flytt oppgaven fra **Backlog** til **Pågående** i TODO.md
-8. Bekreft hvilken branch/worktree som ble opprettet
-
-**Fase 3: Implementasjon**
-
-9. Start implementasjonen i henhold til godkjent plan
-
-**Fase 4: Review-gate (ALLTID etter implementasjon — ingen unntak)**
-
-Etter at implementasjonen er ferdig:
-
-10. Sett følgende `/goal` i neste svar:
-    ```
-    /goal review-loop rapporterer REVIEW_LOOP: CLEAN
-    ```
-11. Invoke `review-loop` — kjører én review-pass, fikser Critical/Important issues og committer fiksen
-12. `/goal`-systemet starter automatisk ny tur og kaller `review-loop` på nytt inntil betingelsen er møtt
-
-**Fase 5: Arkiver TODO (FØR commit — eksplisitt gate)**
-
-13. Når `review-loop` er ren: marker oppgaven ferdig og arkiver den **før** `/commit`
-    foreslås. Følg «Marker oppgave som fullført» nedenfor (sett `[x]`, flytt til
-    `TODO-archive.md`, arkiver plan/spec, oppdater lenker). Arkivering er ikke et
-    etterskritt — det er en del av å fullføre oppgaven.
-
-**Fase 6: Commit + «ship it»**
-
-14. Foreslå `/commit`. Commit-skillen eier all git-mekanikk: kvalitetsport → commit →
-    code-review-loop → (ved godkjent push) «ship it»-sekvensen i Step 5 (rebase på lokal
-    main → `merge --ff-only` → `git-review` fra main → opprydding med `ExitWorktree`).
-    Rekkefølgen er kritisk: merge MÅ skje før worktreet fjernes — se `/commit` Step 5c.
-
-**Forbudt:** Foreslå `/commit` før (a) `/goal` har bekreftet at `review-loop` er ren **og**
-(b) oppgaven er arkivert (Fase 5).
-
----
-
-### Gjenoppta pågående oppgave
-
-Når brukeren vil fortsette på en oppgave som allerede er i **Pågående** (fra en tidligere sesjon):
-
-**ALLTID første steg — ingen unntak:**
-
-1. Kjør worktree-sjekk for å bekrefte at arbeidet skjer på riktig sted:
-   ```bash
-   GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-   GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-   git worktree list
-   git branch --show-current
-   ```
-   - Hvis `GIT_DIR == GIT_COMMON`: vi er i hovedrepoet, IKKE i en worktree — stopp og korriger
-   - Hvis `GIT_DIR != GIT_COMMON`: vi er allerede i en worktree — fortsett
-2. Invoke `superpowers:using-git-worktrees` for å entre riktig worktree (eller opprette ny ved behov)
-3. Bekreft hvilken branch/worktree som er aktiv før arbeidet begynner
-
-**Aldri anta at worktree-oppsettet fra forrige sesjon er på plass — verifiser alltid.**
-
----
-
-### Marker oppgave som fullført
-
-Når en oppgave er ferdig:
-
-1. **Avhengig av kontekst:**
-   - **Som del av den løpende flyten (Fase 5):** arkiver *nå*, før `/commit`. Arkiv-endringene
-     (TODO.md, flyttede plan/spec-filer) committes sammen med resten i den påfølgende
-     `/commit`. Uncommittede endringer er forventet her — ikke blokker.
-   - **Frittstående (oppgave fullført i en tidligere sesjon):** sjekk først at alt er
-     committet og pushet:
-     ```bash
-     git status
-     git log --oneline origin/main..HEAD
-     ```
-     Hvis det finnes uncommittede eller upushede endringer: påminn brukeren om å kjøre
-     `/commit` (som inkluderer «ship it») før arkivering.
-2. Les `TODO.md`
-3. Endre `- [ ]` til `- [x]` på oppgaven
-4. Legg til et kort sammendrag av hva som ble gjort (som underpunkter), basert på kontekst fra samtalen
-5. Arkiver oppgaven:
-   - Flytt oppgaven fra TODO.md til TODO-archive.md
-   - Flytt planfilen til `archive/`-mappen under samme katalog som den ligger i:
-     - `docs/plans/` → `docs/plans/archive/`
-     - `docs/superpowers/plans/` → `docs/superpowers/plans/archive/`
-   - Flytt eventuelle spec/design-docs til `archive/`-mappen under samme katalog:
-     - `docs/designs/` → `docs/designs/archive/`
-     - `docs/superpowers/specs/` → `docs/superpowers/specs/archive/`
-   - Oppdater lenker i TODO-archive.md til de nye plasseringene
-6. Bekreft oppdateringen
-
----
-
-### Oppdater oppgave
+## Oppdater oppgave
 
 Hvis brukeren vil legge til notater, deloppgaver eller endre beskrivelse:
 
