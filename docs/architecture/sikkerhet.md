@@ -119,7 +119,7 @@ Repoet har ingen Terraform/CDK i dag. Innføring for ett enkelt CloudFront-objek
 
 Hele CSP-strengen i CloudFront-policyen erstattes automatisk ved hver deploy:
 
-1. `scripts/generate-csp-hashes.mjs` scanner `dist/**/*.html` for inline `<script>`-blokker
+1. `scripts/generate-csp-hashes.mjs` skanner `dist/**/*.html` for inline `<script>`-blokker
 2. Beregner SHA256-hashes og skriver til `src/generated/csp-hashes.json`
 3. `scripts/update-cloudfront-csp.mjs` henter gjeldende policy, bygger ny CSP via `buildCspString` og oppdaterer
 
@@ -294,10 +294,10 @@ Dependabot og CI-audit ved push dekker bare kjente CVE-er og nye avhengighetsver
 
 | Komponent | Hva det gjør |
 |-----------|--------------|
-| `npm-audit` (jobb) | Kjører `npm audit --audit-level=high` på root og `lambda/kontakt-form-handler` ukentlig mandag 06:00 UTC. Feiler ved high/critical → GitHub sender e-post. |
-| `osv-scan` (jobb) | Kjører Google OSV Scanner via reusable workflow, scanner begge `package-lock.json` rekursivt, laster opp SARIF til GitHub Security-fanen. |
+| `npm-audit` (jobb) | Kjører `npm audit --audit-level=high` i rotmappen og `lambda/kontakt-form-handler` ukentlig mandag 06:00 UTC. Feiler ved high/critical → GitHub sender e-post. |
+| `osv-scan` (jobb) | Kjører Google OSV Scanner via reusable workflow, skanner begge `package-lock.json`-filene rekursivt, laster opp SARIF til GitHub Security-fanen. |
 
-**Nivå-forskjell:** `--audit-level=high` her vs. `--audit-level=critical` i `deploy.yml`. Scheduled-workflow er et tidlig varslingssystem; deploy.yml er den harde CI-gaten. Juster ned til `--audit-level=critical` ved for mye støy fra dev-avhengigheter.
+**Nivåforskjell:** `--audit-level=high` her vs. `--audit-level=critical` i `deploy.yml`. Scheduled-workflowen er et tidlig varslingssystem; deploy.yml er den harde CI-gaten. Juster ned til `--audit-level=critical` ved for mye støy fra dev-avhengigheter.
 
 **Dependabot alerts og automated security fixes:** Verifisert aktivert via `gh api` (HTTP 204 og `{"enabled":true,"paused":false}`). Disse supplerer scheduled-audit ved å åpne PR-er automatisk ved kjente CVE-er i avhengigheter.
 

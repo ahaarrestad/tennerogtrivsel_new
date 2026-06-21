@@ -64,11 +64,6 @@
   - Konsekvens hvis utdatert: CSP kan blokkere et inline-script i prod. Sjekk hvilket script hashen tilhører og hvor genereringen kjøres i deploy-pipelinen
   - Funnet under galleri-bildeprosessering-oppgaven (2026-06-07)
 
-- [ ] **Norsk rettskriving i dokumentasjon** — *ingen plan ennå*
-  - Småfiks fra PR-review (#367/#368), rent kosmetisk/konsistens
-  - `docs/architecture/sikkerhet.md`: «scanner» → «skanner» (linje 122, 298), «på root» → «i rotmappen» (297), «begge package-lock.json» → «…-filene» (298), «Nivå-forskjell» → «Nivåforskjell» og «Scheduled-workflow» → bestemt form (300)
-  - `TODO-archive.md`: «eget job» → «egen jobb», «scanner» → «skanner» (linje 17)
-
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)

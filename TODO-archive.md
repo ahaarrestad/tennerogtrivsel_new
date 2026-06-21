@@ -3,6 +3,12 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Norsk rettskriving i dokumentasjon** ([plan](docs/plans/archive/2026-06-14-norsk-rettskriving.md))
+  - Småfiks fra PR-review (#367/#368), rent kosmetisk/konsistens — fem bokmål-rettelser i to filer
+  - `docs/architecture/sikkerhet.md`: «scanner» → «skanner» (2×), «på root» → «i rotmappen», «begge `package-lock.json`» → «…-filene», «Nivå-forskjell» → «Nivåforskjell» (sammensatt ord), «Scheduled-workflow er» → «Scheduled-workflowen er» (bestemt form)
+  - `TODO-archive.md`: «eget job» → «egen jobb» (anglisisme + kjønnsfeil: «jobb» er hankjønn → «egen»), «scanner» → «skanner»
+  - Review-funn: planutkastet foreslo feilaktig «eget jobb»; rettet til «egen jobb» før implementasjon. Review-loop CLEAN, alle rettelser grammatisk verifisert.
+
 - [x] **Fikse flaky tester (timing/mock-lekkasje)** ([plan](docs/plans/archive/2026-06-14-flaky-tester.md)) — iterasjon 2 etter Drive-uavhengighet
   - **galleri-lightbox.spec.ts:** erstattet `waitForLoadState('networkidle')` + manuell DOM-poke med `page.route` som leverer en deterministisk *aktiv* melding (datoer 2000→2100). Appen viser banneret via ekte `initBanner()`-kodesti; ingen kodesti re-skjuler det → ingen falsk positiv. Bevist: `--repeat-each=10` = 40/40 på alle 4 prosjekter.
   - **vitest.config.ts:** `clearMocks: true` mot call-historikk-lekkasje (nullstiller kun historikk, ikke `vi.mock`-implementasjoner). Full suite 1559/1559 — ingen fallout. `csp-check` (CI-ignored) og `mockReset`/`restoreMocks` (9-filers churn uten påvist gevinst) bevisst droppet etter avklaring.
@@ -66,7 +72,7 @@
 - [x] **Varsling ved supply chain-angrep** ([plan](docs/plans/archive/2026-06-02-supply-chain-varsling.md))
   - Dependabot alerts og automated security fixes verifisert aktivert via `gh api`
   - `scheduled-audit.yml` opprettet — kjører ukentlig `npm audit --audit-level=high` på root og lambda
-  - Google OSV Scanner lagt til som eget job i samme workflow — scanner begge `package-lock.json` rekursivt, laster opp SARIF til GitHub Security-fanen
+  - Google OSV Scanner lagt til som egen jobb i samme workflow — skanner begge `package-lock.json` rekursivt, laster opp SARIF til GitHub Security-fanen
   - `docs/architecture/sikkerhet.md` oppdatert med avsnitt «Kontinuerlig varsling — scheduled audit»
   - Merget til `origin/main`
 
