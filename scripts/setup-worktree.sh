@@ -5,7 +5,11 @@ set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
 
-MAIN=$(git rev-parse --git-common-dir); MAIN=${MAIN%/.git}
+# Absolutt sti til hovedrepoets rot — robust både fra en worktree (git-common-dir er
+# absolutt) og fra hovedrepoet selv (git-common-dir er relativ `.git`).
+MAIN=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)
+
+mkdir -p src/content src/assets/galleri
 
 for f in galleri.json innstillinger.json prisliste.json tannleger.json kontaktskjema.json; do
   if [ ! -f "src/content/$f" ] && [ -f "$MAIN/src/content/$f" ]; then
