@@ -99,10 +99,10 @@ async function editTannlege(rowIndex, data = null) {
             <!-- HØYRE: Preview + bildeutsnitt -->
             <div class="space-y-6">
                 <h3 class="text-brand font-black uppercase tracking-tighter text-center lg:text-left">Forhåndsvisning</h3>
+                <p class="text-xs text-admin-muted-light text-center lg:text-left -mt-3">Speiler kortet på /tannleger. Hold musa over for spesialiteten (på mobil vises den alltid).</p>
                 <div class="flex justify-center lg:justify-start">
                     <div class="w-full max-w-[250px]">
-                        <div class="max-w-[75%] mx-auto">
-                        <div class="relative aspect-[3/4] rounded-xl overflow-hidden bg-admin-surface">
+                        <div class="tannlege-kort relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md bg-admin-surface">
                             <div id="no-image-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-admin-muted-light ${previewSrc ? 'hidden' : ''}">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                                 <span class="text-[10px] font-black uppercase tracking-widest">Velg bilde</span>
@@ -112,20 +112,12 @@ async function editTannlege(rowIndex, data = null) {
                                  class="absolute inset-0 w-full h-full object-cover transition-all duration-75 ${previewSrc ? '' : 'hidden'}"
                                  style="object-position: ${t.positionX}% ${t.positionY}%; transform: scale(${t.scale}); transform-origin: ${t.positionX}% ${t.positionY}%;"
                             >
-                        </div>
-                        </div>
-                        <details class="mt-3" ${t.description ? '' : 'hidden'} id="preview-details">
-                            <summary class="tannlege-summary w-full text-center cursor-pointer list-none rounded-xl border border-brand-border py-2 px-3 transition-all duration-200 hover:border-brand">
-                                <span id="preview-name" class="font-heading font-bold text-sm block">${escapeHtml(t.name) || 'Navn'}</span>
-                                <span id="preview-title" class="text-brand-hover text-xs block">${escapeHtml(t.title) || 'Tittel'}</span>
-                            </summary>
-                            <div class="mt-3 text-sm leading-relaxed text-brand-hover">
-                                <span id="preview-desc">${escapeHtml(t.description) || ''}</span>
+                            <div class="absolute inset-0 tannlege-scrim"></div>
+                            <div class="absolute inset-x-0 bottom-0 p-4">
+                                <p id="preview-name" class="font-heading font-extrabold text-white text-sm leading-tight">${escapeHtml(t.name) || 'Navn'}</p>
+                                <p id="preview-title" class="text-white/80 text-xs mt-0.5">${escapeHtml(t.title) || 'Tittel'}</p>
+                                <p id="preview-spec" class="tannlege-spec text-white/90 text-xs leading-relaxed" ${t.description ? '' : 'hidden'}>${escapeHtml(t.description) || ''}</p>
                             </div>
-                        </details>
-                        <div class="mt-3 text-center ${t.description ? 'hidden' : ''}" id="preview-no-desc">
-                            <span id="preview-name-nodesc" class="font-heading font-bold text-sm block">${escapeHtml(t.name) || 'Navn'}</span>
-                            <span id="preview-title-nodesc" class="text-brand-hover text-xs block">${escapeHtml(t.title) || 'Tittel'}</span>
                         </div>
                     </div>
                 </div>
@@ -230,27 +222,15 @@ async function editTannlege(rowIndex, data = null) {
 
         const nameEl = document.getElementById('preview-name');
         const titleEl = document.getElementById('preview-title');
-        const descEl = document.getElementById('preview-desc');
-        const nameNoDesc = document.getElementById('preview-name-nodesc');
-        const titleNoDesc = document.getElementById('preview-title-nodesc');
-        const detailsEl = document.getElementById('preview-details');
-        const noDescEl = document.getElementById('preview-no-desc');
+        const specEl = document.getElementById('preview-spec');
         const nameVal = nameInp.value || 'Navn';
         const titleVal = titleInp.value || 'Tittel';
         const descVal = descInp.value || '';
         if (nameEl) nameEl.textContent = nameVal;
         if (titleEl) titleEl.textContent = titleVal;
-        if (descEl) descEl.textContent = descVal;
-        if (nameNoDesc) nameNoDesc.textContent = nameVal;
-        if (titleNoDesc) titleNoDesc.textContent = titleVal;
-        if (detailsEl && noDescEl) {
-            if (descVal) {
-                detailsEl.hidden = false;
-                noDescEl.classList.add('hidden');
-            } else {
-                detailsEl.hidden = true;
-                noDescEl.classList.remove('hidden');
-            }
+        if (specEl) {
+            specEl.textContent = descVal;
+            specEl.hidden = !descVal;
         }
 
         const img = document.getElementById('preview-img');
