@@ -626,7 +626,7 @@ describe('editTannlege', () => {
         expect(autoSaver.trigger).toHaveBeenCalled();
     });
 
-    it('should update preview description on change', async () => {
+    it('should update preview specialty (#preview-spec) on change', async () => {
         await window.editTannlege(2, {
             name: 'N', title: 'T', description: 'Old desc',
             image: '', active: true, scale: 1, positionX: 50, positionY: 50
@@ -636,7 +636,22 @@ describe('editTannlege', () => {
         descInp.value = 'New desc';
         descInp.dispatchEvent(new Event('change'));
 
-        expect(document.getElementById('preview-desc').textContent).toBe('New desc');
+        const spec = document.getElementById('preview-spec');
+        expect(spec.textContent).toBe('New desc');
+        expect(spec.hidden).toBe(false);
+    });
+
+    it('should hide #preview-spec when description is cleared', async () => {
+        await window.editTannlege(2, {
+            name: 'N', title: 'T', description: 'Har tekst',
+            image: '', active: true, scale: 1, positionX: 50, positionY: 50
+        });
+
+        const descInp = document.getElementById('edit-t-desc');
+        descInp.value = '';
+        descInp.dispatchEvent(new Event('change'));
+
+        expect(document.getElementById('preview-spec').hidden).toBe(true);
     });
 
     it('should show empty placeholders when fields are cleared', async () => {
