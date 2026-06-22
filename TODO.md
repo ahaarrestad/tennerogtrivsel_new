@@ -18,11 +18,6 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
-- [ ] **Tannleger-siden: visuelt løft** ([plan](docs/plans/2026-06-21-tannleger-visuelt-loft.md)) ([spec](docs/designs/2026-06-21-tannleger-visuelt-loft.md))
-  - Variant A «galleri-overlay»: portrett fyller kortet, gradient-scrim med navn/tittel, spesialitet glir inn på hover / alltid synlig på touch
-  - Omfatter også admin-forhåndsvisningen (samme kort, identisk hover-/fokus-/mobiloppførsel)
-  - Følg design-guide og token-systemet
-
 ## Backlog
 
 - [ ] **Dev-modus a11y-flake: rot-årsak-fiks** — *ingen plan ennå*

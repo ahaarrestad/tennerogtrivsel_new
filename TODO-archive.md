@@ -3,6 +3,13 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Tannleger-siden: visuelt løft** ([plan](docs/plans/archive/2026-06-21-tannleger-visuelt-loft.md)) ([spec](docs/designs/archive/2026-06-21-tannleger-visuelt-loft.md))
+  - Variant A «galleri-overlay»: portrett fyller kortet (3/4), gradient-scrim med navn/tittel alltid synlig, spesialitet glir inn på hover (pekerenheter) / alltid synlig på touch. Accordion (`<details>`) fjernet. Rutenett 2/3/4 kolonner, kapslet `max-w-[1000px]` og sentrert.
+  - **Admin-paritet:** forhåndsvisningen i `admin-module-tannleger.js` gjenbruker nøyaktig samme kort-klasser (`.tannlege-kort/.tannlege-scrim/.tannlege-spec`) → identisk tekst-overlegg + hover-/fokus-/mobiloppførsel. `updatePreview()` forenklet til ny DOM (`#preview-name/title/spec`), gamle accordion-/no-desc-grener fjernet.
+  - **CSS:** scrim via `color-mix(--color-brand-dark)`, hover-reveal av spesialitet kun under `@media (hover:hover) and (pointer:fine)` (a11y: innhold aldri låst bak hover; alltid i DOM). Design-guide §5.3 oppdatert (3/4 scrim, ikke sirkel).
+  - **Designprosess:** Variant A valgt via interaktive UI-mockups (companion). Iterert på bildestørrelse/luft (kapslet grid, to rene rader) og bio-visning før spec.
+  - **Verifisert:** vitest 1560 ✓ (`admin-module-tannleger.js` 84.9 % branch); Playwright a11y 28/28 ✓ mot `npm run preview` (dev:secure-feil var kjent dev-flake «Execution context destroyed», ikke ekte WCAG-brudd); `build:ci` ✓. Review-loop: CLEAN.
+
 - [x] **setup-worktree.sh: robust utledning av `MAIN`** ([plan](docs/plans/archive/2026-06-21-setup-worktree-robust-main.md))
   - PR-review-funn (#399, Gemini): kjørt fra hovedrepoet ga `git rev-parse --git-common-dir` relativ `.git`; `${MAIN%/.git}` matcher ikke den bare strengen → `MAIN` ble `.git`, så `"$MAIN/src/..."` ble `.git/src/...` (feil relativ kilde) og kopieringen no-op-et stille. Reell impact lav (skriptet kjøres normalt kun fra worktree der git-common-dir er absolutt).
   - **Fiks** (`scripts/setup-worktree.sh`): `MAIN=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)` — resolver alltid absolutt sti til hovedrepoet uansett kjørested. La til `mkdir -p src/content src/assets/galleri` så galleri-kopieringen (som svelger feil med `|| true`) ikke stille hopper over manglende målmappe.
