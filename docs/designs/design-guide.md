@@ -372,8 +372,13 @@ nedtonet støttehandlinger.
 |----------|-----------|-------------|-------|--------|
 | Hero | rounded-2xl | 16/10 | border-4 border-white | shadow-lg |
 | Galleri | rounded-xl | 4/3 | ingen | shadow-sm → shadow-md hover |
-| Tannleger | rounded-full | 1/1 (sirkel) | border-4 border-white | shadow-md |
+| Tannleger | rounded-2xl | 3/4 | ingen (scrim-overlegg) | shadow-sm → shadow-md hover |
 | Tjeneste-detalj | rounded-xl | fritt | ingen | shadow-sm |
+
+> **Tannleger-kort:** Portrett fyller kortet med en gradient-scrim nederst
+> (`--color-brand-dark` via `color-mix`). Navn/tittel ligger alltid på bildet;
+> spesialiteten tones inn på hover (pekerenheter) og er alltid synlig på touch.
+> Erstatter det tidligere sirkulære portrettet.
 
 ### 5.4 Navbar
 
