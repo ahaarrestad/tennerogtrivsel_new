@@ -810,14 +810,38 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
-    /* Accordion — tannlege-kort */
-    .tannlege-summary::-webkit-details-marker,
-    .tannlege-summary::marker {
-        display: none;
+    /* Tannlege-kort (variant A: galleri-overlay) */
+    .tannlege-scrim {
+        background: linear-gradient(to top,
+            color-mix(in srgb, var(--color-brand-dark) 92%, transparent) 0%,
+            color-mix(in srgb, var(--color-brand-dark) 55%, transparent) 28%,
+            color-mix(in srgb, var(--color-brand-dark) 8%, transparent) 54%,
+            transparent 72%);
+        transition: background .3s ease;
+    }
+    .tannlege-kort:hover .tannlege-scrim {
+        background: linear-gradient(to top,
+            color-mix(in srgb, var(--color-brand-dark) 95%, transparent) 0%,
+            color-mix(in srgb, var(--color-brand-dark) 78%, transparent) 40%,
+            color-mix(in srgb, var(--color-brand-dark) 35%, transparent) 70%,
+            color-mix(in srgb, var(--color-brand-dark) 8%, transparent) 100%);
     }
 
-    details[open] .tannlege-summary {
-        @apply border-brand;
+    /* Spesialitet: alltid synlig (standard/touch). Tones inn på hover KUN på
+       pekerenheter med hover, slik at innholdet aldri låses bak hover. */
+    @media (hover: hover) and (pointer: fine) {
+        .tannlege-spec {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+            overflow: hidden;
+            transition: max-height .4s ease, opacity .3s ease, margin-top .3s ease;
+        }
+        .tannlege-kort:hover .tannlege-spec {
+            max-height: 8rem;
+            opacity: 1;
+            margin-top: .375rem;
+        }
     }
 
     /* EasyMDE editor — admin-designsystem */
