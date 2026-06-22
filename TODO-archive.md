@@ -3,6 +3,11 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **setup-worktree.sh: kopier også tannleger-bilder** ([plan](docs/plans/archive/2026-06-22-setup-worktree-tannleger-bilder.md))
+  - `scripts/setup-worktree.sh` kopierte innhold-JSON, galleri-bilder og hovedbilde fra main inn i nye worktrees, men hoppet over `src/assets/tannleger/` (gitignorert) → tannlege-portrettene måtte kopieres manuelt. Oppdaget under «Tannleger-siden: visuelt løft» (2026-06-21).
+  - **Fiks** (`scripts/setup-worktree.sh`): la `src/assets/tannleger` til i `mkdir -p`-linja og en `cp -rn "$MAIN/src/assets/tannleger/." src/assets/tannleger/ 2>/dev/null || true`-linje etter galleri-linja — samme idempotente mønster. Bevisst ikke generalisert til «alle asset-mapper» (konsistent med eksisterende eksplisitte mønster).
+  - **Verifisert:** `bash -n` ✓; kjørt to ganger (idempotent) → alle 8 portretter kopiert; svelger feil hvis kildemappa mangler (`2>/dev/null || true` under `set -euo pipefail`). Review-loop: CLEAN.
+
 - [x] **Tannleger-siden: visuelt løft** ([plan](docs/plans/archive/2026-06-21-tannleger-visuelt-loft.md)) ([spec](docs/designs/archive/2026-06-21-tannleger-visuelt-loft.md))
   - Variant A «galleri-overlay»: portrett fyller kortet (3/4), gradient-scrim med navn/tittel alltid synlig, spesialitet glir inn på hover (pekerenheter) / alltid synlig på touch. Accordion (`<details>`) fjernet. Rutenett 2/3/4 kolonner, kapslet `max-w-[1000px]` og sentrert.
   - **Admin-paritet:** forhåndsvisningen i `admin-module-tannleger.js` gjenbruker nøyaktig samme kort-klasser (`.tannlege-kort/.tannlege-scrim/.tannlege-spec`) → identisk tekst-overlegg + hover-/fokus-/mobiloppførsel. `updatePreview()` forenklet til ny DOM (`#preview-name/title/spec`), gamle accordion-/no-desc-grener fjernet.
