@@ -1,6 +1,9 @@
-import { defineConfig } from 'vitest/config';
+// Bruk Astros Vite-oppsett slik at .astro-komponenter kan importeres og
+// rendres i tester (via experimental_AstroContainer). getViteConfig legger
+// til Astros plugins som parser .astro-filer.
+import { getViteConfig } from 'astro/config';
 
-export default defineConfig({
+export default getViteConfig({
   test: {
     environment: 'node', // or 'jsdom' if you need browser APIs
     // Nullstill mock-historikk (mock.calls/results) før hver test mot lekkasje

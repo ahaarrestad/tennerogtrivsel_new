@@ -76,11 +76,6 @@
   - Tiltak: legg til fallback (`settings.phone1 ?? ''`) eller guard, konsistent med Footer.astro
   - Alvorlighetsnivå: Lav (krasj kun hvis phone1 faktisk mangler), men inkonsistent med søsterkomponent
 
-- [ ] **Button.astro: attributt-lekkasje til `<span>`** — *ingen plan ennå*
-  - Gemini-review på PR #380 (medium): `...rest` videresender interaktive attributter (`type`, `disabled`, `target`, `rel`) til `<span>`-elementet når `interactive={false}` → ugyldig HTML
-  - Tiltak: destrukturer disse propene eksplisitt fra `Astro.props`, og sett dem kun på taggene som støtter dem (`type`/`disabled` på `<button>`, `target`/`rel` på `<a>`)
-  - Alvorlighetsnivå: Lav (ingen kjente kall trigger dette i dag), men gjør komponenten robust
-
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
