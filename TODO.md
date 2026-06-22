@@ -81,6 +81,12 @@
   - Tiltak: destrukturer disse propene eksplisitt fra `Astro.props`, og sett dem kun på taggene som støtter dem (`type`/`disabled` på `<button>`, `target`/`rel` på `<a>`)
   - Alvorlighetsnivå: Lav (ingen kjente kall trigger dette i dag), men gjør komponenten robust
 
+- [ ] **setup-worktree.sh: kopier også tannleger-bilder** — *ingen plan ennå*
+  - `scripts/setup-worktree.sh` kopierer innhold-JSON, galleri-bilder og hovedbilde fra main inn i nye worktrees, men hopper over `src/assets/tannleger/` (gitignorert). Nye worktrees mangler dermed tannlege-portrettene til de kopieres manuelt.
+  - Oppdaget under «Tannleger-siden: visuelt løft» (2026-06-21) — måtte kopiere bildene for hånd for å teste lokalt
+  - Tiltak: legg til en `cp -rn "$MAIN/src/assets/tannleger/." src/assets/tannleger/`-linje (samme mønster som galleri), evt. generaliser til alle gitignorerte asset-mapper
+  - Alvorlighetsnivå: Lav (rammer kun lokal worktree-testing av tannleger-relatert arbeid)
+
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
