@@ -9,7 +9,7 @@ cd "$(git rev-parse --show-toplevel)"
 # absolutt) og fra hovedrepoet selv (git-common-dir er relativ `.git`).
 MAIN=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)
 
-mkdir -p src/content src/assets/galleri
+mkdir -p src/content src/assets/galleri src/assets/tannleger
 
 for f in galleri.json innstillinger.json prisliste.json tannleger.json kontaktskjema.json; do
   if [ ! -f "src/content/$f" ] && [ -f "$MAIN/src/content/$f" ]; then
@@ -18,6 +18,7 @@ for f in galleri.json innstillinger.json prisliste.json tannleger.json kontaktsk
 done
 
 cp -rn "$MAIN/src/assets/galleri/." src/assets/galleri/ 2>/dev/null || true
+cp -rn "$MAIN/src/assets/tannleger/." src/assets/tannleger/ 2>/dev/null || true
 
 if [ ! -f src/assets/hovedbilde.png ] && [ -f "$MAIN/src/assets/hovedbilde.png" ]; then
   cp "$MAIN/src/assets/hovedbilde.png" src/assets/hovedbilde.png
