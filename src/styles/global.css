@@ -811,6 +811,11 @@
     }
 
     /* Tannlege-kort (variant A: galleri-overlay) */
+    /* Tekst-skygge sikrer lesbarhet av overleggstekst over lyse bildepartier —
+       særlig spesialiteten, som alltid er synlig på touch/mobil. */
+    .tannlege-kort p {
+        text-shadow: 0 1px 3px color-mix(in srgb, var(--color-brand-dark) 60%, transparent);
+    }
     .tannlege-scrim {
         background: linear-gradient(to top,
             color-mix(in srgb, var(--color-brand-dark) 92%, transparent) 0%,
