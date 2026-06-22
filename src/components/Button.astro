@@ -12,9 +12,13 @@ interface Props {
     interactive?: boolean;
 }
 
-const { href, class: className, variant = 'primary', interactive = true, ...rest } = Astro.props;
+const { href, class: className, variant = 'primary', interactive = true, type, disabled, target, rel, ...rest } = Astro.props;
 
 const Tag = !interactive ? 'span' : href ? 'a' : 'button';
+// Gate interaktive attributter per tag så de ikke lekker til feil element
+// (type/disabled hører kun til <button>, target/rel kun til <a>).
+const isButton = Tag === 'button';
+const isAnchor = Tag === 'a';
 const variantClasses: Record<string, string> = {
     primary: 'btn-primary',
     secondary: 'btn-secondary',
@@ -25,6 +29,10 @@ const variantClass = variantClasses[variant] ?? 'btn-primary';
 
 <Tag
         href={interactive ? href : undefined}
+        type={isButton ? type : undefined}
+        disabled={isButton ? disabled : undefined}
+        target={isAnchor ? target : undefined}
+        rel={isAnchor ? rel : undefined}
         class:list={[variantClass, className]}
         {...rest}
 >
