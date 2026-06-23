@@ -127,4 +127,16 @@ describe('run', () => {
         const hashes = run(tmpDist, tmpOut);
         expect(hashes).toHaveLength(1);
     });
+
+    it('skriver hashene i kanonisk sortert rekkefølge (deterministisk på tvers av filsystemer)', () => {
+        // Flere ulike skript i flere filer — uavhengig av traverseringsrekkefølge skal
+        // output være sortert, så CI-porten (git diff --exit-code) ikke gir falske feil.
+        writeFileSync(join(tmpDist, 'z.html'), '<script>zzz()</script>');
+        writeFileSync(join(tmpDist, 'a.html'), '<script>aaa()</script>');
+        writeFileSync(join(tmpDist, 'm.html'), '<script>mmm()</script>');
+        const hashes = run(tmpDist, tmpOut);
+        expect(hashes).toEqual([...hashes].sort());
+        const data = JSON.parse(readFileSync(tmpOut, 'utf-8'));
+        expect(data.scriptHashes).toEqual([...data.scriptHashes].sort());
+    });
 });
