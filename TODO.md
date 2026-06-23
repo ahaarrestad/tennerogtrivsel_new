@@ -71,11 +71,6 @@
   - Konsekvens hvis utdatert: CSP kan blokkere et inline-script i prod. Sjekk hvilket script hashen tilhører og hvor genereringen kjøres i deploy-pipelinen
   - Funnet under galleri-bildeprosessering-oppgaven (2026-06-07)
 
-- [ ] **TelefonKnapp.astro: manglende fallback for `settings.phone1`** — *ingen plan ennå*
-  - Gemini-review på PR #380 flagget at `settings.phone1` kan være `undefined`. Footer.astro fikk `?.`-guard, men `TelefonKnapp.astro` ble glemt: `const phone = settings.phone1; phone.replace(...)` kaster `TypeError` på byggetid hvis telefon mangler i CMS
-  - Tiltak: legg til fallback (`settings.phone1 ?? ''`) eller guard, konsistent med Footer.astro
-  - Alvorlighetsnivå: Lav (krasj kun hvis phone1 faktisk mangler), men inkonsistent med søsterkomponent
-
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
