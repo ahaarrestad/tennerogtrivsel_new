@@ -38,7 +38,10 @@ export function run(distDir, outputFile) {
     const allContents = htmlFiles.flatMap(f =>
         extractInlineScripts(readFileSync(f, 'utf-8'))
     );
-    const uniqueHashes = [...new Set(allContents.map(computeHash))];
+    // Sorter for kanonisk, deterministisk rekkefølge — readdirSync gir ikke stabil
+    // traverseringsrekkefølge på tvers av filsystemer, og CI-porten sammenligner
+    // byte-eksakt med `git diff`. Rekkefølgen er semantisk irrelevant for CSP.
+    const uniqueHashes = [...new Set(allContents.map(computeHash))].sort();
     mkdirSync(dirname(outputFile), { recursive: true });
     writeFileSync(outputFile, JSON.stringify({ scriptHashes: uniqueHashes }, null, 2) + '\n');
     console.log(`Wrote ${uniqueHashes.length} hash(es) to ${outputFile}`);

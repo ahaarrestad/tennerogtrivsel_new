@@ -78,6 +78,15 @@ jobs:
       - name: Build Astro site (fixtures)
         run: npm run build:ci
 
+      # Fixtures-bygget gir samme inline-skript-hasher som prod-bygget (datadrevne
+      # application/json-skript ekskluderes), så vi kan verifisere at den committede
+      # src/generated/csp-hashes.json er i sync med kildekoden. Feiler hvis en utvikler
+      # endret et inline-skript uten å regenerere og committe hash-fila.
+      - name: Verify CSP hashes are in sync
+        run: |
+          npm run generate-csp-hashes
+          git diff --exit-code src/generated/csp-hashes.json
+
       - name: Run E2E tests
         run: npx playwright test
         env:
