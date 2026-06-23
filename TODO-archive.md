@@ -3,6 +3,11 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Tannlege-kort: guide-alignering av grid (1 / 2 / 3 kolonner)** ([plan](docs/plans/archive/2026-06-23-tannlege-kort-mobil-1-kolonne.md))
+  - Kort-gridet på `/tannleger` brukte `grid-cols-2 md:grid-cols-3 lg:grid-cols-4` — et avvik fra design-guidens 1/2/3-kolonner (mobil/md/lg, §6/linje 487). Små bilder + konstant tekstmengde (navn/tittel/spesialitet i scrim) gjorde at teksten dominerte, verst på mobil men også synlig på md. Rapportert av bruker.
+  - **Fiks** (`src/pages/tannleger.astro:23`): grid-klassen endret til `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`, og `md:gap-7` → `md:gap-8` for full samsvar med guidens grid-rad. `aspect-[3/4]`, scrim, hover/touch-logikk og `max-w-[1000px]` uendret. Forside-seksjonen (16/9-fellesbilde) ikke berørt.
+  - **Verifisert:** `npm run build` ✓ (21 sider); vitest 1564/1564 ✓; visuell kontroll mot `npm run preview` på 390px/820px/1100px bekreftet 1/2/3 kolonner med proporsjonal tekst. Review-loop: CLEAN.
+
 - [x] **TelefonKnapp.astro: manglende fallback for `settings.phone1`** ([plan](docs/plans/archive/2026-06-22-telefonknapp-phone-fallback.md))
   - Gemini-review på PR #380 flagget at `settings.phone1` kunne være `undefined`; `Footer.astro` fikk `?.`-guard, men `TelefonKnapp.astro` ble glemt: `const phone = settings.phone1; phone.replace(...)` ville kaste `TypeError` på byggetid hvis telefon manglet i CMS.
   - **Fiks** (`src/components/TelefonKnapp.astro:6`): `const phone = settings.phone1 ?? '';` — `phone` er alltid en streng, så `phone.replace(...)` kan aldri kaste. Konsistent med `Footer.astro`s `?.`-guard.
