@@ -84,6 +84,9 @@ jobs:
       # endret et inline-skript uten å regenerere og committe hash-fila.
       - name: Verify CSP hashes are in sync
         run: |
+          # Playwright-imaget kjører som root mens checkout eier workspace som annen
+          # UID — uten dette nekter git med «detected dubious ownership» (idempotent).
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           npm run generate-csp-hashes
           git diff --exit-code src/generated/csp-hashes.json
 
