@@ -3,6 +3,11 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **TelefonKnapp.astro: manglende fallback for `settings.phone1`** ([plan](docs/plans/archive/2026-06-22-telefonknapp-phone-fallback.md))
+  - Gemini-review på PR #380 flagget at `settings.phone1` kunne være `undefined`; `Footer.astro` fikk `?.`-guard, men `TelefonKnapp.astro` ble glemt: `const phone = settings.phone1; phone.replace(...)` ville kaste `TypeError` på byggetid hvis telefon manglet i CMS.
+  - **Fiks** (`src/components/TelefonKnapp.astro:6`): `const phone = settings.phone1 ?? '';` — `phone` er alltid en streng, så `phone.replace(...)` kan aldri kaste. Konsistent med `Footer.astro`s `?.`-guard.
+  - **Verifisert:** `npm run build` ✓ med endret kode. Review-loop: CLEAN (kun minor doc-presisering: `HARD_DEFAULTS.phone1` + loader-coercion gjør realistisk feilmodus til tom streng, ikke `undefined` — krasjen var mest teoretisk; planfila oppdatert).
+
 - [x] **setup-worktree.sh: kopier også tannleger-bilder** ([plan](docs/plans/archive/2026-06-22-setup-worktree-tannleger-bilder.md))
   - `scripts/setup-worktree.sh` kopierte innhold-JSON, galleri-bilder og hovedbilde fra main inn i nye worktrees, men hoppet over `src/assets/tannleger/` (gitignorert) → tannlege-portrettene måtte kopieres manuelt. Oppdaget under «Tannleger-siden: visuelt løft» (2026-06-21).
   - **Fiks** (`scripts/setup-worktree.sh`): la `src/assets/tannleger` til i `mkdir -p`-linja og en `cp -rn "$MAIN/src/assets/tannleger/." src/assets/tannleger/ 2>/dev/null || true`-linje etter galleri-linja — samme idempotente mønster. Bevisst ikke generalisert til «alle asset-mapper» (konsistent med eksisterende eksplisitte mønster).

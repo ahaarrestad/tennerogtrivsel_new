@@ -3,7 +3,7 @@ import { getSiteSettings } from '../scripts/getSettings';
 import Button from "./Button.astro";
 import PhoneIcon from "./PhoneIcon.astro";
 const settings = await getSiteSettings();
-const phone = settings.phone1;
+const phone = settings.phone1 ?? '';
 const cleanPhone = phone.replace(/\s+/g, '');
 const { class: className, variant = 'primary' } = Astro.props;
 ---
