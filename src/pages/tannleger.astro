@@ -20,7 +20,7 @@ const sorterteTannleger = tannleger.toSorted((a, b) => a.data.name.localeCompare
         <div class="section-content">
             <SectionHeader title={settings.tannlegerTittel} intro={settings.tannlegerTekst} as="h1" />
 
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-7 max-w-[1000px] mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-[1000px] mx-auto">
                 {sorterteTannleger.map((t) => {
                     const d = t.data;
                     const imagePath = `/src/assets/tannleger/${d.image}`;
