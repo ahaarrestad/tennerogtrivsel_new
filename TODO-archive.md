@@ -3,6 +3,13 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Button.astro: auto `rel="noopener noreferrer"` for `target="_blank"`** ([plan](docs/plans/archive/2026-06-23-button-rel-noopener.md))
+  - PR-review #403 (gemini-code-assist, security-medium): `<a target="_blank">` uten `rel` gir reverse-tabnabbing-svakhet i eldre nettlesere (moderne nettlesere setter `noopener` implisitt, eldre ikke).
+  - **Fiks** (`src/components/Button.astro:35`): `rel={isAnchor ? (rel ?? (target === '_blank' ? 'noopener noreferrer' : undefined)) : undefined}` — setter `noopener noreferrer` som fallback kun når `target === '_blank'` og forbrukeren ikke har angitt `rel`. Eksplisitt `rel` bevares; `<button>`/`<span>` får aldri `rel` (uendret gating).
+  - **Tester** (TDD, `src/components/__tests__/Button.test.ts`): tre nye caser — auto-fallback ved `_blank`, eksplisitt `rel` bevart, ingen `rel` uten `target`. Driver-testen verifisert RED → GREEN.
+  - **Verifisert:** Button-tester 7/7 ✓. Review-loop: CLEAN (kun to minor — én bevisst dokumentert non-goal, én ikke-blokkerende assertion-presisering).
+
+
 - [x] **Tannlege-kort: guide-alignering av grid (1 / 2 / 3 kolonner)** ([plan](docs/plans/archive/2026-06-23-tannlege-kort-mobil-1-kolonne.md))
   - Kort-gridet på `/tannleger` brukte `grid-cols-2 md:grid-cols-3 lg:grid-cols-4` — et avvik fra design-guidens 1/2/3-kolonner (mobil/md/lg, §6/linje 487). Små bilder + konstant tekstmengde (navn/tittel/spesialitet i scrim) gjorde at teksten dominerte, verst på mobil men også synlig på md. Rapportert av bruker.
   - **Fiks** (`src/pages/tannleger.astro:23`): grid-klassen endret til `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`, og `md:gap-7` → `md:gap-8` for full samsvar med guidens grid-rad. `aspect-[3/4]`, scrim, hover/touch-logikk og `max-w-[1000px]` uendret. Forside-seksjonen (16/9-fellesbilde) ikke berørt.

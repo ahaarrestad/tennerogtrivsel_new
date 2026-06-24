@@ -69,6 +69,40 @@ describe('Button.astro – attributt-gating per tag', () => {
         expect(attrs).not.toMatch(/\brel=/);
     });
 
+    it('setter rel="noopener noreferrer" automatisk på <a target="_blank"> uten eksplisitt rel', async () => {
+        const html = await render({
+            href: 'https://ekstern.example',
+            target: '_blank',
+        });
+        const { tag, attrs } = openingTag(html);
+
+        expect(tag).toBe('a');
+        expect(attrs).toMatch(/target="_blank"/);
+        expect(attrs).toMatch(/rel="noopener noreferrer"/);
+    });
+
+    it('overstyrer ikke eksplisitt rel på <a target="_blank">', async () => {
+        const html = await render({
+            href: 'https://ekstern.example',
+            target: '_blank',
+            rel: 'noopener',
+        });
+        const { attrs } = openingTag(html);
+
+        expect(attrs).toMatch(/rel="noopener"/);
+        expect(attrs).not.toMatch(/rel="noopener noreferrer"/);
+    });
+
+    it('setter ingen rel på <a> uten target="_blank"', async () => {
+        const html = await render({
+            href: '/intern',
+        });
+        const { tag, attrs } = openingTag(html);
+
+        expect(tag).toBe('a');
+        expect(attrs).not.toMatch(/\brel=/);
+    });
+
     it('bevarer variant-, class- og aria-label-oppførsel (regresjonsvern)', async () => {
         const html = await render({
             variant: 'accent',
