@@ -20,6 +20,11 @@
 
 ## Backlog
 
+- [ ] **tannleger.astro: gjenbruk `.card-grid` i stedet for hardkodet grid** — *ingen plan ennå*
+  - PR-review (#405, gemini-code-assist, medium): `.card-grid` i `src/styles/global.css:250` har allerede samme responsive oppførsel (stabel/2/3 kolonner)
+  - Tiltak: erstatt `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3` på `src/pages/tannleger.astro:23` med `.card-grid` for konsistens og gjenbruk
+  - Verifiser visuelt at gap/maks-bredde bevares (`gap-6 md:gap-8 max-w-[1000px] mx-auto`)
+
 - [ ] **Dev-modus a11y-flake: rot-årsak-fiks** — *ingen plan ennå*
   - Forrige oppgaves networkidle-fiks reduserte, men eliminerte ikke flaken i `tests/accessibility.spec.ts` under `astro dev` (lokal e2e). Slo til på 2 tester i en kvalitetsport-kjøring (2026-06-21), altså mer enn de «~1%» som ble dokumentert.
   - Årsak: dev-serveren gjør en andre dokument-navigasjon (Vite dep-reload) *under* axe-skannet → «Execution context was destroyed». `networkidle` lar siden roe seg før skann, men hindrer ikke en reload som starter *etter* at networkidle har løst.
