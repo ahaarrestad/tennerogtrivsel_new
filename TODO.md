@@ -20,10 +20,20 @@
 
 ## Backlog
 
-- [ ] **tannleger.astro: gjenbruk `.card-grid` i stedet for hardkodet grid** — *ingen plan ennå*
-  - PR-review (#405, gemini-code-assist, medium): `.card-grid` i `src/styles/global.css:250` har allerede samme responsive oppførsel (stabel/2/3 kolonner)
-  - Tiltak: erstatt `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3` på `src/pages/tannleger.astro:23` med `.card-grid` for konsistens og gjenbruk
-  - Verifiser visuelt at gap/maks-bredde bevares (`gap-6 md:gap-8 max-w-[1000px] mx-auto`)
+- [ ] **Button.astro: case-insensitiv `target`-sjekk for auto-`rel`** — *ingen plan ennå*
+  - PR-review (#407, gemini-code-assist, sikkerhet lav-medium): `Button.astro:37` bruker `target === '_blank'`. HTML-`target` er case-insensitiv i nettleseren, så `_BLANK`/`_Blank` åpner ny fane *uten* at `rel="noopener noreferrer"` settes — hull i reverse-tabnabbing-fiksen
+  - Tiltak: bruk `target?.toLowerCase() === '_blank'` + legg til testcase med `_BLANK`
+  - Lav sannsynlighet i praksis (vi bruker konsekvent `_blank`), men trivielt å lukke
+
+- [ ] **TelefonKnapp.astro: betinget rendring når `phone1` mangler** — *ingen plan ennå*
+  - PR-review (#404, gemini-code-assist, UX/a11y medium): `?? ''`-fallbacken hindrer build-krasj, men ved manglende nummer rendres to tomme knapper med ugyldig `href="tel:"` (bare ikon, ingen tekst)
+  - Tiltak: render knappene betinget (`{phone && (...)}`) slik at ingenting vises når nummeret mangler
+  - Trigges kun i edge-casen der `phone1` faktisk er tomt
+
+- [ ] **generate-csp-hashes-test: assert antall hasher** — *ingen plan ennå*
+  - PR-review (#406, gemini-code-assist, lav): testen sammenligner output mot egen sortert kopi — en tom liste ville bestått falskt
+  - Tiltak: legg til `expect(hashes).toHaveLength(3)` (og tilsvarende for `data.scriptHashes`) i `scripts/__tests__/generate-csp-hashes.test.mjs`
+  - Triviell herding av regresjonsvernet
 
 - [ ] **Dev-modus a11y-flake: rot-årsak-fiks** — *ingen plan ennå*
   - Forrige oppgaves networkidle-fiks reduserte, men eliminerte ikke flaken i `tests/accessibility.spec.ts` under `astro dev` (lokal e2e). Slo til på 2 tester i en kvalitetsport-kjøring (2026-06-21), altså mer enn de «~1%» som ble dokumentert.

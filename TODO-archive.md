@@ -3,6 +3,12 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **tannleger.astro: flex-sentrert kort-rutenett (siste rad sentreres)** ([plan](docs/plans/archive/2026-06-24-tannleger-card-grid-sentrert.md))
+  - PR #405 (gemini-code-assist) foreslo å gjenbruke `.card-grid` i stedet for hardkodet grid. Underveis kom et nytt krav: en delvis siste rad skal sentreres. CSS grid kan ikke sentrere en orphan-rad (kortene låses til kolonnesporene), så `.card-grid`-gjenbruken ble forkastet til fordel for en flex-basert løsning.
+  - **Fiks** (`src/styles/global.css:254`): ny klasse `.card-grid-center` — `flex flex-col md:flex-row md:flex-wrap md:justify-center` + `gap-6 md:gap-8`, med `.card-grid-center > * { md:basis-[calc((100%-2rem)/2)] lg:basis-[calc((100%-4rem)/3)] }`. Gap og basis samlet i én regel så de holdes i sync. `.card-grid` og `Tjenester.astro` urørt. `src/pages/tannleger.astro:23`: grid-klassene byttet til `card-grid-center max-w-[1000px] mx-auto`.
+  - **Hvorfor virker det:** full rad summerer til nøyaktig 100% → `justify-center` er en no-op på fulle rader (identisk med grid); kun en kort siste rad sentreres. `flex-grow:0` (default) hindrer at orphan-kort strekkes; `flex-shrink:1` beholdt som sub-pixel-buffer.
+  - **Verifisert:** `npm run build` ✓ (Tailwind reduserer til `calc(50% - 1rem)` / `calc(33.3333% - 1.33333rem)`); vitest 1568/1568 ✓ (ren presentasjons-endring, dekning uendret); Playwright-måling på 375/800/1280px med ekte innhold (8 tannleger): mobil stablet, md 4 fulle 2-kol-rader, lg 3+3+2 med siste rad sentrert (midtpunkt 500 = container-senter 1000/2). Review-loop: CLEAN (kun 3 minor maintainability-notater, godt dekket av kode-kommentar).
+
 - [x] **Button.astro: auto `rel="noopener noreferrer"` for `target="_blank"`** ([plan](docs/plans/archive/2026-06-23-button-rel-noopener.md))
   - PR-review #403 (gemini-code-assist, security-medium): `<a target="_blank">` uten `rel` gir reverse-tabnabbing-svakhet i eldre nettlesere (moderne nettlesere setter `noopener` implisitt, eldre ikke).
   - **Fiks** (`src/components/Button.astro:35`): `rel={isAnchor ? (rel ?? (target === '_blank' ? 'noopener noreferrer' : undefined)) : undefined}` — setter `noopener noreferrer` som fallback kun når `target === '_blank'` og forbrukeren ikke har angitt `rel`. Eksplisitt `rel` bevares; `<button>`/`<span>` får aldri `rel` (uendret gating).

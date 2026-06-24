@@ -251,6 +251,17 @@
         @apply flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3;
     }
 
+    /* Som .card-grid, men flexbasert så en delvis siste rad sentreres (orphan-kort
+       midtstilles i stedet for å henge venstre). Gap og basis holdes i sync her:
+       full rad summerer til 100% → justify-center påvirker kun en kort siste rad. */
+    .card-grid-center {
+        @apply flex flex-col md:flex-row md:flex-wrap md:justify-center;
+        @apply gap-6 md:gap-8;
+    }
+    .card-grid-center > * {
+        @apply md:basis-[calc((100%-2rem)/2)] lg:basis-[calc((100%-4rem)/3)];
+    }
+
     /* Bildramme med hvit kant og skygge */
     .image-frame {
         @apply rounded-2xl border-4 border-white shadow-md overflow-hidden;
