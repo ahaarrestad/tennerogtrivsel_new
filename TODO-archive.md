@@ -3,6 +3,11 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **TelefonKnapp.astro: betinget rendring når `phone1` mangler** ([plan](docs/plans/archive/2026-06-26-telefonknapp-betinget-rendring.md))
+  - PR-review #404 (gemini-code-assist, UX/a11y medium): `phone = settings.phone1 ?? ''` hindret build-krasj, men ved manglende nummer rendret komponenten likevel to knapper — med ugyldig `href="tel:"` og kun ikon (ingen tekst).
+  - **Fiks** (`src/components/TelefonKnapp.astro:14`): begge `<Button>`-elementene wrappet i `{cleanPhone && (<Fragment>...</Fragment>)}` så ingenting rendres når nummeret mangler. Guard på `cleanPhone` (ikke `phone`) fanger også whitespace-only verdier som ellers ville gitt tom `href="tel:"`. `<Fragment>` brukt fordi Astro krever én rot under en betinget med to søsken. Knappenes props/klasser/slots uendret.
+  - **Verifisert:** `npm run build:ci` ✓ (9 sider). Ingen unit-test — statisk `.astro`-markup, utenfor coverage-gaten (scripts/API). Review-loop: CLEAN (én minor whitespace-edge, fikset ved å guarde på `cleanPhone`).
+
 - [x] **Button.astro: case-insensitiv `target`-sjekk for auto-`rel`** ([plan](docs/plans/archive/2026-06-26-button-case-insensitive-target.md))
   - PR-review #407 (gemini-code-assist, sikkerhet lav-medium): `Button.astro:37` brukte `target === '_blank'`. HTML-`target` er case-insensitiv i nettleseren, så `_BLANK`/`_Blank` åpnet ny fane *uten* `rel="noopener noreferrer"` — restgap i reverse-tabnabbing-fiksen fra #403.
   - **Fiks** (`src/components/Button.astro:37`): `target === '_blank'` → `target?.toLowerCase() === '_blank'`. Optional chaining beholdt så no-`target` fortsatt gir `undefined`. Kommentaren (linje 19–21) utvidet med en note om hvorfor sjekken er case-insensitiv (hindrer fremtidig «forenkling» tilbake).
