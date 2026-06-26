@@ -3,6 +3,12 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Button.astro: case-insensitiv `target`-sjekk for auto-`rel`** ([plan](docs/plans/archive/2026-06-26-button-case-insensitive-target.md))
+  - PR-review #407 (gemini-code-assist, sikkerhet lav-medium): `Button.astro:37` brukte `target === '_blank'`. HTML-`target` er case-insensitiv i nettleseren, så `_BLANK`/`_Blank` åpnet ny fane *uten* `rel="noopener noreferrer"` — restgap i reverse-tabnabbing-fiksen fra #403.
+  - **Fiks** (`src/components/Button.astro:37`): `target === '_blank'` → `target?.toLowerCase() === '_blank'`. Optional chaining beholdt så no-`target` fortsatt gir `undefined`. Kommentaren (linje 19–21) utvidet med en note om hvorfor sjekken er case-insensitiv (hindrer fremtidig «forenkling» tilbake).
+  - **Test** (`src/components/__tests__/Button.test.ts`): ny case — `target="_BLANK"` uten eksplisitt `rel` → forventer `rel="noopener noreferrer"`, og verifiserer at original-casingen (`target="_BLANK"`) bevares i output.
+  - **Verifisert:** Button-tester 8/8 ✓. Review-loop: CLEAN (kun én minor — kommentar-note, tatt med).
+
 - [x] **tannleger.astro: flex-sentrert kort-rutenett (siste rad sentreres)** ([plan](docs/plans/archive/2026-06-24-tannleger-card-grid-sentrert.md))
   - PR #405 (gemini-code-assist) foreslo å gjenbruke `.card-grid` i stedet for hardkodet grid. Underveis kom et nytt krav: en delvis siste rad skal sentreres. CSS grid kan ikke sentrere en orphan-rad (kortene låses til kolonnesporene), så `.card-grid`-gjenbruken ble forkastet til fordel for en flex-basert løsning.
   - **Fiks** (`src/styles/global.css:254`): ny klasse `.card-grid-center` — `flex flex-col md:flex-row md:flex-wrap md:justify-center` + `gap-6 md:gap-8`, med `.card-grid-center > * { md:basis-[calc((100%-2rem)/2)] lg:basis-[calc((100%-4rem)/3)] }`. Gap og basis samlet i én regel så de holdes i sync. `.card-grid` og `Tjenester.astro` urørt. `src/pages/tannleger.astro:23`: grid-klassene byttet til `card-grid-center max-w-[1000px] mx-auto`.

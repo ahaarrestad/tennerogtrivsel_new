@@ -18,7 +18,8 @@ const Tag = !interactive ? 'span' : href ? 'a' : 'button';
 // Gate interaktive attributter per tag så de ikke lekker til feil element
 // (type/disabled hører kun til <button>, target/rel kun til <a>). For <a target="_blank">
 // settes rel="noopener noreferrer" automatisk når rel ikke er eksplisitt angitt — hindrer
-// reverse tabnabbing i eldre nettlesere (moderne setter noopener implisitt).
+// reverse tabnabbing i eldre nettlesere (moderne setter noopener implisitt). target-sjekken
+// er case-insensitiv (toLowerCase) fordi HTML-target er det — _BLANK må også dekkes.
 const isButton = Tag === 'button';
 const isAnchor = Tag === 'a';
 const variantClasses: Record<string, string> = {
@@ -34,7 +35,7 @@ const variantClass = variantClasses[variant] ?? 'btn-primary';
         type={isButton ? type : undefined}
         disabled={isButton ? disabled : undefined}
         target={isAnchor ? target : undefined}
-        rel={isAnchor ? (rel ?? (target === '_blank' ? 'noopener noreferrer' : undefined)) : undefined}
+        rel={isAnchor ? (rel ?? (target?.toLowerCase() === '_blank' ? 'noopener noreferrer' : undefined)) : undefined}
         class:list={[variantClass, className]}
         {...rest}
 >
