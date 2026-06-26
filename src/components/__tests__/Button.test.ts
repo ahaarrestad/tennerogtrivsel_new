@@ -81,6 +81,18 @@ describe('Button.astro – attributt-gating per tag', () => {
         expect(attrs).toMatch(/rel="noopener noreferrer"/);
     });
 
+    it('setter rel="noopener noreferrer" automatisk på <a target="_BLANK"> (case-insensitiv)', async () => {
+        const html = await render({
+            href: 'https://ekstern.example',
+            target: '_BLANK',
+        });
+        const { tag, attrs } = openingTag(html);
+
+        expect(tag).toBe('a');
+        expect(attrs).toMatch(/target="_BLANK"/);
+        expect(attrs).toMatch(/rel="noopener noreferrer"/);
+    });
+
     it('overstyrer ikke eksplisitt rel på <a target="_blank">', async () => {
         const html = await render({
             href: 'https://ekstern.example',

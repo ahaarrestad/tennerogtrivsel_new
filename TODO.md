@@ -20,11 +20,6 @@
 
 ## Backlog
 
-- [ ] **Button.astro: case-insensitiv `target`-sjekk for auto-`rel`** — *ingen plan ennå*
-  - PR-review (#407, gemini-code-assist, sikkerhet lav-medium): `Button.astro:37` bruker `target === '_blank'`. HTML-`target` er case-insensitiv i nettleseren, så `_BLANK`/`_Blank` åpner ny fane *uten* at `rel="noopener noreferrer"` settes — hull i reverse-tabnabbing-fiksen
-  - Tiltak: bruk `target?.toLowerCase() === '_blank'` + legg til testcase med `_BLANK`
-  - Lav sannsynlighet i praksis (vi bruker konsekvent `_blank`), men trivielt å lukke
-
 - [ ] **TelefonKnapp.astro: betinget rendring når `phone1` mangler** — *ingen plan ennå*
   - PR-review (#404, gemini-code-assist, UX/a11y medium): `?? ''`-fallbacken hindrer build-krasj, men ved manglende nummer rendres to tomme knapper med ugyldig `href="tel:"` (bare ikon, ingen tekst)
   - Tiltak: render knappene betinget (`{phone && (...)}`) slik at ingenting vises når nummeret mangler
