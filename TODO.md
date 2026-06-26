@@ -20,11 +20,6 @@
 
 ## Backlog
 
-- [ ] **TelefonKnapp.astro: betinget rendring når `phone1` mangler** — *ingen plan ennå*
-  - PR-review (#404, gemini-code-assist, UX/a11y medium): `?? ''`-fallbacken hindrer build-krasj, men ved manglende nummer rendres to tomme knapper med ugyldig `href="tel:"` (bare ikon, ingen tekst)
-  - Tiltak: render knappene betinget (`{phone && (...)}`) slik at ingenting vises når nummeret mangler
-  - Trigges kun i edge-casen der `phone1` faktisk er tomt
-
 - [ ] **generate-csp-hashes-test: assert antall hasher** — *ingen plan ennå*
   - PR-review (#406, gemini-code-assist, lav): testen sammenligner output mot egen sortert kopi — en tom liste ville bestått falskt
   - Tiltak: legg til `expect(hashes).toHaveLength(3)` (og tilsvarende for `data.scriptHashes`) i `scripts/__tests__/generate-csp-hashes.test.mjs`

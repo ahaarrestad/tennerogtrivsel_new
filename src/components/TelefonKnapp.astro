@@ -10,20 +10,26 @@ const { class: className, variant = 'primary' } = Astro.props;
 {/*
   Mobil: ekte tel:-lenke (tap-to-call). Desktop: ikke-interaktivt <span> som kun
   viser nummeret — holdes utenfor tab-rekkefølgen siden det ikke er klikkbart der.
+  Mangler nummeret, rendres ingenting (unngår tomme knapper med ugyldig href="tel:").
+  Guard på cleanPhone fanger også whitespace-only verdier som ellers gir tom href.
 */}
-<Button
-        href={`tel:${cleanPhone}`}
-        variant={variant}
-        class:list={["lg:hidden", className]}
->
-    <PhoneIcon slot="icon-left" />
-    {phone}
-</Button>
-<Button
-        interactive={false}
-        variant={variant}
-        class:list={["hidden lg:inline-flex", className]}
->
-    <PhoneIcon slot="icon-left" />
-    {phone}
-</Button>
+{cleanPhone && (
+    <Fragment>
+        <Button
+                href={`tel:${cleanPhone}`}
+                variant={variant}
+                class:list={["lg:hidden", className]}
+        >
+            <PhoneIcon slot="icon-left" />
+            {phone}
+        </Button>
+        <Button
+                interactive={false}
+                variant={variant}
+                class:list={["hidden lg:inline-flex", className]}
+        >
+            <PhoneIcon slot="icon-left" />
+            {phone}
+        </Button>
+    </Fragment>
+)}
