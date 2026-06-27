@@ -35,7 +35,7 @@ const variantClass = variantClasses[variant] ?? 'btn-primary';
         type={isButton ? type : undefined}
         disabled={isButton ? disabled : undefined}
         target={isAnchor ? target : undefined}
-        rel={isAnchor ? (rel ?? (target?.toLowerCase() === '_blank' ? 'noopener noreferrer' : undefined)) : undefined}
+        rel={isAnchor ? (rel ?? (typeof target === 'string' && target.toLowerCase() === '_blank' ? 'noopener noreferrer' : undefined)) : undefined}
         class:list={[variantClass, className]}
         {...rest}
 >

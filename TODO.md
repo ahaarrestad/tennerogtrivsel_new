@@ -20,11 +20,6 @@
 
 ## Backlog
 
-- [ ] **Button.astro: typeof-guard på `target` før `toLowerCase()`** — *ingen plan ennå*
-  - PR-review (#409, gemini-code-assist, medium): `Button.astro:38` bruker `target?.toLowerCase()`. Optional chaining vokter kun `null`/`undefined` — en ikke-streng `target` (boolean/number) ville kaste `TypeError` ved render.
-  - Tiltak: bytt til `typeof target === 'string' && target.toLowerCase() === '_blank'` i rel-uttrykket
-  - Reell risiko er lav (`target` er typet `string` i Props), men billig defensiv herding
-
 - [ ] **generate-csp-hashes-test: assert antall hasher** — *ingen plan ennå*
   - PR-review (#406, gemini-code-assist, lav): testen sammenligner output mot egen sortert kopi — en tom liste ville bestått falskt
   - Tiltak: legg til `expect(hashes).toHaveLength(3)` (og tilsvarende for `data.scriptHashes`) i `scripts/__tests__/generate-csp-hashes.test.mjs`
