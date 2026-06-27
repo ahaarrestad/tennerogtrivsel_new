@@ -3,6 +3,11 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Button.astro: typeof-guard på `target` før `toLowerCase()`** ([plan](docs/plans/archive/2026-06-27-button-typeof-guard.md))
+  - PR-review #409 (gemini-code-assist, medium): `Button.astro:38` brukte `target?.toLowerCase()`. Optional chaining vokter kun mot `null`/`undefined` — en ikke-streng `target` (boolean/number) ville kastet `TypeError` ved render. Reell risiko lav (`target` er typet `string` i Props), men billig defensiv herding.
+  - **Fiks** (`src/components/Button.astro:38`): `target?.toLowerCase() === '_blank'` → `typeof target === 'string' && target.toLowerCase() === '_blank'`. Bevarer case-insensitiv `_blank`-deteksjon og `rel ??`-short-circuit; ingen funksjonell endring for typet input.
+  - **Verifisert:** Button-tester 8/8 ✓ (dekker `_blank`, `_BLANK` case-insensitiv, eksplisitt rel-overstyring, ingen-target). Ingen ny test — endringen er ren defensiv herding av allerede typet input (waived i planen). Review-loop: CLEAN (én minor — direkte ikke-streng-test, frivillig waived).
+
 - [x] **TelefonKnapp.astro: betinget rendring når `phone1` mangler** ([plan](docs/plans/archive/2026-06-26-telefonknapp-betinget-rendring.md))
   - PR-review #404 (gemini-code-assist, UX/a11y medium): `phone = settings.phone1 ?? ''` hindret build-krasj, men ved manglende nummer rendret komponenten likevel to knapper — med ugyldig `href="tel:"` og kun ikon (ingen tekst).
   - **Fiks** (`src/components/TelefonKnapp.astro:14`): begge `<Button>`-elementene wrappet i `{cleanPhone && (<Fragment>...</Fragment>)}` så ingenting rendres når nummeret mangler. Guard på `cleanPhone` (ikke `phone`) fanger også whitespace-only verdier som ellers ville gitt tom `href="tel:"`. `<Fragment>` brukt fordi Astro krever én rot under en betinget med to søsken. Knappenes props/klasser/slots uendret.
