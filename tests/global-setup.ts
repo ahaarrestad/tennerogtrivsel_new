@@ -10,11 +10,13 @@ import { chromium, type FullConfig } from '@playwright/test';
 // Vite-dev-server, så ingen dep-optimering skjer.
 //
 // Vi venter på 'load' (ikke 'networkidle'): warm-upen trenger bare å laste
-// modulgrafen så Vite oppdager og cacher deps — 'load' er nok til det. '/admin'
-// laster Google Identity Services som holder gjentakende nettverksaktivitet og
-// derfor aldri når «networkidle»; det ville bare race mot timeout. Warm-upen er
-// dessuten best-effort: et enkelt rute-hikke skal ikke felle hele suiten — de
-// ekte testene har sine egne assertions og rapporterer reelle feil tydelig.
+// modulgrafen så Vite oppdager og cacher deps — 'load' er nok til det, og
+// raskere. '/admin' laster Google Identity Services som holder gjentakende
+// nettverksaktivitet, så «networkidle» kan være tregt/upålitelig der under
+// parallell last; å legge enda et networkidle-kall i warm-upen øker bare
+// risikoen for å race mot 30s-timeouten unødvendig. Warm-upen er dessuten
+// best-effort: et enkelt rute-hikke skal ikke felle hele suiten — de ekte
+// testene har sine egne assertions og rapporterer reelle feil tydelig.
 async function globalSetup(config: FullConfig): Promise<void> {
   if (process.env.CI) return;
 

@@ -62,9 +62,11 @@ axe. Global setup herder derfor hele suiten, ikke bare `accessibility.spec.ts`.
      `waitUntil: 'load'`, lukker browseren.
    - Ruter: `/`, `/kontakt/`, `/tannleger/`, `/tjenester/`, `/galleri/`, `/admin`.
    - **Hvorfor `'load'` og ikke `'networkidle'`:** warm-upen trenger bare å laste modulgrafen
-     så Vite oppdager og cacher deps — `'load'` er nok. `/admin` laster Google Identity
-     Services som holder gjentakende nettverksaktivitet og derfor aldri når «networkidle»;
-     `networkidle` ville bare race mot 30s-timeouten og kunne henge hele warm-upen.
+     så Vite oppdager og cacher deps — `'load'` er nok, og raskere. `/admin` laster Google
+     Identity Services som holder gjentakende nettverksaktivitet, så `networkidle` kan være
+     tregt/upålitelig der under parallell last. Den asserterende admin-testen bruker fortsatt
+     `networkidle` og består, men å legge enda et `networkidle`-kall i warm-upen øker bare
+     risikoen for å race mot 30s-timeouten unødvendig.
 2. **`playwright.config.ts`** — legg til `globalSetup: './tests/global-setup.ts'`.
 
 ## Dataflyt
