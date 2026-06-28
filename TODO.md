@@ -18,19 +18,16 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
+- [ ] **Dev-modus a11y-flake: rot-årsak-fiks** ([plan](docs/plans/2026-06-28-dev-a11y-flake-warmup.md)) ([spec](docs/designs/2026-06-28-dev-a11y-flake-warmup.md))
+  - Vite dep-optimerings-reload på kald dev-server river axe-konteksten → «Execution context was destroyed». Ren dev-artefakt (CI kjører `preview`, alltid 77/0).
+  - Fiks: warm-up i Playwright `globalSetup` besøker rutene før testkjøring så reloaden er unnagjort før axe-skannet. Hot-reload bevart; CI uendret.
+
 ## Backlog
 
 - [ ] **generate-csp-hashes-test: assert antall hasher** — *ingen plan ennå*
   - PR-review (#406, gemini-code-assist, lav): testen sammenligner output mot egen sortert kopi — en tom liste ville bestått falskt
   - Tiltak: legg til `expect(hashes).toHaveLength(3)` (og tilsvarende for `data.scriptHashes`) i `scripts/__tests__/generate-csp-hashes.test.mjs`
   - Triviell herding av regresjonsvernet
-
-- [ ] **Dev-modus a11y-flake: rot-årsak-fiks** — *ingen plan ennå*
-  - Forrige oppgaves networkidle-fiks reduserte, men eliminerte ikke flaken i `tests/accessibility.spec.ts` under `astro dev` (lokal e2e). Slo til på 2 tester i en kvalitetsport-kjøring (2026-06-21), altså mer enn de «~1%» som ble dokumentert.
-  - Årsak: dev-serveren gjør en andre dokument-navigasjon (Vite dep-reload) *under* axe-skannet → «Execution context was destroyed». `networkidle` lar siden roe seg før skann, men hindrer ikke en reload som starter *etter* at networkidle har løst.
-  - Reproduserer IKKE mot `npm run preview` (prod-bygget CI kjører) — alltid 77/0. Ren dev-artefakt, når aldri CI.
-  - Mulige tilnærminger å vurdere: (a) la lokal e2e kjøre mot `npm run preview` i stedet for `dev:secure:fixtures` (fjerner Vite-reload helt, men mister hot-reload-nytte lokalt); (b) retry-wrapper rundt axe-skannet ved «context destroyed»; (c) vente på at Vite-optimaliseringen er ferdig før skann starter. Diskuter trade-offs før valg.
-  - Mål: stabil lokal e2e i begge moduser, ikke bare mot CI-stien
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
