@@ -44,6 +44,13 @@ import { chromium, type FullConfig } from '@playwright/test';
 //
 // Hoppes over i CI: der serverer `npm run preview` et statisk prod-bygg uten
 // Vite-dev-server, så ingen dep-optimering skjer.
+//
+// Vi venter på 'load' (ikke 'networkidle'): warm-upen trenger bare å laste
+// modulgrafen så Vite oppdager og cacher deps — 'load' er nok til det. '/admin'
+// laster Google Identity Services som holder gjentakende nettverksaktivitet og
+// derfor aldri når «networkidle»; det ville bare race mot timeout. Warm-upen er
+// dessuten best-effort: et enkelt rute-hikke skal ikke felle hele suiten — de
+// ekte testene har sine egne assertions og rapporterer reelle feil tydelig.
 async function globalSetup(config: FullConfig): Promise<void> {
   if (process.env.CI) return;
 
@@ -56,7 +63,11 @@ async function globalSetup(config: FullConfig): Promise<void> {
   try {
     const page = await browser.newPage({ baseURL });
     for (const rute of ruter) {
-      await page.goto(rute, { waitUntil: 'networkidle' });
+      try {
+        await page.goto(rute, { waitUntil: 'load' });
+      } catch (err) {
+        console.warn(`globalSetup: warm-up av ${rute} feilet (ignorert):`, err);
+      }
     }
   } finally {
     await browser.close();
@@ -65,6 +76,13 @@ async function globalSetup(config: FullConfig): Promise<void> {
 
 export default globalSetup;
 ```
+
+> **Designnote (lagt til under implementasjon):** Første utkast brukte
+> `waitUntil: 'networkidle'` og lot en `goto`-feil avbryte hele kjøringen. Det viste seg at
+> `/admin` aldri når «networkidle» (Google Identity Services holder gjentakende
+> nettverksaktivitet), så warm-upen kunne henge mot 30s-timeouten og felle hele suiten.
+> Løsning: `waitUntil: 'load'` (nok til å prime Vite-cachen) + best-effort try/catch per rute.
+> Se rot-årsak-analysen i spec-ens feilhåndteringsavsnitt.
 
 - [ ] **Step 2: Registrer globalSetup i `playwright.config.ts`**
 
