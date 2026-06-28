@@ -59,8 +59,12 @@ axe. Global setup herder derfor hele suiten, ikke bare `accessibility.spec.ts`.
    - Tidlig retur hvis `process.env.CI` er satt (CI kjører `preview` — ingen Vite-optimering,
      warm-up unødvendig).
    - Leser `baseURL` fra config, starter en chromium-instans, navigerer til hver rute med
-     `waitUntil: 'networkidle'`, lukker browseren.
+     `waitUntil: 'load'`, lukker browseren.
    - Ruter: `/`, `/kontakt/`, `/tannleger/`, `/tjenester/`, `/galleri/`, `/admin`.
+   - **Hvorfor `'load'` og ikke `'networkidle'`:** warm-upen trenger bare å laste modulgrafen
+     så Vite oppdager og cacher deps — `'load'` er nok. `/admin` laster Google Identity
+     Services som holder gjentakende nettverksaktivitet og derfor aldri når «networkidle»;
+     `networkidle` ville bare race mot 30s-timeouten og kunne henge hele warm-upen.
 2. **`playwright.config.ts`** — legg til `globalSetup: './tests/global-setup.ts'`.
 
 ## Dataflyt
@@ -72,8 +76,11 @@ testkjøring starter mot varm server.
 ## Feilhåndtering
 
 Warm-up-besøkene asserterer ingenting; en reload *under* warm-up er forventet og uskadelig
-(sidene forkastes). Feiler en `goto` (f.eks. server ikke oppe), kaster global setup og hele
-kjøringen stopper med tydelig feil — riktig, siden testene uansett ville feilet.
+(sidene forkastes). Warm-upen er **best-effort**: hver `goto` er pakket i try/catch som
+logger en `console.warn` og fortsetter ved feil. En enkelt rute som feiler (f.eks. et
+timing-hikke) skal ikke felle hele suiten — de ekte testene har sine egne assertions og
+rapporterer reelle feil tydelig. Mangler `baseURL` i config (en konfigurasjonsfeil, ikke et
+runtime-hikke), kastes det tidlig før browseren startes.
 
 ## Avgrensninger (non-goals)
 

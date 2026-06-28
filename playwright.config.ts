@@ -5,6 +5,7 @@ const PORT = process.env.PORT ?? '4321';
 export default defineConfig({
   testDir: './tests',
   testIgnore: ['**/csp-check.spec.ts'],
+  globalSetup: './tests/global-setup.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
