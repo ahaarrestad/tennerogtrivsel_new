@@ -6,7 +6,9 @@ test.describe('Universell utforming (UU)', () => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('main');
     // Venter til siden er stabil før axe starter; løser umiddelbart mot
-    // preview-bygg (CI), gir Vite-dep-reloads tid til å fullføre i dev-modus.
+    // preview-bygg (CI). Den primære beskyttelsen mot Vite-dep-reload midt i
+    // skannet (dev-modus) er warm-upen i tests/global-setup.ts — se
+    // docs/designs/2026-06-28-dev-a11y-flake-warmup.md.
     await page.waitForLoadState('networkidle');
 
     const accessibilityScanResults = await new AxeBuilder({ page })
