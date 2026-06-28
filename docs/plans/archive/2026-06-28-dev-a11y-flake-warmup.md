@@ -8,7 +8,7 @@
 
 **Tech Stack:** Playwright (`@playwright/test`), Astro 5 dev-server (Vite), TypeScript.
 
-Spec: [docs/designs/2026-06-28-dev-a11y-flake-warmup.md](../designs/2026-06-28-dev-a11y-flake-warmup.md)
+Spec: [docs/designs/archive/2026-06-28-dev-a11y-flake-warmup.md](../../designs/archive/2026-06-28-dev-a11y-flake-warmup.md)
 
 ## Global Constraints
 
