@@ -4,7 +4,7 @@ import { chromium, type FullConfig } from '@playwright/test';
 // dep-optimering (og den påfølgende reloaden) er unnagjort FØR de assertende
 // testene kjører. Uten dette kan reloaden starte midt i axe-skannet i
 // accessibility.spec.ts → «Execution context was destroyed». Se
-// docs/designs/2026-06-28-dev-a11y-flake-warmup.md.
+// docs/designs/archive/2026-06-28-dev-a11y-flake-warmup.md.
 //
 // Hoppes over i CI: der serverer `npm run preview` et statisk prod-bygg uten
 // Vite-dev-server, så ingen dep-optimering skjer.
