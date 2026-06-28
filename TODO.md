@@ -18,10 +18,6 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
-- [ ] **Dev-modus a11y-flake: rot-årsak-fiks** ([plan](docs/plans/2026-06-28-dev-a11y-flake-warmup.md)) ([spec](docs/designs/2026-06-28-dev-a11y-flake-warmup.md))
-  - Vite dep-optimerings-reload på kald dev-server river axe-konteksten → «Execution context was destroyed». Ren dev-artefakt (CI kjører `preview`, alltid 77/0).
-  - Fiks: warm-up i Playwright `globalSetup` besøker rutene før testkjøring så reloaden er unnagjort før axe-skannet. Hot-reload bevart; CI uendret.
-
 ## Backlog
 
 - [ ] **generate-csp-hashes-test: assert antall hasher** — *ingen plan ennå*

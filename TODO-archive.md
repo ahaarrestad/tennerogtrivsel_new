@@ -3,6 +3,12 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **Dev-modus a11y-flake: rot-årsak-fiks** ([plan](docs/plans/archive/2026-06-28-dev-a11y-flake-warmup.md)) ([spec](docs/designs/archive/2026-06-28-dev-a11y-flake-warmup.md))
+  - Dev-only flake i `tests/accessibility.spec.ts` («Execution context was destroyed»). Rot-årsak: på en kald `astro dev`-server trigger Vites dep-optimering en full dokument-reload som kan starte midt i axe-skannet, *etter* at `networkidle` har løst. Når aldri CI (kjører `preview`, ingen Vite-dev-server).
+  - **Fiks** (`tests/global-setup.ts`, ny): Playwright `globalSetup` besøker hovedrutene (`/`, `/kontakt/`, `/tannleger/`, `/tjenester/`, `/galleri/`, `/admin`) én gang med `waitUntil: 'load'` *før* testkjøring, så Vites dep-optimering er unnagjort før de assertende testene. Best-effort per rute (try/catch + `console.warn`); hoppes over i CI via `process.env.CI`-guard. Registrert med `globalSetup` i `playwright.config.ts`.
+  - **Designvalg under impl.:** Første utkast brukte `waitUntil: 'networkidle'` og lot en `goto`-feil avbryte hele kjøringen. `/admin` (Google Identity Services) er treg/upålitelig på networkidle under parallell last → globalSetup kunne henge mot 30s-timeout og felle suiten. Byttet til `'load'` (nok til å prime Vite-cachen) + best-effort. Hot-reload bevart (ingen `preview`-bytte lokalt).
+  - **Verifisert:** 3× kald cache (`rm -rf node_modules/.vite`) full e2e → 77 passed, 0 «context destroyed», 0 admin-timeouts. Lint rent. CI-guard bekreftet (returnerer uten å starte browser når `CI=1`). Reviewen bekreftet at Playwright starter/venter på `webServer` *før* `globalSetup`. Review-loop: CLEAN (tre minor doc/kommentar-nits, adressert).
+
 - [x] **Button.astro: typeof-guard på `target` før `toLowerCase()`** ([plan](docs/plans/archive/2026-06-27-button-typeof-guard.md))
   - PR-review #409 (gemini-code-assist, medium): `Button.astro:38` brukte `target?.toLowerCase()`. Optional chaining vokter kun mot `null`/`undefined` — en ikke-streng `target` (boolean/number) ville kastet `TypeError` ved render. Reell risiko lav (`target` er typet `string` i Props), men billig defensiv herding.
   - **Fiks** (`src/components/Button.astro:38`): `target?.toLowerCase() === '_blank'` → `typeof target === 'string' && target.toLowerCase() === '_blank'`. Bevarer case-insensitiv `_blank`-deteksjon og `rel ??`-short-circuit; ingen funksjonell endring for typet input.
