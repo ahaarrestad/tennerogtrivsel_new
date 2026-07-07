@@ -135,8 +135,10 @@ describe('run', () => {
         writeFileSync(join(tmpDist, 'a.html'), '<script>aaa()</script>');
         writeFileSync(join(tmpDist, 'm.html'), '<script>mmm()</script>');
         const hashes = run(tmpDist, tmpOut);
+        expect(hashes).toHaveLength(3); // vokter mot falsk-positiv: en tom liste ville bestått sorterings-sjekken
         expect(hashes).toEqual([...hashes].sort());
         const data = JSON.parse(readFileSync(tmpOut, 'utf-8'));
+        expect(data.scriptHashes).toHaveLength(3);
         expect(data.scriptHashes).toEqual([...data.scriptHashes].sort());
     });
 });

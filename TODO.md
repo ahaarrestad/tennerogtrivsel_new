@@ -20,11 +20,6 @@
 
 ## Backlog
 
-- [ ] **generate-csp-hashes-test: assert antall hasher** — *ingen plan ennå*
-  - PR-review (#406, gemini-code-assist, lav): testen sammenligner output mot egen sortert kopi — en tom liste ville bestått falskt
-  - Tiltak: legg til `expect(hashes).toHaveLength(3)` (og tilsvarende for `data.scriptHashes`) i `scripts/__tests__/generate-csp-hashes.test.mjs`
-  - Triviell herding av regresjonsvernet
-
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
   - Dekker: GitHub (secrets, Actions, permissions), AWS (IAM, S3, Lambda, CloudFront, DynamoDB, SES), Google (OAuth, Sheets/Drive API-nøkler, scopes), og hvordan alt er skrudd sammen
