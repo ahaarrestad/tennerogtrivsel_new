@@ -3,6 +3,11 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
 
 
+- [x] **generate-csp-hashes-test: assert antall hasher** ([plan](docs/plans/archive/2026-07-07-csp-hashes-assert-antall.md))
+  - PR-review #406 (gemini-code-assist, lav): sorterings-testen i `scripts/__tests__/generate-csp-hashes.test.mjs` sammenlignet `hashes` mot sin egen sorterte kopi (`expect(hashes).toEqual([...hashes].sort())`). En tom liste ville bestått falskt (`[] === [].sort()`), så en regresjon i skanning/ekstraksjon som returnerte null hasher hadde forblitt grønn.
+  - **Fiks** (`scripts/__tests__/generate-csp-hashes.test.mjs`): la til `expect(hashes).toHaveLength(3)` og `expect(data.scriptHashes).toHaveLength(3)` før hver sorterings-assertion. Fixturen skriver tre distinkte skript (zzz/aaa/mmm) i tre filer — ingen dedup/whitespace — så nøyaktig 3 hasher forventes. Vokter både returverdien og skrevet JSON.
+  - **Verifisert:** vitest 18/18 ✓ (kun test-fila endret, ingen ny kildekode-branch → coverage uendret). Review-loop: CLEAN (én minor TODO.md-plasserings-nit, verifisert falsk alarm — oppgaven lå korrekt under Pågående).
+
 - [x] **Dev-modus a11y-flake: rot-årsak-fiks** ([plan](docs/plans/archive/2026-06-28-dev-a11y-flake-warmup.md)) ([spec](docs/designs/archive/2026-06-28-dev-a11y-flake-warmup.md))
   - Dev-only flake i `tests/accessibility.spec.ts` («Execution context was destroyed»). Rot-årsak: på en kald `astro dev`-server trigger Vites dep-optimering en full dokument-reload som kan starte midt i axe-skannet, *etter* at `networkidle` har løst. Når aldri CI (kjører `preview`, ingen Vite-dev-server).
   - **Fiks** (`tests/global-setup.ts`, ny): Playwright `globalSetup` besøker hovedrutene (`/`, `/kontakt/`, `/tannleger/`, `/tjenester/`, `/galleri/`, `/admin`) én gang med `waitUntil: 'load'` *før* testkjøring, så Vites dep-optimering er unnagjort før de assertende testene. Best-effort per rute (try/catch + `console.warn`); hoppes over i CI via `process.env.CI`-guard. Registrert med `globalSetup` i `playwright.config.ts`.
