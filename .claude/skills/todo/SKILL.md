@@ -3,7 +3,7 @@ name: todo
 model: sonnet
 description: "Vis og administrer prosjektets TODO-liste (TODO.md). Bruk når brukeren sier 'todo', 'TODO', 'oppgaveliste', 'vis oppgaver', 'backlog', 'hva gjenstår', 'neste oppgave', 'legg til oppgave', 'ny oppgave', 'flytt oppgave', 'marker ferdig', 'start oppgave', 'begynn på', 'gjenoppta', 'fortsett med', eller spør om status på oppgaver."
 disable-model-invocation: false
-allowed-tools: ["Read(TODO.md)", "Read(TODO-archive.md)", "Edit(TODO.md)", "Edit(TODO-archive.md)", "Glob(docs/**)", "Read(docs/**)", "Write(docs/**)", "Read(.claude/skills/todo/references/**)", "Bash(mv *)", "Bash(mkdir *)", "Bash(git *)", "Skill(superpowers:brainstorming)", "Skill(superpowers:using-git-worktrees)", "Skill(review-loop)"]
+allowed-tools: ["Read(TODO.md)", "Read(TODO-archive.md)", "Read(TODO-abandoned.md)", "Edit(TODO.md)", "Edit(TODO-archive.md)", "Edit(TODO-abandoned.md)", "Write(TODO-abandoned.md)", "Glob(docs/**)", "Read(docs/**)", "Write(docs/**)", "Read(.claude/skills/todo/references/**)", "Bash(mv *)", "Bash(mkdir *)", "Bash(git *)", "Skill(superpowers:brainstorming)", "Skill(superpowers:using-git-worktrees)", "Skill(review-loop)"]
 ---
 
 # TODO-liste Skill
@@ -20,6 +20,7 @@ for å holde denne skillen lett ved vanlig statusbruk.
 | Se status / oversikt (standard) | Følg «Vis status» nedenfor (inline) |
 | Legge til ny oppgave | Følg «Legg til oppgave» nedenfor (inline) |
 | Oppdatere/endre en oppgave | Følg «Oppdater oppgave» nedenfor (inline) |
+| Forkaste / droppe en oppgave (bruker vil *ikke* gjøre den) | Følg «Forkast oppgave» nedenfor (inline) |
 | **Starte / flytte oppgave fra Backlog** | **Du MÅ først `Read references/start-oppgave.md`** og følge hele flyten der — ikke gå rett til implementasjon, ikke gjengi flyten fra hukommelsen |
 | **Markere oppgave som fullført / arkivere** | **Du MÅ først `Read references/start-oppgave.md`** (delen «Marker oppgave som fullført») |
 | **Gjenoppta pågående oppgave** | **Du MÅ først `Read references/gjenoppta.md`** og følge worktree-sjekken der |
@@ -78,6 +79,29 @@ Hvis brukeren vil legge til notater, deloppgaver eller endre beskrivelse:
 1. Les `TODO.md`
 2. Gjør den ønskede endringen
 3. Bekreft oppdateringen
+
+---
+
+## Forkast oppgave
+
+Hvis brukeren bevisst vil droppe en oppgave («jeg vil ikke gjøre denne», «dropp X», «forkast X») — altså *ikke* fullføre den, men heller ikke bare slette den sporløst:
+
+1. Les `TODO.md` og finn oppgaven. Ved tvetydighet: list alternativene og spør.
+2. Fjern oppgaven fra TODO.md (Backlog eller Pågående).
+3. Legg oppgaven inn i `TODO-abandoned.md` med `[~]`-merke, dato og begrunnelse:
+   ```markdown
+   - [~] **Kort tittel** — *forkastet YYYY-MM-DD* ([plan](...)) ([spec](...))
+     - Kort beskrivelse av hva oppgaven var
+     - **Begrunnelse:** hvorfor den droppes (hva brukeren sa)
+   ```
+   Behold eventuelle plan-/spec-lenker. **La plan-/spec-filene ligge der de er** — de flyttes *ikke* til `archive/` (det er forbeholdt fullførte oppgaver).
+4. Hvis `TODO-abandoned.md` ikke finnes ennå: opprett den med samme header-mønster som `TODO-archive.md` (tittel + kort forklaring som lenker til TODO.md og TODO-archive.md).
+5. Bekreft flyttingen.
+
+Skille mellom de tre endestasjonene:
+- **Fullført** → `TODO-archive.md` (`[x]`), plan/spec flyttes til `archive/`.
+- **Forkastet** → `TODO-abandoned.md` (`[~]`), plan/spec blir liggende.
+- **Ren sletting** (feilopprettet e.l.) → bare fjern fra TODO.md, ingen arkivering. Bruk kun når brukeren eksplisitt ber om å slette sporløst.
 
 ---
 
