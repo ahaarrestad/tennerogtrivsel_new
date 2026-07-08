@@ -10,6 +10,7 @@
 - **Spec/design-docs** lagres i `docs/designs/YYYY-MM-DD-<topic>.md`. **Planer** lagres i `docs/plans/YYYY-MM-DD-<topic>.md`. Hver oppgave skal alltid ha **både** spec og plan, og begge reviewes før arbeidet starter. (For veldig små, trivielle oppgaver kan spec og plan slås sammen til noen linjer i én planfil — bruk hodet.)
 - Flytt oppgaven til «Fullført» når den er ferdig.
 - **Arkivering:** Når en oppgave er fullført, flytt oppgaven fra TODO.md til [TODO-archive.md](TODO-archive.md), planfilen til `docs/plans/archive/` og eventuelle design-docs til `docs/designs/archive/`.
+- **Forkasting:** Når en oppgave bevisst droppes, flytt den fra TODO.md til [TODO-abandoned.md](TODO-abandoned.md) (merk `[~]`, dato + begrunnelse). La plan-/spec-filene ligge der de er.
 
 ## Pågående
 
@@ -25,15 +26,6 @@
   - Dekker: GitHub (secrets, Actions, permissions), AWS (IAM, S3, Lambda, CloudFront, DynamoDB, SES), Google (OAuth, Sheets/Drive API-nøkler, scopes), og hvordan alt er skrudd sammen
   - Vurder angrepsflater, least-privilege, secret rotation, logging/audit trail og potensielle svakheter i hele kjeden
   - Diskuter funn med bruker etter hvert domene — ingen tiltak uten godkjenning
-
-- [ ] **«Bygg nå»-knapp i admin** ([plan](docs/superpowers/plans/2026-03-21-bygg-na-knapp.md)) ([spec](docs/superpowers/specs/2026-03-21-bygg-na-knapp-design.md))
-  - Lambda Function URL-proxy som verifiserer Google OAuth-token og kaller GitHub `repository_dispatch`
-  - Knapp i admin-dashboard med spinner, statusmelding og siste vellykkede bygg-tidspunkt
-
-- [ ] **Audit trail for admin-panelet** ([plan](docs/superpowers/plans/2026-05-14-endringslogg-admin.md)) ([spec](docs/superpowers/specs/2026-05-14-endringslogg-admin-design.md))
-  - Logg hvem som gjør hvilke endringer når (oppretter, redigerer, sletter innhold)
-  - Eget Google Sheets-regneark for loggen, synlig som fane i admin-UI
-  - Relevant for sporbarhet og feilsøking
 
 - [ ] **i18n — mulighetsstudie** — *ingen plan ennå*
   - Er det mulig og gjennomførbart å legge til flerspråklig støtte på siden?

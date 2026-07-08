@@ -1,6 +1,6 @@
 # Fullførte oppgaver – Tenner og Trivsel
 
-> Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md).
+> Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
 - [x] **generate-csp-hashes-test: assert antall hasher** ([plan](docs/plans/archive/2026-07-07-csp-hashes-assert-antall.md))
