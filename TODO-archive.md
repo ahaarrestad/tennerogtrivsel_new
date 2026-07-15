@@ -3,6 +3,14 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **Oppdater Astro til v7** ([spec](docs/designs/archive/2026-07-15-astro-v7-oppgradering.md)) ([plan](docs/plans/archive/2026-07-15-astro-v7-oppgradering.md))
+  - Oppgradert `astro` 6.4.8 → 7.0.9. Ren vedlikeholdsoppgradering — ingen v7-funksjoner tatt i bruk. Bringer Vite 8, ny Rust-kompilator, `compressHTML: 'jsx'` og Sätteri som markdown-motor.
+  - **Kjerne-endring** (`package.json`): `astro ^6.4.8` → `^7.0.9`, og `overrides.vite` `^7` → `^8` (astro 7 krever `vite ^8.0.13`; den gamle `^7`-overriden holdt vite på 7.3.6 i en stille inkonsistens uten ERESOLVE). `overrides.esbuild: ^0.28.1` (sikkerhets-pin, commit fdeb229) bevart — kompatibel med astros `^0.28.0`. `package-lock.json` regenerert (vite 8.1.4 / esbuild 0.28.1 deduped overalt).
+  - **CSP-hasher** (`src/generated/csp-hashes.json`): regenerert fra ny byggeoutput (compressHTML + Vite 8 endret inline-hasher). Verifisert reproduserbar fra `dist/`.
+  - **Funn:** Astro 7 gjør `astro dev` til en bakgrunns-daemon når den oppdager en AI-agent (auto-`--background`). Rammer verken vanlig utvikler (foreground) eller CI (bruker `preview`) — kun E2E kjørt *fra en agent*, som løses med `reuseExistingServer`. Ingen kode-/config-endring nødvendig.
+  - **Deploy verifisert:** `deploy.yml` uendret-kompatibel — `build:ci` gir forventet `dist/`-struktur (`_astro/`, `fonts/`, sitemap), `astro preview` (CI-E2E) kjører foreground og svarer 200, `npm ci` i sync med ny lockfile.
+  - **Verifisert:** build ✓ (12 sider, sitemap generert), unit 1569/1569 ✓ (coverage uendret 97.2/89.1/95.1/98.2), lint rent, E2E 77 passed/0 failed (axe-core UU grønt), CSP-check kjørt manuelt (`/`, `/kontakt`, `/personvern` rene; /admin-fail er kun flaky `networkidle`-timeout, ikke CSP). Bruker bekreftet manuelt: admin-innlogging, tjeneste-kort og -undersider ser bra ut med ekte innhold. Review-loop: CLEAN.
+
 - [x] **generate-csp-hashes-test: assert antall hasher** ([plan](docs/plans/archive/2026-07-07-csp-hashes-assert-antall.md))
   - PR-review #406 (gemini-code-assist, lav): sorterings-testen i `scripts/__tests__/generate-csp-hashes.test.mjs` sammenlignet `hashes` mot sin egen sorterte kopi (`expect(hashes).toEqual([...hashes].sort())`). En tom liste ville bestått falskt (`[] === [].sort()`), så en regresjon i skanning/ekstraksjon som returnerte null hasher hadde forblitt grønn.
   - **Fiks** (`scripts/__tests__/generate-csp-hashes.test.mjs`): la til `expect(hashes).toHaveLength(3)` og `expect(data.scriptHashes).toHaveLength(3)` før hver sorterings-assertion. Fixturen skriver tre distinkte skript (zzz/aaa/mmm) i tre filer — ingen dedup/whitespace — så nøyaktig 3 hasher forventes. Vokter både returverdien og skrevet JSON.
