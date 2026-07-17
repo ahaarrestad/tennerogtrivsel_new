@@ -57,11 +57,6 @@
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
     - Opprett GitHub Environment (f.eks. `production`) med protection rules for deploy-jobben — begrenser hvem/hva som kan trigge deploy og sikrer at secrets kun er tilgjengelige i riktig miljø
 
-- [ ] **Innfør `astro check` som type-gate** — *ingen plan ennå*
-  - I dag type-sjekkes ikke `.astro`-filer: ESLint linter dem ikke, og `astro build` stripper typer uten å sjekke. tsconfig er strict, men ingenting kjører en sjekk.
-  - Tiltak: installer `@astrojs/check` + `typescript`, legg til `check`-script og et CI-steg
-  - Rydd ev. eksisterende typefeil som avdekkes (kan være en bakoverlogg — derfor egen oppgave, ikke del av Astro 7-bumpen)
-
 
 ## Fullført
 

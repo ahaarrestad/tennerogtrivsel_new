@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, type Mock } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 
@@ -23,10 +23,10 @@ vi.mock('astro:content', () => {
     } as unknown as ZMock;
     Object.entries(zMock).forEach(([key, v]) => {
         if (key !== 'safeParse' && key !== 'coerce' && typeof v === 'function') {
-            vi.mocked(v).mockReturnValue(zMock);
+            (v as Mock).mockReturnValue(zMock);
         }
     });
-    vi.mocked(zMock.coerce.date).mockReturnValue(zMock);
+    (zMock.coerce.date as Mock).mockReturnValue(zMock);
     return {
         defineCollection: vi.fn((config: unknown) => config),
         z: zMock,
@@ -84,8 +84,13 @@ describe('Datavalidering (syntetiske fixtures)', () => {
 
     it('tannleger collection should include imageConfig in schema', async () => {
         const { collections } = await import('../content.config');
-        const schema = collections.tannleger.schema;
-        
+        // astro:content er mocket over: z.object(...) gir zMock hvis safeParse.
+        // De reelle Astro-typene ser schema som en union (ZodObject | factory | undefined),
+        // så vi caster til den mockede formen testen faktisk kjører mot.
+        const schema = collections.tannleger.schema as unknown as {
+            safeParse: (data: unknown) => { success: boolean; data: { imageConfig?: { scale?: number } } };
+        };
+
         const validData = {
             id: 'test',
             name: 'Test',

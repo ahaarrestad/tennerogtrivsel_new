@@ -1,5 +1,6 @@
 ---
 import { Image, getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 import { getCollection } from 'astro:content';
 import { getSiteSettings } from '../scripts/getSettings';
 import { getSectionClasses, type SectionVariant } from '../scripts/sectionVariant';
@@ -10,7 +11,7 @@ import Lightbox from './Lightbox.astro';
 const galleri = await getCollection('galleri');
 const settings = await getSiteSettings();
 
-const images = import.meta.glob('/src/assets/galleri/*.{jpeg,jpg,png,webp}');
+const images = import.meta.glob<{ default: ImageMetadata }>('/src/assets/galleri/*.{jpeg,jpg,png,webp}');
 
 const sortert = [...galleri]
     .filter(item => (item.data.type ?? 'galleri') === 'galleri')

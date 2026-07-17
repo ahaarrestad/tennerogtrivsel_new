@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 // Bruk Astros Vite-oppsett slik at .astro-komponenter kan importeres og
 // rendres i tester (via experimental_AstroContainer). getViteConfig legger
 // til Astros plugins som parser .astro-filer.

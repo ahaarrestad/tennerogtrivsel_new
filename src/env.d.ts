@@ -14,3 +14,8 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+interface Window {
+  // Settes i admin-siden etter dynamisk import; brukes av admin-scriptene.
+  flatpickr: typeof import('flatpickr').default;
+}

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { getSiteSettings, HARD_DEFAULTS } from '../getSettings';
 // The actual getCollection is mocked via vitest.config.ts alias,
 // but we need to import it here to be able to mock its behavior dynamically per test.
@@ -29,13 +29,13 @@ describe('getSiteSettings', () => {
 
 
     it('should return HARD_DEFAULTS when getCollection is empty', async () => {
-        (getCollection as vi.Mock).mockResolvedValueOnce([]); // Mock an empty collection
+        (getCollection as Mock).mockResolvedValueOnce([]); // Mock an empty collection
         const settings = await getSiteSettings();
         expect(settings).toEqual(HARD_DEFAULTS);
     });
 
     it('should return HARD_DEFAULTS when getCollection throws an error', async () => {
-        (getCollection as vi.Mock).mockRejectedValueOnce(new Error('Failed to fetch')); // Mock an error
+        (getCollection as Mock).mockRejectedValueOnce(new Error('Failed to fetch')); // Mock an error
         const settings = await getSiteSettings();
         expect(settings).toEqual(HARD_DEFAULTS);
     });
@@ -45,7 +45,7 @@ describe('getSiteSettings', () => {
             { id: 'phone1', data: { value: '99887766' } },
             { id: 'email', data: { value: 'new@example.com' } },
         ];
-        (getCollection as vi.Mock).mockResolvedValueOnce(collectionData);
+        (getCollection as Mock).mockResolvedValueOnce(collectionData);
 
         const settings = await getSiteSettings();
         expect(settings.phone1).toBe('99887766');
@@ -58,7 +58,7 @@ describe('getSiteSettings', () => {
             { id: 'newSetting', data: { value: 'someValue' } },
             { id: 'businessHours1', data: { value: 'Always Open' } },
         ];
-        (getCollection as vi.Mock).mockResolvedValueOnce(collectionData);
+        (getCollection as Mock).mockResolvedValueOnce(collectionData);
 
         const settings = await getSiteSettings();
         expect(settings.newSetting).toBe('someValue');
@@ -71,7 +71,7 @@ describe('getSiteSettings', () => {
             { id: 'phone1', data: { value: '' } }, // Empty string should override
             { id: 'email', data: { value: 'new@example.com' } },
         ];
-        (getCollection as vi.Mock).mockResolvedValueOnce(collectionData);
+        (getCollection as Mock).mockResolvedValueOnce(collectionData);
 
         const settings = await getSiteSettings();
         expect(settings.phone1).toBe(''); // Expect empty string

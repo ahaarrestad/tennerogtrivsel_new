@@ -1,6 +1,13 @@
 ---
+import type { ComponentProps } from 'astro/types';
 import Button from "./Button.astro";
 import { getEntry } from 'astro:content';
+
+interface Props {
+    class?: string;
+    variant?: ComponentProps<typeof Button>['variant'];
+}
+
 const { class: className, variant = 'primary' } = Astro.props;
 const ksEntry = await getEntry('kontaktskjema', 'kontaktskjema');
 const aktiv = ksEntry?.data?.aktiv ?? false;

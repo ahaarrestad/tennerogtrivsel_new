@@ -1,4 +1,18 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+type MockFile = { id: string; name?: string; content: string };
+type SetupMockOptions = {
+  messages?: MockFile[];
+  services?: MockFile[];
+  dentists?: string[][];
+};
+// Heterogene gapi-kall (drive/sheets) sender ulike felter — samlet, alle valgfrie.
+type GapiParams = {
+  alt?: string;
+  fileId?: string;
+  range?: string;
+  resource?: { trashed?: boolean };
+};
 
 test.describe('Admin-panel Fase 1', () => {
   // Admin tests share a Vite dev-server; running them in parallel overloads it
@@ -18,7 +32,7 @@ test.describe('Admin-panel Fase 1', () => {
   });
 
   /** Navigate to /admin and wait for the dashboard to become visible (mock auth flow). */
-  const gotoAdminDashboard = async (page) => {
+  const gotoAdminDashboard = async (page: Page) => {
     await page.goto('/admin');
     // In CI the Vite dev-server can be slow to serve module scripts, so the
     // async setup() in admin-init.js may not have completed by the time goto()
@@ -26,15 +40,15 @@ test.describe('Admin-panel Fase 1', () => {
     await expect(page.locator('#dashboard')).toBeVisible({ timeout: 15000 });
   };
 
-  const setupMocks = async (page, options: any = {}) => {
-    await page.addInitScript(({ messages = [], services = [], dentists = [] }) => {
+  const setupMocks = async (page: Page, options: SetupMockOptions = {}) => {
+    await page.addInitScript(({ messages = [], services = [], dentists = [] }: SetupMockOptions) => {
       sessionStorage.setItem('admin_google_token', JSON.stringify({
         access_token: 'mock_token',
         expiry: Date.now() + 3600000,
         user: { name: 'Test User', email: 'test@example.com' }
       }));
       
-      const mockDriveGet = (params) => {
+      const mockDriveGet = (params: GapiParams) => {
         // Handle file content requests (alt=media)
         if (params.alt === 'media') {
             const foundMsg = messages.find(m => m.id === params.fileId);
@@ -56,7 +70,7 @@ test.describe('Admin-panel Fase 1', () => {
       let deletedFileIds: string[] = [];
 
       (window as any).gapi = {
-        load: (name, cb) => cb(),
+        load: (_name: string, cb: () => void) => cb(),
         client: {
           init: () => Promise.resolve(),
           load: () => Promise.resolve(),
@@ -69,8 +83,8 @@ test.describe('Admin-panel Fase 1', () => {
                     return Promise.resolve({ result: { files: [...messages, ...remaining] } });
                 },
                 get: mockDriveGet,
-                update: (params) => {
-                    if (params.resource?.trashed) deletedFileIds.push(params.fileId);
+                update: (params: GapiParams) => {
+                    if (params.resource?.trashed && params.fileId) deletedFileIds.push(params.fileId);
                     return Promise.resolve({});
                 }
             }
@@ -80,8 +94,8 @@ test.describe('Admin-panel Fase 1', () => {
                 get: () => Promise.resolve({ result: { sheets: [{ properties: { title: 'Slettet' } }] } }),
                 batchUpdate: () => Promise.resolve({}),
                 values: {
-                    get: (params) => {
-                        if (params.range.includes('tannleger')) {
+                    get: (params: GapiParams) => {
+                        if (params.range?.includes('tannleger')) {
                             return Promise.resolve({ result: { values: dentists } });
                         }
                         return Promise.resolve({ result: { values: [["id", "value", "note"], ["dummy", "val", "note"]] } });
