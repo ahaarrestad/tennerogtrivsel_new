@@ -3,6 +3,14 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **Innfør `astro check` som type-gate** ([spec](docs/designs/archive/2026-07-16-astro-check-type-gate.md)) ([plan](docs/plans/archive/2026-07-16-astro-check-type-gate.md))
+  - `.astro`/`.ts`/config type-sjekkes nå: `astro check` innført som lokalt `check`-script + eget CI-steg som gater `build`-jobben. Ryddet hele etterslepet på **63 typefeil** (161→164 filer, 0 errors) med ekte typefikser — ingen `any`/`@ts-ignore`/`@ts-nocheck`.
+  - **Avhengigheter** (`package.json`): `@astrojs/check` + `typescript` som direkte devDeps; `check`-script = `astro check`.
+  - **CI** (`.github/workflows/deploy.yml`): ny `type-check`-jobb (mønster fra `lint`) som seeder fixtures + `astro sync` før `npm run check` (prisliste.json er gitignorert + statisk importert, `.astro/`-typer genereres av sync). Gated i **`build`**-jobbens `needs`/`if` (på linje med `lint`), ikke i `deploy`.
+  - **Produksjonskode:** typet Map fra collection-schema i `prisliste.astro` (+ fjernet en død sort-tiebreaker mot ikke-eksisterende `tjeneste`-felt — behaviour-bevarende); generisk `import.meta.glob<{default: ImageMetadata}>` i `Galleri`/`tannleger`/`Tannleger`; JSDoc-typedefs i `generate-llms.js`; `Button.astro` Props extends `HTMLAttributes<'button'>`; `MessageButton` `interface Props`; `middleware.ts` `.then()`→`async/await`; `mapInit.ts` fjernet død `tap: false`-opsjon; `Window.flatpickr`-augmentering i `env.d.ts`; typet returstruktur i `buildSchema.ts`.
+  - **Testfiler:** type-annoteringer (mapInit, getSettings, buildSchema, data-validation, content.config, admin.spec) med `as unknown as`/`as Mock`-cast der begrunnet; oppdaterte mapInit-assertions etter `tap`-fjerning.
+  - **Verifisert:** `npm run check` 0 errors (også simulert CI: fixtures + sync → 0 errors); `npm test` 1568/1568 ✓ (branch-coverage 89,1 % global, berørte kjernefiler ≥ 80 %); `npm run lint` rent. Review-loop: CLEAN (kun to ikke-blokkerende minor-notater; alle fire behaviour-endringer uavhengig verifisert ekvivalente).
+
 - [x] **Oppdater Astro til v7** ([spec](docs/designs/archive/2026-07-15-astro-v7-oppgradering.md)) ([plan](docs/plans/archive/2026-07-15-astro-v7-oppgradering.md))
   - Oppgradert `astro` 6.4.8 → 7.0.9. Ren vedlikeholdsoppgradering — ingen v7-funksjoner tatt i bruk. Bringer Vite 8, ny Rust-kompilator, `compressHTML: 'jsx'` og Sätteri som markdown-motor.
   - **Kjerne-endring** (`package.json`): `astro ^6.4.8` → `^7.0.9`, og `overrides.vite` `^7` → `^8` (astro 7 krever `vite ^8.0.13`; den gamle `^7`-overriden holdt vite på 7.3.6 i en stille inkonsistens uten ERESOLVE). `overrides.esbuild: ^0.28.1` (sikkerhets-pin, commit fdeb229) bevart — kompatibel med astros `^0.28.0`. `package-lock.json` regenerert (vite 8.1.4 / esbuild 0.28.1 deduped overalt).

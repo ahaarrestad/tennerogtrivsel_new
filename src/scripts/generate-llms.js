@@ -1,5 +1,13 @@
 // src/scripts/generate-llms.js
 
+/**
+ * @typedef {Record<string, string>} Settings
+ * @typedef {{ name: string, title: string, description?: string }} Tannlege
+ * @typedef {{ title: string, ingress: string, body?: string }} Tjeneste
+ * @typedef {{ kategori: string, behandling: string, pris: string | number, order?: number }} PrisRad
+ * @typedef {{ kategoriOrder?: Array<{ kategori: string, order: number }>, items?: PrisRad[] }} Prisliste
+ */
+
 function buildHeader(settings) {
     const hours = ['businessHours1', 'businessHours2', 'businessHours3', 'businessHours4', 'businessHours5']
         .map(k => settings[k])
@@ -83,6 +91,9 @@ function buildFooter(includeFull) {
     return `\n\n## Mer informasjon\n${links.join('\n')}`;
 }
 
+/**
+ * @param {{ settings?: Settings, tannleger?: Tannlege[], tjenester?: Tjeneste[] }} [opts]
+ */
 export function generateLlmsTxt({ settings = {}, tannleger = [], tjenester = [] } = {}) {
     return [
         buildHeader(settings),
@@ -92,6 +103,9 @@ export function generateLlmsTxt({ settings = {}, tannleger = [], tjenester = [] 
     ].join('').trim();
 }
 
+/**
+ * @param {{ settings?: Settings, tannleger?: Tannlege[], tjenester?: Tjeneste[], prisliste?: Prisliste }} [opts]
+ */
 export function generateLlmsFullTxt({ settings = {}, tannleger = [], tjenester = [], prisliste = {} } = {}) {
     return [
         buildHeader(settings),

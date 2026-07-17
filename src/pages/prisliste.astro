@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getCollection } from 'astro:content';
+import { getCollection, type CollectionEntry } from 'astro:content';
 import { Image } from 'astro:assets';
 import logoImage from '../assets/tt-logo-2026.png';
 import prislisteJson from '../content/prisliste.json';
@@ -15,14 +15,19 @@ const kategoriOrderMap = new Map(
     (prislisteJson.kategoriOrder ?? []).map(k => [k.kategori, k.order])
 );
 
-const kategorier = new Map();
+type PrisRad = CollectionEntry<'prisliste'>['data'];
+const kategorier = new Map<string, PrisRad[]>();
 for (const item of rawPrisliste) {
     const key = item.data.kategori;
-    if (!kategorier.has(key)) kategorier.set(key, []);
-    kategorier.get(key).push(item.data);
+    let liste = kategorier.get(key);
+    if (!liste) {
+        liste = [];
+        kategorier.set(key, liste);
+    }
+    liste.push(item.data);
 }
 for (const items of kategorier.values()) {
-    items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.tjeneste ?? '').localeCompare(b.tjeneste ?? '', 'nb'));
+    items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
 // Sort categories by kategoriOrder, fallback to alphabetical

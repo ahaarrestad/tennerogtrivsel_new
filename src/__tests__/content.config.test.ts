@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import fs from 'fs';
 
 type CollectionWithLoader = { loader: () => Promise<Record<string, unknown>[]> };
@@ -25,10 +25,10 @@ vi.mock('astro:content', () => {
     } as unknown as ZMock;
     Object.entries(zMock).forEach(([key, v]) => {
         if (key !== 'safeParse' && key !== 'coerce' && typeof v === 'function') {
-            vi.mocked(v).mockReturnValue(zMock);
+            (v as Mock).mockReturnValue(zMock);
         }
     });
-    vi.mocked(zMock.coerce.date).mockReturnValue(zMock);
+    (zMock.coerce.date as Mock).mockReturnValue(zMock);
     return {
         defineCollection: vi.fn((config: unknown) => config),
         z: zMock,

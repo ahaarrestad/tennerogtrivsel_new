@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 import { getCollection } from 'astro:content';
 import { getSiteSettings } from '../scripts/getSettings';
 import { buildImageStyle } from '../scripts/image-config.js';
@@ -8,7 +9,7 @@ import SectionHeader from '../components/SectionHeader.astro';
 
 const settings = await getSiteSettings();
 const tannleger = await getCollection('tannleger');
-const images = import.meta.glob('/src/assets/tannleger/*.{jpeg,jpg,png,webp}');
+const images = import.meta.glob<{ default: ImageMetadata }>('/src/assets/tannleger/*.{jpeg,jpg,png,webp}');
 const sorterteTannleger = tannleger.toSorted((a, b) => a.data.name.localeCompare(b.data.name, 'nb'));
 
 ---

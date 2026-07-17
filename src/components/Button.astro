@@ -1,13 +1,11 @@
 ---
-interface Props {
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'button'> {
     href?: string;
-    class?: string;
     variant?: 'primary' | 'secondary' | 'accent';
     target?: string;
     rel?: string;
-    'aria-label'?: string;
-    type?: 'button' | 'submit' | 'reset';
-    disabled?: boolean;
     /** Sett til false for å rendre et ikke-interaktivt, ikke-fokuserbart <span>. */
     interactive?: boolean;
 }

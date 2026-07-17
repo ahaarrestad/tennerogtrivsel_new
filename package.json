@@ -13,6 +13,7 @@
     "build": "node src/scripts/sync-data.js && astro build",
     "build:ci": "astro build",
     "preview": "astro preview",
+    "check": "astro check",
     "astro": "astro",
     "test": "vitest --run --coverage",
     "test:e2e": "playwright test",
@@ -37,6 +38,7 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.9",
     "@axe-core/playwright": "^4.12.1",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.1",
@@ -48,6 +50,7 @@
     "globals": "^17.7.0",
     "jsdom": "^29.1.1",
     "sharp": "^0.35.3",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.62.1",
     "vitest": "^4.0.18"
   },
