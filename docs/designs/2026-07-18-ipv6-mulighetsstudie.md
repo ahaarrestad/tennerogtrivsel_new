@@ -39,9 +39,13 @@ aws cloudfront get-distribution-config --id E9Z51DQB2K1G4 \
 | Test | `E2WXX7ZUR5NNP3` | **`true`** | `http2` |
 
 Prod og test er altså ute av sync på denne innstillingen. Test har IPv6 på, prod har det ikke.
-Ingenting tyder på at dette var en bevisst beslutning — mer sannsynlig er det en forskjell som
-oppsto fordi distribusjonene ble opprettet manuelt til ulik tid. Se
-[Config as code](#config-as-code).
+
+**Dette er et dokumentert avvik, ikke en ukjent.** Oppsettsplanen for prod-distribusjonen sier
+eksplisitt «**IPv6:** Behold aktivert»
+([`docs/plans/archive/2026-02-25-cloudfront-prod.md:84`](../plans/archive/2026-02-25-cloudfront-prod.md)).
+Prod står altså på `false` i strid med sin egen plan — sannsynligvis fordi innstillingen ble
+klikket manuelt i konsollen og glapp. Det er nøyaktig den feilklassen
+[config as code](#config-as-code) eksisterer for å fjerne.
 
 ### DNS
 
@@ -53,8 +57,14 @@ dig +short AAAA <domene>
 |---|---|---|
 | `www.tennerogtrivsel.no` | CNAME → CloudFront | Nei — fordi distribusjonen har IPv6 av |
 | `tennerogtrivsel.no` (apex) | **4 × A-record**, TTL 3600 | Nei |
+| `tennerogtrivsel.com` (apex) | **4 × A-record** — samme IP-er | Nei |
+| `tennerogtrivsel.net` (apex) | **4 × A-record** — samme IP-er | Nei |
 | `test2.aarrestad.com` | CNAME → CloudFront | **Ja — 8 AAAA-adresser** |
 | `test3.aarrestad.com` | CNAME → CloudFront | **Ja — 8 AAAA-adresser** |
+
+> **Det er tre apex-domener, ikke ett.** `.no`, `.com` og `.net` har alle de samme fire
+> hardkodede A-postene, og alle seks navn (tre apex + tre `www`) er aliaser på prod-
+> distribusjonen. Enhver apex-jobb må gjøres tre ganger.
 
 DNS-leverandør er hyp.net (ikke Route 53).
 
@@ -139,10 +149,22 @@ automatisk, fordi den er en CNAME. Apex forblir IPv4-only.
 Erstatt de fire A-postene med én ALIAS-post mot `d19b7g2frcrx6i.cloudfront.net`. Da følger
 apex distribusjonen på samme måte som `www` gjør, inkludert AAAA.
 
+**Må gjøres for alle tre apex-domenene** — `.no`, `.com` og `.net`.
+
 - **Kostnad:** null, forutsatt at hyp.net støtter ALIAS/ANAME.
-- **Bonus:** fjerner den hardkodede-IP-svakheten beskrevet under.
+- **Bonus:** fjerner den hardkodede-IP-svakheten beskrevet under, på alle tre.
 - **Åpent punkt:** støtter hyp.net dette? Må sjekkes i kontrollpanelet. Kunne ikke verifiseres
   utenfra i denne utredningen. Dette avgjør om vei B i det hele tatt er farbar.
+
+> **Viktig forbehold om verdien:** apex serverer ikke innhold. `curl -I
+> https://tennerogtrivsel.no/` gir `301` → `https://www.tennerogtrivsel.no/`, generert av
+> CloudFront Function-en `sitemap_redirect`. IPv6 på apex gir altså en **IPv6-tilgjengelig
+> redirect**, ikke IPv6-levering av selve siden. En ren IPv6-klient trenger uansett IPv6 på
+> `www` for å få innhold — og det får den gratis via vei A.
+>
+> Vei B er derfor teknisk sunn (ALIAS-målet er samme distribusjon som lager redirecten, så
+> oppførselen bevares), men gevinsten er hovedsakelig at apex slutter å peke på hardkodede
+> IP-er — ikke IPv6 i seg selv.
 
 ### C. Flytt DNS til Route 53 — avvist
 
@@ -155,15 +177,20 @@ Avvist på det grunnlaget alene — ikke fordi løsningen er dårlig.
 
 ## Det uløste: apex
 
-`tennerogtrivsel.no` peker i dag på fire hardkodede CloudFront-IP-er:
+Alle tre apex-domenene — `tennerogtrivsel.no`, `.com` og `.net` — peker i dag på de samme
+fire hardkodede CloudFront-IP-ene:
 
 ```
 3.167.2.24   3.167.2.82   3.167.2.101   3.167.2.104
 ```
 
 CloudFront garanterer ikke at disse adressene forblir stabile, og AWS fraråder eksplisitt å
-peke A-poster rett på dem. Hvis AWS bytter dem ut, slutter apex å svare til noen oppdager det
-og retter DNS manuelt.
+peke A-poster rett på dem. Hvis AWS bytter dem ut, slutter alle tre apex-domenene å svare
+samtidig — de deler IP-er — til noen oppdager det og retter DNS manuelt.
+
+Konsekvensen er begrenset av at apex kun redirecter til `www` (se forbeholdet under vei B):
+et utfall ville brutt inngangen for besøkende som skriver domenet uten `www`, ikke selve
+siten.
 
 **Dette er en svakhet som finnes i dag, uavhengig av IPv6.** Den er tatt med her fordi enhver
 IPv6-jobb på apex uansett tvinger fram en beslutning om hvordan apex skal peke — og vei B
@@ -247,7 +274,9 @@ Ingenting av dette haster, og ingenting bør gjøres før noen har lyst.
 - **Støtter hyp.net ALIAS/ANAME på apex?** Avgjør om vei B er mulig. Krever innlogging i
   kontrollpanelet — kunne ikke verifiseres utenfra.
 - **Hvorfor svarer test-siten 403?** Urelatert til IPv6, men verdt å se på.
-- **Var prod/test-forskjellen bevisst?** Antatt nei, men ikke bekreftet.
+
+> ~~Var prod/test-forskjellen bevisst?~~ **Besvart:** nei. Oppsettsplanen sa «behold
+> aktivert»; prod avviker fra egen plan.
 
 ---
 
@@ -255,5 +284,7 @@ Ingenting av dette haster, og ingenting bør gjøres før noen har lyst.
 
 - [`docs/architecture/aws-infrastruktur.md`](../architecture/aws-infrastruktur.md) — fullt
   CloudFront-, DNS- og AWS-oppsett
+- [`docs/plans/archive/2026-02-25-cloudfront-prod.md`](../plans/archive/2026-02-25-cloudfront-prod.md)
+  — oppsettsplanen for prod-distribusjonen, som spesifiserte IPv6 aktivert
 - **HTTP/3 (QUIC) på CloudFront** — egen backlog-oppgave. Samme distribusjon, beslektet
   innstilling (`HttpVersion`), men teknisk urelatert. Større brukergevinst enn IPv6.
