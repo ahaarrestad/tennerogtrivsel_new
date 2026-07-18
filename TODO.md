@@ -50,6 +50,21 @@
   - Tiltak: dokumenter DPA-status i internkontrollmappen (relevant når kontaktskjema aktiveres)
   - Alvorlighetsnivå: Lav
 
+- [ ] **IPv6-støtte — mulighetsstudie** ([notat](docs/designs/2026-07-18-ipv6-mulighetsstudie.md))
+  - Utredningen er skrevet 2026-07-18. Konklusjon: ja, det er mulig — test-miljøet kjører allerede IPv6
+  - Prod-distribusjonen har `IsIPV6Enabled: false`, test har `true`. `www` får IPv6 ved å flippe bryteren (gratis, reversibelt)
+  - Apex (`tennerogtrivsel.no`) har hardkodede A-poster og krever ALIAS/ANAME — **åpent punkt:** støtter hyp.net det?
+  - Route 53 avvist: hosted zone koster ~0,50 USD/mnd, og kravet var gratis
+  - Ingen hast — verdien er læring og ryddighet, ikke brukergevinst
+
+- [ ] **HTTP/3 (QUIC) på CloudFront** — *ingen plan ennå*
+  - Prod-distribusjonen `E9Z51DQB2K1G4` kjører `HttpVersion: http2` — HTTP/3 er ikke aktivert
+  - Tiltak: endre til `http2and3`. Ingen ekstra kostnad, bakoverkompatibelt (klienter uten HTTP/3-støtte faller tilbake til HTTP/2)
+  - Nytte: raskere oppkobling (én rundtur), ingen head-of-line blocking ved pakketap, overlever nettverksbytte wifi↔mobil — treffer mobilbrukere på ujevnt nett
+  - Vurdert som større praktisk gevinst enn IPv6 for denne siden, og enklere (rører ikke DNS)
+  - Sjekk om test-distribusjonen `E2WXX7ZUR5NNP3` skal endres tilsvarende
+  - Beslektet med IPv6-oppgaven (nabo i samme CloudFront-config), men teknisk urelatert
+
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
