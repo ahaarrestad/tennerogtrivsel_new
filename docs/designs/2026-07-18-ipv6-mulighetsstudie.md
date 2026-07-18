@@ -13,9 +13,8 @@ Ja. Og dere kjører det allerede — på test-miljøet.
 `test2.aarrestad.com` har svart over IPv6 hele tiden, på samme CloudFront-stack som prod.
 Spørsmålet «får vi det til» er dermed ikke teoretisk: det er besvart i deres eget oppsett.
 
-For prod er www-delen én bryter i CloudFront. Apex-domenet
-(`tennerogtrivsel.no` uten `www`) krever en DNS-beslutning og er den eneste reelle
-oppgaven i saken.
+For prod er www-delen én bryter i CloudFront. Apex-domenene (`.no`, `.com` og `.net` uten
+`www`) krever en DNS-beslutning og er den eneste reelle oppgaven i saken.
 
 Dette er en «kjekt å få til»-sak, ikke en «må ha»-sak. Se
 [Hva er egentlig nytten?](#hva-er-egentlig-nytten) — den delen er bevisst ærlig.
@@ -56,6 +55,7 @@ dig +short AAAA <domene>
 | Navn | Type | IPv6 i dag |
 |---|---|---|
 | `www.tennerogtrivsel.no` | CNAME → CloudFront | Nei — fordi distribusjonen har IPv6 av |
+| `www.tennerogtrivsel.com` / `.net` | CNAME → CloudFront | Nei — samme årsak |
 | `tennerogtrivsel.no` (apex) | **4 × A-record**, TTL 3600 | Nei |
 | `tennerogtrivsel.com` (apex) | **4 × A-record** — samme IP-er | Nei |
 | `tennerogtrivsel.net` (apex) | **4 × A-record** — samme IP-er | Nei |
@@ -135,8 +135,9 @@ Kravet er at det skal være gratis. Det avgjør mer enn man skulle tro.
 
 ### A. Kun www — flipp bryteren
 
-Sett `IsIPV6Enabled: true` på prod-distribusjonen. `www.tennerogtrivsel.no` får AAAA-poster
-automatisk, fordi den er en CNAME. Apex forblir IPv4-only.
+Sett `IsIPV6Enabled: true` på prod-distribusjonen. **Alle tre `www`-navnene** —
+`www.tennerogtrivsel.no`, `.com` og `.net` — får AAAA-poster automatisk, fordi de er CNAME-er
+mot samme distribusjon. Apex-domenene forblir IPv4-only.
 
 - **Kostnad:** null. CloudFront tar ikke betalt for IPv6.
 - **Risiko:** svært lav. Reversibel ved å sette verdien tilbake. Klienter uten IPv6 påvirkes
@@ -188,9 +189,9 @@ CloudFront garanterer ikke at disse adressene forblir stabile, og AWS fraråder 
 peke A-poster rett på dem. Hvis AWS bytter dem ut, slutter alle tre apex-domenene å svare
 samtidig — de deler IP-er — til noen oppdager det og retter DNS manuelt.
 
-Konsekvensen er begrenset av at apex kun redirecter til `www` (se forbeholdet under vei B):
-et utfall ville brutt inngangen for besøkende som skriver domenet uten `www`, ikke selve
-siten.
+Konsekvensen er begrenset av at alle tre apex-domenene kun redirecter til
+`www.tennerogtrivsel.no` (se forbeholdet under vei B): et utfall ville brutt inngangen for
+besøkende som skriver domenet uten `www`, ikke selve siten.
 
 **Dette er en svakhet som finnes i dag, uavhengig av IPv6.** Den er tatt med her fordi enhver
 IPv6-jobb på apex uansett tvinger fram en beslutning om hvordan apex skal peke — og vei B
