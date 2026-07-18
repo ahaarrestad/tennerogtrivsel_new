@@ -11,10 +11,21 @@ Kjør én review-pass over diff-en fra denne branchen. Ment å kalles av `/goal`
 
 ## Steg 1: Finn git-range
 
+**Fetch alltid først.** `BASE_SHA` regnes ut mot `origin/main` — er den refen utdatert, blir
+review-rangen feil, og feilen er stille: reviewen kjører og rapporterer «ren», men på feil
+commits. Samme krav som `/commit` Step 4.4.
+
 ```bash
+git fetch origin
 BASE_SHA=$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse HEAD~1)
 HEAD_SHA=$(git rev-parse HEAD)
+
+git log --oneline $BASE_SHA..$HEAD_SHA   # kontroller: nøyaktig de forventede commitene
 ```
+
+Viser rangen andre commits enn du forventer — stopp og finn ut hvorfor før du dispatcher
+agenten. En for vid range gir review av allerede merget kode; en for smal går glipp av
+endringer som faktisk skal reviewes.
 
 ## Steg 2: Kjør review-agent
 

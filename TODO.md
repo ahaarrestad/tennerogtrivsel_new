@@ -52,8 +52,9 @@
 
 - [ ] **IPv6-støtte — mulighetsstudie** ([notat](docs/designs/2026-07-18-ipv6-mulighetsstudie.md))
   - Utredningen er skrevet 2026-07-18. Konklusjon: ja, det er mulig — test-miljøet kjører allerede IPv6
-  - Prod-distribusjonen har `IsIPV6Enabled: false`, test har `true`. `www` får IPv6 ved å flippe bryteren (gratis, reversibelt)
-  - Apex (`tennerogtrivsel.no`) har hardkodede A-poster og krever ALIAS/ANAME — **åpent punkt:** støtter hyp.net det?
+  - Prod-distribusjonen har `IsIPV6Enabled: false` i strid med sin egen oppsettsplan; test har `true`. `www` får IPv6 ved å flippe bryteren (gratis, reversibelt)
+  - **Tre** apex-domener (`.no`, `.com`, `.net`) har samme hardkodede A-poster og krever ALIAS/ANAME hver — **åpent punkt:** støtter hyp.net det?
+  - Merk: apex redirecter kun til `www` (301), så IPv6 der gir en IPv6-tilgjengelig redirect, ikke IPv6-levering av siden
   - Route 53 avvist: hosted zone koster ~0,50 USD/mnd, og kravet var gratis
   - Ingen hast — verdien er læring og ryddighet, ikke brukergevinst
 
