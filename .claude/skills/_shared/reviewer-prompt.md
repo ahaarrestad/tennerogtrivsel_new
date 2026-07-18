@@ -9,11 +9,15 @@ Dispatch en `general-purpose` Agent med prompten under. Fyll inn placeholderne:
 
 - `{WHAT_WAS_IMPLEMENTED}` — commit-meldingen, eller en kort oppsummering av diff-en
   (`git diff --stat {BASE_SHA}..{HEAD_SHA}`).
-- `{BASE_SHA}` / `{HEAD_SHA}` — fra:
+- `{BASE_SHA}` / `{HEAD_SHA}` — **kjør `git fetch origin` først**, ellers regnes rangen ut mot
+  en utdatert `origin/main`-ref og reviewen dekker feil commits:
   ```bash
+  git fetch origin
   BASE_SHA=$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse HEAD~1)
   HEAD_SHA=$(git rev-parse HEAD)
   ```
+  Verifiser alltid rangen før agenten dispatches — `git log --oneline $BASE_SHA..$HEAD_SHA`
+  skal vise nøyaktig de commitene du forventer å få reviewet, verken flere eller færre.
 
 ## Prompt
 
