@@ -117,15 +117,61 @@ EOF
 )"
 ```
 
+## Step 4.4: Synk med origin (ALLTID før review og push)
+
+**Skip if push was NOT requested.**
+
+**Kjør alltid `git fetch` før Step 4.5.** Ikke hopp over dette fordi «vi synket ved
+oppgavestart» — det gjelder kun når arbeidet gikk via `/todo`-flyten. Committer du direkte
+på main, eller har origin beveget seg underveis i økten, finnes det ikke noe synk-punkt.
+
+```bash
+git fetch origin
+git rev-list --count HEAD..origin/main   # bak oss — commits vi mangler lokalt
+git rev-list --count origin/main..HEAD   # foran — våre upushede commits
+```
+
+**Hvorfor dette ikke er valgfritt:** `BASE_SHA` i Step 4.5 regnes ut fra `git merge-base HEAD
+origin/main`. Er `origin/main`-refen utdatert, blir review-rangen feil — reviewen dekker da
+enten commits som for lengst er merget, eller går glipp av nye. Feilen er stille: reviewen
+kjører fint og rapporterer «ren», men på feil grunnlag.
+
+**Er «bak oss» > 0** — origin/main har commits vi mangler:
+```bash
+git pull --rebase origin main
+```
+Løs eventuelle konflikter, og **kjør kvalitetsporten (Step 2.5) på nytt** — nye commits
+fra origin kan bryte koden vår selv om vår egen diff er uendret.
+
+**Er «foran» > forventet antall commits** — sjekk hva de ekstra er før du pusher. Typiske
+årsaker: en tidligere `git review` ble auto-merget med **ny SHA** (rebase i `auto-pr.yml`),
+så lokal commit og origin-commit er samme endring med ulik SHA. Sammenlign meldinger:
+```bash
+git log --oneline origin/main..HEAD
+git log --oneline -5 origin/main
+```
+Ser du samme commit-melding på begge sider, er det en duplikat — `git pull --rebase` fjerner
+den normalt via patch-id. Skjer ikke det, **stopp og spør brukeren** framfor å pushe en
+duplisert commit.
+
 ## Step 4.5: Code Review Before Push
 
 **Skip if push was NOT requested.**
+
+**Forutsetter at Step 4.4 er kjørt** — `BASE_SHA` under er kun gyldig mot en fersk
+`origin/main`-ref.
 
 This step loops until the review is clean, **max 3 iterations**. Track iteration count starting at 1.
 
 ```bash
 BASE_SHA=$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse HEAD~1)
 HEAD_SHA=$(git rev-parse HEAD)
+```
+
+Vis alltid hvilke commits som havner i reviewen før agenten dispatches, så avvik oppdages
+tidlig:
+```bash
+git log --oneline $BASE_SHA..$HEAD_SHA
 ```
 
 Dispatch a `general-purpose` Agent med den delte reviewer-prompten i
@@ -173,7 +219,13 @@ clean tree.
 > **Hvorfor dette er trygt:** `auto-pr.yml` auto-merger PR-en med `gh pr merge --auto
 > --rebase` (ikke squash). Når `origin/main` ikke har beveget seg, blir rebase en
 > fast-forward som bevarer commits; om den har beveget seg, selv-heler `git pull --rebase`
-> i synk-steget (start av neste `/todo`-oppgave) ev. divergens via patch-id.
+> divergens via patch-id.
+>
+> **Merk:** synkingen skjer i **Step 4.4**, ikke ved starten av neste `/todo`-oppgave.
+> Tidligere lå synk-punktet kun i `/todo`-flyten, noe som etterlot et hull: committer man
+> direkte på main uten å gå via oppgavestart, ble det aldri synket før push. Step 4.4 lukker
+> det — `/todo` Fase 2 synker fortsatt ved oppgavestart, men `commit` er ikke lenger avhengig
+> av at det har skjedd.
 
 > **Rekkefølgen er kritisk:** merge til main MÅ skje *før* worktreet fjernes. `ExitWorktree
 > (action: remove)` **nekter** å fjerne et worktree som har commits som ikke ligger på
