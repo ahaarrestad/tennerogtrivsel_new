@@ -27,14 +27,14 @@
     "@astrojs/sitemap": "^3.7.3",
     "@googleapis/drive": "^20.2.0",
     "@googleapis/sheets": "^13.0.2",
-    "@tailwindcss/vite": "^4.3.2",
-    "astro": "^7.0.9",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.1.1",
     "dompurify": "^3.4.11",
     "easymde": "^2.21.0",
     "flatpickr": "^4.6.13",
     "google-auth-library": "^10.9.0",
     "leaflet": "^1.9.4",
-    "marked": "^18.0.5",
+    "marked": "^18.0.7",
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
