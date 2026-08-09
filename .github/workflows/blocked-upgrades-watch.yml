@@ -40,23 +40,33 @@ jobs:
           set +e
 
           # Er ignore-regelen fjernet, er det ingenting igjen å vokte — da skal
-          # workflowen slettes, ikke fortsette å kjøre.
-          if ! grep -q 'dependency-name: typescript' .github/dependabot.yml; then
+          # workflowen slettes, ikke fortsette å kjøre. Mønsteret er ankret: en løs
+          # substrengmatch ville både truffet `typescript-eslint` og bommet på den
+          # siterte formen `- dependency-name: "typescript"`.
+          if ! grep -qE '^[[:space:]]*-[[:space:]]*dependency-name:[[:space:]]*"?typescript"?[[:space:]]*$' .github/dependabot.yml; then
             echo "::notice::ignore-regelen for typescript er borte — denne workflowen kan slettes."
             echo "ready=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          OUT=$(npm install --package-lock-only --strict-peer-deps typescript@^7 2>&1)
-          RC=$?
-          printf '%s\n' "$OUT"
+          # tee framfor $(...): blir jobben drept av timeout-minutes, vil vi likevel ha
+          # npm-outputen i loggen.
+          npm install --package-lock-only --strict-peer-deps typescript@^7 2>&1 | tee probe.log
+          RC=${PIPESTATUS[0]}
 
-          if [ $RC -ne 0 ]; then
-            # Uten denne sjekken ville registry-nedetid, npm-flagg som endrer navn,
+          if [ "$RC" -ne 0 ]; then
+            # Uten disse sjekkene ville registry-nedetid, npm-flagg som endrer navn,
             # eller en borte typescript@7 alle sett ut som «fortsatt blokkert» og gitt
             # grønn kjøring — watchdogen kunne dødd stille.
-            if ! printf '%s' "$OUT" | grep -q 'ERESOLVE'; then
-              echo "::error::Proben feilet uten ERESOLVE — workflowen er ødelagt, ikke oppgraderingen."
+            #
+            # Match på feilKODEN, ikke substrengen «ERESOLVE»: npm skriver rutinemessig
+            # `npm warn ERESOLVE overriding peer dependency` også når alt går bra, så en
+            # løs match ville sluppet gjennom en urelatert fatal feil som kommer etterpå.
+            # Og konflikten må faktisk handle om typescript — ellers er det en annen
+            # peer-konflikt i treet, og da skal noen se på det.
+            if ! grep -q 'npm error code ERESOLVE' probe.log ||
+               ! grep -q 'npm error.*peer typescript@' probe.log; then
+              echo "::error::Proben feilet, men ikke på en typescript-peer-konflikt — se loggen. Workflowen er ødelagt, ikke oppgraderingen."
               exit 1
             fi
             echo "Fortsatt blokkert på peer-nivå — dette er forventet."
@@ -122,6 +132,9 @@ jobs:
           2. Slett jobben `typescript-7` i `.github/workflows/blocked-upgrades-watch.yml` —
              og hele fila hvis den ikke har fått andre jobber.
           3. La dependabot foreslå oppgraderingen, eller bump manuelt.
+
+          La denne issuen stå åpen til `ignore`-regelen faktisk er fjernet. Lukkes den før
+          det, åpner watchdogen en ny hver mandag — det er tilsiktet, ikke en feil.
 
           Se `docs/plans/archive/2026-08-09-ts7-blokkering.md` for bakgrunnen.
           EOF
