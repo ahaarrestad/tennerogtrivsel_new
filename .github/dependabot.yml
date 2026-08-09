@@ -10,6 +10,15 @@ updates:
       semver-major-days: 30
       semver-minor-days: 7
       semver-patch-days: 3
+    ignore:
+      # typescript@7 gjør lockfilen uløselig og feiler `npm ci` i alle CI-jobber.
+      # To blokkeringer, begge uten TS 7-støtte per 2026-08-09:
+      #   @astrojs/check@0.9.10   peer "^5.0.0 || ^6.0.0"
+      #   typescript-eslint@8.66  peer ">=4.8.4 <6.1.0"  (støtte tracket mot TS >=7.1)
+      # Begge har også runtime-vakter, så overrides/--legacy-peer-deps hjelper ikke.
+      # Fjernes når blocked-upgrades-watch.yml åpner issue om at TS 7 er klart.
+      - dependency-name: typescript
+        versions: [">=7"]
     groups:
       version-updates:
         applies-to: version-updates
