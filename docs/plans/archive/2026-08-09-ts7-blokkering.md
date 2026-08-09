@@ -131,9 +131,12 @@ Cron `30 6 * * 1` (mandag 06:30 UTC, etter `scheduled-audit` som kjører 06:00) 
 2. Guard: står `ignore`-regelen fortsatt i `dependabot.yml`? Er den borte, er det ingenting igjen
    å vokte — `::notice::` om at workflowen kan slettes, og avslutt grønt.
 3. Probe: `npm install --package-lock-only --strict-peer-deps typescript@^7`.
-   Exit ≠ 0 **og** `ERESOLVE` i outputen → fortsatt blokkert, logg og avslutt **grønt**.
-   Exit ≠ 0 **uten** `ERESOLVE` → `::error::` og avslutt **rødt**: da er workflowen ødelagt
-   (registry-nedetid, endret flaggnavn), ikke oppgraderingen blokkert.
+   Exit ≠ 0 **og** outputen inneholder både `npm error code ERESOLVE` og
+   `npm error … peer typescript@` → fortsatt blokkert, logg og avslutt **grønt**.
+   Enhver annen feil → `::error::` og avslutt **rødt**: da er workflowen ødelagt
+   (registry-nedetid, endret flaggnavn) eller konflikten handler om noe annet.
+   Match på feil**koden**, ikke substrengen `ERESOLVE`: npm skriver rutinemessig
+   `npm warn ERESOLVE overriding peer dependency` også når alt går bra.
 4. Ved exit 0: `npm ci --ignore-scripts && npm run lint && npm run seed:fixtures &&
    npx astro sync && npm run check`. Feiler noe → `::warning::` om at peer-rangen er åpnet, men
    verktøyene ikke virker ennå, og avslutt grønt. (Samme sekvens som `type-check`-jobben i
@@ -252,6 +255,21 @@ begge fikset i workflowen:
    og jobben avbryter tidlig med `::notice::` hvis `ignore`-regelen er borte fra
    `dependabot.yml` — det er da workflowen selv skal slettes.
 
-Verifisert med stubbet `npm` at alle fire grener oppfører seg riktig (ETARGET → exit 1,
-ERESOLVE → `ready=false`, lint-feil → `ready=false` + warning, alt grønt → `ready=true`),
-og med ekte `npm` at dagens tilstand gir `ready=false` uten å røre `package.json`.
+Tredje runde fant at begge fiksene var for løse, og at den ene innførte en ny stille
+dødsmåte:
+
+- `grep -q 'ERESOLVE'` traff også `npm warn ERESOLVE overriding peer dependency`, som npm
+  skriver rutinemessig — også i dagens ekte probe-output. En urelatert fatal feil etter en
+  slik warn-linje ville altså fortsatt blitt lest som «fortsatt blokkert». Nå kreves
+  `npm error code ERESOLVE` **og** `npm error … peer typescript@`.
+- Guard-grepen `dependency-name: typescript` bommet på den fullt gyldige siterte formen
+  `- dependency-name: "typescript"` → jobben ville avsluttet med `::notice::` og aldri sagt
+  fra igjen. Mønsteret er nå ankret med `grep -qE`, og treffer verken `typescript-eslint`
+  eller en utkommentert regel.
+
+Verifisert med stubbet `npm` at alle seks grener oppfører seg riktig (ekte typescript-konflikt
+→ `ready=false`; warn-ERESOLVE + nettverksfeil → exit 1; ERESOLVE på en annen pakke → exit 1;
+ETARGET → exit 1; lint-feil → `ready=false` + warning; alt grønt → `ready=true`), at
+guard-mønsteret treffer dagens fil og den siterte formen men ikke `typescript-eslint` eller en
+utkommentert regel, og med ekte `npm` at dagens tilstand gir `ready=false` uten å røre
+`package.json`.
