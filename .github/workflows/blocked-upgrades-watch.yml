@@ -1,0 +1,110 @@
+name: Blocked Upgrades Watch
+
+# Overvåker oppgraderinger vi har måttet blokkere i dependabot.yml, og sier fra når
+# blokkeringen er borte — så en `ignore`-regel ikke blir en glemt lapp.
+#
+# Normaltilstanden er «fortsatt blokkert», og den skal gi GRØNN kjøring. Rødt her
+# betyr at workflowen selv er ødelagt, ikke at oppgraderingen er blokkert.
+
+on:
+  schedule:
+    - cron: '30 6 * * 1' # mandag 06:30 UTC, etter scheduled-audit (06:00)
+  workflow_dispatch: # manuell dispatch for testing
+
+jobs:
+  typescript-7:
+    name: Kan typescript@7 tas i bruk?
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: '24'
+          cache: npm
+
+      # Ingen `npm ci` før proben: --package-lock-only løser mot registeret, ikke mot
+      # et installert tre.
+      #
+      # --strict-peer-deps er kritisk. npm 11 har strict-peer-deps=false som default
+      # for `install`, så ERESOLVE degraderes til en warning og lockfilen skrives
+      # likevel — uten flagget gir proben exit 0 selv i dag. Kun `npm ci` håndhever
+      # strengt, og det er nettopp den CI feiler på.
+      - name: Er peer-konflikten borte?
+        id: probe
+        run: |
+          set +e
+          npm install --package-lock-only --strict-peer-deps typescript@^7
+          if [ $? -ne 0 ]; then
+            echo "Fortsatt blokkert på peer-nivå — dette er forventet."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Peer-range er bare en proxy for om verktøyene faktisk virker: både
+          # typescript-eslint og astro check har harde runtime-vakter mot TS 7.
+          # Vi kjører derfor de reelle kommandoene (samme sekvens som type-check-
+          # jobben i deploy.yml) før vi påstår at oppgraderingen er klar.
+          echo "Peer-konflikten er borte. Verifiserer at verktøyene faktisk virker."
+          npm ci --ignore-scripts &&
+            npm run lint &&
+            npm run seed:fixtures &&
+            npx astro sync &&
+            npm run check
+          if [ $? -ne 0 ]; then
+            echo "Peer-range er åpnet, men lint/astro check feiler fortsatt under TS 7."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "typescript@7 er klar til bruk."
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      # github.token framfor MY_GITHUB_PAT (som resten av repoet bruker): watchdogen
+      # trenger kun issues:write, ikke skrivetilgang til PR-er. Ikke «rett» dette.
+      - name: Åpne issue om at TS 7 er klart
+        if: steps.probe.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          gh label create ts7-watch \
+            --description "Watchdog: typescript@7 er ikke lenger blokkert" \
+            --color 0e8a16 --force
+
+          # --state all: en lukket issue teller også, ellers åpner watchdogen en ny
+          # hver mandag så lenge ignore-regelen står.
+          FUNNET=$(gh issue list --label ts7-watch --state all --limit 1 --json number --jq 'length')
+          if [ "$FUNNET" != "0" ]; then
+            echo "Issue finnes allerede — gjør ingenting."
+            exit 0
+          fi
+
+          # Heredoc-innholdet må ligge innenfor YAML-blokkens innrykk, ellers brytes
+          # `run: |`. YAML fjerner innrykket, så bash ser teksten venstrejustert.
+          cat > issue-body.md <<'EOF'
+          `blocked-upgrades-watch.yml` har verifisert at `typescript@^7` nå både lar seg
+          installere med `--strict-peer-deps` og passerer `npm run lint` og `npm run check`.
+
+          Blokkeringen var:
+
+          - `@astrojs/check` — peer `^5.0.0 || ^6.0.0`
+          - `typescript-eslint` — peer `>=4.8.4 <6.1.0` (typescript-eslint#10940 tracket TS >=7.1)
+
+          Opprydding:
+
+          1. Fjern `ignore`-regelen for `typescript` i `.github/dependabot.yml`.
+          2. Slett jobben `typescript-7` i `.github/workflows/blocked-upgrades-watch.yml` —
+             og hele fila hvis den ikke har fått andre jobber.
+          3. La dependabot foreslå oppgraderingen, eller bump manuelt.
+
+          Se `docs/plans/archive/2026-08-09-ts7-blokkering.md` for bakgrunnen.
+          EOF
+
+          gh issue create \
+            --label ts7-watch \
+            --title "typescript@7 kan tas i bruk — fjern dependabot-ignore" \
+            --body-file issue-body.md
