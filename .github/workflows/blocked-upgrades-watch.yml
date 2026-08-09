@@ -43,7 +43,7 @@ jobs:
           # workflowen slettes, ikke fortsette å kjøre. Mønsteret er ankret: en løs
           # substrengmatch ville både truffet `typescript-eslint` og bommet på den
           # siterte formen `- dependency-name: "typescript"`.
-          if ! grep -qE '^[[:space:]]*-[[:space:]]*dependency-name:[[:space:]]*"?typescript"?[[:space:]]*$' .github/dependabot.yml; then
+          if ! grep -qE '^[[:space:]]*-[[:space:]]*dependency-name:[[:space:]]*["'"'"']?typescript["'"'"']?[[:space:]]*$' .github/dependabot.yml; then
             echo "::notice::ignore-regelen for typescript er borte — denne workflowen kan slettes."
             echo "ready=false" >> "$GITHUB_OUTPUT"
             exit 0
