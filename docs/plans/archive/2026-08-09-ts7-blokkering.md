@@ -165,6 +165,31 @@ Merk rekkefølge: push til main trigger `dependabot-rebase.yml`, som kommenterer
 på alle åpne dependabot-PR-er. Lander den før vår `recreate`, får vi en ekstra rød kjøring. Ufarlig
 støy — alternativet er å bare lukke PR #433 og la neste ukentlige kjøring lage en ren PR.
 
+### 3b. Etterspill: `ignore` trådte ikke i kraft (2026-08-09)
+
+Etter merge fortsatte `typescript@7.0.2` å dukke opp i gruppe-PR-en, og to runder med
+`@dependabot recreate` endret ingenting. Jobbloggen viste `"ignore-conditions":[]` — regelen nådde
+aldri updateren.
+
+Årsaken var **ikke** noe ved `ignore`-regelen, men at `.github/dependabot.yml` hadde vært ugyldig
+siden `41aa247` (2026-05-17): `cooldown.semver-major-days`/`-minor-days`/`-patch-days` støttes ikke
+for `package-ecosystem: github-actions`. Ett ustøttet felt ugyldiggjør **hele fila**, ikke bare den
+blokken, og dependabot faller da tilbake på en tidligere konfigurasjon. Alt vi la til i tre måneder
+var dermed uten effekt.
+
+To ting å ta med videre:
+
+- **Feilen er stille i Actions-loggen.** Den vises kun som et banner under Insights → Dependency
+  graph → Dependabot. Kjøringene fortsetter grønt på gammel konfigurasjon. Sjekk den fanen etter
+  hver endring i `dependabot.yml` — en grønn dependabot-kjøring beviser ikke at endringen er lest.
+- **`ignore-conditions: []` i jobbdefinisjonen er den harde indikatoren.** Står den tom mens
+  `dependabot.yml` har en `ignore`-blokk, er fila avvist. Hentes med
+  `gh run view <run-id> --log | grep ignore-conditions`.
+
+En mellomliggende hypotese — at `recreate` er en refresh-jobb som gjenbruker pakkelisten og hopper
+over ignore-regler — ble forkastet da den ugyldige konfigurasjonen kom for dagen. PR #436 ble lukket
+på den hypotesen; ufarlig, men diagnosen var feil.
+
 ## Konsekvens som bør bekreftes: auto-merge
 
 `typescript` er den **eneste** major-bumpen i PR #433 — de fem andre (`dompurify` 3.4.11→3.4.13,

@@ -53,11 +53,13 @@ updates:
     schedule: { interval: weekly }
     open-pull-requests-limit: 5
     rebase-strategy: auto
+    # Kun default-days her. github-actions har ingen semver-klassifisering i
+    # dependabot, så semver-major/minor/patch-days avvises — og et avvist felt
+    # ugyldiggjør HELE fila, ikke bare denne blokken. Da faller dependabot
+    # tilbake på en tidligere konfigurasjon, og nye regler (som ignore for
+    # typescript) trer stille aldri i kraft. Ikke «harmoniser» med npm-blokkene.
     cooldown:
       default-days: 7
-      semver-major-days: 30
-      semver-minor-days: 7
-      semver-patch-days: 3
     groups:
       actions-version-updates:
         applies-to: version-updates
