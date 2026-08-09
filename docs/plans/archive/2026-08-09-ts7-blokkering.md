@@ -108,7 +108,7 @@ Legg `ignore` i npm-`/`-blokken (ikke lambda-blokken):
       # typescript@7 gjør lockfilen uløselig og feiler `npm ci` i alle CI-jobber.
       # To blokkeringer, begge uten TS 7-støtte per 2026-08-09:
       #   @astrojs/check@0.9.10  peer "^5.0.0 || ^6.0.0"
-      #   typescript-eslint@8.66 peer ">=4.8.4 <6.1.0"  (støtte tracket mot TS >=7.1)
+      #   typescript-eslint@8.65 peer ">=4.8.4 <6.1.0"  (støtte tracket mot TS >=7.1)
       # Fjernes når blocked-upgrades-watch.yml åpner issue om at TS 7 er klart.
       - dependency-name: typescript
         versions: [">=7"]
@@ -128,15 +128,21 @@ Cron `30 6 * * 1` (mandag 06:30 UTC, etter `scheduled-audit` som kjører 06:00) 
 `workflow_dispatch`. Én jobb, `typescript-7`:
 
 1. `actions/checkout` + `actions/setup-node` (node 24) — samme pinnede SHA-er som resten av repoet.
-2. Probe: `npm install --package-lock-only --strict-peer-deps typescript@^7`.
-   Exit ≠ 0 → fortsatt blokkert, logg og avslutt **grønt**.
-3. Ved exit 0: `npm ci --ignore-scripts && npm run lint && npm run seed:fixtures &&
-   npx astro sync && npm run check`. Feiler noe → logg «peer-range åpnet, men verktøyene virker
-   ikke ennå» og avslutt grønt. (Samme sekvens som `type-check`-jobben i `deploy.yml:75-84`;
-   krever ingen secrets — fixtures gir deterministisk innhold.)
-4. Alt grønt → `gh label create ts7-watch --force`, så sjekk `gh issue list --label ts7-watch
-   --state all`. Finnes en issue fra før (åpen **eller lukket**), gjør ingenting. Ellers
-   `gh issue create` med instruksjon om å fjerne `ignore`-regelen og denne workflowen.
+2. Guard: står `ignore`-regelen fortsatt i `dependabot.yml`? Er den borte, er det ingenting igjen
+   å vokte — `::notice::` om at workflowen kan slettes, og avslutt grønt.
+3. Probe: `npm install --package-lock-only --strict-peer-deps typescript@^7`.
+   Exit ≠ 0 **og** `ERESOLVE` i outputen → fortsatt blokkert, logg og avslutt **grønt**.
+   Exit ≠ 0 **uten** `ERESOLVE` → `::error::` og avslutt **rødt**: da er workflowen ødelagt
+   (registry-nedetid, endret flaggnavn), ikke oppgraderingen blokkert.
+4. Ved exit 0: `npm ci --ignore-scripts && npm run lint && npm run seed:fixtures &&
+   npx astro sync && npm run check`. Feiler noe → `::warning::` om at peer-rangen er åpnet, men
+   verktøyene ikke virker ennå, og avslutt grønt. (Samme sekvens som `type-check`-jobben i
+   `deploy.yml:75-84`; krever ingen secrets — fixtures gir deterministisk innhold.)
+5. Alt grønt → `gh label create ts7-watch --force`, så sjekk `gh issue list --label ts7-watch
+   --state open`. Finnes en **åpen** issue, gjør ingenting. Ellers `gh issue create` med
+   instruksjon om å fjerne `ignore`-regelen og denne workflowen. Dedup mot kun åpne issues er
+   bevisst: lukkes issuen uten at regelen fjernes, skal påminnelsen komme igjen — og guarden i
+   steg 2 sørger for at den stopper når regelen faktisk er borte.
 
 Intet `npm ci`-steg før proben: `--package-lock-only` løser mot registeret, ikke mot et installert
 tre. Verifisert at proben gir korrekt resultat i en tom katalog med kun `package.json` +
@@ -230,6 +236,22 @@ Uavhengig review 2026-08-09 fant to kritiske feil i første plan-utkast:
    `@astrojs/check`, og oppfølgingsavsnittet påsto feilaktig at konflikten forsvinner hvis den
    pakken fjernes.
 
-I tillegg innarbeidet: unødvendig `npm ci` før proben fjernet, dedup tåler lukkede issues,
-`package.json`-mutasjon presisert, fallback for `ignore` × `groups`, auto-merge-konsekvensen
-dokumentert, cron-tidspunkt satt.
+I tillegg innarbeidet: unødvendig `npm ci` før proben fjernet, `package.json`-mutasjon
+presisert, fallback for `ignore` × `groups`, auto-merge-konsekvensen dokumentert,
+cron-tidspunkt satt.
+
+Andre review-runde (etter implementering) fant to måter watchdogen kunne dø stille på —
+begge fikset i workflowen:
+
+1. **Enhver feil ble tolket som «fortsatt blokkert».** Registry-nedetid, et npm-flagg som
+   bytter navn, eller en borte `typescript@7` ga alle grønn kjøring med `ready=false`.
+   Proben krever nå `ERESOLVE` i outputen for å konkludere «blokkert» — ellers rødt.
+   Feiler lint/check etter at peer-rangen har åpnet seg, logges det som `::warning::`.
+2. **Dedup mot `--state all` gjorde varselet til engangs.** Lukket noen issuen uten å fjerne
+   `ignore`-regelen, sa watchdogen aldri fra igjen. Nå dedupes det kun mot **åpne** issues,
+   og jobben avbryter tidlig med `::notice::` hvis `ignore`-regelen er borte fra
+   `dependabot.yml` — det er da workflowen selv skal slettes.
+
+Verifisert med stubbet `npm` at alle fire grener oppfører seg riktig (ETARGET → exit 1,
+ERESOLVE → `ready=false`, lint-feil → `ready=false` + warning, alt grønt → `ready=true`),
+og med ekte `npm` at dagens tilstand gir `ready=false` uten å røre `package.json`.

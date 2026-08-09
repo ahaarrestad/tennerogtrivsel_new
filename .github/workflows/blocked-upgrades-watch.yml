@@ -15,16 +15,17 @@ jobs:
   typescript-7:
     name: Kan typescript@7 tas i bruk?
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6.4.0
         with:
           node-version: '24'
-          cache: npm
+          cache: 'npm'
 
       # Ingen `npm ci` før proben: --package-lock-only løser mot registeret, ikke mot
       # et installert tre.
@@ -37,8 +38,27 @@ jobs:
         id: probe
         run: |
           set +e
-          npm install --package-lock-only --strict-peer-deps typescript@^7
-          if [ $? -ne 0 ]; then
+
+          # Er ignore-regelen fjernet, er det ingenting igjen å vokte — da skal
+          # workflowen slettes, ikke fortsette å kjøre.
+          if ! grep -q 'dependency-name: typescript' .github/dependabot.yml; then
+            echo "::notice::ignore-regelen for typescript er borte — denne workflowen kan slettes."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          OUT=$(npm install --package-lock-only --strict-peer-deps typescript@^7 2>&1)
+          RC=$?
+          printf '%s\n' "$OUT"
+
+          if [ $RC -ne 0 ]; then
+            # Uten denne sjekken ville registry-nedetid, npm-flagg som endrer navn,
+            # eller en borte typescript@7 alle sett ut som «fortsatt blokkert» og gitt
+            # grønn kjøring — watchdogen kunne dødd stille.
+            if ! printf '%s' "$OUT" | grep -q 'ERESOLVE'; then
+              echo "::error::Proben feilet uten ERESOLVE — workflowen er ødelagt, ikke oppgraderingen."
+              exit 1
+            fi
             echo "Fortsatt blokkert på peer-nivå — dette er forventet."
             echo "ready=false" >> "$GITHUB_OUTPUT"
             exit 0
@@ -49,13 +69,12 @@ jobs:
           # Vi kjører derfor de reelle kommandoene (samme sekvens som type-check-
           # jobben i deploy.yml) før vi påstår at oppgraderingen er klar.
           echo "Peer-konflikten er borte. Verifiserer at verktøyene faktisk virker."
-          npm ci --ignore-scripts &&
-            npm run lint &&
-            npm run seed:fixtures &&
-            npx astro sync &&
-            npm run check
-          if [ $? -ne 0 ]; then
-            echo "Peer-range er åpnet, men lint/astro check feiler fortsatt under TS 7."
+          if ! { npm ci --ignore-scripts &&
+                 npm run lint &&
+                 npm run seed:fixtures &&
+                 npx astro sync &&
+                 npm run check; }; then
+            echo "::warning::Peer-range er åpnet, men lint/check feiler under TS 7. Er dette en urelatert regresjon og ikke TS 7, blir varselet aldri sendt — sjekk loggen."
             echo "ready=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -75,17 +94,20 @@ jobs:
             --description "Watchdog: typescript@7 er ikke lenger blokkert" \
             --color 0e8a16 --force
 
-          # --state all: en lukket issue teller også, ellers åpner watchdogen en ny
-          # hver mandag så lenge ignore-regelen står.
-          FUNNET=$(gh issue list --label ts7-watch --state all --limit 1 --json number --jq 'length')
-          if [ "$FUNNET" != "0" ]; then
-            echo "Issue finnes allerede — gjør ingenting."
+          # Dedup kun mot ÅPNE issues. Lukkes issuen uten at ignore-regelen fjernes,
+          # skal påminnelsen komme igjen — regelen står jo fortsatt (sjekket i proben).
+          AAPNE=$(gh issue list --label ts7-watch --state open --limit 1 --json number --jq 'length')
+          if [ "$AAPNE" != "0" ]; then
+            echo "Åpen issue finnes allerede — gjør ingenting."
             exit 0
           fi
 
           # Heredoc-innholdet må ligge innenfor YAML-blokkens innrykk, ellers brytes
           # `run: |`. YAML fjerner innrykket, så bash ser teksten venstrejustert.
-          cat > issue-body.md <<'EOF'
+          gh issue create \
+            --label ts7-watch \
+            --title "typescript@7 kan tas i bruk — fjern dependabot-ignore" \
+            --body-file - <<'EOF'
           `blocked-upgrades-watch.yml` har verifisert at `typescript@^7` nå både lar seg
           installere med `--strict-peer-deps` og passerer `npm run lint` og `npm run check`.
 
@@ -103,8 +125,3 @@ jobs:
 
           Se `docs/plans/archive/2026-08-09-ts7-blokkering.md` for bakgrunnen.
           EOF
-
-          gh issue create \
-            --label ts7-watch \
-            --title "typescript@7 kan tas i bruk — fjern dependabot-ignore" \
-            --body-file issue-body.md
