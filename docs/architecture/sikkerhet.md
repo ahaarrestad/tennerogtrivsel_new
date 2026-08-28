@@ -349,9 +349,9 @@ OAuth-access-token lagres alltid i `sessionStorage` — aldri i `localStorage`. 
 
 `PUBLIC_GOOGLE_API_KEY` initialiserer Google API Client Library (gapi) i admin-panelet (`admin-auth.js:43`). Nøkkelen eksponeres i klient-side JavaScript (Astro `PUBLIC_`-prefix) og brukes til å laste **Drive v3** og **Sheets v4**.
 
-**Gjeldende konfigurasjon (satt via gcloud 2026-05-31):**
+**Gjeldende konfigurasjon (verifisert via gcloud 2026-08-28):**
 
-Referrer-restriksjoner — 11 mønstre, prod bruker wildcards for subdomener:
+Referrer-restriksjoner — 12 mønstre, prod bruker wildcards for subdomener:
 ```
 https://*.tennerogtrivsel.no/*
 https://tennerogtrivsel.no/*
@@ -364,9 +364,10 @@ http://test2.aarrestad.com/*
 https://test3.aarrestad.com/*
 http://test3.aarrestad.com/*
 http://localhost:4321/*
+http://localhost:4322/*
 ```
 
-API-restriksjoner:
+API-restriksjoner (gjelder **nøkkelen** — hvilke tjenester den får kalle):
 - `sheets.googleapis.com`
 - `drive.googleapis.com`
 
@@ -396,6 +397,38 @@ curl "https://www.googleapis.com/drive/v3/files?key=<NØKKEL>" \
 ```
 
 **Hvorfor API-restriksjoner er viktig selv med referrer-sjekk:** En angriper kan forfalske `Referer`-header fra serversiden. API-restriksjoner begrenser hvilke Google-tjenester nøkkelen gir tilgang til — en lekket nøkkel kan da ikke brukes mot andre Google APIs.
+
+### Aktiverte API-er på prosjektet
+
+API-restriksjoner på nøkkelen er noe annet enn hvilke API-er som er **aktivert på prosjektet**. En tjeneste kan stå aktivert selv om ingen nøkkel kan nå den — den teller likevel som aktiv bruk hos Google (vilkårsvarsler, fakturerbar tjeneste).
+
+Aktivert i `tennerogtrivsel` per 2026-08-28:
+```
+apikeys.googleapis.com
+drive.googleapis.com      # i bruk (CMS)
+sheets.googleapis.com     # i bruk (CMS)
+telemetry.googleapis.com
+```
+
+**Maps deaktivert 2026-08-28:** `maps-backend.googleapis.com` (Maps JavaScript API) og
+`maps-embed-backend.googleapis.com` (Maps Embed API) sto fortsatt aktivert på prosjektet etter at
+Google Maps-iframen ble erstattet med Leaflet + CartoDB i mars 2026. Ryddejobben 2026-05-31 fjernet
+`maps-embed-backend` fra *nøkkelens* API-restriksjoner, ikke fra prosjektets aktiverte tjenester —
+derfor fortsatte Google å sende varsler om Maps Platform-vilkår. Begge er nå deaktivert:
+
+```bash
+gcloud services disable maps-backend.googleapis.com maps-embed-backend.googleapis.com \
+  --project=tennerogtrivsel
+```
+
+Kartet på kontaktsiden bruker Leaflet med CartoDB-tiles via CloudFront-proxyen og berøres ikke.
+De to gjenværende `google.com/maps/search/`-lenkene (`Kontakt.astro`, `buildSchema.ts`) er vanlige
+nettlenker til forbrukertjenesten Maps — ingen API-bruk, ingen nøkkel.
+
+Sjekk aktiverte tjenester:
+```bash
+gcloud services list --enabled --project=tennerogtrivsel
+```
 
 ## Akseptert risiko
 
