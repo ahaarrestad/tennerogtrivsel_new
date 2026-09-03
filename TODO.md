@@ -73,6 +73,12 @@
     - Samme Google Sheet/Drive for alle miljøer — ingen dataduplisering
     - Opprett GitHub Environment (f.eks. `production`) med protection rules for deploy-jobben — begrenser hvem/hva som kan trigge deploy og sikrer at secrets kun er tilgjengelige i riktig miljø
 
+- [ ] **CI: tidlig lockfile-gate for Dependabot-PR-er** — *ingen plan ennå*
+  - Dependabot-lockfiler blir aldri `npm ci`-validert før PR-en åpnes. Er lockfilen ugyldig, ryker `unit-tests`, `lint`, `type-check` og `e2e-tests` samtidig på samme steg — fire røde jobber som skjuler at årsaken er én
+  - Konkret tilfelle: PR #444 (2026-08-22). `satteri@0.10.4` deklarerte ni plattformbinærer som `optionalDependencies`, men to av dem ble aldri publisert på den versjonen. `npm install` hopper stille over optional deps som ikke lar seg resolve, mens `npm ci` validerer hele settet og feiler
+  - Mulig tiltak: en rask `lockfile-check`-jobb som kun kjører `npm ci --ignore-scripts`, og som de øvrige jobbene `needs:`-avhenger av — gir én rød jobb med tydelig årsak i stedet for fire
+  - Alternativt/i tillegg: la jobben tolke `Missing: X from lock file` og kommentere diagnosen på PR-en, og/eller dokumentere feilmønsteret i `docs/guides/`
+  - Vurder kostnad/nytte i planfasen: en ekstra jobb koster litt ekstra kjøretid per PR, men de fire jobbene kjører allerede `npm ci` hver for seg
 
 ## Fullført
 
