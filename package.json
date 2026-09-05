@@ -24,17 +24,17 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@astrojs/sitemap": "^3.7.3",
-    "@googleapis/drive": "^20.2.0",
-    "@googleapis/sheets": "^13.0.2",
+    "@astrojs/sitemap": "^3.7.4",
+    "@googleapis/drive": "^21.0.0",
+    "@googleapis/sheets": "^14.0.0",
     "@tailwindcss/vite": "^4.3.3",
-    "astro": "^7.2.4",
+    "astro": "^7.2.10",
     "dompurify": "^3.4.14",
     "easymde": "^2.21.0",
     "flatpickr": "^4.6.13",
-    "google-auth-library": "^10.9.1",
+    "google-auth-library": "^11.0.0",
     "leaflet": "^1.9.4",
-    "marked": "^18.0.10",
+    "marked": "^18.0.11",
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
@@ -45,13 +45,13 @@
     "@tailwindcss/typography": "^0.5.20",
     "@types/leaflet": "^1.9.22",
     "@vitest/coverage-v8": "^4.1.11",
-    "eslint": "^10.8.1",
+    "eslint": "^10.9.1",
     "eslint-plugin-security": "^4.0.1",
     "globals": "^17.11.0",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.0.1",
     "sharp": "^0.35.3",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.67.0",
+    "typescript-eslint": "^8.68.0",
     "vitest": "^4.0.18"
   },
   "overrides": {
