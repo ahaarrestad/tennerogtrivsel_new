@@ -228,7 +228,8 @@ jobs:
 
       # Må kjøre FØR invalideringen av /* nedenfor. Invalideres cachen mens den gamle
       # funksjonen fortsatt er live, repopulerer trafikk i mellomtiden /tiles/* med
-      # vannmerkede tiles fra CARTO — og de blir liggende i 24 t. Steget er uavhengig av
+      # vannmerkede tiles fra CARTO — og de blir liggende i 180 dager (CARTO sender
+      # max-age=15552000, som slår cache-policyens DefaultTTL). Steget er uavhengig av
       # bygget (leser kun scripts/*.js fra checkouten), så det legges først for å gi
       # publish-function maksimal tid til å propagere til edge før cachen tømmes.
       - name: Deploy CloudFront Functions
@@ -325,7 +326,7 @@ jobs:
       # Andre invalidering, kun for tiles. Funksjons-steget kjører først i jobben, men
       # publish-function propagerer til edge asynkront og kan bruke lengre tid enn resten av
       # jobben. Rakk ikke den nye versjonen ut før `/*`-invalideringen over, ble cachen fylt
-      # på nytt med vannmerkede tiles som blir liggende i 24 t. Denne kjører sist og er
+      # på nytt med vannmerkede tiles som blir liggende i 180 dager. Denne kjører sist og er
       # billig, og reduserer vinduet kraftig. Den lukker det ikke helt — varer propageringen
       # lenger enn hele jobben, kan vannmerkede tiles rekke å bli cachet også etter dette
       # steget, og da må /tiles/* invalideres manuelt.

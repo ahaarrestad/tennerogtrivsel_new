@@ -32,10 +32,15 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
 
             <h2>Hvilke data samler vi inn?</h2>
             <p>
-                Nettsiden vår samler <strong>ikke</strong> inn personopplysninger fra besøkende.
+                Nettsiden vår <strong>lagrer</strong> ingen personopplysninger om deg som besøkende.
                 Vi bruker ingen analyseverktøy, sporingsteknologi eller informasjonskapsler (cookies).
                 Server-side access logging er heller ikke aktivert — trafikklogger (inkludert IP-adresser)
                 lagres ikke i vår skyinfrastruktur.
+            </p>
+            <p>
+                IP-adressen din videresendes likevel til en tredjepart i ett tilfelle: når kartet på
+                kontaktsiden må hente et kartbilde vi ikke allerede har mellomlagret. Det er beskrevet
+                under «Karttjeneste» nedenfor.
             </p>
 
             <h2>Karttjeneste</h2>
@@ -43,15 +48,22 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
                 Kontaktsiden viser et kart basert på OpenStreetMap-data, med kartbilder levert
                 av CARTO. Kartbildene (tiles) lastes via vår egen server (CloudFront-proxy),
                 slik at nettleseren din aldri kobler direkte til CARTO. Vi videresender verken
-                nettlesertype, språkinnstillinger, informasjonskapsler eller hvilken side du
-                besøker.
+                nettlesertype, språkinnstillinger, informasjonskapsler eller hvilken side du er på.
             </p>
             <p>
-                Kartbildene mellomlagres hos oss i 24 timer, og de aller fleste forespørsler
-                besvares fra dette mellomlageret. Når et kartbilde ikke ligger der og må hentes
-                fra CARTO, videresender CloudFront IP-adressen din i forespørselen. Grunnlaget
-                for dette er berettiget interesse (GDPR art. 6 nr. 1 bokstav f) i å vise deg
-                kartet du har bedt om.
+                Kartbildene mellomlagres hos oss, og de fleste forespørsler besvares fra dette
+                mellomlageret uten å nå CARTO. Ligger ikke kartbildet der, videresender
+                CloudFront forespørselen videre, og IP-adressen din følger med. Vi kan ikke
+                garantere at dette ikke skjer under ditt besøk. Behandlingsgrunnlaget er
+                berettiget interesse (GDPR art. 6 nr. 1 bokstav f) i å vise deg kartet du
+                har bedt om.
+            </p>
+            <p>
+                Mottakeren er CARTO (CARTO DB Inc.), en amerikansk leverandør, og forespørslene
+                besvares fra deres infrastruktur i USA. En slik henting innebærer derfor en
+                overføring av IP-adressen din til USA. Se
+                <a href="https://carto.com/privacy" target="_blank" rel="noopener noreferrer">CARTOs personvernerklæring</a>
+                for hvordan de behandler opplysninger.
             </p>
 
             {visKontaktPersonvern && (
@@ -61,7 +73,7 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
                 </p>
                 <table>
                     <tbody>
-                        <tr><th scope="row">Hva samles inn</th><td>Navn, e-post, telefon, melding og tema</td></tr>
+                        <tr><th scope="row">Hva samles inn</th><td>Navn, e-post, telefon, melding og tema. IP-adressen din lagres midlertidig (10 minutter) for å begrense antall innsendinger</td></tr>
                         <tr><th scope="row">Formål</th><td>Besvare henvendelser fra besøkende</td></tr>
                         <tr><th scope="row">Rettslig grunnlag</th><td>Ditt samtykke (avkrysning i skjemaet)</td></tr>
                         <tr><th scope="row">Lagringstid</th><td>Overføres på e-post og lagres i klinikkens e-postarkiv</td></tr>

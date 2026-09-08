@@ -170,7 +170,7 @@ describe('assertCartoKeyAvailable', () => {
 describe('placeholder i faktisk funksjonskode', () => {
     // Vaktpost mot drift: injectCartoKey er en ren streng-erstatning, så en placeholder som
     // omdøpes eller fjernes i CF-funksjonen gir ingen feil — deployen går grønn og CARTO
-    // svarer med vannmerkede tiles som blir cachet i 24 t.
+    // svarer med vannmerkede tiles som blir cachet i 180 dager.
     it('cloudfront-strip-tiles-prefix.js inneholder placeholderen', async () => {
         const { readFileSync: lesEkte } = await vi.importActual('node:fs');
         const { fileURLToPath } = await import('node:url');
