@@ -32,15 +32,14 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
 
             <h2>Hvilke data samler vi inn?</h2>
             <p>
-                Nettsiden vår <strong>lagrer</strong> ingen personopplysninger om deg som besøkende.
-                Vi bruker ingen analyseverktøy, sporingsteknologi eller informasjonskapsler (cookies).
-                Server-side access logging er heller ikke aktivert — trafikklogger (inkludert IP-adresser)
-                lagres ikke i vår skyinfrastruktur.
+                Nettsiden vår bruker ingen analyseverktøy, sporingsteknologi eller
+                informasjonskapsler (cookies). Server-side access logging er ikke aktivert —
+                trafikklogger (inkludert IP-adresser) lagres ikke i vår skyinfrastruktur.
             </p>
             <p>
-                IP-adressen din videresendes likevel til en tredjepart i ett tilfelle: når kartet på
-                kontaktsiden må hente et kartbilde vi ikke allerede har mellomlagret. Det er beskrevet
-                under «Karttjeneste» nedenfor.
+                IP-adressen din behandles likevel i enkelte tilfeller, som er beskrevet nedenfor:
+                når kartet på kontaktsiden må hente et kartbilde vi ikke allerede har mellomlagret
+                {visKontaktPersonvern && ', og som spamsperre når du sender inn kontaktskjemaet'}.
             </p>
 
             <h2>Karttjeneste</h2>
@@ -51,17 +50,16 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
                 nettlesertype, språkinnstillinger, informasjonskapsler eller hvilken side du er på.
             </p>
             <p>
-                Kartbildene mellomlagres hos oss, og de fleste forespørsler besvares fra dette
-                mellomlageret uten å nå CARTO. Ligger ikke kartbildet der, videresender
-                CloudFront forespørselen videre, og IP-adressen din følger med. Vi kan ikke
-                garantere at dette ikke skjer under ditt besøk. Behandlingsgrunnlaget er
-                berettiget interesse (GDPR art. 6 nr. 1 bokstav f) i å vise deg kartet du
-                har bedt om.
+                Kartbildene mellomlagres hos oss. Ligger ikke kartbildet der, sendes
+                forespørselen til CARTO, og IP-adressen din følger med. Dette kan skje under
+                ditt besøk. Behandlingsgrunnlaget er berettiget interesse (GDPR art. 6 nr. 1
+                bokstav f) i å vise deg kartet du har bedt om.
             </p>
             <p>
-                Mottakeren er CARTO (CARTO DB Inc.), en amerikansk leverandør, og forespørslene
-                besvares fra deres infrastruktur i USA. En slik henting innebærer derfor en
-                overføring av IP-adressen din til USA. Se
+                Kartbildene leveres via CARTOs innholdsnettverk, som driftes av Fastly. I praksis
+                besvares forespørslene som regel fra servere i Europa, men finnes ikke kartbildet
+                der heller, går forespørselen videre til CARTOs egne servere i USA. IP-adressen
+                din kan derfor bli overført til USA. Se
                 <a href="https://carto.com/privacy" target="_blank" rel="noopener noreferrer">CARTOs personvernerklæring</a>
                 for hvordan de behandler opplysninger.
             </p>
@@ -73,11 +71,12 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
                 </p>
                 <table>
                     <tbody>
-                        <tr><th scope="row">Hva samles inn</th><td>Navn, e-post, telefon, melding og tema. IP-adressen din lagres midlertidig (10 minutter) for å begrense antall innsendinger</td></tr>
+                        <tr><th scope="row">Hva samles inn</th><td>Navn, e-post, telefon, melding og tema</td></tr>
                         <tr><th scope="row">Formål</th><td>Besvare henvendelser fra besøkende</td></tr>
                         <tr><th scope="row">Rettslig grunnlag</th><td>Ditt samtykke (avkrysning i skjemaet)</td></tr>
                         <tr><th scope="row">Lagringstid</th><td>Overføres på e-post og lagres i klinikkens e-postarkiv</td></tr>
                         <tr><th scope="row">Databehandler</th><td>Amazon Web Services (SES) for e-postutsending</td></tr>
+                        <tr><th scope="row">Spamsperre</th><td>IP-adressen din lagres i inntil ca. 10 minutter etter siste innsending for å begrense antall henvendelser, og slettes deretter automatisk. Grunnlaget er berettiget interesse (GDPR art. 6 nr. 1 bokstav f). Lagres hos Amazon Web Services (DynamoDB)</td></tr>
                     </tbody>
                 </table>
             )}
