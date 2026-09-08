@@ -285,7 +285,8 @@ Se [Sikkerhet → CARTO API-nøkkel](sikkerhet.md#carto-api-nøkkel-carto_api_ke
 **Rekkefølge i `deploy.yml`:** steget som deployer CloudFront Functions kjører først i
 `deploy`-jobben — før S3-synken og før invalideringen av `/*`. Motsatt rekkefølge tømmer
 cachen mens den forrige funksjonsversjonen fortsatt er live på edge, og trafikk i det vinduet
-repopulerer `/tiles/*` med vannmerkede tiles som blir liggende i 24 t. Steget er uavhengig av
+repopulerer `/tiles/*` med vannmerkede tiles som blir liggende i 180 dager (CARTO sender
+`max-age=15552000`; se [Sikkerhet](sikkerhet.md#cloudfront-tile-proxy-gdpr)). Steget er uavhengig av
 byggeartefaktene, så det koster ingenting å legge det først — og `publish-function` får
 maksimal tid til å propagere før cachen tømmes.
 

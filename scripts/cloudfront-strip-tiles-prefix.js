@@ -10,7 +10,7 @@
 //   1. CARTO håndhever nøkkelens domenerestriksjon på Referer, mens cache-nøkkelen for
 //      /tiles/* kun er pathen. Videresendte vi klientens egen Referer, kunne hvem som
 //      helst hotlinke tile-URL-en fra et fremmed domene, få et vannmerket svar fra CARTO,
-//      og få det cachet i 24 t for alle ekte besøkende.
+//      og få det cachet i 180 dager for alle ekte besøkende (CARTO sender max-age=15552000).
 //   2. Klientens Referer er full side-URL (same-origin). Å sende den videre ville lekket
 //      hver besøkendes side-URL til CARTO — stikk i strid med hvorfor vi proxyer i det
 //      hele tatt.

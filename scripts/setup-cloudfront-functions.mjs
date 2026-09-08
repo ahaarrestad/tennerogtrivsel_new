@@ -60,7 +60,7 @@ export function injectCartoKey(code, apiKey) {
                 'Er nøkkelen derimot korrekt kopiert, har CARTO endret nøkkelformat, og både denne ' +
                 'regexen og escapingen i injectCartoKey må oppdateres. ' +
                 'Deploy avbrutt — en nøkkel med whitespace avvises av CARTO, og resultatet er vannmerkede ' +
-                'tiles med HTTP 200 som blir cachet i 24 t.'
+                'tiles med HTTP 200 som blir cachet i 180 dager.'
         );
     }
     return code.split(CARTO_KEY_PLACEHOLDER).join(apiKey);
