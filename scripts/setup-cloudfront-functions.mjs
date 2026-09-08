@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync, rmSync, mkdtempSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -57,6 +57,8 @@ export function injectCartoKey(code, apiKey) {
         throw new Error(
             'CARTO_API_KEY har uventet format — kun A-Z, a-z, 0-9, «_» og «-» er tillatt. ' +
                 'Vanligste årsak er et linjeskift eller mellomrom som ble med da secreten ble limt inn. ' +
+                'Er nøkkelen derimot korrekt kopiert, har CARTO endret nøkkelformat, og både denne ' +
+                'regexen og escapingen i injectCartoKey må oppdateres. ' +
                 'Deploy avbrutt — en nøkkel med whitespace avvises av CARTO, og resultatet er vannmerkede ' +
                 'tiles med HTTP 200 som blir cachet i 24 t.'
         );
@@ -119,7 +121,7 @@ export function deployFunction({ name, codePath, comment, runtime }, cartoApiKey
 }
 
 /* v8 ignore start */
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     const cartoApiKey = process.env.CARTO_API_KEY;
     try {
         assertCartoKeyAvailable(FUNCTIONS, cartoApiKey);

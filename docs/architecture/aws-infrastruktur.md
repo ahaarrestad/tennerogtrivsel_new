@@ -290,14 +290,21 @@ byggeartefaktene, så det koster ingenting å legge det først — og `publish-f
 maksimal tid til å propagere før cachen tømmes.
 
 Fordi `publish-function` propagerer til edge asynkront, avsluttes jobben likevel med en
-målrettet invalidering av `/tiles/*`. Da spiller propageringstiden ingen rolle: rakk ikke den
-nye funksjonen ut før `/*`-invalideringen, fanges tiles av den siste.
+målrettet invalidering av `/tiles/*`. Det **reduserer** vinduet kraftig — fra hele
+`/*`-invalideringens forsprang ned til sekundene mellom siste steg og propagering — men
+eliminerer det ikke: varer propageringen lenger enn jobben, kan vannmerkede tiles rekke å bli
+cachet på nytt også etter den siste invalideringen. Verifiser derfor kartet visuelt etter
+deploy, og invalider `/tiles/*` manuelt hvis vannmerket henger igjen.
 
 **Ny kobling å være klar over:** når funksjons-steget ligger først, stopper en feil der hele
 innholds-deployen. Tidligere gikk innholdet ut og kun funksjons-steget ble rødt. Det er
 bevisst — en `strip-tiles-prefix` uten gyldig nøkkel gir vannmerkede tiles med HTTP 200, som
 er nettopp den stille feilen vi vil unngå — men det betyr at en manglende eller feilformatert
 `CARTO_API_KEY` nå blokkerer publisering av vanlig innhold.
+
+Steget publiserer også `sitemap_redirect` og `tot-admin-noindex`, som dermed går live *før*
+S3-synken i stedet for etter. Innfører du en redirect-regel som peker på en side som først
+finnes i det nye bygget, vil den kort gi 404 i vinduet mellom de to stegene.
 
 ### Opprett distribusjon i AWS-konsollen
 
@@ -348,7 +355,8 @@ er nettopp den stille feilen vi vil unngå — men det betyr at en manglende ell
 
 8. **Legg til behavior for `/tiles/*`:**
    - Path pattern: `/tiles/*`
-   - Origin: `basemaps.cartocdn.com`
+   - Origin: `tile.openstreetmap.org osm-tiles` (origin-ID-en fra steg 3 — historisk
+     navn, peker i dag på `basemaps.cartocdn.com`)
    - Viewer protocol: Redirect HTTP to HTTPS
    - Allowed HTTP methods: GET, HEAD
    - Cache policy: `CachingOptimized`
