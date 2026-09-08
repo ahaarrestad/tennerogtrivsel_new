@@ -107,6 +107,16 @@
   - Vurder samtidig: skal `gh pr merge --auto` i `auto-pr.yml` vente på den, og hva er terskelen — kun `high`/`critical`, eller alle nye alerts?
   - Avveining å ta stilling til: en blokkerende CodeQL gjør at falske positiver stopper deployen. Trengs en dokumentert vei for å dismisse en alert med begrunnelse
 
+- [ ] **Personvern: navngi overføringsgrunnlaget til USA (GDPR art. 13 nr. 1 bokstav f)** — *ingen plan ennå*
+  - Personvernerklæringen opplyser nå (2026-09-08) at IP-adressen kan overføres til USA ved cache-miss på karttiles. Det utløser plikten til å oppgi *hvilken* garanti overføringen hviler på — EU-US Data Privacy Framework-sertifisering, standard personvernbestemmelser (SCC) eller annet — og hvor den kan etterses
+  - Kunne ikke verifiseres under skrivingen: både `carto.com/privacy` og `dataprivacyframework.gov` er JS-rendrede SPA-er, så DPF-status for CARTO og for Fastly lot seg ikke slå opp fra CLI. Gjett aldri her — teksten er en juridisk erklæring
+  - Samme uverifiserte punkt: CARTOs juridiske foretaksnavn. Bevisst utelatt framfor å gjengi en uverifisert påstand
+  - **Merk:** løses «Kart-tiles: selvhost vektor-tiles med Protomaps PMTiles» først, faller hele punktet bort — ingen tredjepart, ingen overføring
+
+- [ ] **Stabiliser to ustabile tester** — *ingen plan ennå*
+  - `tests/accessibility.spec.ts` → «Admin (/admin) skal ikke ha kritiske UU-feil»: `page.waitForLoadState('networkidle')` timer ut på 30 s i full E2E-kjøring. Består isolert på både chromium (7/7) og Mobile Safari (7/7). Sannsynlig årsak: `/admin` laster Google-skript som holder forbindelser åpne, så «networkidle» inntreffer aldri under last. Vurder `domcontentloaded` + eksplisitt venting på et element framfor `networkidle`
+  - `src/__tests__/data-validation.test.ts` → «tannleger collection should include imageConfig in schema»
+
 ## Fullført
 
 Se [TODO-archive.md](TODO-archive.md) for alle fullførte oppgaver.
