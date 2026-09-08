@@ -4,6 +4,16 @@
 > **Dato:** 2026-03-01
 > **Tilnærming:** Defensiv (B)
 
+> **Rettelse lagt til 2026-09-08.** Dokumentet er bevart som historisk referat og er
+> *ikke* omskrevet, men premisset «ingen IP overføres til tredjepart» holder ikke.
+> Mot et custom origin legger CloudFront selv på `X-Forwarded-For` med viewer-IP-en, og
+> det kan ikke slås av med en origin request policy. Proxyen er en dataminimering — den
+> fjerner User-Agent, Accept-Language, cookies og klientens `Referer` — men ikke en
+> eliminering. Personvernerklæringen ble rettet 2026-09-08.
+>
+> Gjeldende beskrivelse: [`docs/architecture/sikkerhet.md`](../../architecture/sikkerhet.md)
+> og `src/pages/personvern.astro`.
+
 ## Bakgrunn
 
 Prosjektet er en statisk Astro-nettside for en tannklinikk, hostet på AWS S3 med CloudFront. Ingen brukerdata samles inn direkte (ingen skjema, ingen analytics, ingen cookies). Eneste GDPR-risiko er IP-adresser som automatisk sendes til tredjeparter.

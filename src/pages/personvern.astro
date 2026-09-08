@@ -18,7 +18,7 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
                 Denne personvernerklæringen gjelder for nettsiden til Tenner og Trivsel
                 (tennerogtrivsel.no, tennerogtrivsel.com og tennerogtrivsel.net) og beskriver
                 hvordan vi behandler opplysninger i forbindelse med ditt besøk. Behandling av
-                helseopplysninger knyttet til pasientbehandling reguleres av
+                helseopplysninger knyttet til pasientbehandling reguleres av{' '}
                 <a href="https://www.datatilsynet.no/personvern-pa-ulike-omrader/forskning-helse-og-velferd/" target="_blank" rel="noopener noreferrer" title="Les veiledning om personvern i helsesektoren hos Datatilsynet">helse- og
                 personvernlovgivningen</a> — ta kontakt med klinikken hvis du har spørsmål om dette.
             </p>
@@ -51,16 +51,16 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
             </p>
             <p>
                 Kartbildene mellomlagres hos oss. Ligger ikke kartbildet der, sendes
-                forespørselen til CARTO, og IP-adressen din følger med. Dette kan skje under
-                ditt besøk. Behandlingsgrunnlaget er berettiget interesse (GDPR art. 6 nr. 1
-                bokstav f) i å vise deg kartet du har bedt om.
+                forespørselen videre, og IP-adressen din følger med. Behandlingsgrunnlaget er
+                berettiget interesse (GDPR art. 6 nr. 1 bokstav f) i å vise deg kartet du
+                har bedt om.
             </p>
             <p>
-                Kartbildene leveres via CARTOs innholdsnettverk, som driftes av Fastly. I praksis
-                besvares forespørslene som regel fra servere i Europa, men finnes ikke kartbildet
-                der heller, går forespørselen videre til CARTOs egne servere i USA. IP-adressen
-                din kan derfor bli overført til USA. Se
-                <a href="https://carto.com/privacy" target="_blank" rel="noopener noreferrer">CARTOs personvernerklæring</a>
+                Kartbildene leveres via CARTOs innholdsnettverk, som driftes av Fastly.
+                Forespørslene besvares normalt fra servere i Europa, men finnes ikke kartbildet
+                der, går de videre til Fastlys servere i USA og eventuelt til CARTOs egne
+                servere der. IP-adressen din kan derfor bli overført til USA. Se{' '}
+                <a href="https://carto.com/privacy" target="_blank" rel="noopener noreferrer">CARTOs personvernerklæring</a>{' '}
                 for hvordan de behandler opplysninger.
             </p>
 
@@ -71,18 +71,20 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
                 </p>
                 <table>
                     <tbody>
-                        <tr><th scope="row">Hva samles inn</th><td>Navn, e-post, telefon, melding og tema</td></tr>
+                        <tr><th scope="row">Hva samles inn</th><td>Navn, e-post, telefon, melding og tema. IP-adressen din behandles i tillegg — se «Spamsperre»</td></tr>
                         <tr><th scope="row">Formål</th><td>Besvare henvendelser fra besøkende</td></tr>
-                        <tr><th scope="row">Rettslig grunnlag</th><td>Ditt samtykke (avkrysning i skjemaet)</td></tr>
+                        <tr><th scope="row">Behandlingsgrunnlag</th><td>Ditt samtykke (avkrysning i skjemaet)</td></tr>
                         <tr><th scope="row">Lagringstid</th><td>Overføres på e-post og lagres i klinikkens e-postarkiv</td></tr>
                         <tr><th scope="row">Databehandler</th><td>Amazon Web Services (SES) for e-postutsending</td></tr>
-                        <tr><th scope="row">Spamsperre</th><td>IP-adressen din lagres i inntil ca. 10 minutter etter siste innsending for å begrense antall henvendelser, og slettes deretter automatisk. Grunnlaget er berettiget interesse (GDPR art. 6 nr. 1 bokstav f). Lagres hos Amazon Web Services (DynamoDB)</td></tr>
+                        <tr><th scope="row">Spamsperre</th><td>IP-adressen din lagres for å begrense antall henvendelser. Den merkes for sletting ca. 10 minutter etter siste innsending og slettes automatisk kort tid etter. Behandlingsgrunnlaget er berettiget interesse (GDPR art. 6 nr. 1 bokstav f). Lagres hos Amazon Web Services (DynamoDB).</td></tr>
                     </tbody>
                 </table>
             )}
 
             <p>
-                Du har rett til innsyn, retting og sletting av opplysninger vi behandler om deg, og du kan klage til
+                Du har rett til innsyn, retting og sletting av opplysninger vi behandler om deg.
+                Der behandlingen hviler på berettiget interesse — kartet og spamsperren — har du
+                også rett til å protestere mot den (GDPR art. 21). Du kan klage til{' '}
                 <a
                     href="https://www.datatilsynet.no/om-datatilsynet/kontakt-oss/"
                     target="_blank"
@@ -96,7 +98,7 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
                 Kontaktsiden inneholder to lenker til Google Maps: besøksadressen og
                 knappen «Få veibeskrivelse». Begge åpner Google Maps i en ny fane, og
                 dette skjer kun når du selv klikker på lenken. Ved å følge lenkene
-                forlater du vår nettside og blir underlagt
+                forlater du vår nettside og blir underlagt{' '}
                 <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Googles personvernerklæring</a>.
             </p>
 
@@ -124,8 +126,8 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
                 Admin-panelet laster inn Google-skript for autentisering fra
                 <code>apis.google.com</code> og <code>accounts.google.com</code>.
                 Disse tjenestene mottar administratorens IP-adresse som en del av
-                OAuth-innloggingsflyten. Se
-                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Googles personvernerklæring</a>
+                OAuth-innloggingsflyten. Se{' '}
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Googles personvernerklæring</a>{' '}
                 for detaljer.
             </p>
 

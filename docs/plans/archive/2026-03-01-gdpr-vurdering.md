@@ -4,6 +4,16 @@
 
 **Goal:** Eliminere IP-adresse-lekkasje til tredjeparter og etablere personvernerklæring for GDPR-compliance.
 
+> **Rettelse lagt til 2026-09-08.** Dokumentet er bevart som historisk referat og er
+> *ikke* omskrevet, men premisset «ingen IP overføres til tredjepart» holder ikke.
+> Mot et custom origin legger CloudFront selv på `X-Forwarded-For` med viewer-IP-en, og
+> det kan ikke slås av med en origin request policy. Proxyen er en dataminimering — den
+> fjerner User-Agent, Accept-Language, cookies og klientens `Referer` — men ikke en
+> eliminering. Personvernerklæringen ble rettet 2026-09-08.
+>
+> Gjeldende beskrivelse: [`docs/architecture/sikkerhet.md`](../../architecture/sikkerhet.md)
+> og `src/pages/personvern.astro`.
+
 **Architecture:** CloudFront tile-proxy eliminerer OSM IP-lekkasje. Ny `/personvern`-side dokumenterer databehandling. Admin-panel får info-banner om localStorage. CSP ryddes for ubrukte Google Fonts-referanser.
 
 **Tech Stack:** AWS CloudFront (eksisterende distribusjon), Astro (statisk side), Leaflet.js, Vitest, Playwright
