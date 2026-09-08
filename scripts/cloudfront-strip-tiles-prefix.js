@@ -26,6 +26,11 @@
 var TILES_PREFIX = /^\/tiles/;
 var PROD_REFERER = 'https://www.tennerogtrivsel.no/';
 var TEST_REFERER = 'https://test2.aarrestad.com/';
+// Test-distribusjonens aliaser. Eksakt likhet, ikke delstreng: `indexOf('aarrestad.com')`
+// ville også slått til på `aarrestad.com.angriper.example`. CloudFront validerer riktignok
+// Host mot distribusjonens aliaser, så en fremmed verdi når oss ikke i praksis — men det er
+// en ekstern garanti, og en delstreng-sjekk går i stykker stille hvis et alias legges til.
+var TEST_HOSTS = ['test2.aarrestad.com', 'test3.aarrestad.com'];
 
 function handler(event) {
     var request = event.request;
@@ -36,7 +41,7 @@ function handler(event) {
         if (!request.headers) request.headers = {};
         var host = ((request.headers.host && request.headers.host.value) || '').toLowerCase();
         request.headers.referer = {
-            value: host.indexOf('aarrestad.com') !== -1 ? TEST_REFERER : PROD_REFERER
+            value: TEST_HOSTS.indexOf(host) !== -1 ? TEST_REFERER : PROD_REFERER
         };
     }
     return request;
