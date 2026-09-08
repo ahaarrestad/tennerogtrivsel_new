@@ -29,7 +29,7 @@ export default defineConfig({
                         const rewritten = path.replace(/^\/tiles/, '/rastertiles/voyager');
                         if (!CARTO_API_KEY) return rewritten;
                         const skille = rewritten.includes('?') ? '&' : '?';
-                        return `${rewritten}${skille}key=${CARTO_API_KEY}`;
+                        return `${rewritten}${skille}key=${encodeURIComponent(CARTO_API_KEY)}`;
                     },
                 },
                 '/api/kontakt': {

@@ -322,6 +322,17 @@ jobs:
         env:
           CLOUDFRONT_POLICY_ID: ${{ secrets.CLOUDFRONT_CSP_POLICY_ID }}
 
+      # Andre invalidering, kun for tiles. Funksjons-steget kjører først i jobben, men
+      # publish-function propagerer til edge asynkront og kan bruke lengre tid enn resten av
+      # jobben. Rakk ikke den nye versjonen ut før `/*`-invalideringen over, ble cachen fylt
+      # på nytt med vannmerkede tiles som blir liggende i 24 t. Denne kjører sist og er
+      # billig, og gjør utfallet uavhengig av propageringstiden.
+      - name: Invalidate CloudFront tiles PROD
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }} \
+            --paths "/tiles/*"
+
   update-lambda:
     needs: build
     if: always() && needs.build.result == 'success' && github.event_name != 'pull_request'

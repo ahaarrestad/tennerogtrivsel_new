@@ -69,15 +69,26 @@ S3 bruker **OAC (Origin Access Control)**, ikke OAI. Ingen `OriginAccessIdentity
 
 Behaviors sjekkes i rekkefølge — mest spesifikk path vinner.
 
-| Path | Origin | CF Functions | Cache-policy | Respons-headers-policy | HTTP-metoder |
-|------|--------|-------------|-------------|----------------------|-------------|
-| `/api/kontakt` | Lambda URL | — | `Managed-CachingDisabled` | `tot-security-headers` | Alle (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS) |
-| `/api/*` | S3 | — | `Managed-CachingDisabled` | `tot-security-headers` | GET, HEAD |
-| `/tiles/*` | basemaps.cartocdn.com | `strip-tiles-prefix` (viewer-req) | `Managed-CachingOptimized` | `tot-security-headers` | GET, HEAD |
-| `*` (default) | S3 | `sitemap_redirect` (viewer-req), `tot-admin-noindex` (viewer-resp) | `Managed-CachingOptimized` | `tot-security-headers` | GET, HEAD |
+| Path | Origin | CF Functions | Cache-policy | Origin-request-policy | Respons-headers-policy | HTTP-metoder |
+|------|--------|-------------|-------------|----------------------|----------------------|-------------|
+| `/api/kontakt` | Lambda URL | — | `Managed-CachingDisabled` | `Managed-AllViewerExceptHostHeader` | `tot-security-headers` | Alle (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS) |
+| `/api/*` | S3 | — | `Managed-CachingDisabled` | — | `tot-security-headers` | GET, HEAD |
+| `/tiles/*` | basemaps.cartocdn.com | `strip-tiles-prefix` (viewer-req) | `Managed-CachingOptimized` | **`carto-tiles-key-forward`** | `tot-security-headers` | GET, HEAD |
+| `*` (default) | S3 | `sitemap_redirect` (viewer-req), `tot-admin-noindex` (viewer-resp) | `Managed-CachingOptimized` | — | `tot-security-headers` | GET, HEAD |
 
 **Origin Request Policy for `/api/kontakt`:** `Managed-AllViewerExceptHostHeader`
 (`Host`-headeren er reservert i CloudFront og kan ikke videresendes til custom origins.)
+
+**Origin Request Policy for `/tiles/*`:** `carto-tiles-key-forward`
+(`f6aa3531-3882-45d0-97a7-8400b29263fb`) — videresender query-parameteren `key` og headeren
+`Referer`, ingen cookies. **Uten den fungerer ikke CARTO-nøkkelen:** `Managed-CachingOptimized`
+har `QueryStringBehavior: none`, så `key` strippes før origin selv når CloudFront-funksjonen
+har satt den. Resultatet er vannmerkede tiles med HTTP 200 — ingen feil noe sted.
+
+> **Rekkefølge ved oppsett:** knytt denne policyen på **etter** at `strip-tiles-prefix` er
+> deployet i en versjon som overskriver `Referer`. Policyen videresender `Referer` til
+> tredjepart; gjør du det mens en eldre funksjonsversjon er live, sender du hver besøkendes
+> fulle side-URL til CARTO — stikk i strid med hvorfor `/tiles/*` proxyes i det hele tatt.
 
 **Viewer Protocol Policy:**
 - `/api/kontakt`: `https-only`
@@ -89,7 +100,7 @@ Behaviors sjekkes i rekkefølge — mest spesifikk path vinner.
 |----------|-----------|----------------|--------|
 | `sitemap_redirect` | viewer-request | `*` (default) | www-redirect, sitemap-redirect, trailing-slash-redirect |
 | `tot-admin-noindex` | viewer-response | `*` (default) | Setter `X-Robots-Tag: noindex` på `/admin`-paths |
-| `strip-tiles-prefix` | viewer-request | `/tiles/*` | Omskriver `/tiles/{z}/{x}/{y}` → `/rastertiles/voyager/{z}/{x}/{y}` |
+| `strip-tiles-prefix` | viewer-request | `/tiles/*` | Omskriver `/tiles/{z}/{x}/{y}` → `/rastertiles/voyager/{z}/{x}/{y}`, setter CARTO-nøkkelen som `?key=`, og setter `Referer` til et fast domene |
 
 ---
 
@@ -278,6 +289,16 @@ repopulerer `/tiles/*` med vannmerkede tiles som blir liggende i 24 t. Steget er
 byggeartefaktene, så det koster ingenting å legge det først — og `publish-function` får
 maksimal tid til å propagere før cachen tømmes.
 
+Fordi `publish-function` propagerer til edge asynkront, avsluttes jobben likevel med en
+målrettet invalidering av `/tiles/*`. Da spiller propageringstiden ingen rolle: rakk ikke den
+nye funksjonen ut før `/*`-invalideringen, fanges tiles av den siste.
+
+**Ny kobling å være klar over:** når funksjons-steget ligger først, stopper en feil der hele
+innholds-deployen. Tidligere gikk innholdet ut og kun funksjons-steget ble rødt. Det er
+bevisst — en `strip-tiles-prefix` uten gyldig nøkkel gir vannmerkede tiles med HTTP 200, som
+er nettopp den stille feilen vi vil unngå — men det betyr at en manglende eller feilformatert
+`CARTO_API_KEY` nå blokkerer publisering av vanlig innhold.
+
 ### Opprett distribusjon i AWS-konsollen
 
 1. Gå til **CloudFront → Distributions → Create distribution**
@@ -327,13 +348,18 @@ maksimal tid til å propagere før cachen tømmes.
 
 8. **Legg til behavior for `/tiles/*`:**
    - Path pattern: `/tiles/*`
-   - Origin: `tile.openstreetmap.org osm-tiles`
+   - Origin: `basemaps.cartocdn.com`
    - Viewer protocol: Redirect HTTP to HTTPS
    - Allowed HTTP methods: GET, HEAD
    - Cache policy: `CachingOptimized`
+   - **Origin request policy: `carto-tiles-key-forward`** — uten den strippes `key` før
+     origin, og CARTO svarer med vannmerkede tiles og HTTP 200
    - Response headers policy: `tot-security-headers`
    - Function associations:
      - Viewer request: `strip-tiles-prefix`
+
+   Knytt origin-request-policyen på **etter** at `strip-tiles-prefix` er deployet — se
+   rekkefølge-noten under behaviors-tabellen over.
 
 9. **Settings:**
    - Default root object: `index.html`

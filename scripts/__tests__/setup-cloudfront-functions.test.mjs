@@ -31,6 +31,23 @@ describe('injectCartoKey', () => {
         expect(() => injectCartoKey(code, apiKey)).toThrow(/CARTO_API_KEY/);
     });
 
+    it.each([
+        ['etterfølgende linjeskift', 'cb1_abc123\n'],
+        ['ledende mellomrom', ' cb1_abc123'],
+        ['mellomrom inni', 'cb1_abc 123'],
+        ['enkeltfnutt som bryter ut av streng-literalen', "cb1_abc'"],
+        ['backslash', 'cb1_abc\\'],
+        ['tabulator', 'cb1_abc\t'],
+    ])('kaster når nøkkelen har %s', (_label, apiKey) => {
+        const code = `var k = '${CARTO_KEY_PLACEHOLDER}';`;
+        expect(() => injectCartoKey(code, apiKey)).toThrow(/uventet format/);
+    });
+
+    it('godtar en nøkkel på CARTOs faktiske format', () => {
+        const code = `var k = '${CARTO_KEY_PLACEHOLDER}';`;
+        expect(injectCartoKey(code, 'cb1_test_1_abcdef0123456789')).toBe("var k = 'cb1_test_1_abcdef0123456789';");
+    });
+
     it('lar kode uten placeholder stå urørt, også uten nøkkel', () => {
         const code = 'function handler(event) { return event.request; }';
         expect(injectCartoKey(code, undefined)).toBe(code);
