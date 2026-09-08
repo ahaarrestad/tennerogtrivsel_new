@@ -34,7 +34,7 @@ function handler(event) {
         request.querystring.key = { value: '__CARTO_API_KEY__' };
 
         if (!request.headers) request.headers = {};
-        var host = (request.headers.host && request.headers.host.value) || '';
+        var host = ((request.headers.host && request.headers.host.value) || '').toLowerCase();
         request.headers.referer = {
             value: host.indexOf('aarrestad.com') !== -1 ? TEST_REFERER : PROD_REFERER
         };

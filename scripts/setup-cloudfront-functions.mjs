@@ -13,6 +13,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // Funksjonskode i git inneholder denne placeholderen framfor den ekte nøkkelen.
 export const CARTO_KEY_PLACEHOLDER = '__CARTO_API_KEY__';
 
+// Nøkkelen splices inn i en enkeltfnuttet streng-literal i funksjonskoden. Formatkravet er
+// derfor både en whitespace-vakt og en escaping-vakt: en verdi med «'», «\» eller linjeskift
+// ville brutt ut av literalen og gitt en syntaktisk ugyldig CloudFront Function.
+const CARTO_KEY_FORMAT = /^[A-Za-z0-9_-]+$/;
+
 const FUNCTIONS = [
     {
         name: 'sitemap_redirect',
@@ -46,6 +51,14 @@ export function injectCartoKey(code, apiKey) {
         throw new Error(
             `${CARTO_KEY_PLACEHOLDER} finnes i funksjonskoden, men miljøvariabelen CARTO_API_KEY er ikke satt. ` +
                 'Deploy avbrutt — uten nøkkel leverer CARTO vannmerkede tiles.'
+        );
+    }
+    if (!CARTO_KEY_FORMAT.test(apiKey)) {
+        throw new Error(
+            'CARTO_API_KEY har uventet format — kun A-Z, a-z, 0-9, «_» og «-» er tillatt. ' +
+                'Vanligste årsak er et linjeskift eller mellomrom som ble med da secreten ble limt inn. ' +
+                'Deploy avbrutt — en nøkkel med whitespace avvises av CARTO, og resultatet er vannmerkede ' +
+                'tiles med HTTP 200 som blir cachet i 24 t.'
         );
     }
     return code.split(CARTO_KEY_PLACEHOLDER).join(apiKey);
