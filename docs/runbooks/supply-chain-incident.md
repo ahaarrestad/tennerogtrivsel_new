@@ -51,6 +51,7 @@ Gå gjennom hvilke hemmeligheter CI-miljøet hadde tilgang til da den kompromitt
 | `GOOGLE_PRIVATE_KEY` / `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Sheets/Drive-tilgang | **Høy** |
 | `LAMBDA_KONTAKT_ARN` / `ORIGIN_VERIFY_SECRET` | Lambda-manipulasjon | **Middels** |
 | `PUBLIC_GOOGLE_CLIENT_ID` / `PUBLIC_GOOGLE_API_KEY` | Allerede eksponert klient-side | **Lav** |
+| `CARTO_API_KEY` | Bruk av vår kart-tile-kvote hos CARTO. Gratis nøkkel, roteres på carto.com/basemaps/apikey | **Lav** |
 | `CLOUDFRONT_*_DISTRIBUTION_ID` / `CLOUDFRONT_CSP_POLICY_ID` | CloudFront-konfig-endringer | **Middels** |
 
 **Merk:** `npm audit signatures` og postinstall-scripts kan eksfiltrere via outbound HTTP — sjekk AWS CloudTrail og GitHub audit log for uvanlig aktivitet i tidsrommet pakken var aktiv.

@@ -1,6 +1,13 @@
 import {defineConfig} from 'astro/config';
+import {loadEnv} from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
+
+// CARTO krever ?key= på tile-URL-er. I prod settes nøkkelen av CloudFront-funksjonen;
+// lokalt leses den fra .env (gitignorert). Vite laster .env først etter at denne fila er
+// evaluert, så process.env er tom her — derfor loadEnv. Uten nøkkel fungerer proxyen
+// fortsatt, men tiles kommer vannmerket.
+const CARTO_API_KEY = loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), '').CARTO_API_KEY;
 
 export default defineConfig({
     vite: {
@@ -18,7 +25,12 @@ export default defineConfig({
                 '/tiles': {
                     target: 'https://basemaps.cartocdn.com',
                     changeOrigin: true,
-                    rewrite: (path) => path.replace(/^\/tiles/, '/rastertiles/voyager'),
+                    rewrite: (path) => {
+                        const rewritten = path.replace(/^\/tiles/, '/rastertiles/voyager');
+                        if (!CARTO_API_KEY) return rewritten;
+                        const skille = rewritten.includes('?') ? '&' : '?';
+                        return `${rewritten}${skille}key=${CARTO_API_KEY}`;
+                    },
                 },
                 '/api/kontakt': {
                     target: 'http://localhost:3001',

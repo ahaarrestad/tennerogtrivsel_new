@@ -150,13 +150,54 @@ Karttiles serveres via CloudFront-proxy (`/tiles/*`) for å eliminere IP-lekkasj
 **Tile-kilde:** CartoDB Voyager (`basemaps.cartocdn.com/rastertiles/voyager/`). Tidligere ble `tile.openstreetmap.org` brukt, men OSM blokkerer CDN-proxying (krever unik User-Agent og Referer-header, se [OSM Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/)).
 
 **Arkitektur:**
-- **Prod:** CloudFront behavior `/tiles/*` → origin `basemaps.cartocdn.com` med CloudFront Function som omskriver `/tiles/{z}/{x}/{y}.png` til `/rastertiles/voyager/{z}/{x}/{y}.png`
+- **Prod:** CloudFront behavior `/tiles/*` → origin `basemaps.cartocdn.com` med CloudFront Function som omskriver `/tiles/{z}/{x}/{y}.png` til `/rastertiles/voyager/{z}/{x}/{y}.png` og setter `?key=`
 - **Dev:** Vite dev server proxy i `astro.config.mjs` gjør det samme lokalt
 - **Leaflet:** Tile URL er `/tiles/{z}/{x}/{y}.png` (relativ path, fungerer i begge miljøer)
+
+### CARTO API-nøkkel (`CARTO_API_KEY`)
+
+CARTO innførte nøkkelkrav for `basemaps.cartocdn.com` i slutten av august 2026. Uten `?key=`
+leveres tiles med et diagonalt «API KEY REQUIRED»-vannmerke — men fortsatt som `200 OK` med
+gyldig `image/png` i normal størrelse. Degraderingen er altså **usynlig for enhver HTTP-basert
+sjekk**; kun pikslene avslører den.
+
+Nøkkelen håndteres som en hemmelighet og finnes aldri i git eller i klient-JS:
+
+| Sted | Hva |
+|------|-----|
+| GitHub repository secret | `CARTO_API_KEY` — sannhetskilden |
+| `scripts/cloudfront-strip-tiles-prefix.js` | Placeholderen `__CARTO_API_KEY__` (det er dette som ligger i git) |
+| `scripts/setup-cloudfront-functions.mjs` | `injectCartoKey()` bytter ut placeholderen i minnet rett før opplasting. Kildefila i git røres aldri. Den injiserte koden må innom disk fordi `aws --function-code fileb://` krever en sti — den skrives 0600 i en `mkdtempSync`-katalog og slettes i en `finally` |
+| `.github/workflows/deploy.yml` | Sender secreten som `env` til steget «Deploy CloudFront Functions» |
+| `.env` (gitignorert) | Lokal utvikling. `astro.config.mjs` leser den via `loadEnv` og legger `?key=` på dev-proxyen |
+
+**Deploy feiler høylytt uten nøkkel.** Finner `injectCartoKey()` placeholderen mens
+`CARTO_API_KEY` er tom, kastes det og deployen stopper. Alternativet — å laste opp en funksjon
+som sender en tom `key` — ville gitt vannmerkede tiles uten at noe annet slo ut.
+
+Klienten ser aldri nøkkelen: nettleseren ber om same-origin-URL-en `/tiles/...`, og `key` settes
+først i CloudFront-funksjonen på viewer-request.
+
+**Access logging må forbli av — eller nøkkelen må roteres ut av loggene.** Standard CloudFront
+access logging skriver query-strengen til feltet `cs-uri-query`. Siden funksjonen setter `key` på
+viewer-request, ville den injiserte nøkkelen havnet i klartekst i loggbøtta på S3 for hver eneste
+tile-forespørsel. Logging er per i dag deaktivert (`Logging.Enabled: false`) på begge
+distribusjoner, så dette er ikke et problem i dag — men slås logging på senere, må `/tiles/*`
+enten unntas eller nøkkelen behandles som eksponert.
+
+**Rotering:** ny nøkkel på [carto.com/basemaps/apikey](https://carto.com/basemaps/apikey/),
+oppdater GitHub-secreten, kjør deploy. Nøkkelen ligger i klartekst i den deployede
+funksjonskoden og er dermed synlig for alle med AWS-tilgang — akseptert, da det er samme
+tillitsnivå som AWS-kontoen selv, og nøkkelen er gratis.
 
 **CloudFront-gotchas:**
 - `Host` er reservert header — kan ikke settes som custom origin header. CloudFront sender automatisk origin-domenet som Host så lenge Origin Request Policy ikke videresender Host fra viewer.
 - CloudFront videresender hele URL-pathen til origin. CloudFront Function må omskrive `/tiles`-prefix til `/rastertiles/voyager`.
+- **Cache-policy og origin request policy er to ulike ting.** `/tiles/*` bruker `Managed-CachingOptimized`, som har `QueryStringBehavior: none` — den styrer cache-nøkkelen, men *også* at ingen query-parametere når origin. En `key` satt av funksjonen ville derfor blitt strippet. Løsningen er origin request policy `carto-tiles-key-forward` (`f6aa3531-3882-45d0-97a7-8400b29263fb`), som forwarder query-parameteren `key` og headeren `Referer`. Cache-policyen står urørt, så `key` holdes utenfor cache-nøkkelen og vi beholder ett cachet objekt per tile.
+- **`Referer` settes av funksjonen, ikke av klienten — dette er en sikkerhetsmekanisme, ikke en detalj.** CARTO håndhever nøkkelens domenerestriksjon på `Referer`, mens cache-nøkkelen for `/tiles/*` kun er pathen. Ville vi videresendt klientens egen `Referer`, ville den vært den eneste variable inputen som når origin — og samtidig usynlig for cachen. Hvem som helst kunne da hotlinket `https://www.tennerogtrivsel.no/tiles/…` fra et fremmed domene, fått et vannmerket `200 OK` fra CARTO, og fått det cachet i 24 t **for alle ekte besøkende**. Funksjonen setter derfor `request.headers.referer` selv. **Rå `Host` er ikke nok:** CloudFront validerer riktignok `Host` mot distribusjonens aliaser, men prod har seks (`tennerogtrivsel.no/.net/.com` med og uten `www`) pluss `d19b7g2frcrx6i.cloudfront.net`, og kun det kanoniske domenet registreres på nøkkelen — så klienten kunne fortsatt valgt et uregistrert alias og forgiftet cachen. www-redirecten redder oss ikke, fordi `/tiles/*` har `strip-tiles-prefix` knyttet til seg og CloudFront tillater kun én viewer-request-funksjon per behavior (verifisert: `https://tennerogtrivsel.com/tiles/…` gir `200` med tile, ikke `301`). Funksjonen mapper derfor `Host` til én av to konstanter: `aarrestad.com` i Host gir testdomenet, alt annet gir `https://www.tennerogtrivsel.no/`. Verdien som sendes til CARTO er dermed alltid en konstant, aldri klientens streng, og nye aliaser gir ingen stille regresjon. Bonus: klientens `Referer` er full side-URL (same-origin + `Referrer-Policy: strict-origin-when-cross-origin`), så det å overskrive den hindrer også at hver besøkendes side-URL lekker til CARTO — jf. hele begrunnelsen for proxyen.
+- `Referer` står likevel i origin request policyens whitelist. Uten whitelisting filtreres headeren bort før origin, også når det er funksjonen som har satt den — samme mekanisme som for `key`.
+- **Domenerestriksjon på nøkkelen er per 2026-09-08 ikke slått på.** Verifisert: samme tile med gyldig nøkkel gir byte-identisk svar med `Referer: https://ondsinnet-side.example/` og med vårt eget domene. Restriksjonen kan skrus på hos CARTO uten at noe går i stykker — men *bare* fordi funksjonen normaliserer `Referer` selv, og *bare* hvis `www.tennerogtrivsel.no`, `test2.aarrestad.com` og `localhost` er registrert på nøkkelen. Det er de eneste tre verdiene som kan nå CARTO.
+- Policyen er knyttet til `/tiles/*` på **begge** distribusjoner: prod `E9Z51DQB2K1G4` og test `E2WXX7ZUR5NNP3`. Endringen er gjort manuelt via AWS CLI, jf. «Hvorfor ikke IaC?».
 
 **CSP:** `tile.openstreetmap.org` er fjernet fra `img-src` og `connect-src` — tiles lastes nå fra `'self'`. Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) er også fjernet — fontene er self-hosted.
 
@@ -441,6 +482,8 @@ gcloud services list --enabled --project=tennerogtrivsel
 | Admin-side offentlig (L5) | Alle data/funksjonalitet krever gyldig OAuth-token. `noindex` + `robots.txt Disallow` hindrer indeksering. |
 | API-feilmeldinger til bruker (L7) | Admin er OAuth-beskyttet — kun autoriserte brukere ser feilmeldinger. Google API-detaljer i feilmeldinger gir ikke angrepsoverflate. |
 | Vite dev proxy uten path-validering (L8) | Kun aktiv i dev, hardkodet til `basemaps.cartocdn.com`. Ingen brukerdata interpoleres i URL. |
+| CARTO-vilkår pkt. 9.c.iii (server-side proxy) | Vilkårene lister «proxying or caching the content on the server side» som uakseptabel bruk, i en generell liste over elleve urelaterte forbud — klausulen står på egne bein, ikke som presisering av videresalgsforbudet i 9.c.i. Vår `/tiles/*`-proxy med 24 t cache er dekket av ordlyden. **Beslutning 2026-09-08:** vi går videre, da intensjonen bak forbudet er å hindre videresalg og videredistribusjon; alle kall stammer fra vår egen side, og vi tilbyr ikke tiles til tredjeparter. Proxyen er dessuten selve GDPR-tiltaket. **Restrisiko:** CARTO kan suspendere «at any time, in its sole discretion ... without prior notice», og vi har ingen overvåking som ville fanget det opp. |
+| Raster-tiles under avvikling | CARTOs FAQ sier raster-basemaps «are being retired», at de vurderer å stanse dataoppdateringer, og anbefaler vektor «regardless of the watermark». Nøkkelkravet kan bli utvidet til vektor. Fiksen er holdbar, men har begrenset levetid — kartdataene kan bli frosset uten varsel. Veivalget vektor vs. selvhost (Protomaps PMTiles) er egen backlog-oppgave. |
 | COOP-advarsler fra GIS (L9) | `Cross-Origin-Opener-Policy: same-origin-allow-popups` genererer konsolladvarsler fra GIS sin `m_migration_mod` — "would block the window.opener call". OAuth-funksjonalitet er upåvirket. GIS har interne fallback-mekanismer som håndterer dette. Akseptert. |
 
 ## Web Storage og modul-tilstand i tester

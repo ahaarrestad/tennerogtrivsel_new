@@ -19,14 +19,6 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
-- [ ] **Kartet viser «API KEY REQUIRED» — CARTO krever nå nøkkel for basemap-tiles** ([spec](docs/designs/2026-09-08-carto-api-nokkel.md)) ([plan](docs/plans/2026-09-08-carto-api-nokkel.md))
-  - Symptom: tiles på kontaktsiden er stemplet med et diagonalt vannmerke «API KEY REQUIRED / carto.com/basemaps/apikey». Kartet rendrer ellers normalt — Leaflet, markør og tooltip fungerer
-  - Årsak: CARTO har innført nøkkelkrav for `basemaps.cartocdn.com`. Endringen er ren innholds-endring i tiles — endepunktet svarer fortsatt `200 OK` med gyldig `image/png` i normal størrelse (verifisert 2026-09-08: både direkte mot CARTO og gjennom `/tiles/*`-proxyen). Vår CloudFront Function `strip-tiles-prefix` er altså intakt; problemet ligger oppstrøms
-  - **Hvorfor det ikke ble fanget opp:** ingen sjekk ser på pikslene. `mapInit.test.ts` mocker Leaflet fullstendig og asserter kun at `L.tileLayer` kalles med `/tiles/{z}/{x}/{y}.png`. Ingen E2E-test laster ekte tiles, og vi har ingen visuell regresjonstest eller oppetidsovervåking av tile-proxyen. En degradering som beholder HTTP 200 er usynlig for hele testpakken
-  - **Beslutning 2026-09-08:** CARTO-nøkkel med proxyen beholdt. Nøkkelen bor i GitHub Secrets (`CARTO_API_KEY`) og injiseres i CF-funksjonen ved deploy — aldri i git eller klient-JS
-  - Kritisk steg: `/tiles/*` bruker `Managed-CachingOptimized` (`QueryStringBehavior: none`), så `key` strippes før origin. Krever egen origin request policy som forwarder `key`
-  - Ikke med i denne oppgaven: deteksjon av stille degradering, og veivalget vektor vs. selvhost — begge blir egne backlog-oppgaver
-
 ## Backlog
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
@@ -87,6 +79,16 @@
   - Mulig tiltak: en rask `lockfile-check`-jobb som kun kjører `npm ci --ignore-scripts`, og som de øvrige jobbene `needs:`-avhenger av — gir én rød jobb med tydelig årsak i stedet for fire
   - Alternativt/i tillegg: la jobben tolke `Missing: X from lock file` og kommentere diagnosen på PR-en, og/eller dokumentere feilmønsteret i `docs/guides/`
   - Vurder kostnad/nytte i planfasen: en ekstra jobb koster litt ekstra kjøretid per PR, men de fire jobbene kjører allerede `npm ci` hver for seg
+
+- [ ] **Deteksjon av stille degradering på kart-tiles** — *ingen plan ennå*
+  - CARTO-vannmerket sto på siden i ukjent tid uten at noe varslet. Endepunktet svarte `200 OK` med gyldig `image/png` i normal størrelse hele veien — kun pikslene endret seg. `mapInit.test.ts` mocker Leaflet fullstendig og asserter bare at `L.tileLayer` kalles med riktig URL-mønster; ingen E2E-test laster en ekte tile
+  - Vurder: visuell regresjonstest på en kjent tile, størrelses-/checksum-sjekk i en scheduled workflow, eller oppetidsovervåking av `/tiles/*` som ser på innhold og ikke bare statuskode
+  - Generaliser gjerne: hvilke andre tredjeparts-avhengigheter kan degradere stille uten å bryte HTTP-status?
+
+- [ ] **Kart-tiles: vektor vs. selvhosting** — *ingen plan ennå*
+  - Utsatt veivalg fra CARTO-nøkkel-oppgaven (2026-09-08). Dagens løsning er raster-tiles fra CARTO med nøkkel, proxyet gjennom `/tiles/*`
+  - Alternativer å vurdere: vektor-tiles (mindre overføring, skarpere på retina, styling i klienten), eller selvhosting med Protomaps PMTiles på S3 — sistnevnte fjerner tredjepartsavhengigheten og nøkkelhåndteringen helt
+  - Vei kostnad, kompleksitet og GDPR-gevinst mot at dagens løsning faktisk fungerer
 
 ## Fullført
 

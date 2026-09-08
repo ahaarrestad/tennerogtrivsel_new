@@ -241,7 +241,7 @@ Alle scripts kjøres fra prosjektets rot med `node scripts/<script>`. De er idem
 |--------|--------|
 | `scripts/setup-s3.mjs` | Oppretter S3-buckets og setter bucket policy for OAC-tilgang |
 | `scripts/setup-dynamodb.mjs` | Oppretter DynamoDB rate-limit-tabell med TTL |
-| `scripts/setup-cloudfront-functions.mjs` | Deployer CloudFront Functions (`sitemap_redirect`, `strip-tiles-prefix`, `tot-admin-noindex`) |
+| `scripts/setup-cloudfront-functions.mjs` | Deployer CloudFront Functions (`sitemap_redirect`, `strip-tiles-prefix`, `tot-admin-noindex`). **Krever `CARTO_API_KEY`** — se under |
 | `scripts/setup-response-headers-policy.mjs` | Oppretter/oppdaterer `tot-security-headers` Response Headers Policy med CSP-hashes |
 
 **NB:** CloudFront-distribusjonene selv må opprettes manuelt (se steg-for-steg under).
@@ -261,9 +261,22 @@ Bruk dette når du skal sette opp prod eller test fra bunnen av.
 
 ```bash
 node scripts/setup-dynamodb.mjs
-node scripts/setup-cloudfront-functions.mjs
+CARTO_API_KEY=... node scripts/setup-cloudfront-functions.mjs
 node scripts/setup-response-headers-policy.mjs
 ```
+
+`setup-cloudfront-functions.mjs` **kaster og avbryter før noe deployes** hvis `CARTO_API_KEY`
+mangler: `strip-tiles-prefix` inneholder en placeholder for CARTO-nøkkelen, og en funksjon uten
+gyldig nøkkel ville gitt vannmerkede kart-tiles uten at noe annet slo ut. Verdien ligger i
+GitHub-secreten `CARTO_API_KEY` (i CI settes den av `deploy.yml`); lokalt hentes den fra `.env`.
+Se [Sikkerhet → CARTO API-nøkkel](sikkerhet.md#carto-api-nøkkel-carto_api_key).
+
+**Rekkefølge i `deploy.yml`:** steget som deployer CloudFront Functions kjører først i
+`deploy`-jobben — før S3-synken og før invalideringen av `/*`. Motsatt rekkefølge tømmer
+cachen mens den forrige funksjonsversjonen fortsatt er live på edge, og trafikk i det vinduet
+repopulerer `/tiles/*` med vannmerkede tiles som blir liggende i 24 t. Steget er uavhengig av
+byggeartefaktene, så det koster ingenting å legge det først — og `publish-function` får
+maksimal tid til å propagere før cachen tømmes.
 
 ### Opprett distribusjon i AWS-konsollen
 
