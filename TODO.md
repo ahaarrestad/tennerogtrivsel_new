@@ -19,6 +19,14 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
+- [ ] **Kartet viser «API KEY REQUIRED» — CARTO krever nå nøkkel for basemap-tiles** ([spec](docs/designs/2026-09-08-carto-api-nokkel.md)) ([plan](docs/plans/2026-09-08-carto-api-nokkel.md))
+  - Symptom: tiles på kontaktsiden er stemplet med et diagonalt vannmerke «API KEY REQUIRED / carto.com/basemaps/apikey». Kartet rendrer ellers normalt — Leaflet, markør og tooltip fungerer
+  - Årsak: CARTO har innført nøkkelkrav for `basemaps.cartocdn.com`. Endringen er ren innholds-endring i tiles — endepunktet svarer fortsatt `200 OK` med gyldig `image/png` i normal størrelse (verifisert 2026-09-08: både direkte mot CARTO og gjennom `/tiles/*`-proxyen). Vår CloudFront Function `strip-tiles-prefix` er altså intakt; problemet ligger oppstrøms
+  - **Hvorfor det ikke ble fanget opp:** ingen sjekk ser på pikslene. `mapInit.test.ts` mocker Leaflet fullstendig og asserter kun at `L.tileLayer` kalles med `/tiles/{z}/{x}/{y}.png`. Ingen E2E-test laster ekte tiles, og vi har ingen visuell regresjonstest eller oppetidsovervåking av tile-proxyen. En degradering som beholder HTTP 200 er usynlig for hele testpakken
+  - **Beslutning 2026-09-08:** CARTO-nøkkel med proxyen beholdt. Nøkkelen bor i GitHub Secrets (`CARTO_API_KEY`) og injiseres i CF-funksjonen ved deploy — aldri i git eller klient-JS
+  - Kritisk steg: `/tiles/*` bruker `Managed-CachingOptimized` (`QueryStringBehavior: none`), så `key` strippes før origin. Krever egen origin request policy som forwarder `key`
+  - Ikke med i denne oppgaven: deteksjon av stille degradering, og veivalget vektor vs. selvhost — begge blir egne backlog-oppgaver
+
 ## Backlog
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
