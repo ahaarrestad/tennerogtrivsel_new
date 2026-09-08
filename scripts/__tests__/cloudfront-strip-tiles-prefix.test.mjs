@@ -84,6 +84,8 @@ describe('cloudfront-strip-tiles-prefix', () => {
             ['d19b7g2frcrx6i.cloudfront.net', 'https://www.tennerogtrivsel.no/'],
             ['test2.aarrestad.com', 'https://test2.aarrestad.com/'],
             ['test3.aarrestad.com', 'https://test2.aarrestad.com/'],
+            ['aarrestad.com.angriper.example', 'https://www.tennerogtrivsel.no/'],
+            ['ondsinnet-aarrestad.com', 'https://www.tennerogtrivsel.no/'],
         ])('normaliserer Host %s til %s', (host, forventet) => {
             const result = handler(makeEvent('/tiles/10/512/512.png', {}, { host: { value: host } }));
             expect(result.headers.referer).toEqual({ value: forventet });
