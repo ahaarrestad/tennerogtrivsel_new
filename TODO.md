@@ -90,6 +90,12 @@
   - Alternativer å vurdere: vektor-tiles (mindre overføring, skarpere på retina, styling i klienten), eller selvhosting med Protomaps PMTiles på S3 — sistnevnte fjerner tredjepartsavhengigheten og nøkkelhåndteringen helt
   - Vei kostnad, kompleksitet og GDPR-gevinst mot at dagens løsning faktisk fungerer
 
+- [ ] **CI: gjør CodeQL til en blokkerende sjekk** — *ingen plan ennå*
+  - PR #456 (2026-09-08) auto-merget mens CodeQL var rød med en **high**-alert: `js/incomplete-url-substring-sanitization` i `scripts/cloudfront-strip-tiles-prefix.js`. Funnet var reelt — `host.indexOf('aarrestad.com')` matcher også `aarrestad.com.angriper.example` — og ble fikset i #457, men først *etter* at den sårbare versjonen var deployet til prod
+  - `Analyze (javascript-typescript)` og `Analyze (actions)` er grønne selv når CodeQL rapporterer alerts; det er den separate `CodeQL`-sjekken (code scanning-resultatet) som blir rød. Den må inn i branch protection som required check
+  - Vurder samtidig: skal `gh pr merge --auto` i `auto-pr.yml` vente på den, og hva er terskelen — kun `high`/`critical`, eller alle nye alerts?
+  - Avveining å ta stilling til: en blokkerende CodeQL gjør at falske positiver stopper deployen. Trengs en dokumentert vei for å dismisse en alert med begrunnelse
+
 ## Fullført
 
 Se [TODO-archive.md](TODO-archive.md) for alle fullførte oppgaver.
