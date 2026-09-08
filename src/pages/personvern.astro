@@ -13,7 +13,7 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
     <section class={`section-container ${sectionBg}`}>
         <div class="section-content prose prose-brand max-w-3xl mx-auto">
             <h1 class="h2">Personvernerklæring</h1>
-            <p class="text-sm text-brand-muted">Sist oppdatert: mai 2026</p>
+            <p class="text-sm text-brand-muted">Sist oppdatert: september 2026</p>
             <p>
                 Denne personvernerklæringen gjelder for nettsiden til Tenner og Trivsel
                 (tennerogtrivsel.no, tennerogtrivsel.com og tennerogtrivsel.net) og beskriver
@@ -42,8 +42,16 @@ const visKontaktPersonvern = ksEntry?.data?.aktiv ?? false;
             <p>
                 Kontaktsiden viser et kart basert på OpenStreetMap-data, med kartbilder levert
                 av CARTO. Kartbildene (tiles) lastes via vår egen server (CloudFront-proxy),
-                slik at din IP-adresse <strong>ikke</strong> sendes til CARTO, OpenStreetMap
-                eller andre tredjeparter.
+                slik at nettleseren din aldri kobler direkte til CARTO. Vi videresender verken
+                nettlesertype, språkinnstillinger, informasjonskapsler eller hvilken side du
+                besøker.
+            </p>
+            <p>
+                Kartbildene mellomlagres hos oss i 24 timer, og de aller fleste forespørsler
+                besvares fra dette mellomlageret. Når et kartbilde ikke ligger der og må hentes
+                fra CARTO, videresender CloudFront IP-adressen din i forespørselen. Grunnlaget
+                for dette er berettiget interesse (GDPR art. 6 nr. 1 bokstav f) i å vise deg
+                kartet du har bedt om.
             </p>
 
             {visKontaktPersonvern && (

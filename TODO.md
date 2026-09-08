@@ -84,11 +84,22 @@
   - CARTO-vannmerket sto på siden i ukjent tid uten at noe varslet. Endepunktet svarte `200 OK` med gyldig `image/png` i normal størrelse hele veien — kun pikslene endret seg. `mapInit.test.ts` mocker Leaflet fullstendig og asserter bare at `L.tileLayer` kalles med riktig URL-mønster; ingen E2E-test laster en ekte tile
   - Vurder: visuell regresjonstest på en kjent tile, størrelses-/checksum-sjekk i en scheduled workflow, eller oppetidsovervåking av `/tiles/*` som ser på innhold og ikke bare statuskode
   - Generaliser gjerne: hvilke andre tredjeparts-avhengigheter kan degradere stille uten å bryte HTTP-status?
+  - **Merk:** løses «Kart-tiles: selvhost vektor-tiles»-oppgaven først, blir kart-delen av denne uaktuell — tiles ligger da i vår egen bøtte og kan ikke degradere hos en tredjepart. Den generelle delen står fortsatt
 
-- [ ] **Kart-tiles: vektor vs. selvhosting** — *ingen plan ennå*
-  - Utsatt veivalg fra CARTO-nøkkel-oppgaven (2026-09-08). Dagens løsning er raster-tiles fra CARTO med nøkkel, proxyet gjennom `/tiles/*`
-  - Alternativer å vurdere: vektor-tiles (mindre overføring, skarpere på retina, styling i klienten), eller selvhosting med Protomaps PMTiles på S3 — sistnevnte fjerner tredjepartsavhengigheten og nøkkelhåndteringen helt
-  - Vei kostnad, kompleksitet og GDPR-gevinst mot at dagens løsning faktisk fungerer
+- [ ] **Kart-tiles: selvhost vektor-tiles med Protomaps PMTiles** — *ingen plan ennå*
+  - Utsatt veivalg fra CARTO-nøkkel-oppgaven (2026-09-08). Utredet 2026-09-08 — **konklusjonen er tatt: selvhost vektor**. Gjenstår å planlegge og gjennomføre. Valgt variant: **Leaflet + `protomaps-leaflet` + PMTiles-arkiv på S3**
+  - **Målt** med `pmtiles extract` mot dagsbygget `20260908.pmtiles` (137,9 GB planet, uttrekk over HTTP range-requests):
+    - 4 × 4 km rundt klinikken, z0–15: **3,1 MB** (11 s). Samme utsnitt z10–15: 1,95 MB. Hele Stavanger/Sandnes/Jæren (~40 km), z0–15: 27,5 MB
+    - Per besøkende: 3×3 z15-tiles over klinikken = **201 KB**, mot ~450 KB for dagens 18 raster-tiles. Vektor er altså *mindre* over nett
+    - JS-kostnad: dagens `Kontakt`-bundle er 44,9 KB gz (Leaflet + egen kode). `protomaps-leaflet@5.1.0` er 37,7 KB gz og har `pmtiles`-klienten innebygget → ~83 KB gz. Dette er den reelle prisen
+  - **MapLibre GL forkastet:** ~200 KB gz og krever hosting av glyph-PBF-er og sprites. Selvhostet *raster* forkastet: krever full render-pipeline (planetiler + tileserver) for dårligere resultat
+  - **Fjerner:** tredjeparten og hele GDPR-spørsmålet (ingen IP, ingen `X-Forwarded-For`), API-nøkkelen med placeholder-injeksjon i `setup-cloudfront-functions.mjs` + drift-vakt + `CARTO_API_KEY`-secret, `Referer`-trikset, origin request policy-en `carto-tiles-key-forward`, `/tiles/*`-invalideringssteget og deploy-rekkefølgen. CARTO-attribusjonen faller bort; kun `© OpenStreetMap contributors` gjenstår
+  - **Koster:** +38 KB gz JS, et nytt vedlikeholdspunkt (oppdatering av uttrekket — realistisk årlig, kan gjøres manuelt), et designvalg fordi Protomaps' stil ikke er CARTO Voyager (mot design-guiden), og nye tester (`mapInit.test.ts` mocker Leaflet fullstendig i dag)
+  - **Må verifiseres i planfasen:**
+    - Skjema-kompatibilitet: dagsbygget deklarerer `version 4.15.2`, mens `protomaps-leaflet@5.1.0` avhenger av `@protomaps/basemaps ^5.0.0`. Protomaps skriver at dagskanalen er «compatible with style v4.0.0 and newer» — bekreft ved å faktisk rendre et uttrekk lokalt før vi forplikter oss
+    - CSP: `connect-src` må dekke range-requests mot eget origin. Canvas-rendering trenger ikke `eval`
+    - Panorering: `dragging` er på for desktop i `getMapOptions`, så en besøkende kan panorere ut av uttrekket. Vurder `maxBounds` eller et større uttrekk
+  - Vektor overzoomer fra z15 (planetbyggets maks) til z17–19 uten mer data og holder seg skarpt. Individuelle OSM-bygninger finnes fra z15
 
 - [ ] **CI: gjør CodeQL til en blokkerende sjekk** — *ingen plan ennå*
   - PR #456 (2026-09-08) auto-merget mens CodeQL var rød med en **high**-alert: `js/incomplete-url-substring-sanitization` i `scripts/cloudfront-strip-tiles-prefix.js`. Funnet var reelt — `host.indexOf('aarrestad.com')` matcher også `aarrestad.com.angriper.example` — og ble fikset i #457, men først *etter* at den sårbare versjonen var deployet til prod
