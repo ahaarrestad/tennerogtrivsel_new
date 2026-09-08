@@ -2,6 +2,18 @@
 
 *Skrevet 2026-09-08. Spec: [`docs/designs/archive/2026-09-08-carto-api-nokkel.md`](../../designs/archive/2026-09-08-carto-api-nokkel.md)*
 
+> **Rettelse lagt til 2026-09-08 (etter arkivering).** Dokumentet er bevart som
+> historisk referat og er *ikke* omskrevet, men to påstander i det er senere vist å
+> være feil, og de gjentas ikke i gjeldende dokumentasjon:
+> 1. **«Besøkendes IP-adresser når ikke CARTO» stemmer ikke.** Mot et custom origin
+>    legger CloudFront selv på `X-Forwarded-For` med viewer-IP-en, og det kan ikke slås
+>    av med en origin request policy. Proxyen er en dataminimering, ikke en eliminering.
+> 2. **Cache-levetiden er 180 dager, ikke 24 t.** CARTO sender
+>    `Cache-Control: public,max-age=15552000`, som slår cache-policyens `DefaultTTL`.
+>
+> Gjeldende beskrivelse: [`docs/architecture/sikkerhet.md`](../../architecture/sikkerhet.md)
+> og `src/pages/personvern.astro`.
+
 ## Mål
 
 Rene tiles i produksjon, med nøkkelen i GitHub Secrets og aldri i git eller klient-JS.
