@@ -1,6 +1,6 @@
 # Plan: CARTO API-nøkkel for basemap-tiles
 
-*Skrevet 2026-09-08. Spec: [`docs/designs/2026-09-08-carto-api-nokkel.md`](../designs/2026-09-08-carto-api-nokkel.md)*
+*Skrevet 2026-09-08. Spec: [`docs/designs/archive/2026-09-08-carto-api-nokkel.md`](../../designs/archive/2026-09-08-carto-api-nokkel.md)*
 
 ## Mål
 
@@ -15,6 +15,14 @@ kartets utseende, omdøping av origin-ID.
 
 Nøkkel hentet fra [carto.com/basemaps/apikey](https://carto.com/basemaps/apikey/) og lagt inn som
 repository secret `CARTO_API_KEY`. Brukeren gjør dette; nøkkelen deles ikke i chat eller i filer.
+
+Domener som registreres på nøkkelen: `www.tennerogtrivsel.no`, `test2.aarrestad.com`,
+`localhost`. Flere trengs ikke: CloudFront-funksjonen normaliserer `Host` til ett av disse to
+domenene, så verken apex-/`.com`-/`.net`-aliasene eller `test3.aarrestad.com` når CARTO som
+egen `Referer`-verdi.
+
+**Merk rekkefølgen:** secreten må være på plass *før* PR-en merges. Deploy-scriptet feiler
+høylytt uten den (akseptansekriterium 8), så en merge før det stopper hele deployen.
 
 ## Steg
 
@@ -57,8 +65,13 @@ den sjekken, og deploy.yml er eneste workflow som kjører scriptet.
 
 **Manuelt/CLI mot AWS — ikke i repoet.** Uten dette steget har de tre foregående ingen effekt.
 
-- Opprett en origin request policy som forwarder kun query-parameteren `key` (ingen headers utover
-  standard, ingen cookies).
+- Opprett en origin request policy som forwarder query-parameteren `key` **og** headeren `referer`
+  (ingen cookies). `referer` er nødvendig for at CARTOs domenerestriksjon på nøkkelen skal virke —
+  CloudFront videresender ingen `Referer` uten at policyen sier det, heller ikke en funksjonen
+  selv har satt. **Verdien settes av CloudFront-funksjonen til en konstant, normalisert fra
+  `Host`** — ikke av klienten, og ikke til rå `Host`, som er klientvalgbar blant distribusjonens
+  seks aliaser. Slik kan ingen hotlinke tile-URL-en fra et fremmed domene, eller via et
+  uregistrert alias, og få et vannmerket svar cachet for alle.
 - Knytt den til cache-behavior `/tiles/*` på prod-distribusjonen `E9Z51DQB2K1G4`.
 - La cache-policyen `Managed-CachingOptimized` stå — `key` skal ikke inn i cache-nøkkelen.
 - Vurder om test-distribusjonen `E2WXX7ZUR5NNP3` har samme behavior og trenger samme endring.

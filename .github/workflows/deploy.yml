@@ -226,6 +226,16 @@ jobs:
 #            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_TEST }} \
 #            --paths "/*"
 
+      # Må kjøre FØR invalideringen av /* nedenfor. Invalideres cachen mens den gamle
+      # funksjonen fortsatt er live, repopulerer trafikk i mellomtiden /tiles/* med
+      # vannmerkede tiles fra CARTO — og de blir liggende i 24 t. Steget er uavhengig av
+      # bygget (leser kun scripts/*.js fra checkouten), så det legges først for å gi
+      # publish-function maksimal tid til å propagere til edge før cachen tømmes.
+      - name: Deploy CloudFront Functions
+        run: node scripts/setup-cloudfront-functions.mjs
+        env:
+          CARTO_API_KEY: ${{ secrets.CARTO_API_KEY }}
+
       - name: Create IndexNow key file
         env:
           INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
@@ -311,9 +321,6 @@ jobs:
         run: node scripts/update-cloudfront-csp.mjs
         env:
           CLOUDFRONT_POLICY_ID: ${{ secrets.CLOUDFRONT_CSP_POLICY_ID }}
-
-      - name: Deploy CloudFront Functions
-        run: node scripts/setup-cloudfront-functions.mjs
 
   update-lambda:
     needs: build

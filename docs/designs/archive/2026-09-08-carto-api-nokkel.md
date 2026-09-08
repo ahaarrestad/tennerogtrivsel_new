@@ -75,9 +75,40 @@ Cache-behavior `/tiles/*` bruker i dag `Managed-CachingOptimized`, som har
 `QueryStringBehavior: none`. Query-parametere sendes derfor **ikke** videre til origin — en `key`
 satt av funksjonen ville blitt strippet.
 
-Løsning: en egen origin request policy som forwarder kun query-parameteren `key`, knyttet til
-`/tiles/*`-behavioren. Cache-policyen står urørt, så `key` holdes utenfor cache-nøkkelen og vi
-beholder ett cachet objekt per tile framfor ett per nøkkelverdi.
+Løsning: en egen origin request policy knyttet til `/tiles/*`-behavioren, som forwarder
+query-parameteren `key` og headeren `referer`. Cache-policyen står urørt, så ingen av delene
+havner i cache-nøkkelen — vi beholder ett cachet objekt per tile framfor ett per nøkkelverdi.
+
+`referer` må med fordi CARTO håndhever nøkkelens domenerestriksjon på den headeren, og
+CloudFront videresender ingen `Referer` til origin uten at policyen sier det — heller ikke en
+som funksjonen selv har satt.
+
+**Verdien settes av funksjonen, ikke av klienten.** Dette er et sikkerhetskrav, ikke en
+bekvemmelighet: cache-nøkkelen for `/tiles/*` er kun pathen, så videresendte vi klientens egen
+`Referer`, ville den vært den eneste variable inputen som når origin — og samtidig usynlig for
+cachen. Hvem som helst kunne hotlinket `https://www.tennerogtrivsel.no/tiles/…` fra et fremmed
+domene, fått et vannmerket `200 OK` fra CARTO, og fått det cachet i 24 t for alle ekte
+besøkende. Funksjonen setter derfor `request.headers.referer` selv, til en konstant utledet av
+`Host` — men *ikke* til `Host` som sådan; se «Host normaliseres» under.
+
+Sidegevinst: klientens `Referer` er full side-URL (same-origin + `Referrer-Policy:
+strict-origin-when-cross-origin`). Å overskrive den hindrer at hver besøkendes side-URL lekker
+til CARTO — som er hele poenget med å proxye i utgangspunktet.
+
+**Host normaliseres — rå Host er ikke trygg.** CloudFront validerer `Host` mot distribusjonens
+aliaser, men prod har seks (`tennerogtrivsel.no/.net/.com` med og uten `www`) pluss
+`d19b7g2frcrx6i.cloudfront.net`, og bare det kanoniske domenet registreres på nøkkelen.
+Argumentet om at «apex-domenene redirecter 301 til `www…no`, så kartet lastes aldri derfra»
+holder **ikke** for `/tiles/*`: 301-en kommer fra `sitemap_redirect`, som er knyttet til
+default-behavioren, mens `/tiles/*` har `strip-tiles-prefix` — og CloudFront tillater kun én
+viewer-request-funksjon per behavior. Verifisert: `https://tennerogtrivsel.com/tiles/…` gir
+`200` med tile, ikke redirect. Funksjonen mapper derfor `Host` til én av to konstanter
+(`aarrestad.com` i Host → testdomenet, ellers prod-domenet), slik at verdien er deterministisk
+og immun mot at nye aliaser legges til senere.
+
+Domenene som skal registreres på nøkkelen: `www.tennerogtrivsel.no`, `test2.aarrestad.com` og
+`localhost` (lokal utvikling). `test3.aarrestad.com` trenger ikke registreres — funksjonen
+normaliserer den til `test2.aarrestad.com`.
 
 ## Akseptert risiko
 
@@ -110,8 +141,20 @@ Fiksen er altså holdbar, men har begrenset levetid — kartdataene kan bli fros
 Foreslått oppfølging: egen backlog-oppgave for veivalget vektor vs. selvhost (Protomaps PMTiles),
 som også ville fjernet vilkårsproblemet over.
 
-## Åpne spørsmål
+## Verifisert underveis (2026-09-08)
 
-Ingen som blokkerer planlegging. Den ene tekniske usikkerheten — om en origin request policy
-faktisk forwarder query-parameteren *slik funksjonen satte den*, framfor slik nettleseren sendte
-den — er en verifiseringsoppgave i planen, ikke et designvalg.
+- **Nøkkelen virker.** Samme tile hentet direkte fra CARTO med og uten `?key=` gir ulikt innhold;
+  visuell inspeksjon bekrefter vannmerke uten nøkkel og ren tile med.
+- **Origin request policy forwarder query-parameteren.** Etter at
+  `carto-tiles-key-forward` ble knyttet til `/tiles/*`, ga en cache-MISS gjennom
+  `https://www.tennerogtrivsel.no/tiles/...?key=...` en ren tile. Planens hovedusikkerhet er
+  dermed avkreftet for klient-satt `key`; at en *funksjonssatt* `key` oppfører seg likt gjenstår
+  å bekrefte etter deploy.
+- **Nøkkelen aksepteres uten `Referer`.** `curl` sender ingen referrer og fikk likevel ren tile.
+- **Nøkkelen er per i dag ikke domenerestriktert.** Samme tile med gyldig nøkkel ga byte-identisk
+  svar (md5) med `Referer: https://ondsinnet-side.example/` som med vårt eget domene, mens samme
+  tile uten nøkkel ga vannmerke. Hotlink-forgiftningen beskrevet over er altså ikke utnyttbar i
+  dag — men ville blitt det i samme øyeblikk domenerestriksjonen ble slått på, hvis ikke
+  funksjonen satte `Referer` selv.
+- **Nøkkelen lekker ikke til klienten.** `dist/` etter `npm run build:ci` inneholder verken
+  nøkkelen, placeholderen eller variabelnavnet.
