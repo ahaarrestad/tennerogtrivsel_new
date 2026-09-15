@@ -19,6 +19,12 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
+- [ ] **Innholdsdeploy skal ikke blokkeres av avvik som ikke kan handles på** ([spec](docs/designs/2026-09-15-innholdsdeploy-blokkering.md)) ([plan](docs/plans/2026-09-15-innholdsdeploy-blokkering.md))
+  - Startet 2026-09-15. Prinsippet: **en gate skal blokkere der funnet er handlingsbart i den kjøringen.** På `repository_dispatch`-stien er lockfilen byte-identisk med den som alt kjører i prod, så en blokkering fjerner ingen sårbarhet — den hindrer bare innholdspublisering
+  - Audit-gaten i `build` og `update-lambda` gjøres ikke-blokkerende på dispatch-stien via `continue-on-error`-uttrykk; funnet rapporteres som en deduplisert GitHub-issue slik at det overlever kjøringen
+  - `Scheduled Security Audit` heves fra ukentlig til daglig, fordi `high`-båndet ikke dekkes av noen gate i `deploy.yml`
+  - Utløsende hendelse: 2026-09-15 stoppet `npm audit --audit-level=critical` en Drive-oppdatering på GHSA-26w7-cxv4-gfx2 (Astro RCE). Ingen kode var endret — advisory-en ble publisert etter forrige grønne kjøring
+
 ## Backlog
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
@@ -114,19 +120,9 @@
   - **Merk:** løses «Kart-tiles: selvhost vektor-tiles med Protomaps PMTiles» først, faller hele punktet bort — ingen tredjepart, ingen overføring
 
 - [ ] **Stabiliser ustabile tester** — *ingen plan ennå*
-  - `tests/accessibility.spec.ts` → «Admin (/admin) skal ikke ha kritiske UU-feil»: `page.waitForLoadState('networkidle')` timer ut på 30 s i full E2E-kjøring. Består isolert på både chromium (7/7) og Mobile Safari (7/7). Sannsynlig årsak: `/admin` laster Google-skript som holder forbindelser åpne, så «networkidle» inntreffer aldri under last. Vurder `domcontentloaded` + eksplisitt venting på et element framfor `networkidle`
+  - `tests/accessibility.spec.ts` → «Admin (/admin) skal ikke ha kritiske UU-feil»: `page.waitForLoadState('networkidle')` timer ut på 30 s i full E2E-kjøring. Består isolert på både chromium (7/7) og Mobile Safari (7/7). Sannsynlig årsak: `/admin` laster Google-skript som holder forbindelser åpne, så «networkidle» inntreffer aldri under last. Vurder `domcontentloaded` + eksplisitt venting på et element framfor `networkidle`. **Observert i CI 2026-09-15** (kjøring `35022298679`, push til main): feilet også der, inkludert ved retry, og blokkerte `build`, `deploy` og `update-lambda` — flaken er altså ikke bare et lokalt fenomen, den stopper deployer
   - `src/__tests__/data-validation.test.ts` → «tannleger collection should include imageConfig in schema»
   - `tests/links.spec.ts` → «alle tjeneste-sider skal ha fungerende lenker»: `locator.evaluateAll` feiler med «Execution context was destroyed, most likely because of a navigation» i full E2E-kjøring (observert 2026-09-15). Består 3/3 isolert og i en ny full kjøring rett etterpå — altså last-avhengig. Årsaken ligger i testen, ikke i koden: `page.goto(link)` venter kun på `load`, så dokumentet kan byttes ut mens `.container a`-evalueringen kjører. Vurder `waitUntil: 'domcontentloaded'` + eksplisitt `waitForSelector` før `evaluateAll`
-
-- [ ] **Innholdsdeploy skal ikke blokkeres av nye sikkerhetsavvik** — *ingen plan ennå*
-  - 2026-09-15 stoppet en Google Drive-oppdatering (`repository_dispatch: google_drive_update`) i steget «Check for critical vulnerabilities» i `build`-jobben: `npm audit --audit-level=critical` fant GHSA-26w7-cxv4-gfx2 (Astro RCE, `astro <7.2.8`). Ingen kode var endret — advisory-en ble publisert etter forrige grønne kjøring
-  - Prinsippet: **virket deployen i går, skal den virke i dag.** En ren innholdsendring fra Drive endrer ikke risikobildet i avhengighetstreet, og bruker skal ikke miste muligheten til å publisere innhold fordi en tredjepart publiserte en advisory i natt
-  - Mulig tiltak: hopp over audit-gaten når `github.event_name == 'repository_dispatch'`. Mønsteret finnes allerede i samme fil — `resolve-playwright` har `if: github.event_name != 'repository_dispatch'`
-  - Alternativt: la gaten kjøre, men som ikke-blokkerende (`continue-on-error: true`) på dispatch-stien, slik at funnet fortsatt synes i loggen
-  - Avveining å ta stilling til i planfasen: gaten er et bevisst supply-chain-vern (fra sikkerhetshardening-oppgaven). Fjernes den på dispatch-stien, kan sårbar kode deployes til prod uten at noe stopper den. Motvekten er at koden som deployes uansett er `main`, som allerede har passert gaten ved merge
-  - Kartlagt dekning per i dag (verifisert mot `deploy.yml` og `scheduled-audit.yml`, 2026-09-15): audit-gaten i `deploy.yml` står tre steder — i `e2e-tests`, `build` og `update-lambda` — og alle tre kjører `--audit-level=critical`. `build` har `if: always() && github.event_name != 'pull_request' && ...`, så den **kjører på `repository_dispatch`**; det er nettopp den som stoppet deployen 2026-09-15. På `pull_request` hoppes `build` og `update-lambda` over, så der er det kun `e2e-tests` som gater — og den har `github.event.pull_request.head.repo.fork != true`, så en fork-PR får ingen audit-gate i det hele tatt (uten praktisk betydning i dag, men verdt å vite)
-  - Blindsonen ligger i `high`-båndet, ikke i `critical`: alle gatene i `deploy.yml` står på `critical`, så et `high`-avvik fanges kun av `Scheduled Security Audit` (`--audit-level=high`, både rot og lambda) — som kjører **ukentlig** (`cron: '0 6 * * 1'`, mandager 06:00 UTC) — og av Dependabot-alerten, som kommer innen timer men ikke blokkerer noe. Det styrker argumentet for å kombinere tiltaket med hyppigere scheduled audit, framfor å la ukesyklusen være eneste nett under `high`
-  - Se også: «CI: tidlig lockfile-gate for Dependabot-PR-er» — samme tema, CI-porter som feiler for noe som ikke er PR-ens feil
 
 ## Fullført
 
