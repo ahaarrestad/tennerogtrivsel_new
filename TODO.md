@@ -113,9 +113,18 @@
   - Samme uverifiserte punkt: CARTOs juridiske foretaksnavn. Bevisst utelatt framfor å gjengi en uverifisert påstand
   - **Merk:** løses «Kart-tiles: selvhost vektor-tiles med Protomaps PMTiles» først, faller hele punktet bort — ingen tredjepart, ingen overføring
 
-- [ ] **Stabiliser to ustabile tester** — *ingen plan ennå*
+- [ ] **Stabiliser ustabile tester** — *ingen plan ennå*
   - `tests/accessibility.spec.ts` → «Admin (/admin) skal ikke ha kritiske UU-feil»: `page.waitForLoadState('networkidle')` timer ut på 30 s i full E2E-kjøring. Består isolert på både chromium (7/7) og Mobile Safari (7/7). Sannsynlig årsak: `/admin` laster Google-skript som holder forbindelser åpne, så «networkidle» inntreffer aldri under last. Vurder `domcontentloaded` + eksplisitt venting på et element framfor `networkidle`
   - `src/__tests__/data-validation.test.ts` → «tannleger collection should include imageConfig in schema»
+  - `tests/links.spec.ts` → «alle tjeneste-sider skal ha fungerende lenker»: `locator.evaluateAll` feiler med «Execution context was destroyed, most likely because of a navigation» i full E2E-kjøring (observert 2026-09-15). Består 3/3 isolert og i en ny full kjøring rett etterpå — altså last-avhengig. Årsaken ligger i testen, ikke i koden: `page.goto(link)` venter kun på `load`, så dokumentet kan byttes ut mens `.container a`-evalueringen kjører. Vurder `waitUntil: 'domcontentloaded'` + eksplisitt `waitForSelector` før `evaluateAll`
+
+- [ ] **Innholdsdeploy skal ikke blokkeres av nye sikkerhetsavvik** — *ingen plan ennå*
+  - 2026-09-15 stoppet en Google Drive-oppdatering (`repository_dispatch: google_drive_update`) i steget «Check for critical vulnerabilities» i `build`-jobben: `npm audit --audit-level=critical` fant GHSA-26w7-cxv4-gfx2 (Astro RCE, `astro <7.2.8`). Ingen kode var endret — advisory-en ble publisert etter forrige grønne kjøring
+  - Prinsippet: **virket deployen i går, skal den virke i dag.** En ren innholdsendring fra Drive endrer ikke risikobildet i avhengighetstreet, og bruker skal ikke miste muligheten til å publisere innhold fordi en tredjepart publiserte en advisory i natt
+  - Mulig tiltak: hopp over audit-gaten når `github.event_name == 'repository_dispatch'`. Mønsteret finnes allerede i samme fil — `resolve-playwright` har `if: github.event_name != 'repository_dispatch'`
+  - Alternativt: la gaten kjøre, men som ikke-blokkerende (`continue-on-error: true`) på dispatch-stien, slik at funnet fortsatt synes i loggen
+  - Avveining å ta stilling til i planfasen: gaten er et bevisst supply-chain-vern (fra sikkerhetshardening-oppgaven). Fjernes den på dispatch-stien, kan sårbar kode deployes til prod uten at noen ser det. Motvekten er at `Scheduled Security Audit` (`--audit-level=high`, daglig) allerede fanger avvikene uavhengig av deploy, og at koden som deployes uansett er `main` som allerede har passert gaten ved merge
+  - Se også: «CI: tidlig lockfile-gate for Dependabot-PR-er» — samme tema, CI-porter som feiler for noe som ikke er PR-ens feil
 
 ## Fullført
 
