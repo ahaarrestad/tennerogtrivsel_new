@@ -119,6 +119,13 @@
   - Samme uverifiserte punkt: CARTOs juridiske foretaksnavn. Bevisst utelatt framfor å gjengi en uverifisert påstand
   - **Merk:** løses «Kart-tiles: selvhost vektor-tiles med Protomaps PMTiles» først, faller hele punktet bort — ingen tredjepart, ingen overføring
 
+- [ ] **Scheduled Security Audit bør opprette issue, ikke bare feile** — *ingen plan ennå*
+  - En rød scheduled-kjøring gir i dag kun en GitHub-e-post. Det viste seg å ikke være nok: kjøring `34843733661` (2026-09-14 12:29 UTC) fanget GHSA-26w7-cxv4-gfx2 og feilet — men ingen handlet på det, og ~32 timer senere ble en innholdsdeploy blokkert av nøyaktig samme advisory
+  - Det er altså ikke kadensen som sviktet (den ble hevet til daglig 2026-09-15), men at varselet ikke ble til en oppgave
+  - Mønsteret finnes allerede ferdig i `deploy.yml`: etikett-dedup + `<!-- avtrykk: … -->` i issue-kroppen, innført av «Innholdsdeploy skal ikke blokkeres av avvik som ikke kan handles på». Gjenbruk det — vurder å trekke det ut i en composite action framfor å kopiere ~40 linjer bash
+  - Merk at `scheduled-audit.yml` kjører på `--audit-level=high`, så issuen vil dekke et bredere bånd enn `deploy.yml`-gaten
+  - Se også: «CI: tidlig lockfile-gate for Dependabot-PR-er»
+
 - [ ] **Stabiliser ustabile tester** — *ingen plan ennå*
   - `tests/accessibility.spec.ts` → «Admin (/admin) skal ikke ha kritiske UU-feil»: `page.waitForLoadState('networkidle')` timer ut på 30 s i full E2E-kjøring. Består isolert på både chromium (7/7) og Mobile Safari (7/7). Sannsynlig årsak: `/admin` laster Google-skript som holder forbindelser åpne, så «networkidle» inntreffer aldri under last. Vurder `domcontentloaded` + eksplisitt venting på et element framfor `networkidle`. **Observert i CI 2026-09-15** (kjøring `35022298679`, push til main): feilet også der, inkludert ved retry, og blokkerte `build`, `deploy` og `update-lambda` — flaken er altså ikke bare et lokalt fenomen, den stopper deployer
   - `src/__tests__/data-validation.test.ts` → «tannleger collection should include imageConfig in schema»

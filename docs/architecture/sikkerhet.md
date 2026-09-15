@@ -321,7 +321,9 @@ To separate CI-sjekker i `deploy.yml` (kjøres i `e2e-tests`-, `build`- og `upda
 
 **`npm audit signatures`** verifiserer at alle installerte pakker er signert av npm-registryet med nøkkelen som matcher publisert metadata. Dette fanger pakkeforfalskning der innholdet er byttet ut uten å oppdatere registrert signatur.
 
-**`npm audit --audit-level=critical`** feiler bygget ved kjente kritiske CVE-er i avhengighetstreet. Nivået er satt til `critical` (ikke `high`) for å unngå at hyppige `high`-CVE-er i dev-only transitive deps gjør CI flaky uten reell prod-impact.
+**`npm audit --audit-level=critical`** feiler bygget ved kjente kritiske CVE-er i avhengighetstreet. Nivået er satt til `critical` (ikke `high`) for å unngå at hyppige `high`-CVE-er i dev-only transitive deps gjør CI flaky uten reell prod-impact. **Merk:** utdraget over er forenklet — gaten er betinget på `repository_dispatch`-stien, se neste avsnitt.
+
+**Fork-PR-er får ingen audit-gate.** På `pull_request` hoppes `build` og `update-lambda` over, så `e2e-tests` er eneste gate der — og den har `github.event.pull_request.head.repo.fork != true`. En PR fra en fork passerer derfor uten audit. Uten praktisk betydning i dag (repoet tar ikke imot fork-PR-er), men verdt å vite før det eventuelt endres.
 
 **Gaten er betinget på `repository_dispatch`-stien (fra 2026-09-15).** I `build`- og `update-lambda`-jobbene har steget:
 
@@ -336,7 +338,7 @@ To separate CI-sjekker i `deploy.yml` (kjøres i `e2e-tests`-, `build`- og `upda
 
 Utløsende hendelse: 2026-09-15 stoppet gaten en Drive-oppdatering på GHSA-26w7-cxv4-gfx2 (Astro RCE) uten at noe i repoet var endret — advisory-en var publisert etter forrige grønne kjøring.
 
-**Funnet går ikke tapt.** Slår `continue-on-error` inn, skriver et oppfølgingssteg i `build` audit-utdataen til jobbsammendraget og oppretter en GitHub-issue, deduplisert på eksakt tittel mot åpne issues. Steget har selv `continue-on-error: true` — det skal aldri kunne velte jobben det nettopp slapp gjennom. `build` har derfor jobbnivå-`permissions` med `issues: write`; merk at jobbnivå-`permissions` **erstatter** toppnivå-settet, så `contents: read` må gjentas der. Rapporteringen ligger kun i `build`: `update-lambda` auditerer samme lockfile i samme kjøring, så en issue til ville vært duplikatstøy.
+**Funnet går ikke tapt.** Slår `continue-on-error` inn, skriver et oppfølgingssteg i `build` audit-utdataen til jobbsammendraget og oppretter en GitHub-issue med etiketten `sikkerhet-auto`. Dedupen er todelt: etiketten finner en eventuelt åpen issue (ikke tittelen — titler redigeres under triage, og da ville dedupen brutt stille), og et `<!-- avtrykk: … -->`-felt i issue-kroppen holder settet av advisory-URL-er. Er settet uendret, gjøres ingenting; har et nytt avvik kommet til, kommenteres den åpne issuen i stedet for å slukes. Gaten selv skriver rapporten via `tee`, så issuen viser byte-identisk det gaten faktisk så. Steget har selv `continue-on-error: true` — det skal aldri kunne velte jobben det nettopp slapp gjennom. `build` har derfor jobbnivå-`permissions` med `issues: write`; merk at jobbnivå-`permissions` **erstatter** toppnivå-settet, så `contents: read` må gjentas der. Rapporteringen ligger kun i `build`: `update-lambda` auditerer samme lockfile i samme kjøring, så en issue til ville vært duplikatstøy.
 
 **Vurdert og forkastet:** å hoppe over steget helt med `if: github.event_name != 'repository_dispatch'` (fjerner signalet), og å legge en rapporterings-jobb etter `deploy` som feiler ved funn (produserer bevisst røde main-kjøringer der alt gikk bra, og undergraver «rødt bygg = noe er galt»).
 
@@ -357,7 +359,9 @@ Token bør roteres minst én gang i året, eller umiddelbart ved mistanke om lek
 
 Dependabot og CI-audit ved push dekker bare kjente CVE-er og nye avhengighetsversjoner. **Gapet:** en ny CVE for en pakke som allerede er installert oppdages ikke før neste push.
 
-Det gapet materialiserte seg 2026-09-15 (se audit-gate-avsnittet over). Frekvensen ble derfor hevet fra ukentlig til **daglig** samtidig som audit-gaten ble gjort betinget på dispatch-stien: alle gatene i `deploy.yml` står på `critical`, så et `high`-avvik fanges kun her og av Dependabot-alerten — som kommer innen timer, men ikke blokkerer noe. Én gang i uken er for grovmasket til å være eneste nett under `high`. Kjøringen tar under et minutt.
+Frekvensen ble 2026-09-15 hevet fra ukentlig til **daglig**, samtidig som audit-gaten ble gjort betinget på dispatch-stien: alle gatene i `deploy.yml` står på `critical`, så et `high`-avvik fanges kun her og av Dependabot-alerten — som kommer innen timer, men ikke blokkerer noe. Ukentlig kadens gir opptil sju døgns forsinkelse i verste fall; daglig kutter det til ett. Observerte kjøringer tar 15–29 sekunder.
+
+**Men kadensen var ikke problemet 2026-09-15.** Den ukentlige kjøringen `34843733661` (2026-09-14 12:29 UTC) fanget GHSA-26w7-cxv4-gfx2 og feilet med «4 vulnerabilities (3 high, 1 critical)» ~32 timer før deployen ble blokkert. Signalet fantes; det nådde bare ingen som handlet på det, fordi en rød scheduled-kjøring gir en e-post og ikke en oppgave. **Kjent svakhet:** i motsetning til `build` oppretter denne workflowen ingen issue. Det bør rettes — se TODO-backloggen.
 
 **Oppsettet (`scheduled-audit.yml`):**
 

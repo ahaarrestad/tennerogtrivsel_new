@@ -1,7 +1,7 @@
 # Spec: Innholdsdeploy skal ikke blokkeres av avvik som ikke kan handles på
 
 - **Dato:** 2026-09-15
-- **Status:** Til godkjenning
+- **Status:** Godkjent og implementert
 - **Oppgave:** «Innholdsdeploy skal ikke blokkeres av nye sikkerhetsavvik» (TODO.md)
 - **Plan:** [docs/plans/2026-09-15-innholdsdeploy-blokkering.md](../plans/2026-09-15-innholdsdeploy-blokkering.md)
 - **Bakgrunn:** [sikkerhetshardening, Steg 4.3](../plans/2026-04-28-sikkerhetshardening.md) innførte audit-gaten
@@ -105,10 +105,18 @@ kjører på dispatch. Begge gjøres ikke-blokkerende, men kun `build` oppretter 
 auditerer samme lockfile i samme kjøring, så to issues ville vært ren duplikatstøy.
 
 **V4 — daglig scheduled audit.** Alle gatene i `deploy.yml` står på `critical`. Et
-`high`-avvik fanges derfor kun av `Scheduled Security Audit` (`--audit-level=high`) —
-ukentlig, mandager 06:00 UTC — og av Dependabot-alerten, som kommer innen timer, men ikke
-blokkerer noe. Når audit-gaten svekkes på én sti, bør nettet under den være tettere enn én
-gang i uken. Kjøringen tar under et minutt.
+`high`-avvik fanges derfor kun av `Scheduled Security Audit` (`--audit-level=high`) og av
+Dependabot-alerten, som kommer innen timer, men ikke blokkerer noe. Ukentlig kadens gir opptil
+sju døgns deteksjonsforsinkelse i verste fall; daglig kutter det til ett. Kjøringen er billig —
+observerte kjøringer ligger på 15–29 sekunder (`npm audit`-jobben 15 s, OSV-scanner 20 s).
+
+**Viktig presisering:** daglig kadens ville *ikke* forhindret hendelsen 2026-09-15. Den
+ukentlige kjøringen `34843733661` (2026-09-14 12:29 UTC, `event=schedule`) fanget
+GHSA-26w7-cxv4-gfx2 og feilet med «4 vulnerabilities (3 high, 1 critical)» — omtrent 32 timer
+*før* deployen ble blokkert. Signalet fantes altså allerede; det nådde bare ingen som handlet
+på det. Det er et argument for issue-opprettelsen i V2, ikke for kadensen: en rød
+scheduled-kjøring produserer en e-post, ikke en oppgave. Daglig kadens beholdes fordi den
+kutter verstefallsforsinkelsen, men den er ikke tiltaket som løser denne hendelsen.
 
 ## Restrisiko
 
@@ -122,3 +130,8 @@ allerede i prod før dispatchen. Reell endring i eksponering: null. Endringen er
 Ingen som blokkerer planlegging. Ett valg tas i planen, ikke her: hvorvidt feilgrenen
 (`continue-on-error` faktisk slår inn) skal verifiseres empirisk med en midlertidig commit
 på main, eller kun ved gjennomlesing. Se «Risiki» i planen.
+
+Ett spørsmål er identifisert *under* implementasjonen og skyves bevisst ut av denne oppgaven:
+`Scheduled Security Audit` varsler i dag kun via e-post ved rød kjøring, og hendelsen
+2026-09-15 viser at det ikke er nok (se V4). Den burde trolig opprette en issue på samme måte
+som `build` nå gjør. Det er en egen oppgave — den ligger utenfor godkjent scope her.

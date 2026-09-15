@@ -1,7 +1,7 @@
 # Plan: Innholdsdeploy skal ikke blokkeres av avvik som ikke kan handles på
 
 - **Dato:** 2026-09-15
-- **Status:** Til godkjenning
+- **Status:** Godkjent og implementert
 - **Spec:** [docs/designs/2026-09-15-innholdsdeploy-blokkering.md](../designs/2026-09-15-innholdsdeploy-blokkering.md)
 - **Branch:** `fix/innholdsdeploy-blokkering` (worktree opprettes i Fase 2)
 
