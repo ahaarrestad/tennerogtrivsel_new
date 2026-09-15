@@ -323,6 +323,23 @@ To separate CI-sjekker i `deploy.yml` (kjøres i `e2e-tests`-, `build`- og `upda
 
 **`npm audit --audit-level=critical`** feiler bygget ved kjente kritiske CVE-er i avhengighetstreet. Nivået er satt til `critical` (ikke `high`) for å unngå at hyppige `high`-CVE-er i dev-only transitive deps gjør CI flaky uten reell prod-impact.
 
+**Gaten er betinget på `repository_dispatch`-stien (fra 2026-09-15).** I `build`- og `update-lambda`-jobbene har steget:
+
+```yaml
+- name: Check for critical vulnerabilities
+  id: audit
+  continue-on-error: ${{ github.event_name == 'repository_dispatch' }}
+  run: npm audit --audit-level=critical
+```
+
+**Hvorfor:** `repository_dispatch: google_drive_update` er en ren innholdspublisering fra Drive. Lockfilen er da byte-identisk med den som allerede kjører i prod, så et funn er ikke handlingsbart i den kjøringen — å blokkere fjerner ingen sårbarhet fra prod, det hindrer bare redaktøren i å publisere innhold. Netto verdi av blokkeringen er negativ: prod er sårbar uansett, og i tillegg er CMS-en ute av drift. Den styrende regelen er at **en gate skal blokkere der funnet er handlingsbart i den kjøringen** — på `push` og `pull_request`, der avhengighetstreet faktisk kan endres, blokkerer gaten som før.
+
+Utløsende hendelse: 2026-09-15 stoppet gaten en Drive-oppdatering på GHSA-26w7-cxv4-gfx2 (Astro RCE) uten at noe i repoet var endret — advisory-en var publisert etter forrige grønne kjøring.
+
+**Funnet går ikke tapt.** Slår `continue-on-error` inn, skriver et oppfølgingssteg i `build` audit-utdataen til jobbsammendraget og oppretter en GitHub-issue, deduplisert på eksakt tittel mot åpne issues. Steget har selv `continue-on-error: true` — det skal aldri kunne velte jobben det nettopp slapp gjennom. `build` har derfor jobbnivå-`permissions` med `issues: write`; merk at jobbnivå-`permissions` **erstatter** toppnivå-settet, så `contents: read` må gjentas der. Rapporteringen ligger kun i `build`: `update-lambda` auditerer samme lockfile i samme kjøring, så en issue til ville vært duplikatstøy.
+
+**Vurdert og forkastet:** å hoppe over steget helt med `if: github.event_name != 'repository_dispatch'` (fjerner signalet), og å legge en rapporterings-jobb etter `deploy` som feiler ved funn (produserer bevisst røde main-kjøringer der alt gikk bra, og undergraver «rødt bygg = noe er galt»).
+
 ### PAT-rotering (`MY_GITHUB_PAT`)
 
 `MY_GITHUB_PAT` brukes i `dependabot-auto-merge.yml` og `auto-pr.yml` for å trigge workflows etter Dependabot-merge (standard `GITHUB_TOKEN` har en anti-loop-sikring som blokkerer dette).
@@ -340,11 +357,13 @@ Token bør roteres minst én gang i året, eller umiddelbart ved mistanke om lek
 
 Dependabot og CI-audit ved push dekker bare kjente CVE-er og nye avhengighetsversjoner. **Gapet:** en ny CVE for en pakke som allerede er installert oppdages ikke før neste push.
 
+Det gapet materialiserte seg 2026-09-15 (se audit-gate-avsnittet over). Frekvensen ble derfor hevet fra ukentlig til **daglig** samtidig som audit-gaten ble gjort betinget på dispatch-stien: alle gatene i `deploy.yml` står på `critical`, så et `high`-avvik fanges kun her og av Dependabot-alerten — som kommer innen timer, men ikke blokkerer noe. Én gang i uken er for grovmasket til å være eneste nett under `high`. Kjøringen tar under et minutt.
+
 **Oppsettet (`scheduled-audit.yml`):**
 
 | Komponent | Hva det gjør |
 |-----------|--------------|
-| `npm-audit` (jobb) | Kjører `npm audit --audit-level=high` i rotmappen og `lambda/kontakt-form-handler` ukentlig mandag 06:00 UTC. Feiler ved high/critical → GitHub sender e-post. |
+| `npm-audit` (jobb) | Kjører `npm audit --audit-level=high` i rotmappen og `lambda/kontakt-form-handler` daglig 06:00 UTC. Feiler ved high/critical → GitHub sender e-post. |
 | `osv-scan` (jobb) | Kjører Google OSV Scanner via reusable workflow, skanner begge `package-lock.json`-filene rekursivt, laster opp SARIF til GitHub Security-fanen. |
 
 **Nivåforskjell:** `--audit-level=high` her vs. `--audit-level=critical` i `deploy.yml`. Scheduled-workflowen er et tidlig varslingssystem; deploy.yml er den harde CI-gaten. Juster ned til `--audit-level=critical` ved for mye støy fra dev-avhengigheter.

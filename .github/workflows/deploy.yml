@@ -140,6 +140,12 @@ jobs:
 
   build:
     needs: [unit-tests, e2e-tests, lint, type-check]
+    # Jobbnivå-permissions ERSTATTER toppnivå-settet for denne jobben. `issues: write`
+    # trengs av rapporteringssteget under; `pages`/`id-token` brukes ikke her (kun av
+    # deploy-jobben), så de utelates bevisst.
+    permissions:
+      contents: read
+      issues: write
     # Bygger deploy-artefakten. Hoppes over på pull_request (deploy skjer aldri på PR,
     # og fork-PR-er mangler Drive-secrets) — PR-er dekkes av unit/e2e/lint/type-check-jobbene.
     if: |
@@ -173,7 +179,65 @@ jobs:
       - name: Verify npm package signatures
         run: npm audit signatures
       - name: Check for critical vulnerabilities
+        id: audit
+        # Blokkerer på push/PR, der avhengighetstreet faktisk kan endres. På
+        # repository_dispatch er lockfilen byte-identisk med den som alt kjører i prod,
+        # så en blokkering fjerner ingen sårbarhet — den hindrer bare at redaktøren får
+        # publisert innhold. Funnet går ikke tapt: steget under rapporterer det.
+        continue-on-error: ${{ github.event_name == 'repository_dispatch' }}
         run: npm audit --audit-level=critical
+
+      - name: Rapporter avvik som ikke blokkerte deployen
+        if: github.event_name == 'repository_dispatch' && steps.audit.outcome == 'failure'
+        # Dette steget skal aldri kunne velte jobben det nettopp slapp gjennom. Et tapt
+        # varsel er bedre enn en blokkert innholdsdeploy — funnet ligger uansett i
+        # jobbsammendraget.
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITTEL: '[sikkerhet] Kritisk npm-avvik oppdaget under innholdsdeploy'
+        run: |
+          RAPPORT="$RUNNER_TEMP/audit.txt"
+          npm audit --audit-level=critical > "$RAPPORT" 2>&1 || true
+
+          {
+            echo '### Kritisk npm-avvik — deployen ble IKKE stoppet'
+            echo
+            echo 'Lockfilen er uendret fra den som alt kjører i prod, så deployen fikk gå'
+            echo 'gjennom med vilje. Avviket må likevel fikses.'
+            echo
+            echo '```'
+            cat "$RAPPORT"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Eksakt tittelmatch via jq, ikke `gh issue list --search` — GitHubs tittelsøk
+          # er uskarpt og kan gi falske treff, som ville undertrykt et ekte varsel.
+          EKSISTERENDE=$(gh issue list --state open --limit 100 --json number,title \
+            -q '.[] | select(.title == env.TITTEL) | .number' | head -1)
+          if [ -n "$EKSISTERENDE" ]; then
+            echo "Åpen issue #$EKSISTERENDE finnes allerede — oppretter ikke ny."
+            exit 0
+          fi
+
+          KROPP="$RUNNER_TEMP/issue-body.md"
+          {
+            echo '`npm audit --audit-level=critical` fant kritiske avvik under en'
+            echo 'innholdsdeploy (`repository_dispatch: google_drive_update`).'
+            echo
+            echo 'Deployen ble **ikke** stoppet, og det er tilsiktet: lockfilen er identisk'
+            echo 'med den som alt kjører i prod, så en blokkering ville bare hindret'
+            echo 'innholdspublisering uten å fjerne sårbarheten fra prod.'
+            echo
+            echo "Kjøring: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo
+            echo '```'
+            cat "$RAPPORT"
+            echo '```'
+          } > "$KROPP"
+
+          gh issue create --title "$TITTEL" --body-file "$KROPP"
+
       - name: Sync data
         run: npm run sync
       - name: Build Astro site
@@ -354,6 +418,11 @@ jobs:
       - name: Verify npm package signatures
         run: npm audit signatures
       - name: Check for critical vulnerabilities
+        id: audit
+        # Samme begrunnelse som i build-jobben. Rapporteringssteget ligger KUN der:
+        # begge jobbene auditerer samme lockfile i samme kjøring, så en issue til
+        # ville vært ren duplikatstøy.
+        continue-on-error: ${{ github.event_name == 'repository_dispatch' }}
         run: npm audit --audit-level=critical
 
       - name: Configure AWS credentials
