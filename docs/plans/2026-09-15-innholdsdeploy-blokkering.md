@@ -39,46 +39,31 @@ det er `outcome` steg 2 leser.
 ```yaml
       - name: Rapporter avvik som ikke blokkerte deployen
         if: github.event_name == 'repository_dispatch' && steps.audit.outcome == 'failure'
-        # Et tapt varsel er bedre enn en blokkert innholdsdeploy — se R4 i planen.
+        # Et tapt varsel er bedre enn en blokkert innholdsdeploy — se R4.
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-          TITTEL: '[sikkerhet] Kritisk npm-avvik oppdaget under innholdsdeploy'
+          ETIKETT: sikkerhet-auto
         run: |
-          npm audit --audit-level=critical > audit.txt 2>&1 || true
-          {
-            echo "### Kritisk npm-avvik — deployen ble IKKE stoppet"
-            echo
-            echo "Innholdsdeployen fikk gå gjennom med vilje: lockfilen er uendret fra den"
-            echo "som alt kjører i prod. Avviket må likevel fikses."
-            echo
-            echo '```'
-            cat audit.txt
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-
-          EKSISTERENDE=$(gh issue list --state open --limit 100 --json number,title \
-            -q ".[] | select(.title == \"$TITTEL\") | .number" | head -1)
-          if [ -n "$EKSISTERENDE" ]; then
-            echo "Åpen issue #$EKSISTERENDE finnes allerede — oppretter ikke ny."
-            exit 0
-          fi
-
-          gh issue create --title "$TITTEL" --body-file - <<BODY
-          \`npm audit --audit-level=critical\` fant kritiske avvik under en innholdsdeploy
-          (\`repository_dispatch: google_drive_update\`). Deployen ble **ikke** stoppet —
-          se [spec]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/docs/designs/archive/2026-09-15-innholdsdeploy-blokkering.md).
-
-          Kjøring: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
-
-          \`\`\`
-          $(cat audit.txt)
-          \`\`\`
-          BODY
+          # ... skriver $RUNNER_TEMP/audit.txt (fra tee-en i gaten) til $GITHUB_STEP_SUMMARY,
+          # beregner avtrykk, og oppretter eller kommenterer issuen.
 ```
 
-Dedupliseringen bruker **eksakt tittelmatch** mot åpne issues, ikke `--search`, fordi
-GitHubs tittelsøk er uskarpt og kan gi falske treff.
+Se `.github/workflows/deploy.yml` for den fullstendige, gjeldende teksten — den ble
+vesentlig omarbeidet under review, og gjengis ikke i sin helhet her for å unngå at to
+kopier kommer ut av sync.
+
+**Deduplisering — slik den endte (endret to ganger under review):**
+
+| Runde | Mekanisme | Hvorfor den ble forkastet |
+|-------|-----------|---------------------------|
+| Opprinnelig | Eksakt tittelmatch mot åpne issues | Titler redigeres under triage; dedupen ville brutt stille og åpnet en ny issue per innholdspublisering |
+| Runde 1 | Etikett `sikkerhet-auto` + `<!-- avtrykk: … -->` i kroppen, oppdatert med `gh issue edit` | `gh issue edit --body-file` erstatter hele kroppen og ville slettet triage-notater. `$`-ankeret i `sed` sluttet dessuten å matche så snart noen redigerte kroppen i web-editoren (CRLF) |
+| **Gjeldende** | Etikett finner issuen; avtrykket er **siste markør i kropp + kommentarer**. Nye avvik varsles som **kommentar** — kroppen skrives aldri på nytt. `tr -d '\r'` før `sed` | — |
+
+Avtrykket er settet av URL-er til advisories med `severity == "critical"`, sortert. Filteret
+er nødvendig: `npm audit --json` rapporterer hele treet uansett `--audit-level`, så uten det
+ville et nytt `moderate`-avvik utløst varsel om et kritisk sett som ikke hadde endret seg.
 
 ### Steg 3 — jobbrettigheter for `build` (samme fil)
 

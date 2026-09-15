@@ -185,10 +185,13 @@ jobs:
         # så en blokkering fjerner ingen sårbarhet — den hindrer bare at redaktøren får
         # publisert innhold. Funnet går ikke tapt: steget under rapporterer det.
         continue-on-error: ${{ github.event_name == 'repository_dispatch' }}
-        # tee framfor å kjøre auditen på nytt i rapporteringssteget: rapporten blir da
-        # byte-identisk med det gaten faktisk så. PIPESTATUS er nødvendig — default-
-        # shellen er `bash -e` UTEN pipefail, så uten dette ville tee-ens exit 0 skjult
-        # at auditen feilet, og gaten hadde sluttet å gate i det hele tatt.
+        # tee framfor å kjøre TEKST-auditen på nytt i rapporteringssteget: rapporten i
+        # issuen blir da byte-identisk med det gaten faktisk så. (Avtrykket der beregnes
+        # av et eget `--json`-kall — det er maskindata, ikke rapporten.)
+        # PIPESTATUS er nødvendig: default-shellen er `bash -e` UTEN pipefail, så uten
+        # dette ville tee-ens exit 0 skjult at auditen feilet, og gaten hadde sluttet å
+        # gate i det hele tatt. Ingenting må inn mellom pipelinen og `exit` — neste
+        # kommando overskriver PIPESTATUS.
         run: |
           npm audit --audit-level=critical 2>&1 | tee "$RUNNER_TEMP/audit.txt"
           exit ${PIPESTATUS[0]}
@@ -216,11 +219,20 @@ jobs:
             echo '~~~'
           } >> "$GITHUB_STEP_SUMMARY"
 
-          # Avtrykk = settet av advisory-URL-er, sortert. Uten dette ville avvik nummer to
+          # Avtrykk = settet av KRITISKE advisory-URL-er. Uten det ville avvik nummer to
           # forsvunnet: står det alt en åpen issue om avvik A, og avvik B dukker opp, skal
           # B varsles — ikke slukes av dedupen.
-          AVTRYKK=$(npm audit --json 2>/dev/null \
-            | jq -rS '[.vulnerabilities[]?.via[]? | objects | .url] | unique | join(",")')
+          #
+          # Severity-filteret er nødvendig fordi `npm audit --json` alltid rapporterer HELE
+          # treet; `--audit-level` styrer kun exit-koden. Uten filteret ville et nytt
+          # `moderate`-avvik flippet avtrykket og utløst varsel om et kritisk sett som ikke
+          # hadde endret seg.
+          #
+          # Feiler jq (ugyldig JSON), blir AVTRYKK tomt. Da varsles det uten markør, og
+          # forrige avtrykk blir stående som fasit framfor å bli overskrevet med tull.
+          AVTRYKK=$(npm audit --json 2>/dev/null | jq -rS '
+            [.vulnerabilities[]?.via[]? | objects | select(.severity == "critical") | .url]
+            | unique | join(",")') || AVTRYKK=''
 
           # Dedup på etikett, ikke tittel: titler redigeres under triage, og da ville
           # dedupen brutt stille og hver eneste innholdspublisering åpnet en ny issue.
@@ -230,21 +242,35 @@ jobs:
             --color d93f0b --force
 
           # Feiler kallet, står LISTE igjen som tom liste og vi oppretter en ny issue.
-          # Bevisst feilmodus: en duplikat-issue er bedre enn et tapt varsel.
-          LISTE=$(gh issue list --label "$ETIKETT" --state open --limit 1 --json number,body) || LISTE=''
+          # Bevisst feilmodus: en duplikat-issue er bedre enn et tapt varsel. Merk at
+          # `--limit 1` da gjør den eldste usynlig for dedupen — lukk den manuelt.
+          LISTE=$(gh issue list --label "$ETIKETT" --state open --limit 1 --json number) || LISTE=''
           [ -n "$LISTE" ] || LISTE='[]'
           NUMMER=$(printf '%s' "$LISTE" | jq -r '.[0].number // empty')
-          FORRIGE=$(printf '%s' "$LISTE" | jq -r '.[0].body // ""' \
-            | sed -n 's/^<!-- avtrykk: \(.*\) -->$/\1/p')
 
-          if [ -n "$NUMMER" ] && [ "$FORRIGE" = "$AVTRYKK" ]; then
+          # Fasit-avtrykket er den SISTE markøren i kropp + kommentarer. Issue-kroppen
+          # skrives aldri på nytt: den kan inneholde triage-notater et menneske har lagt
+          # inn, og et nytt avvik skal legge seg på den historikken, ikke slette den.
+          # `tr -d '\r'` fordi GitHubs web-editor lagrer kroppen med CRLF så snart noen
+          # har redigert den — uten dette ville `$`-ankeret sluttet å matche, og dedupen
+          # brutt stille nøyaktig når noen begynte å jobbe med issuen.
+          FORRIGE=''
+          if [ -n "$NUMMER" ]; then
+            FORRIGE=$(gh issue view "$NUMMER" --json body,comments \
+                        --jq '.body, .comments[].body' 2>/dev/null \
+                      | tr -d '\r' \
+                      | sed -n 's/^<!-- avtrykk: \(.*\) -->$/\1/p' \
+                      | tail -n 1)
+          fi
+
+          if [ -n "$NUMMER" ] && [ -n "$AVTRYKK" ] && [ "$FORRIGE" = "$AVTRYKK" ]; then
             echo "Åpen issue #$NUMMER dekker allerede nøyaktig disse avvikene."
             exit 0
           fi
 
           KROPP="$RUNNER_TEMP/issue-body.md"
           {
-            echo "<!-- avtrykk: $AVTRYKK -->"
+            if [ -n "$AVTRYKK" ]; then echo "<!-- avtrykk: $AVTRYKK -->"; fi
             echo '`npm audit --audit-level=critical` fant kritiske avvik under en'
             echo 'innholdsdeploy (`repository_dispatch: google_drive_update`).'
             echo
@@ -261,14 +287,17 @@ jobs:
             echo "Kjøring: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo
             echo '~~~'
-            cat "$RAPPORT"
+            # GitHub avviser issue-kropper over 65 536 tegn, og et avvist kall her ville
+            # betydd tapt varsel (steget har continue-on-error). Egen `echo` etterpå fordi
+            # head kan kutte midt i en linje.
+            head -c 50000 "$RAPPORT"
+            echo
             echo '~~~'
           } > "$KROPP"
 
           if [ -n "$NUMMER" ]; then
-            echo "Avvikssettet er endret siden issue #$NUMMER sist ble skrevet — varsler på nytt."
+            echo "Avvikssettet er endret siden issue #$NUMMER sist ble varslet — kommenterer."
             gh issue comment "$NUMMER" --body-file "$KROPP"
-            gh issue edit "$NUMMER" --body-file "$KROPP"
           else
             gh issue create --label "$ETIKETT" \
               --title "[sikkerhet] Kritisk npm-avvik oppdaget under innholdsdeploy" \

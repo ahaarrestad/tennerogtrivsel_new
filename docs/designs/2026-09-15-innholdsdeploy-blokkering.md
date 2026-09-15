@@ -84,6 +84,12 @@ kritiske sårbarheter»*. Endringen her svekker ikke det formålet, men flytter 
   7.2.4–7.2.7 er en separat sak; Dependabot-PR #463 hever gulvet.
 - **Ingen endring i `npm audit signatures`.** Det steget fanger pakkeforfalskning, ikke
   advisories, og er handlingsbart på alle stier.
+- **`workflow_dispatch` beholder den blokkerende gaten.** Manuell kjøring har samme
+  egenskap som dispatch-stien — lockfilen er uendret, så funnet er like lite handlingsbart —
+  og prinsippet over skulle isolert sett tilsagt samme unntak. Det gjøres likevel ikke:
+  `workflow_dispatch` er den naturlige nødutgangen hvis dette blir feil, og da skal den ha
+  den strengeste oppførselen, ikke den mildeste. Er innholdspublisering blokkert, er riktig
+  vei ut å fikse avviket eller trigge en ny Drive-dispatch.
 
 ## Designvalg med begrunnelse
 
@@ -108,7 +114,7 @@ auditerer samme lockfile i samme kjøring, så to issues ville vært ren duplika
 `high`-avvik fanges derfor kun av `Scheduled Security Audit` (`--audit-level=high`) og av
 Dependabot-alerten, som kommer innen timer, men ikke blokkerer noe. Ukentlig kadens gir opptil
 sju døgns deteksjonsforsinkelse i verste fall; daglig kutter det til ett. Kjøringen er billig —
-observerte kjøringer ligger på 15–29 sekunder (`npm audit`-jobben 15 s, OSV-scanner 20 s).
+observerte kjøringer ligger under et halvt minutt (`npm audit`-jobben 15 s, OSV-scanner 20 s).
 
 **Viktig presisering:** daglig kadens ville *ikke* forhindret hendelsen 2026-09-15. Den
 ukentlige kjøringen `34843733661` (2026-09-14 12:29 UTC, `event=schedule`) fanget
