@@ -185,7 +185,13 @@ jobs:
         # så en blokkering fjerner ingen sårbarhet — den hindrer bare at redaktøren får
         # publisert innhold. Funnet går ikke tapt: steget under rapporterer det.
         continue-on-error: ${{ github.event_name == 'repository_dispatch' }}
-        run: npm audit --audit-level=critical
+        # tee framfor å kjøre auditen på nytt i rapporteringssteget: rapporten blir da
+        # byte-identisk med det gaten faktisk så. PIPESTATUS er nødvendig — default-
+        # shellen er `bash -e` UTEN pipefail, så uten dette ville tee-ens exit 0 skjult
+        # at auditen feilet, og gaten hadde sluttet å gate i det hele tatt.
+        run: |
+          npm audit --audit-level=critical 2>&1 | tee "$RUNNER_TEMP/audit.txt"
+          exit ${PIPESTATUS[0]}
 
       - name: Rapporter avvik som ikke blokkerte deployen
         if: github.event_name == 'repository_dispatch' && steps.audit.outcome == 'failure'
@@ -195,10 +201,9 @@ jobs:
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-          TITTEL: '[sikkerhet] Kritisk npm-avvik oppdaget under innholdsdeploy'
+          ETIKETT: sikkerhet-auto
         run: |
           RAPPORT="$RUNNER_TEMP/audit.txt"
-          npm audit --audit-level=critical > "$RAPPORT" 2>&1 || true
 
           {
             echo '### Kritisk npm-avvik — deployen ble IKKE stoppet'
@@ -206,22 +211,40 @@ jobs:
             echo 'Lockfilen er uendret fra den som alt kjører i prod, så deployen fikk gå'
             echo 'gjennom med vilje. Avviket må likevel fikses.'
             echo
-            echo '```'
+            echo '~~~'
             cat "$RAPPORT"
-            echo '```'
+            echo '~~~'
           } >> "$GITHUB_STEP_SUMMARY"
 
-          # Eksakt tittelmatch via jq, ikke `gh issue list --search` — GitHubs tittelsøk
-          # er uskarpt og kan gi falske treff, som ville undertrykt et ekte varsel.
-          EKSISTERENDE=$(gh issue list --state open --limit 100 --json number,title \
-            -q '.[] | select(.title == env.TITTEL) | .number' | head -1)
-          if [ -n "$EKSISTERENDE" ]; then
-            echo "Åpen issue #$EKSISTERENDE finnes allerede — oppretter ikke ny."
+          # Avtrykk = settet av advisory-URL-er, sortert. Uten dette ville avvik nummer to
+          # forsvunnet: står det alt en åpen issue om avvik A, og avvik B dukker opp, skal
+          # B varsles — ikke slukes av dedupen.
+          AVTRYKK=$(npm audit --json 2>/dev/null \
+            | jq -rS '[.vulnerabilities[]?.via[]? | objects | .url] | unique | join(",")')
+
+          # Dedup på etikett, ikke tittel: titler redigeres under triage, og da ville
+          # dedupen brutt stille og hver eneste innholdspublisering åpnet en ny issue.
+          # Samme mønster som `blocked-upgrades-watch.yml`.
+          gh label create "$ETIKETT" \
+            --description "Automatisk varsel: avvik som ikke blokkerte en innholdsdeploy" \
+            --color d93f0b --force
+
+          # Feiler kallet, står LISTE igjen som tom liste og vi oppretter en ny issue.
+          # Bevisst feilmodus: en duplikat-issue er bedre enn et tapt varsel.
+          LISTE=$(gh issue list --label "$ETIKETT" --state open --limit 1 --json number,body) || LISTE=''
+          [ -n "$LISTE" ] || LISTE='[]'
+          NUMMER=$(printf '%s' "$LISTE" | jq -r '.[0].number // empty')
+          FORRIGE=$(printf '%s' "$LISTE" | jq -r '.[0].body // ""' \
+            | sed -n 's/^<!-- avtrykk: \(.*\) -->$/\1/p')
+
+          if [ -n "$NUMMER" ] && [ "$FORRIGE" = "$AVTRYKK" ]; then
+            echo "Åpen issue #$NUMMER dekker allerede nøyaktig disse avvikene."
             exit 0
           fi
 
           KROPP="$RUNNER_TEMP/issue-body.md"
           {
+            echo "<!-- avtrykk: $AVTRYKK -->"
             echo '`npm audit --audit-level=critical` fant kritiske avvik under en'
             echo 'innholdsdeploy (`repository_dispatch: google_drive_update`).'
             echo
@@ -229,14 +252,28 @@ jobs:
             echo 'med den som alt kjører i prod, så en blokkering ville bare hindret'
             echo 'innholdspublisering uten å fjerne sårbarheten fra prod.'
             echo
+            echo '**Slik lukkes dette:**'
+            echo '1. `npm update <pakke>`, eller hev gulvet i `package.json` om det er for lavt'
+            echo '2. Verifiser med `npm audit --audit-level=critical`'
+            echo '3. Send inn via `/commit` — push-stien har fortsatt en blokkerende gate'
+            echo '4. Lukk issuen. Lukkes den uten at avviket er fikset, åpnes en ny ved neste innholdsdeploy'
+            echo
             echo "Kjøring: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo
-            echo '```'
+            echo '~~~'
             cat "$RAPPORT"
-            echo '```'
+            echo '~~~'
           } > "$KROPP"
 
-          gh issue create --title "$TITTEL" --body-file "$KROPP"
+          if [ -n "$NUMMER" ]; then
+            echo "Avvikssettet er endret siden issue #$NUMMER sist ble skrevet — varsler på nytt."
+            gh issue comment "$NUMMER" --body-file "$KROPP"
+            gh issue edit "$NUMMER" --body-file "$KROPP"
+          else
+            gh issue create --label "$ETIKETT" \
+              --title "[sikkerhet] Kritisk npm-avvik oppdaget under innholdsdeploy" \
+              --body-file "$KROPP"
+          fi
 
       - name: Sync data
         run: npm run sync
