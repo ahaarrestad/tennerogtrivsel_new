@@ -19,12 +19,6 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
-- [ ] **Innholdsdeploy skal ikke blokkeres av avvik som ikke kan handles på** ([spec](docs/designs/2026-09-15-innholdsdeploy-blokkering.md)) ([plan](docs/plans/2026-09-15-innholdsdeploy-blokkering.md))
-  - Startet 2026-09-15. Prinsippet: **en gate skal blokkere der funnet er handlingsbart i den kjøringen.** På `repository_dispatch`-stien er lockfilen byte-identisk med den som alt kjører i prod, så en blokkering fjerner ingen sårbarhet — den hindrer bare innholdspublisering
-  - Audit-gaten i `build` og `update-lambda` gjøres ikke-blokkerende på dispatch-stien via `continue-on-error`-uttrykk; funnet rapporteres som en deduplisert GitHub-issue slik at det overlever kjøringen
-  - `Scheduled Security Audit` heves fra ukentlig til daglig, fordi `high`-båndet ikke dekkes av noen gate i `deploy.yml`
-  - Utløsende hendelse: 2026-09-15 stoppet `npm audit --audit-level=critical` en Drive-oppdatering på GHSA-26w7-cxv4-gfx2 (Astro RCE). Ingen kode var endret — advisory-en ble publisert etter forrige grønne kjøring
-
 ## Backlog
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))

@@ -2,7 +2,7 @@
 
 - **Dato:** 2026-09-15
 - **Status:** Godkjent og implementert
-- **Spec:** [docs/designs/2026-09-15-innholdsdeploy-blokkering.md](../designs/2026-09-15-innholdsdeploy-blokkering.md)
+- **Spec:** [docs/designs/archive/2026-09-15-innholdsdeploy-blokkering.md](../../designs/archive/2026-09-15-innholdsdeploy-blokkering.md)
 - **Branch:** `fix/innholdsdeploy-blokkering` (worktree opprettes i Fase 2)
 
 ## Mål og avgrensninger
