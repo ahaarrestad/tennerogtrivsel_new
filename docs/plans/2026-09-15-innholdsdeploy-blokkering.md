@@ -51,24 +51,26 @@ det er `outcome` steg 2 leser.
           ETIKETT: sikkerhet-auto
         run: |
           # ... skriver $RUNNER_TEMP/audit.txt (fra tee-en i gaten) til $GITHUB_STEP_SUMMARY,
-          # beregner avtrykk, og oppretter eller kommenterer issuen.
+          # og oppretter issuen hvis det ikke alt står en åpen med etiketten.
 ```
 
-Se `.github/workflows/deploy.yml` for den fullstendige, gjeldende teksten — den ble
-vesentlig omarbeidet under review, og gjengis ikke i sin helhet her for å unngå at to
-kopier kommer ut av sync.
+Se `.github/workflows/deploy.yml` for den fullstendige teksten — den gjengis ikke i sin
+helhet her for å unngå at to kopier kommer ut av sync.
 
-**Deduplisering — slik den endte (endret to ganger under review):**
+**Deduplisering — slik den endte (endret tre ganger under review):**
 
 | Runde | Mekanisme | Hvorfor den ble forkastet |
 |-------|-----------|---------------------------|
 | Opprinnelig | Eksakt tittelmatch mot åpne issues | Titler redigeres under triage; dedupen ville brutt stille og åpnet en ny issue per innholdspublisering |
-| Runde 1 | Etikett `sikkerhet-auto` + `<!-- avtrykk: … -->` i kroppen, oppdatert med `gh issue edit` | `gh issue edit --body-file` erstatter hele kroppen og ville slettet triage-notater. `$`-ankeret i `sed` sluttet dessuten å matche så snart noen redigerte kroppen i web-editoren (CRLF) |
-| **Gjeldende** | Etikett finner issuen; avtrykket er **siste markør i kropp + kommentarer**. Nye avvik varsles som **kommentar** — kroppen skrives aldri på nytt. `tr -d '\r'` før `sed` | — |
+| 1 | Etikett `sikkerhet-auto` + `<!-- avtrykk: … -->` i kroppen, oppdatert med `gh issue edit` | `gh issue edit --body-file` erstatter hele kroppen og ville slettet triage-notater. `$`-ankeret i `sed` sluttet dessuten å matche så snart noen redigerte kroppen i web-editoren (CRLF) |
+| 2 | Avtrykket lest som siste markør i kropp + kommentarer | Repoet er offentlig: hvem som helst kunne kommentere en markør som matcher og dermed slå av varselet. Tomt avtrykk ved registry-feil ga dessuten varsel ved hver publisering |
+| **Gjeldende** | Finnes en åpen issue med etiketten → gjør ingenting | — |
 
-Avtrykket er settet av URL-er til advisories med `severity == "critical"`, sortert. Filteret
-er nødvendig: `npm audit --json` rapporterer hele treet uansett `--audit-level`, så uten det
-ville et nytt `moderate`-avvik utløst varsel om et kritisk sett som ikke hadde endret seg.
+Hele avtrykk-mekanismen fantes for ett tilfelle: at avvik B dukker opp mens issuen om avvik A
+står åpen. Den kostet ~60 linjer bash, tre reviewrunder og to reelle feil av seg selv, mot en
+gevinst som er marginal — issuen står åpen til noen fikser auditen, og den som gjør det ser
+hele bildet gjennom `npm audit` uansett. Forenklingen er derfor et bevisst bytte, ikke en
+forglemmelse.
 
 ### Steg 3 — jobbrettigheter for `build` (samme fil)
 

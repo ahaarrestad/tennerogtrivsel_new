@@ -210,10 +210,10 @@ jobs:
           RAPPORT="$RUNNER_TEMP/audit.txt"
 
           {
-            echo '### Kritisk npm-avvik — deployen ble IKKE stoppet'
+            echo '### npm audit feilet — deployen ble IKKE stoppet'
             echo
             echo 'Lockfilen er uendret fra den som alt kjører i prod, så deployen fikk gå'
-            echo 'gjennom med vilje. Avviket må likevel fikses.'
+            echo 'gjennom med vilje. Funnet må likevel følges opp.'
             echo
             echo '~~~'
             cat "$RAPPORT"
@@ -222,104 +222,31 @@ jobs:
             echo '~~~'
           } >> "$GITHUB_STEP_SUMMARY"
 
-          # Avtrykk = settet av KRITISKE advisory-URL-er. Uten det ville avvik nummer to
-          # forsvunnet: står det alt en åpen issue om avvik A, og avvik B dukker opp, skal
-          # B varsles — ikke slukes av dedupen.
-          #
-          # Severity-filteret er nødvendig fordi `npm audit --json` alltid rapporterer HELE
-          # treet; `--audit-level` styrer kun exit-koden. Uten filteret ville et nytt
-          # `moderate`-avvik flippet avtrykket og utløst varsel om et kritisk sett som ikke
-          # hadde endret seg.
-          #
-          AVTRYKK=$(npm audit --json 2>/dev/null | jq -rS '
-            [.vulnerabilities[]?.via[]? | objects | select(.severity == "critical") | .url]
-            | unique | join(",")') || AVTRYKK=''
-
-          # Tomt avtrykk = vi klarte ikke lese ut noe avvikssett. Den realistiske årsaken
-          # er ikke ugyldig JSON, men at npm-registryet var nede: da svarer `npm audit
-          # --json` med `{"error":…}`, jq lykkes, og resultatet blir tomt — samtidig som
-          # gaten over feilet på nøyaktig samme nettverksfeil og sendte oss hit.
-          # Uten et avtrykk å sammenligne på ville tidlig-exiten under aldri kunne slå
-          # til, og hver eneste innholdspublisering hadde gitt et nytt varsel — akkurat
-          # den løkken denne mekanismen finnes for å unngå. Vi bruker derfor et fast
-          # avtrykk for «lot seg ikke lese», og sier tydelig fra at dette ikke er et funn.
-          #
-          # Bevisst IKKE en hash av rapporten: `npm audit` skriver stien til debug-loggen
-          # sin på stderr, og den inneholder et tidsstempel — en hash ville dermed vært
-          # ustabil og gitt varsel ved hver eneste deploy. En konstant kollapser alle
-          # uleselige tilstander til ett varsel, som er hele poenget; hva som faktisk
-          # skjedde står i rapporten nederst i issuen.
-          UKJENT=''
-          if [ -z "$AVTRYKK" ]; then
-            UKJENT=1
-            AVTRYKK='ukjent'
-          fi
-
-          # Dedup på etikett, ikke tittel: titler redigeres under triage, og da ville
-          # dedupen brutt stille og hver eneste innholdspublisering åpnet en ny issue.
-          # Samme mønster som `blocked-upgrades-watch.yml`.
+          # Dedup på etikett, ikke tittel: titler redigeres under triage, og da ville hver
+          # eneste innholdspublisering åpnet en ny issue. Samme mønster som
+          # `blocked-upgrades-watch.yml`.
           gh label create "$ETIKETT" \
             --description "Automatisk varsel: avvik som ikke blokkerte en innholdsdeploy" \
             --color d93f0b --force
 
-          # Feiler kallet, står LISTE igjen som tom liste og vi oppretter en ny issue.
-          # Bevisst feilmodus: en duplikat-issue er bedre enn et tapt varsel. Merk at
-          # `--limit 1` da gjør den eldste usynlig for dedupen — lukk den manuelt.
-          LISTE=$(gh issue list --label "$ETIKETT" --state open --limit 1 --json number) || LISTE=''
-          [ -n "$LISTE" ] || LISTE='[]'
-          NUMMER=$(printf '%s' "$LISTE" | jq -r '.[0].number // empty') || NUMMER=''
-
-          # Fasit-avtrykket er den SISTE markøren i kropp + våre egne kommentarer.
-          # Issue-kroppen skrives aldri på nytt: den kan inneholde triage-notater et
-          # menneske har lagt inn, og et nytt avvik skal legge seg på den historikken,
-          # ikke slette den.
-          #
-          # Forfatterfilteret er ikke kosmetikk: repoet er offentlig, så hvem som helst
-          # kan kommentere på issuen. Uten filteret kunne en fremmed poste en markør som
-          # matcher dagens avtrykk og dermed slå AV oppfølgingsvarselet om en kritisk
-          # sårbarhet som ikke er fikset. `github-actions` er et reservert brukernavn og
-          # kan ikke tas av en vanlig konto. (Begge skrivemåtene tas med fordi GraphQL og
-          # REST er uenige om `[bot]`-suffikset.) Treffer filteret ingenting, blir FORRIGE
-          # tom og vi varsler — feilretningen er støy, ikke stillhet.
-          #
-          # `tr -d '\r'` fordi GitHubs web-editor lagrer kroppen med CRLF så snart noen
-          # har redigert den — uten dette ville `$`-ankeret sluttet å matche, og dedupen
-          # brutt stille nøyaktig når noen begynte å jobbe med issuen.
-          FORRIGE=''
-          if [ -n "$NUMMER" ]; then
-            FORRIGE=$(gh issue view "$NUMMER" --json body,comments \
-                        --jq '.body, (.comments[]
-                              | select(.author.login == "github-actions"
-                                    or .author.login == "github-actions[bot]")
-                              | .body)' 2>/dev/null \
-                      | tr -d '\r' \
-                      | sed -n 's/^<!-- avtrykk: \(.*\) -->$/\1/p' \
-                      | tail -n 1)
-          fi
-
-          if [ -n "$NUMMER" ] && [ "$FORRIGE" = "$AVTRYKK" ]; then
-            echo "Åpen issue #$NUMMER dekker allerede nøyaktig dette."
+          # Står det alt en åpen issue, er varselet levert, og vi gjør ingenting. Et nytt
+          # avvik som dukker opp mens den står åpen får dermed ikke eget varsel — bevisst
+          # bytte: den som setter seg ned og fikser auditen ser hele bildet uansett, og
+          # alternativet var ~60 linjer avtrykk-logikk som kostet mer enn den var verdt.
+          # Feiler kallet, oppretter vi heller en duplikat enn å miste varselet.
+          ANTALL=$(gh issue list --label "$ETIKETT" --state open --limit 1 \
+                     --json number --jq 'length') || ANTALL=0
+          if [ "${ANTALL:-0}" != 0 ]; then
+            echo "Åpen issue med etiketten $ETIKETT finnes allerede — varsler ikke på nytt."
             exit 0
-          fi
-
-          TITTEL='[sikkerhet] Kritisk npm-avvik oppdaget under innholdsdeploy'
-          if [ -n "$UKJENT" ]; then
-            TITTEL='[sikkerhet] npm audit feilet under innholdsdeploy'
           fi
 
           KROPP="$RUNNER_TEMP/issue-body.md"
           {
-            echo "<!-- avtrykk: $AVTRYKK -->"
-            if [ -n "$UKJENT" ]; then
-              echo '`npm audit` feilet under en innholdsdeploy'
-              echo '(`repository_dispatch: google_drive_update`), men utdataen kunne ikke'
-              echo 'tolkes som et avvikssett — typisk at npm-registryet var utilgjengelig.'
-              echo '**Det er altså ikke gitt at dette er et sårbarhetsfunn i det hele tatt.**'
-              echo 'Les rapporten nederst før du konkluderer.'
-            else
-              echo '`npm audit --audit-level=critical` fant kritiske avvik under en'
-              echo 'innholdsdeploy (`repository_dispatch: google_drive_update`).'
-            fi
+            echo '`npm audit --audit-level=critical` feilet under en innholdsdeploy'
+            echo '(`repository_dispatch: google_drive_update`). Rapporten nederst viser hva'
+            echo 'som skjedde — som regel et kritisk avvik, men det kan også være at'
+            echo 'npm-registryet ikke svarte.'
             echo
             echo 'Deployen ble **ikke** stoppet, og det er tilsiktet: lockfilen er identisk'
             echo 'med den som alt kjører i prod, så en blokkering ville bare hindret'
@@ -329,25 +256,21 @@ jobs:
             echo '1. `npm update <pakke>`, eller hev gulvet i `package.json` om det er for lavt'
             echo '2. Verifiser med `npm audit --audit-level=critical`'
             echo '3. Send inn via `/commit` — push-stien har fortsatt en blokkerende gate'
-            echo '4. Lukk issuen. Lukkes den uten at avviket er fikset, åpnes en ny ved neste innholdsdeploy'
+            echo '4. Lukk issuen. Er avviket der fortsatt, åpnes en ny ved neste innholdsdeploy'
             echo
             echo "Kjøring: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo
             echo '~~~'
             # GitHub avviser issue-kropper over 65 536 tegn, og et avvist kall her ville
-            # betydd tapt varsel (steget har continue-on-error). Egen `echo` etterpå fordi
-            # head kan kutte midt i en linje.
+            # betydd tapt varsel (steget har continue-on-error).
             head -c 50000 "$RAPPORT"
             echo
             echo '~~~'
           } > "$KROPP"
 
-          if [ -n "$NUMMER" ]; then
-            echo "Avvikssettet er endret siden issue #$NUMMER sist ble varslet — kommenterer."
-            gh issue comment "$NUMMER" --body-file "$KROPP"
-          else
-            gh issue create --label "$ETIKETT" --title "$TITTEL" --body-file "$KROPP"
-          fi
+          gh issue create --label "$ETIKETT" \
+            --title "[sikkerhet] npm audit feilet under innholdsdeploy" \
+            --body-file "$KROPP"
 
       - name: Sync data
         run: npm run sync
