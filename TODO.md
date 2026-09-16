@@ -122,7 +122,7 @@
 - [ ] **Scheduled Security Audit bør opprette issue, ikke bare feile** — *ingen plan ennå*
   - En rød scheduled-kjøring gir i dag kun en GitHub-e-post. Det viste seg å ikke være nok: kjøring `34843733661` (2026-09-14 12:29 UTC) fanget GHSA-26w7-cxv4-gfx2 og feilet — men ingen handlet på det, og ~32 timer senere ble en innholdsdeploy blokkert av nøyaktig samme advisory
   - Det er altså ikke kadensen som sviktet (den ble hevet til daglig 2026-09-15), men at varselet ikke ble til en oppgave
-  - Mønsteret finnes allerede ferdig i `deploy.yml`: etikett-dedup + `<!-- avtrykk: … -->` i issue-kroppen, innført av «Innholdsdeploy skal ikke blokkeres av avvik som ikke kan handles på». Gjenbruk det — vurder å trekke det ut i en composite action framfor å kopiere ~40 linjer bash
+  - Mønsteret finnes allerede ferdig i `deploy.yml`: etikett-dedup + `<!-- avtrykk: … -->` der fasit er *siste markør i kropp og egne kommentarer* (oppdateringer skrives som kommentar, aldri ved å overskrive kroppen — det ville slettet triage-notater), innført av «Innholdsdeploy skal ikke blokkeres av avvik som ikke kan handles på». Gjenbruk det — vurder å trekke det ut i en composite action framfor å kopiere ~40 linjer bash
   - Merk at `scheduled-audit.yml` kjører på `--audit-level=high`, så issuen vil dekke et bredere bånd enn `deploy.yml`-gaten
   - Se også: «CI: tidlig lockfile-gate for Dependabot-PR-er»
 

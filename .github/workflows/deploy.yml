@@ -180,7 +180,8 @@ jobs:
         run: npm audit signatures
       - name: Check for critical vulnerabilities
         id: audit
-        # Blokkerer på push/PR, der avhengighetstreet faktisk kan endres. På
+        # Blokkerer på push og workflow_dispatch, der avhengighetstreet faktisk kan
+        # endres. (PR-er gates av `e2e-tests` — denne jobben kjører ikke da.) På
         # repository_dispatch er lockfilen byte-identisk med den som alt kjører i prod,
         # så en blokkering fjerner ingen sårbarhet — den hindrer bare at redaktøren får
         # publisert innhold. Funnet går ikke tapt: steget under rapporterer det.
@@ -216,6 +217,8 @@ jobs:
             echo
             echo '~~~'
             cat "$RAPPORT"
+            # Egen echo: mangler rapporten avsluttende newline, limes fencen på siste linje.
+            echo
             echo '~~~'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -228,11 +231,29 @@ jobs:
           # `moderate`-avvik flippet avtrykket og utløst varsel om et kritisk sett som ikke
           # hadde endret seg.
           #
-          # Feiler jq (ugyldig JSON), blir AVTRYKK tomt. Da varsles det uten markør, og
-          # forrige avtrykk blir stående som fasit framfor å bli overskrevet med tull.
           AVTRYKK=$(npm audit --json 2>/dev/null | jq -rS '
             [.vulnerabilities[]?.via[]? | objects | select(.severity == "critical") | .url]
             | unique | join(",")') || AVTRYKK=''
+
+          # Tomt avtrykk = vi klarte ikke lese ut noe avvikssett. Den realistiske årsaken
+          # er ikke ugyldig JSON, men at npm-registryet var nede: da svarer `npm audit
+          # --json` med `{"error":…}`, jq lykkes, og resultatet blir tomt — samtidig som
+          # gaten over feilet på nøyaktig samme nettverksfeil og sendte oss hit.
+          # Uten et avtrykk å sammenligne på ville tidlig-exiten under aldri kunne slå
+          # til, og hver eneste innholdspublisering hadde gitt et nytt varsel — akkurat
+          # den løkken denne mekanismen finnes for å unngå. Vi bruker derfor et fast
+          # avtrykk for «lot seg ikke lese», og sier tydelig fra at dette ikke er et funn.
+          #
+          # Bevisst IKKE en hash av rapporten: `npm audit` skriver stien til debug-loggen
+          # sin på stderr, og den inneholder et tidsstempel — en hash ville dermed vært
+          # ustabil og gitt varsel ved hver eneste deploy. En konstant kollapser alle
+          # uleselige tilstander til ett varsel, som er hele poenget; hva som faktisk
+          # skjedde står i rapporten nederst i issuen.
+          UKJENT=''
+          if [ -z "$AVTRYKK" ]; then
+            UKJENT=1
+            AVTRYKK='ukjent'
+          fi
 
           # Dedup på etikett, ikke tittel: titler redigeres under triage, og da ville
           # dedupen brutt stille og hver eneste innholdspublisering åpnet en ny issue.
@@ -246,33 +267,59 @@ jobs:
           # `--limit 1` da gjør den eldste usynlig for dedupen — lukk den manuelt.
           LISTE=$(gh issue list --label "$ETIKETT" --state open --limit 1 --json number) || LISTE=''
           [ -n "$LISTE" ] || LISTE='[]'
-          NUMMER=$(printf '%s' "$LISTE" | jq -r '.[0].number // empty')
+          NUMMER=$(printf '%s' "$LISTE" | jq -r '.[0].number // empty') || NUMMER=''
 
-          # Fasit-avtrykket er den SISTE markøren i kropp + kommentarer. Issue-kroppen
-          # skrives aldri på nytt: den kan inneholde triage-notater et menneske har lagt
-          # inn, og et nytt avvik skal legge seg på den historikken, ikke slette den.
+          # Fasit-avtrykket er den SISTE markøren i kropp + våre egne kommentarer.
+          # Issue-kroppen skrives aldri på nytt: den kan inneholde triage-notater et
+          # menneske har lagt inn, og et nytt avvik skal legge seg på den historikken,
+          # ikke slette den.
+          #
+          # Forfatterfilteret er ikke kosmetikk: repoet er offentlig, så hvem som helst
+          # kan kommentere på issuen. Uten filteret kunne en fremmed poste en markør som
+          # matcher dagens avtrykk og dermed slå AV oppfølgingsvarselet om en kritisk
+          # sårbarhet som ikke er fikset. `github-actions` er et reservert brukernavn og
+          # kan ikke tas av en vanlig konto. (Begge skrivemåtene tas med fordi GraphQL og
+          # REST er uenige om `[bot]`-suffikset.) Treffer filteret ingenting, blir FORRIGE
+          # tom og vi varsler — feilretningen er støy, ikke stillhet.
+          #
           # `tr -d '\r'` fordi GitHubs web-editor lagrer kroppen med CRLF så snart noen
           # har redigert den — uten dette ville `$`-ankeret sluttet å matche, og dedupen
           # brutt stille nøyaktig når noen begynte å jobbe med issuen.
           FORRIGE=''
           if [ -n "$NUMMER" ]; then
             FORRIGE=$(gh issue view "$NUMMER" --json body,comments \
-                        --jq '.body, .comments[].body' 2>/dev/null \
+                        --jq '.body, (.comments[]
+                              | select(.author.login == "github-actions"
+                                    or .author.login == "github-actions[bot]")
+                              | .body)' 2>/dev/null \
                       | tr -d '\r' \
                       | sed -n 's/^<!-- avtrykk: \(.*\) -->$/\1/p' \
                       | tail -n 1)
           fi
 
-          if [ -n "$NUMMER" ] && [ -n "$AVTRYKK" ] && [ "$FORRIGE" = "$AVTRYKK" ]; then
-            echo "Åpen issue #$NUMMER dekker allerede nøyaktig disse avvikene."
+          if [ -n "$NUMMER" ] && [ "$FORRIGE" = "$AVTRYKK" ]; then
+            echo "Åpen issue #$NUMMER dekker allerede nøyaktig dette."
             exit 0
+          fi
+
+          TITTEL='[sikkerhet] Kritisk npm-avvik oppdaget under innholdsdeploy'
+          if [ -n "$UKJENT" ]; then
+            TITTEL='[sikkerhet] npm audit feilet under innholdsdeploy'
           fi
 
           KROPP="$RUNNER_TEMP/issue-body.md"
           {
-            if [ -n "$AVTRYKK" ]; then echo "<!-- avtrykk: $AVTRYKK -->"; fi
-            echo '`npm audit --audit-level=critical` fant kritiske avvik under en'
-            echo 'innholdsdeploy (`repository_dispatch: google_drive_update`).'
+            echo "<!-- avtrykk: $AVTRYKK -->"
+            if [ -n "$UKJENT" ]; then
+              echo '`npm audit` feilet under en innholdsdeploy'
+              echo '(`repository_dispatch: google_drive_update`), men utdataen kunne ikke'
+              echo 'tolkes som et avvikssett — typisk at npm-registryet var utilgjengelig.'
+              echo '**Det er altså ikke gitt at dette er et sårbarhetsfunn i det hele tatt.**'
+              echo 'Les rapporten nederst før du konkluderer.'
+            else
+              echo '`npm audit --audit-level=critical` fant kritiske avvik under en'
+              echo 'innholdsdeploy (`repository_dispatch: google_drive_update`).'
+            fi
             echo
             echo 'Deployen ble **ikke** stoppet, og det er tilsiktet: lockfilen er identisk'
             echo 'med den som alt kjører i prod, så en blokkering ville bare hindret'
@@ -299,9 +346,7 @@ jobs:
             echo "Avvikssettet er endret siden issue #$NUMMER sist ble varslet — kommenterer."
             gh issue comment "$NUMMER" --body-file "$KROPP"
           else
-            gh issue create --label "$ETIKETT" \
-              --title "[sikkerhet] Kritisk npm-avvik oppdaget under innholdsdeploy" \
-              --body-file "$KROPP"
+            gh issue create --label "$ETIKETT" --title "$TITTEL" --body-file "$KROPP"
           fi
 
       - name: Sync data

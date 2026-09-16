@@ -131,6 +131,15 @@ koden som deployes uansett `main`, som allerede passerte gaten ved merge — så
 allerede i prod før dispatchen. Reell endring i eksponering: null. Endringen er at vi nå
 *vet* om det, via issuen, i stedet for at en rød kjøring blir tolket som «deployen feilet».
 
+**Repoet er offentlig, og det har to følger som er bevisst akseptert.** For det første blir
+issuen en varig, selvoppdaterende og godt synlig oversikt over upatchede kritiske
+advisories i den kjørende siden. Ingen *ny* informasjon lekker — `package-lock.json` og
+Actions-loggene er allerede offentlige, og advisory-en er per definisjon publisert — så
+dette er en endring i oppdagbarhet, ikke i avsløring. Den prisen tas mot at alternativet er
+at funnet ikke når noen i det hele tatt. For det andre kan hvem som helst kommentere på
+issuen. Dedupen leser derfor kun markører skrevet av `github-actions`; uten det filteret
+kunne en fremmed slå av varselet ved å poste en markør som matcher dagens avtrykk.
+
 ## Åpne spørsmål
 
 Ingen som blokkerer planlegging. Ett valg tas i planen, ikke her: hvorvidt feilgrenen
