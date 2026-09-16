@@ -17,7 +17,7 @@ rapporteres som en GitHub-issue. Scheduled audit heves fra ukentlig til daglig.
 
 ### Steg 1 — `build`-jobben blir ikke-blokkerende på dispatch (`.github/workflows/deploy.yml`)
 
-Audit-steget (linje ~175) får `id` og et betinget `continue-on-error`:
+Audit-steget får `id` og et betinget `continue-on-error`:
 
 ```yaml
       - name: Check for critical vulnerabilities
@@ -29,6 +29,11 @@ Audit-steget (linje ~175) får `id` og et betinget `continue-on-error`:
         continue-on-error: ${{ github.event_name == 'repository_dispatch' }}
         run: npm audit --audit-level=critical
 ```
+
+**Merk:** `run:` her viser utgangspunktet. Steg 2 trenger rapporten gaten faktisk så, så
+linjen ble under implementasjonen erstattet av en `tee` til `$RUNNER_TEMP/audit.txt`
+etterfulgt av `exit ${PIPESTATUS[0]}` — se `deploy.yml` for den gjeldende teksten.
+`PIPESTATUS`-linjen er påkrevd: default-shellen er `bash -e` uten `pipefail`.
 
 `continue-on-error` er ett av de få steg-feltene som tar imot uttrykk. Ved
 `continue-on-error` blir `steps.audit.outcome` = `failure` mens `conclusion` = `success` —
@@ -83,7 +88,7 @@ ville et nytt `moderate`-avvik utløst varsel om et kritisk sett som ikke hadde 
 audit-stegene, `npm run sync`, `npm run build:ci` og `upload-artifact`. `deploy`- og
 `update-lambda`-jobbene beholder toppnivå-settet uendret.
 
-### Steg 4 — `update-lambda` blir ikke-blokkerende på dispatch (samme fil, linje ~357)
+### Steg 4 — `update-lambda` blir ikke-blokkerende på dispatch (samme fil)
 
 Samme `id: audit` + `continue-on-error`-uttrykk som Steg 1, men **uten** rapporteringssteg:
 jobben auditerer samme lockfile i samme kjøring som `build`, så en issue til ville vært
