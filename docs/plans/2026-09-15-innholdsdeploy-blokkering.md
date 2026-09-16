@@ -22,7 +22,8 @@ Audit-steget får `id` og et betinget `continue-on-error`:
 ```yaml
       - name: Check for critical vulnerabilities
         id: audit
-        # Blokkerer på push/PR, der avhengighetstreet faktisk kan endres. På
+        # Blokkerer på push og workflow_dispatch, der avhengighetstreet faktisk kan
+        # endres. (PR-er gates av `e2e-tests` — denne jobben kjører ikke da.) På
         # repository_dispatch er lockfilen identisk med den som alt kjører i prod, så en
         # blokkering hindrer bare innholdspublisering — den fjerner ingen sårbarhet.
         # Funnet går ikke tapt: steget under oppretter en issue.
@@ -63,7 +64,7 @@ helhet her for å unngå at to kopier kommer ut av sync.
 |-------|-----------|---------------------------|
 | Opprinnelig | Eksakt tittelmatch mot åpne issues | Titler redigeres under triage; dedupen ville brutt stille og åpnet en ny issue per innholdspublisering |
 | 1 | Etikett `sikkerhet-auto` + `<!-- avtrykk: … -->` i kroppen, oppdatert med `gh issue edit` | `gh issue edit --body-file` erstatter hele kroppen og ville slettet triage-notater. `$`-ankeret i `sed` sluttet dessuten å matche så snart noen redigerte kroppen i web-editoren (CRLF) |
-| 2 | Avtrykket lest som siste markør i kropp + kommentarer | Repoet er offentlig: hvem som helst kunne kommentere en markør som matcher og dermed slå av varselet. Tomt avtrykk ved registry-feil ga dessuten varsel ved hver publisering |
+| 2 | Avtrykket lest som siste markør i kropp + kommentarer | Repoet er offentlig: hvem som helst kunne kommentere en markør som matcher og dermed slå av varselet. Samtidig ble det klart at et tomt avtrykk ved registry-feil ville gitt varsel ved hver publisering — fanget før det rakk å bli live |
 | **Gjeldende** | Finnes en åpen issue med etiketten → gjør ingenting | — |
 
 Hele avtrykk-mekanismen fantes for ett tilfelle: at avvik B dukker opp mens issuen om avvik A

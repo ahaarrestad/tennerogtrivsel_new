@@ -109,9 +109,11 @@ handlingsbar og blir liggende i Issues-fanen.
 **V2b — dedupen er bevisst «dum».** Underveis ble den bygget ut til et
 `<!-- avtrykk: … -->`-felt som holdt settet av advisory-URL-er, slik at avvik nummer to
 kunne varsles separat mens issuen om det første sto åpen. Den varianten ble forkastet etter
-tre reviewrunder: den kostet ~60 linjer bash og produserte to reelle feil av seg selv (den
-leste markører fra kommentarer hvem som helst kan skrive på et offentlig repo, og en
-registry-feil ga tomt avtrykk og dermed varsel ved hver eneste publisering). Gevinsten var
+tre reviewrunder: den kostet ~60 linjer bash og produserte to reelle feil av seg selv — den
+overskrev triage-notater og brøt stille på CRLF (runde 2), og den leste markører fra
+kommentarer hvem som helst kan skrive på et offentlig repo (runde 3). En tredje, at
+registry-feil ga tomt avtrykk og dermed varsel ved hver publisering, ble fanget før den
+rakk å bli live. Gevinsten var
 liten: issuen står åpen til noen fikser auditen, og den som gjør det kjører `npm audit` og
 ser hele bildet uansett. Nå gjelder: finnes en åpen issue med etiketten, gjør ingenting.
 
