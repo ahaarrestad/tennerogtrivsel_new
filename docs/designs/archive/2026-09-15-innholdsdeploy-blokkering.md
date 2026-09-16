@@ -3,8 +3,8 @@
 - **Dato:** 2026-09-15
 - **Status:** Godkjent og implementert
 - **Oppgave:** «Innholdsdeploy skal ikke blokkeres av nye sikkerhetsavvik» (TODO.md)
-- **Plan:** [docs/plans/2026-09-15-innholdsdeploy-blokkering.md](../plans/2026-09-15-innholdsdeploy-blokkering.md)
-- **Bakgrunn:** [sikkerhetshardening, Steg 4.3](../plans/2026-04-28-sikkerhetshardening.md) innførte audit-gaten
+- **Plan:** [docs/plans/archive/2026-09-15-innholdsdeploy-blokkering.md](../../plans/archive/2026-09-15-innholdsdeploy-blokkering.md)
+- **Bakgrunn:** [sikkerhetshardening, Steg 4.3](../../plans/2026-04-28-sikkerhetshardening.md) innførte audit-gaten
 
 ## Problem/mål
 
