@@ -106,6 +106,15 @@ røde kjøringer på main der alt faktisk gikk bra. Det undergraver «rødt bygg
 som signal — nettopp den forvirringen som utløste denne oppgaven. En issue er dessuten
 handlingsbar og blir liggende i Issues-fanen.
 
+**V2b — dedupen er bevisst «dum».** Underveis ble den bygget ut til et
+`<!-- avtrykk: … -->`-felt som holdt settet av advisory-URL-er, slik at avvik nummer to
+kunne varsles separat mens issuen om det første sto åpen. Den varianten ble forkastet etter
+tre reviewrunder: den kostet ~60 linjer bash og produserte to reelle feil av seg selv (den
+leste markører fra kommentarer hvem som helst kan skrive på et offentlig repo, og en
+registry-feil ga tomt avtrykk og dermed varsel ved hver eneste publisering). Gevinsten var
+liten: issuen står åpen til noen fikser auditen, og den som gjør det kjører `npm audit` og
+ser hele bildet uansett. Nå gjelder: finnes en åpen issue med etiketten, gjør ingenting.
+
 **V3 — bare `build` rapporterer.** Både `build` og `update-lambda` har audit-steget og
 kjører på dispatch. Begge gjøres ikke-blokkerende, men kun `build` oppretter issue. De
 auditerer samme lockfile i samme kjøring, så to issues ville vært ren duplikatstøy.
@@ -137,8 +146,8 @@ advisories i den kjørende siden. Ingen *ny* informasjon lekker — `package-loc
 Actions-loggene er allerede offentlige, og advisory-en er per definisjon publisert — så
 dette er en endring i oppdagbarhet, ikke i avsløring. Den prisen tas mot at alternativet er
 at funnet ikke når noen i det hele tatt. For det andre kan hvem som helst kommentere på
-issuen. Dedupen leser derfor kun markører skrevet av `github-actions`; uten det filteret
-kunne en fremmed slå av varselet ved å poste en markør som matcher dagens avtrykk.
+issuen. Det er uten betydning her, fordi dedupen kun spør om det finnes en åpen issue med
+etiketten — ingenting utenforstående skriver, påvirker hva mekanismen gjør.
 
 ## Åpne spørsmål
 
