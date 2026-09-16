@@ -186,9 +186,8 @@ jobs:
         # så en blokkering fjerner ingen sårbarhet — den hindrer bare at redaktøren får
         # publisert innhold. Funnet går ikke tapt: steget under rapporterer det.
         continue-on-error: ${{ github.event_name == 'repository_dispatch' }}
-        # tee framfor å kjøre TEKST-auditen på nytt i rapporteringssteget: rapporten i
-        # issuen blir da byte-identisk med det gaten faktisk så. (Avtrykket der beregnes
-        # av et eget `--json`-kall — det er maskindata, ikke rapporten.)
+        # tee framfor å kjøre auditen på nytt i rapporteringssteget: rapporten i
+        # jobbsammendraget og issuen blir da det gaten faktisk så.
         # PIPESTATUS er nødvendig: default-shellen er `bash -e` UTEN pipefail, så uten
         # dette ville tee-ens exit 0 skjult at auditen feilet, og gaten hadde sluttet å
         # gate i det hele tatt. Ingenting må inn mellom pipelinen og `exit` — neste
@@ -233,7 +232,10 @@ jobs:
           # avvik som dukker opp mens den står åpen får dermed ikke eget varsel — bevisst
           # bytte: den som setter seg ned og fikser auditen ser hele bildet uansett, og
           # alternativet var ~60 linjer avtrykk-logikk som kostet mer enn den var verdt.
-          # Feiler kallet, oppretter vi heller en duplikat enn å miste varselet.
+          # Feiler oppslaget, oppretter vi heller en duplikat enn å miste varselet.
+          # (Feiler `gh label create` over, ryker steget derimot før vi kommer hit, og
+          # varselet er tapt. Rapporten ligger uansett i jobbsammendraget, og etiketten
+          # finnes etter første kjøring — `--force` er idempotent — så vi lever med det.)
           ANTALL=$(gh issue list --label "$ETIKETT" --state open --limit 1 \
                      --json number --jq 'length') || ANTALL=0
           if [ "${ANTALL:-0}" != 0 ]; then
@@ -455,7 +457,8 @@ jobs:
         id: audit
         # Samme begrunnelse som i build-jobben. Rapporteringssteget ligger KUN der:
         # begge jobbene auditerer samme lockfile i samme kjøring, så en issue til
-        # ville vært ren duplikatstøy.
+        # ville vært ren duplikatstøy. `id` har derfor ingen konsument her — den står
+        # for å holde de to stegene like.
         continue-on-error: ${{ github.event_name == 'repository_dispatch' }}
         run: npm audit --audit-level=critical
 
