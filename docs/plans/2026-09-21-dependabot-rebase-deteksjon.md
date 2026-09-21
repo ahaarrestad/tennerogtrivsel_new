@@ -51,9 +51,10 @@ Dependabot og `fetch-metadata` godtar den — uansett timing mot pushes til main
    *ikke* `update-branch`.
 2. **A2 — andre PR-er uendret:** For en åpen PR med menneskelig forfatter (f.eks.
    `review/*`-PR-ene fra `auto-pr.yml`) kalles `update-branch` som før.
-3. **A3 — robust mot begge login-former:** Både `dependabot[bot]` (eldre `gh`, GitHub
-   API) og `app/dependabot` (dagens `gh`) gjenkjennes, så en framtidig `gh`-endring på
-   runneren ikke gjeninnfører feilen stille.
+3. **A3 — robust mot begge login-former:** Både `app/dependabot` (slik `gh --json author`
+   har rapportert boter siden gh 2.0) og `dependabot[bot]` (REST-API-ets `user.login` og
+   `github.actor`) gjenkjennes, så en framtidig `gh`-endring på runneren ikke
+   gjeninnfører feilen stille.
 4. **A4 — signatur overlever:** Etter neste Dependabot-rebase på main viser
    `gh api repos/…/commits/<sha>` `verification.verified == true` med Dependabot som
    committer. (Verifiseres etter merge — se «Verifisering etter merge».)
@@ -81,7 +82,8 @@ sier nøyaktig hva vi mener, og A3 dekkes:
 case "$author" in
   "dependabot[bot]"|"app/dependabot")
     echo "PR #$number (dependabot): commenting @dependabot rebase"
-    gh pr comment "$number" --body "@dependabot rebase"
+    gh pr comment "$number" --body "@dependabot rebase" || \
+      echo "  Skipped (comment failed)"
     ;;
   *)
     echo "PR #$number: updating branch via API"
@@ -103,7 +105,11 @@ resten) og et «ikke i første liste»-filter. Én liste med `case` er enklere �
 1. **`.github/workflows/dependabot-rebase.yml`** — bytt `if [ "$author" = … ]` / `else`
    / `fi` med `case`-blokken over. Ingen andre linjer endres. Legg en kort kommentar over
    `case` om *hvorfor* det er to former (`gh` rapporterer boter som `app/<navn>`), så
-   neste leser ikke «rydder» det bort.
+   neste leser ikke «rydder» det bort. Dependabot-grenen får samme `|| echo "Skipped …"`
+   som `update-branch`-grenen: `run:` kjører som `bash -e`, og `while`-løkken står i en
+   pipeline-subshell der `errexit` gjelder — én feilende `gh pr comment` (rate limit,
+   transient API-feil) ville ellers avbrutt løkken og hoppet over resten av PR-ene. Med
+   `strict: true` blir en hoppet-over PR stående umergbar.
 2. **Lokal verifisering** (før commit) — kjør løkke-kroppen mot ekte PR-data med
    sideeffektene byttet ut med `echo`:
    ```bash

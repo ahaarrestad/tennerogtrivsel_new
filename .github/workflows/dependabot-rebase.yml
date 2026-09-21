@@ -19,14 +19,15 @@ jobs:
             number=$(echo "$pr" | jq -r '.number')
             author=$(echo "$pr" | jq -r '.author.login')
 
-            # gh rapporterer boter som «app/<navn>» i --json author, mens API-et
-            # og eldre gh bruker «<navn>[bot]». Begge må matches — ellers går
+            # gh rapporterer boter som «app/<navn>» i --json author; REST-API-et
+            # og github.actor bruker «<navn>[bot]». Begge må matches — ellers går
             # Dependabot-PR-er i else-grenen og rebases via PAT, som gir en
             # usignert commit fetch-metadata nekter å auto-merge (jf. PR #472).
             case "$author" in
               "dependabot[bot]"|"app/dependabot")
                 echo "PR #$number (dependabot): commenting @dependabot rebase"
-                gh pr comment "$number" --body "@dependabot rebase"
+                gh pr comment "$number" --body "@dependabot rebase" || \
+                  echo "  Skipped (comment failed)"
                 ;;
               *)
                 echo "PR #$number: updating branch via API"
