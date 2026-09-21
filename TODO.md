@@ -19,6 +19,13 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
+- [ ] **CI: `dependabot-rebase.yml` gjenkjenner ikke Dependabot-PR-er** ([plan](docs/plans/2026-09-21-dependabot-rebase-deteksjon.md))
+  - Sjekken `[ "$author" = "dependabot[bot]" ]` treffer aldri: `gh pr list --json author` rapporterer boten som `{"is_bot":true,"login":"app/dependabot"}`. Alle Dependabot-PR-er går derfor i `else`-grenen og rebases via `update-branch`-API-et med `MY_GITHUB_PAT` — ikke ved `@dependabot rebase`. Bekreftet i loggene helt tilbake til 2026-07-25; Dependabot-grenen har aldri blitt kjørt
+  - **Konkret utslag:** PR #472 (2026-09-19) ble åpnet 15:55:54 og PAT-rebaset 15:55:58 fordi #470 merget i samme sekund. `fetch-metadata` i `dependabot-auto-merge.yml` så en usignert commit med Asbjørn som committer og nektet («Dependabot's commit signature is not verified»). Auto-merge ble aldri aktivert, og senere `synchronize`-hendelser hadde `actor = ahaarrestad` så jobben ble hoppet over. PR-en sto urørt til den ble merget manuelt 2026-09-20
+  - Feilen er et kappløp: den slår bare ut når en PR åpnes mens main beveger seg. Ellers er auto-merge aktivert før første rebase, og GitHub merger uansett
+  - **Bivirkning:** alle Dependabot-commits på main er usignerte med brukerens PAT-identitet som committer (#471 verifisert), selv om Dependabots egne commits er signert. Rører også «Sikkerhetshardening» Task 3 (PAT blast-radius) — PAT-en skriver i dag om commits den ikke trengte å røre
+  - Tiltak: test på `.author.is_bot == true` (eller match begge login-formene `dependabot[bot]` og `app/dependabot`), så Dependabot rebaser sine egne PR-er og signaturen overlever. Vurder samtidig om `update-branch`-grenen i det hele tatt trengs for bot-PR-er, og om auto-merge-jobben bør ha et sikkerhetsnett for PR-er der `fetch-metadata` nekter (f.eks. kommentar som ber om `@dependabot recreate`)
+
 ## Backlog
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
@@ -79,13 +86,6 @@
   - Mulig tiltak: en rask `lockfile-check`-jobb som kun kjører `npm ci --ignore-scripts`, og som de øvrige jobbene `needs:`-avhenger av — gir én rød jobb med tydelig årsak i stedet for fire
   - Alternativt/i tillegg: la jobben tolke `Missing: X from lock file` og kommentere diagnosen på PR-en, og/eller dokumentere feilmønsteret i `docs/guides/`
   - Vurder kostnad/nytte i planfasen: en ekstra jobb koster litt ekstra kjøretid per PR, men de fire jobbene kjører allerede `npm ci` hver for seg
-
-- [ ] **CI: `dependabot-rebase.yml` gjenkjenner ikke Dependabot-PR-er** — *ingen plan ennå*
-  - Sjekken `[ "$author" = "dependabot[bot]" ]` treffer aldri: `gh pr list --json author` rapporterer boten som `{"is_bot":true,"login":"app/dependabot"}`. Alle Dependabot-PR-er går derfor i `else`-grenen og rebases via `update-branch`-API-et med `MY_GITHUB_PAT` — ikke ved `@dependabot rebase`. Bekreftet i loggene helt tilbake til 2026-07-25; Dependabot-grenen har aldri blitt kjørt
-  - **Konkret utslag:** PR #472 (2026-09-19) ble åpnet 15:55:54 og PAT-rebaset 15:55:58 fordi #470 merget i samme sekund. `fetch-metadata` i `dependabot-auto-merge.yml` så en usignert commit med Asbjørn som committer og nektet («Dependabot's commit signature is not verified»). Auto-merge ble aldri aktivert, og senere `synchronize`-hendelser hadde `actor = ahaarrestad` så jobben ble hoppet over. PR-en sto urørt til den ble merget manuelt 2026-09-20
-  - Feilen er et kappløp: den slår bare ut når en PR åpnes mens main beveger seg. Ellers er auto-merge aktivert før første rebase, og GitHub merger uansett
-  - **Bivirkning:** alle Dependabot-commits på main er usignerte med brukerens PAT-identitet som committer (#471 verifisert), selv om Dependabots egne commits er signert. Rører også «Sikkerhetshardening» Task 3 (PAT blast-radius) — PAT-en skriver i dag om commits den ikke trengte å røre
-  - Tiltak: test på `.author.is_bot == true` (eller match begge login-formene `dependabot[bot]` og `app/dependabot`), så Dependabot rebaser sine egne PR-er og signaturen overlever. Vurder samtidig om `update-branch`-grenen i det hele tatt trengs for bot-PR-er, og om auto-merge-jobben bør ha et sikkerhetsnett for PR-er der `fetch-metadata` nekter (f.eks. kommentar som ber om `@dependabot recreate`)
 
 - [ ] **Lås Node-versjonen på tvers av lokalt og CI** — *ingen plan ennå*
   - Ingenting pinner Node i dag: verken `.nvmrc` eller `engines` i `package.json` finnes, og alle åtte workflow-stegene bruker `node-version: '24'`, som alltid henter siste 24.x. Lokalt sto v24.12.0 (2026-09-15)
