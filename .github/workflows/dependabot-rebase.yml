@@ -19,15 +19,22 @@ jobs:
             number=$(echo "$pr" | jq -r '.number')
             author=$(echo "$pr" | jq -r '.author.login')
 
-            if [ "$author" = "dependabot[bot]" ]; then
-              echo "PR #$number (dependabot): commenting @dependabot rebase"
-              gh pr comment "$number" --body "@dependabot rebase"
-            else
-              echo "PR #$number: updating branch via API"
-              gh api "repos/$GH_REPO/pulls/$number/update-branch" \
-                --method PUT --field update_method=rebase 2>/dev/null || \
-                echo "  Skipped (already up to date or conflict)"
-            fi
+            # gh rapporterer boter som «app/<navn>» i --json author, mens API-et
+            # og eldre gh bruker «<navn>[bot]». Begge må matches — ellers går
+            # Dependabot-PR-er i else-grenen og rebases via PAT, som gir en
+            # usignert commit fetch-metadata nekter å auto-merge (jf. PR #472).
+            case "$author" in
+              "dependabot[bot]"|"app/dependabot")
+                echo "PR #$number (dependabot): commenting @dependabot rebase"
+                gh pr comment "$number" --body "@dependabot rebase"
+                ;;
+              *)
+                echo "PR #$number: updating branch via API"
+                gh api "repos/$GH_REPO/pulls/$number/update-branch" \
+                  --method PUT --field update_method=rebase 2>/dev/null || \
+                  echo "  Skipped (already up to date or conflict)"
+                ;;
+            esac
           done
         env:
           GH_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
