@@ -19,13 +19,6 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
-- [ ] **CI: `dependabot-rebase.yml` gjenkjenner ikke Dependabot-PR-er** ([plan](docs/plans/2026-09-21-dependabot-rebase-deteksjon.md))
-  - Sjekken `[ "$author" = "dependabot[bot]" ]` treffer aldri: `gh pr list --json author` rapporterer boten som `{"is_bot":true,"login":"app/dependabot"}`. Alle Dependabot-PR-er går derfor i `else`-grenen og rebases via `update-branch`-API-et med `MY_GITHUB_PAT` — ikke ved `@dependabot rebase`. Bekreftet i loggene helt tilbake til 2026-07-25; Dependabot-grenen har aldri blitt kjørt
-  - **Konkret utslag:** PR #472 (2026-09-19) ble åpnet 15:55:54 og PAT-rebaset 15:55:58 fordi #470 merget i samme sekund. `fetch-metadata` i `dependabot-auto-merge.yml` så en usignert commit med Asbjørn som committer og nektet («Dependabot's commit signature is not verified»). Auto-merge ble aldri aktivert, og senere `synchronize`-hendelser hadde `actor = ahaarrestad` så jobben ble hoppet over. PR-en sto urørt til den ble merget manuelt 2026-09-20
-  - Feilen er et kappløp: den slår bare ut når en PR åpnes mens main beveger seg. Ellers er auto-merge aktivert før første rebase, og GitHub merger uansett
-  - **Bivirkning:** alle Dependabot-commits på main er usignerte med brukerens PAT-identitet som committer (#471 verifisert), selv om Dependabots egne commits er signert. Rører også «Sikkerhetshardening» Task 3 (PAT blast-radius) — PAT-en skriver i dag om commits den ikke trengte å røre
-  - Tiltak: test på `.author.is_bot == true` (eller match begge login-formene `dependabot[bot]` og `app/dependabot`), så Dependabot rebaser sine egne PR-er og signaturen overlever. Vurder samtidig om `update-branch`-grenen i det hele tatt trengs for bot-PR-er, og om auto-merge-jobben bør ha et sikkerhetsnett for PR-er der `fetch-metadata` nekter (f.eks. kommentar som ber om `@dependabot recreate`)
-
 ## Backlog
 
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
@@ -135,7 +128,7 @@
 
 - [ ] **Stabiliser ustabile tester** — *ingen plan ennå*
   - `tests/accessibility.spec.ts` → «Admin (/admin) skal ikke ha kritiske UU-feil»: `page.waitForLoadState('networkidle')` timer ut på 30 s i full E2E-kjøring. Består isolert på både chromium (7/7) og Mobile Safari (7/7). Sannsynlig årsak: `/admin` laster Google-skript som holder forbindelser åpne, så «networkidle» inntreffer aldri under last. Vurder `domcontentloaded` + eksplisitt venting på et element framfor `networkidle`. **Observert i CI 2026-09-15** (kjøring `35022298679`, push til main): feilet også der, inkludert ved retry, og blokkerte `build`, `deploy` og `update-lambda` — flaken er altså ikke bare et lokalt fenomen, den stopper deployer
-  - `src/__tests__/data-validation.test.ts` → «tannleger collection should include imageConfig in schema»
+  - `src/__tests__/data-validation.test.ts` → «tannleger collection should include imageConfig in schema»: `await import('../content.config')` timer ut (henger, også med 20 s) i full kjøring, består isolert på 2 s. **Rotårsak funnet 2026-09-21:** feilet 4/4 i et ferskt worktree uten `.astro/`, mens primærtreet var grønt under samme last; `npx astro sync` i worktreet ga 51/51 grønt umiddelbart. `scripts/setup-worktree.sh` bør kjøre `astro sync` (eller testen bør ikke importere `astro/loaders`)
   - `tests/links.spec.ts` → «alle tjeneste-sider skal ha fungerende lenker»: `locator.evaluateAll` feiler med «Execution context was destroyed, most likely because of a navigation» i full E2E-kjøring (observert 2026-09-15). Består 3/3 isolert og i en ny full kjøring rett etterpå — altså last-avhengig. Årsaken ligger i testen, ikke i koden: `page.goto(link)` venter kun på `load`, så dokumentet kan byttes ut mens `.container a`-evalueringen kjører. Vurder `waitUntil: 'domcontentloaded'` + eksplisitt `waitForSelector` før `evaluateAll`
 
 ## Fullført
