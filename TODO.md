@@ -21,6 +21,13 @@
 
 ## Backlog
 
+- [ ] **a11y-tester i WebKit er CPU-bundet og timer ut under tung ytre last** — *ingen plan ennå*
+  - Målt 2026-09-22: i WebKit tar `goto` 3–4 s og `AxeBuilder.analyze()` 4–5 s per side allerede ved load 7 (chromium: 1–2 s + 1,5–2 s). Med fire WebKit-workere under load ~22 sprenger både gammel og ny ventelogikk 30 s-timeouten (13/14 vs. 12/14 røde) — uavhengig av mekanismen som ble fikset i «Stabiliser ustabile tester»
+  - Har ikke slått ut i CI (2 kjerner, 4 workere, ingen ytre last). Vurder eget `test.setTimeout` for webkit-prosjektene i `accessibility.spec.ts`, eller færre workere for dem — ikke global timeout-økning
+
+- [ ] **`tests/csp-check.spec.ts` bruker `networkidle`** — *ingen plan ennå*
+  - Bytt til deterministisk venting som i `accessibility.spec.ts` (`domcontentloaded` + eksplisitte betingelser). Lav prioritet: testen har aldri flaket, besøker ikke `/admin`, og er `testIgnore`-t i `playwright.config.ts` (kjøres kun eksplisitt)
+
 - [ ] **Helhetlig sikkerhetsgjennomgang** ([plan](docs/plans/2026-05-14-helhetlig-sikkerhetsgjennomgang.md))
   - Streng gjennomgang av hele prosjektet: kode, infrastruktur, deploy-pipeline og tredjepartsintegrasjoner
   - Dekker: GitHub (secrets, Actions, permissions), AWS (IAM, S3, Lambda, CloudFront, DynamoDB, SES), Google (OAuth, Sheets/Drive API-nøkler, scopes), og hvordan alt er skrudd sammen
@@ -125,11 +132,6 @@
   - Mønsteret finnes allerede ferdig i `deploy.yml`: `gh label create --force` + «finnes det en åpen issue med etiketten, gjør ingenting». Dedup på etikett, ikke tittel. Motstå fristelsen til å bygge ut med avtrykk/fingerprint for å varsle avvik nummer to — det ble prøvd og forkastet her, se planen. Innført av «Innholdsdeploy skal ikke blokkeres av avvik som ikke kan handles på». Gjenbruk det — vurder å trekke det ut i en composite action framfor å kopiere ~40 linjer bash
   - Merk at `scheduled-audit.yml` kjører på `--audit-level=high`, så issuen vil dekke et bredere bånd enn `deploy.yml`-gaten
   - Se også: «CI: tidlig lockfile-gate for Dependabot-PR-er»
-
-- [ ] **Stabiliser ustabile tester** — *ingen plan ennå*
-  - `tests/accessibility.spec.ts` → «Admin (/admin) skal ikke ha kritiske UU-feil»: `page.waitForLoadState('networkidle')` timer ut på 30 s i full E2E-kjøring. Består isolert på både chromium (7/7) og Mobile Safari (7/7). Sannsynlig årsak: `/admin` laster Google-skript som holder forbindelser åpne, så «networkidle» inntreffer aldri under last. Vurder `domcontentloaded` + eksplisitt venting på et element framfor `networkidle`. **Observert i CI 2026-09-15** (kjøring `35022298679`, push til main): feilet også der, inkludert ved retry, og blokkerte `build`, `deploy` og `update-lambda` — flaken er altså ikke bare et lokalt fenomen, den stopper deployer
-  - `src/__tests__/data-validation.test.ts` → «tannleger collection should include imageConfig in schema»: `await import('../content.config')` timer ut (henger, også med 20 s) i full kjøring, består isolert på 2 s. **Rotårsak funnet 2026-09-21:** feilet 4/4 i et ferskt worktree uten `.astro/`, mens primærtreet var grønt under samme last; `npx astro sync` i worktreet ga 51/51 grønt umiddelbart. `scripts/setup-worktree.sh` bør kjøre `astro sync` (eller testen bør ikke importere `astro/loaders`)
-  - `tests/links.spec.ts` → «alle tjeneste-sider skal ha fungerende lenker»: `locator.evaluateAll` feiler med «Execution context was destroyed, most likely because of a navigation» i full E2E-kjøring (observert 2026-09-15). Består 3/3 isolert og i en ny full kjøring rett etterpå — altså last-avhengig. Årsaken ligger i testen, ikke i koden: `page.goto(link)` venter kun på `load`, så dokumentet kan byttes ut mens `.container a`-evalueringen kjører. Vurder `waitUntil: 'domcontentloaded'` + eksplisitt `waitForSelector` før `evaluateAll`
 
 ## Fullført
 
