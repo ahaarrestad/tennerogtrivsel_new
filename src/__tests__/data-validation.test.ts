@@ -33,6 +33,13 @@ vi.mock('astro:content', () => {
     };
 });
 
+// astro/loaders drar inn hele Astros content-layer (~0,8 s inne i vitest, målt
+// 2026-09-22). Skjema-sjekken under trenger ikke glob-loaderen, og den tunge importen
+// gjorde testen last-avhengig: i full kjøring under ytre last overskred den 5 s-timeouten.
+vi.mock('astro/loaders', () => ({
+    glob: vi.fn(() => ({ name: 'glob-mock', load: vi.fn() })),
+}));
+
 // Validerer det syntetiske fixture-settet (tests/fixtures/), IKKE live Drive-data.
 // Fixtures er committet og alltid til stede, så testene er deterministiske og kjører
 // uavhengig av om Google Drive-innhold er synket inn. Drive-data kan byttes fritt.

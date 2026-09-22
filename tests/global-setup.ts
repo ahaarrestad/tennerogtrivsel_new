@@ -13,8 +13,8 @@ import { chromium, type FullConfig } from '@playwright/test';
 // modulgrafen så Vite oppdager og cacher deps — 'load' er nok til det, og
 // raskere. '/admin' laster Google Identity Services som holder gjentakende
 // nettverksaktivitet, så «networkidle» kan være tregt/upålitelig der under
-// parallell last; å legge enda et networkidle-kall i warm-upen øker bare
-// risikoen for å race mot 30s-timeouten unødvendig. Warm-upen er dessuten
+// parallell last (a11y-testene venter av samme grunn deterministisk, se
+// accessibility.spec.ts). Warm-upen er dessuten
 // best-effort: et enkelt rute-hikke skal ikke felle hele suiten — de ekte
 // testene har sine egne assertions og rapporterer reelle feil tydelig.
 async function globalSetup(config: FullConfig): Promise<void> {

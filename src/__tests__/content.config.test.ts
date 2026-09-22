@@ -47,6 +47,12 @@ vi.mock('fs', async () => {
     };
 });
 
+// Testene under bruker kun de håndskrevne innstillinger-/galleri-loaderne, aldri glob.
+// Mocken sparer den tunge astro/loaders-importen (~0,8 s) — se data-validation.test.ts.
+vi.mock('astro/loaders', () => ({
+    glob: vi.fn(() => ({ name: 'glob-mock', load: vi.fn() })),
+}));
+
 const { collections } = await import('../content.config.ts');
 
 describe('content.config.ts - Loaders', () => {

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 test.describe('Link Crawler', () => {
   // Lenkesjekk er serverside og identisk uavhengig av nettleser
@@ -29,24 +29,30 @@ test.describe('Link Crawler', () => {
     }
   });
 
+  // Henter interne hrefs under en selektor i ett page.evaluate-kall rett etter goto.
+  // Testen feilet 2026-09-15 med «Execution context was destroyed» under full kjøring;
+  // utløseren lot seg ikke reprodusere 2026-09-22 (kald Vite-cache + last, 8/8 grønne).
+  // Endringen er hygiene: ett kall, ikke-tom-sjekk, og feilmeldinger som sier hvilken side.
+  const interneHrefs = (page: Page, selector: string) =>
+    page.evaluate((sel) =>
+      Array.from(document.querySelectorAll<HTMLAnchorElement>(`${sel} a`))
+        .map(a => a.href)
+        .filter(h => h.startsWith(window.location.origin)),
+    selector);
+
   test('alle tjeneste-sider skal ha fungerende lenker', async ({ page }) => {
-    await page.goto('/');
     await page.setViewportSize({ width: 1280, height: 800 });
-    
-    // Finn alle tjeneste-lenker
-    const tjenesteLinks = await page.locator('#tjenester a').evaluateAll(links => 
-      links.map(a => (a as HTMLAnchorElement).href)
-    );
+    await page.goto('/');
+    const tjenesteLinks = await interneHrefs(page, '#tjenester');
+    expect(tjenesteLinks.length, 'Fant ingen tjeneste-lenker på forsiden').toBeGreaterThan(0);
 
     for (const link of tjenesteLinks) {
-      const response = await page.goto(link);
-      expect(response?.status()).toBe(200);
-      
+      const response = await page.goto(link, { waitUntil: 'load' });
+      expect(response?.status(), `Tjeneste-siden ${link} ga status ${response?.status()}`).toBe(200);
+
       // Sjekk at nav-lenkene på denne siden også fungerer (f.eks. "Våre tjenester" nederst)
-      const subLinks = await page.locator('.container a').evaluateAll(links => 
-        links.map(a => (a as HTMLAnchorElement).href).filter(h => h.startsWith(window.location.origin))
-      );
-      
+      const subLinks = await interneHrefs(page, '.container');
+
       for (const subLink of subLinks.slice(0, 5)) { // Sjekk et utvalg for å ikke bruke for lang tid
         const subResponse = await page.request.get(subLink);
         expect(subResponse.status(), `Lenken ${subLink} på siden ${link} feilet`).toBe(200);

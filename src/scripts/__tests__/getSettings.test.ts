@@ -13,6 +13,14 @@ vi.mock('astro:content', async (importOriginal) => {
     };
 });
 
+// sync-data.js drar inn googleapis + sharp (~0,6 s inne i vitest, målt 2026-09-22).
+// Synk-testen nederst trenger bare HARD_DEFAULT_KEYS, og importen skjer inne i testkroppen
+// — så den belastes 5 s-timeouten og sprakk under ytre last. Samme mønster som sync-data.test.js.
+vi.mock('sharp', () => ({ default: vi.fn() }));
+vi.mock('@googleapis/sheets', () => ({ sheets: vi.fn() }));
+vi.mock('@googleapis/drive', () => ({ drive: vi.fn() }));
+vi.mock('google-auth-library', () => ({ GoogleAuth: vi.fn() }));
+
 describe('getSiteSettings', () => {
     // Suppress console.error output for tests that expect errors
     let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
