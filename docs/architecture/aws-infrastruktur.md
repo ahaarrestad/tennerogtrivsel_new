@@ -73,7 +73,7 @@ Behaviors sjekkes i rekkefølge — mest spesifikk path vinner.
 |------|--------|-------------|-------------|----------------------|----------------------|-------------|
 | `/api/kontakt` | Lambda URL | — | `Managed-CachingDisabled` | `Managed-AllViewerExceptHostHeader` | `tot-security-headers` | Alle (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS) |
 | `/api/*` | S3 | — | `Managed-CachingDisabled` | — | `tot-security-headers` | GET, HEAD |
-| `/tiles/*` | basemaps.cartocdn.com | `strip-tiles-prefix` (viewer-req) | `Managed-CachingOptimized` | **`carto-tiles-key-forward`** | `tot-security-headers` | GET, HEAD |
+| `/tiles/*` | basemaps.cartocdn.com | `strip-tiles-prefix` (viewer-req), `tiles-browser-cache` (viewer-resp) | `Managed-CachingOptimized` | **`carto-tiles-key-forward`** | `tot-security-headers` | GET, HEAD |
 | `*` (default) | S3 | `sitemap_redirect` (viewer-req), `tot-admin-noindex` (viewer-resp) | `Managed-CachingOptimized` | — | `tot-security-headers` | GET, HEAD |
 
 **Origin Request Policy for `/api/kontakt`:** `Managed-AllViewerExceptHostHeader`
@@ -101,6 +101,7 @@ har satt den. Resultatet er vannmerkede tiles med HTTP 200 — ingen feil noe st
 | `sitemap_redirect` | viewer-request | `*` (default) | www-redirect, sitemap-redirect, trailing-slash-redirect |
 | `tot-admin-noindex` | viewer-response | `*` (default) | Setter `X-Robots-Tag: noindex` på `/admin`-paths |
 | `strip-tiles-prefix` | viewer-request | `/tiles/*` | Omskriver `/tiles/{z}/{x}/{y}` → `/rastertiles/voyager/{z}/{x}/{y}`, setter CARTO-nøkkelen som `?key=`, og setter `Referer` til et fast domene |
+| `tiles-browser-cache` | viewer-response | `/tiles/*` | Setter `Cache-Control: public, max-age=86400` mot nettleseren på `200`/`304` — CARTOs 180 dager gjelder da kun edge-cachen. Se [Sikkerhet](sikkerhet.md#cloudfront-tile-proxy-gdpr) |
 
 ---
 
@@ -252,7 +253,7 @@ Alle scripts kjøres fra prosjektets rot med `node scripts/<script>`. De er idem
 |--------|--------|
 | `scripts/setup-s3.mjs` | Oppretter S3-buckets og setter bucket policy for OAC-tilgang |
 | `scripts/setup-dynamodb.mjs` | Oppretter DynamoDB rate-limit-tabell med TTL |
-| `scripts/setup-cloudfront-functions.mjs` | Deployer CloudFront Functions (`sitemap_redirect`, `strip-tiles-prefix`, `tot-admin-noindex`). **Krever `CARTO_API_KEY`** — se under |
+| `scripts/setup-cloudfront-functions.mjs` | Deployer CloudFront Functions (`sitemap_redirect`, `strip-tiles-prefix`, `tot-admin-noindex`, `tiles-browser-cache`). **Krever `CARTO_API_KEY`** — se under |
 | `scripts/setup-response-headers-policy.mjs` | Oppretter/oppdaterer `tot-security-headers` Response Headers Policy med CSP-hashes |
 
 **NB:** CloudFront-distribusjonene selv må opprettes manuelt (se steg-for-steg under).
@@ -295,9 +296,10 @@ målrettet invalidering av `/tiles/*`. Det **reduserer** vinduet kraftig — fra
 `/*`-invalideringens forsprang ned til sekundene mellom siste steg og propagering — men
 eliminerer det ikke: varer propageringen lenger enn jobben, kan vannmerkede tiles rekke å bli
 cachet på nytt også etter den siste invalideringen. Verifiser derfor kartet visuelt etter
-deploy. Henger vannmerket igjen: invalider `/tiles/*` manuelt, verifiser at edge leverer rene
-tiles, og bump **deretter** `v` i tile-URL-en i `src/scripts/mapInit.ts`. Invalidering alene
-når ikke nettleserne — de har allerede fått `max-age=15552000` — se
+deploy. Henger vannmerket igjen: invalider `/tiles/*` manuelt og verifiser at edge leverer rene
+tiles. Invalidering når ikke nettleserne. Takket være `tiles-browser-cache` holder de en tile i
+maks ett døgn, så feilen forsvinner av seg selv innen da; skal den bort *umiddelbart*, bump
+**deretter** `v` i tile-URL-en i `src/scripts/mapInit.ts` — se
 [Sikkerhet → Leaflet](sikkerhet.md#cloudfront-tile-proxy-gdpr).
 
 **Ny kobling å være klar over:** når funksjons-steget ligger først, stopper en feil der hele
@@ -306,9 +308,9 @@ bevisst — en `strip-tiles-prefix` uten gyldig nøkkel gir vannmerkede tiles me
 er nettopp den stille feilen vi vil unngå — men det betyr at en manglende eller feilformatert
 `CARTO_API_KEY` nå blokkerer publisering av vanlig innhold.
 
-Steget publiserer også `sitemap_redirect` og `tot-admin-noindex`, som dermed går live *før*
-S3-synken i stedet for etter. Innfører du en redirect-regel som peker på en side som først
-finnes i det nye bygget, vil den kort gi 404 i vinduet mellom de to stegene.
+Steget publiserer også `sitemap_redirect`, `tot-admin-noindex` og `tiles-browser-cache`, som
+dermed går live *før* S3-synken i stedet for etter. Innfører du en redirect-regel som peker på
+en side som først finnes i det nye bygget, vil den kort gi 404 i vinduet mellom de to stegene.
 
 ### Opprett distribusjon i AWS-konsollen
 
@@ -369,6 +371,8 @@ finnes i det nye bygget, vil den kort gi 404 i vinduet mellom de to stegene.
    - Response headers policy: `tot-security-headers`
    - Function associations:
      - Viewer request: `strip-tiles-prefix`
+     - Viewer response: `tiles-browser-cache` — uten den får nettleseren CARTOs
+       `max-age=15552000`, og en dårlig tile blir liggende hos besøkende i 180 dager
 
    Knytt origin-request-policyen på **etter** at `strip-tiles-prefix` er deployet — se
    rekkefølge-noten under behaviors-tabellen over.

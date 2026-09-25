@@ -38,9 +38,10 @@ export function initMap(): void {
     const isTouch = isTouchDevice();
     const map = L.map(mapEl, getMapOptions(isTouch)).setView([lat, lng], 17);
 
-    // ?v= er cache-busting mot nettleseren: CARTO sender max-age på 180 dager, så en
-    // dårlig tile (f.eks. vannmerket) blir liggende lokalt lenge etter at CloudFront er
-    // friskt. Bump verdien for å tvinge ny henting — først etter at edge er invalidert og
+    // ?v= er cache-busting mot nettleseren: en dårlig tile (f.eks. vannmerket) kan bli
+    // liggende lokalt etter at CloudFront er friskt — i opptil ett døgn (tiles-browser-cache),
+    // eller 180 dager for tiles hentet før den funksjonen ble tatt i bruk. Bump verdien for
+    // å tvinge ny henting umiddelbart — først etter at edge er invalidert og
     // verifisert ren. I prod ignorerer CloudFront parameteren i cache-nøkkelen og sender den
     // ikke til origin (se docs/architecture/sikkerhet.md).
     L.tileLayer('/tiles/{z}/{x}/{y}.png?v=2', {

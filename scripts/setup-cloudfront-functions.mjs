@@ -37,6 +37,12 @@ const FUNCTIONS = [
         comment: 'viewer-response: X-Robots-Tag noindex for /admin paths',
         runtime: 'cloudfront-js-2.0',
     },
+    {
+        name: 'tiles-browser-cache',
+        codePath: join(__dirname, 'cloudfront-tiles-browser-cache.js'),
+        comment: 'viewer-response: Cache-Control max-age=86400 mot nettleser for /tiles/*',
+        runtime: 'cloudfront-js-2.0',
+    },
 ];
 
 /**
