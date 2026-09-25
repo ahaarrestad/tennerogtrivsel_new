@@ -87,12 +87,6 @@
   - Alternativt/i tillegg: la jobben tolke `Missing: X from lock file` og kommentere diagnosen på PR-en, og/eller dokumentere feilmønsteret i `docs/guides/`
   - Vurder kostnad/nytte i planfasen: en ekstra jobb koster litt ekstra kjøretid per PR, men de fire jobbene kjører allerede `npm ci` hver for seg
 
-- [ ] **Lås Node-versjonen på tvers av lokalt og CI** — *ingen plan ennå*
-  - Ingenting pinner Node i dag: verken `.nvmrc` eller `engines` i `package.json` finnes, og alle åtte workflow-stegene bruker `node-version: '24'`, som alltid henter siste 24.x. Lokalt sto v24.12.0 (2026-09-15)
-  - Konkret utslag: `jsdom@30.0.1` (via Dependabot-PR #466) krever `^22.22.2 || ^24.15.0 || >=26.0.0`. Lokal `npm install` ga `EBADENGINE`, mens CI var upåvirket fordi den fikk en nyere 24.x. Testene passerte likevel — men driften er reell: en advarsel i dag kan være en ekte inkompatibilitet neste gang, og den vil da treffe kun én av sidene
-  - Mulig tiltak: `.nvmrc` + `engines.node` i `package.json`, og bytt workflow-stegene til `node-version-file: .nvmrc` slik at én fil styrer begge sider
-  - Vurder i planfasen: hvor stramt `engines` skal være (eksakt versjon vs. `>=`), om `engine-strict` skal slås på, og hvordan versjonen holdes oppdatert — Dependabot oppdaterer ikke `.nvmrc`, så det blir en manuell rutine eller en scheduled sjekk
-
 - [ ] **Deteksjon av stille degradering på kart-tiles** — *ingen plan ennå*
   - CARTO-vannmerket sto på siden i ukjent tid uten at noe varslet. Endepunktet svarte `200 OK` med gyldig `image/png` i normal størrelse hele veien — kun pikslene endret seg. `mapInit.test.ts` mocker Leaflet fullstendig og asserter bare at `L.tileLayer` kalles med riktig URL-mønster; ingen E2E-test laster en ekte tile
   - Vurder: visuell regresjonstest på en kjent tile, størrelses-/checksum-sjekk i en scheduled workflow, eller oppetidsovervåking av `/tiles/*` som ser på innhold og ikke bare statuskode

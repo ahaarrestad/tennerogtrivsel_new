@@ -2,6 +2,9 @@
   "name": "tennerogtrivsel2",
   "type": "module",
   "version": "0.0.1",
+  "engines": {
+    "node": ">=24.15.0 <25.0.0"
+  },
   "scripts": {
     "dev": "node src/scripts/sync-data.js && astro dev",
     "dev:nosync": "astro dev",

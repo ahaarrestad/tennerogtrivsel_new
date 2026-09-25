@@ -1,0 +1,140 @@
+name: Node Version Watch
+
+# Dependabot oppdaterer verken `.nvmrc` eller `engines.node`, så uten denne
+# workflowen blir den låste Node-versjonen stående til noen tilfeldigvis husker den.
+# Den åpner en issue når én av to ting er sant:
+#
+#   1. Det finnes en sikkerhetsutgivelse i vår major som er nyere enn `.nvmrc`.
+#   2. Det finnes en LTS-linje med høyere major enn vår.
+#
+# Normaltilstanden er «ingenting å gjøre», og den skal gi GRØNN kjøring. Rødt her
+# betyr at workflowen selv er ødelagt, ikke at Node må oppgraderes.
+
+on:
+  schedule:
+    # Ukentlig, ikke månedlig: sikkerhetsutgivelser skal fanges innen en uke.
+    - cron: '45 6 * * 1' # mandag 06:45 UTC, etter blocked-upgrades-watch (06:30)
+  workflow_dispatch: # manuell dispatch for testing
+
+jobs:
+  node-version:
+    name: Bør Node-versjonen oppgraderes?
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Sammenlign .nvmrc med nodejs.org
+        id: probe
+        run: |
+          set -euo pipefail
+
+          PINNED=$(tr -d '[:space:]' < .nvmrc)
+          PINNED=${PINNED#v}
+          if ! [[ "$PINNED" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::.nvmrc må inneholde en eksakt versjon (X.Y.Z), fant '$PINNED'."
+            exit 1
+          fi
+          MAJOR=${PINNED%%.*}
+
+          # -f: en HTTP-feil skal gi rød kjøring, ikke tolkes som «ingen nyere versjon».
+          curl -sSf --retry 3 https://nodejs.org/dist/index.json -o index.json
+
+          # Uten denne vakten ville et endret dataformat gitt tomme treff og grønn
+          # kjøring for alltid — watchdogen kunne dødd stille.
+          if ! jq -e --arg v "v$PINNED" 'any(.[]; .version == $v)' index.json > /dev/null; then
+            echo "::error::Fant ikke v$PINNED i nodejs.org/dist/index.json — feil i .nvmrc eller endret dataformat."
+            exit 1
+          fi
+
+          # Versjonene sammenlignes numerisk; strengsammenligning ville satt 24.9 over 24.21.
+          SECURITY=$(jq -r --arg pinned "$PINNED" --argjson major "$MAJOR" '
+            def ver: ltrimstr("v") | split(".") | map(tonumber);
+            [ .[] | select(.security == true)
+                  | select((.version | ver)[0] == $major)
+                  | select((.version | ver) > ($pinned | ver)) ]
+            | first | .version // empty
+          ' index.json)
+
+          # `lts` er false eller et kodenavn; krev streng så et manglende felt ikke telles som LTS.
+          NEWER_LTS=$(jq -r --argjson major "$MAJOR" '
+            def ver: ltrimstr("v") | split(".") | map(tonumber);
+            [ .[] | select(.lts | type == "string") | select((.version | ver)[0] > $major) ]
+            | first | if . == null then empty else "\(.version) (\(.lts))" end
+          ' index.json)
+
+          echo "Låst versjon: v$PINNED"
+          echo "Nyere sikkerhetsutgivelse i v$MAJOR: ${SECURITY:-ingen}"
+          echo "Nyere LTS-linje: ${NEWER_LTS:-ingen}"
+
+          {
+            echo "pinned=$PINNED"
+            echo "security=$SECURITY"
+            echo "newer_lts=$NEWER_LTS"
+          } >> "$GITHUB_OUTPUT"
+
+      # github.token framfor MY_GITHUB_PAT (som resten av repoet bruker): watchdogen
+      # trenger kun issues:write. Samme valg som i blocked-upgrades-watch.yml.
+      #
+      # Sikkerhet og LTS får hver sin etikett og dedupes hver for seg. En LTS-issue
+      # kan stå åpen i månedsvis (major-bytte), og med felles etikett ville den skjult
+      # alle sikkerhetsutgivelser i vår major i mellomtiden.
+      - name: Åpne issue om Node-oppgradering
+        if: steps.probe.outputs.security != '' || steps.probe.outputs.newer_lts != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PINNED: ${{ steps.probe.outputs.pinned }}
+          SECURITY: ${{ steps.probe.outputs.security }}
+          NEWER_LTS: ${{ steps.probe.outputs.newer_lts }}
+        run: |
+          set -euo pipefail
+
+          # $1 etikett, $2 etikettbeskrivelse, $3 tittel, $4 punkt i issue-teksten.
+          aapne_issue() {
+            gh label create "$1" --description "$2" --color d93f0b --force
+
+            # Dedup kun mot ÅPNE issues, og på etikett — ikke tittel. Lukkes issuen uten
+            # at .nvmrc er oppgradert, skal påminnelsen komme igjen neste mandag.
+            local aapne
+            aapne=$(gh issue list --label "$1" --state open --limit 1 --json number --jq 'length')
+            if [ "$aapne" != "0" ]; then
+              echo "Åpen issue med etiketten $1 finnes allerede — gjør ingenting."
+              return 0
+            fi
+
+            {
+              echo "\`node-version-watch.yml\` har funnet at den låste Node-versjonen (\`v$PINNED\`) bør oppgraderes."
+              echo
+              echo "$4"
+              echo
+              echo "Slik oppgraderer du:"
+              echo
+              echo "1. Sett ny versjon i \`.nvmrc\` (eksakt \`X.Y.Z\`, ingen \`v\`). CI leser den via \`node-version-file\`."
+              echo "2. Ved major-bytte: oppdater også \`engines.node\` i \`package.json\` (gulv og tak)."
+              echo "3. Lokalt: \`nvm install\` i repo-roten, deretter \`npm ci\`."
+              echo
+              echo "La issuen stå åpen til \`.nvmrc\` er oppgradert, og lukk den i samme PR"
+              echo "(\`Closes #<nr>\`). En åpen issue med samme etikett hindrer nye varsler, så"
+              echo "en glemt issue ville skjult neste utgivelse. Lukkes den før oppgraderingen,"
+              echo "åpner watchdogen en ny neste mandag — det er tilsiktet."
+            } > body.md
+
+            gh issue create --label "$1" --title "$3" --body-file body.md
+          }
+
+          if [ -n "$SECURITY" ]; then
+            aapne_issue node-security-watch \
+              "Watchdog: sikkerhetsutgivelse i låst Node-major" \
+              "Node $SECURITY er en sikkerhetsutgivelse — oppgrader .nvmrc (låst: v$PINNED)" \
+              "- **Sikkerhetsutgivelse i samme major:** \`$SECURITY\` (eller nyere). Bør tas raskt."
+          fi
+
+          if [ -n "$NEWER_LTS" ]; then
+            aapne_issue node-lts-watch \
+              "Watchdog: nyere Node LTS-linje finnes" \
+              "Ny Node LTS-linje: $NEWER_LTS — vurder å oppgradere fra v$PINNED" \
+              "- **Nyere LTS-linje:** \`$NEWER_LTS\`. Planlegg overgangen før gjeldende linje når EOL."
+          fi

@@ -24,7 +24,7 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
-          node-version: '24'
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       # Ingen `npm ci` før proben: --package-lock-only løser mot registeret, ikke mot
@@ -64,6 +64,14 @@ jobs:
             # løs match ville sluppet gjennom en urelatert fatal feil som kommer etterpå.
             # Og konflikten må faktisk handle om typescript — ellers er det en annen
             # peer-konflikt i treet, og da skal noen se på det.
+            #
+            # Med engine-strict=true i .npmrc gir en typescript@7 som krever nyere Node
+            # `EBADENGINE`, ikke ERESOLVE. Da er det .nvmrc som må oppgraderes, ikke
+            # workflowen som er ødelagt, så det får sin egen feilmelding.
+            if grep -q 'npm error code EBADENGINE' probe.log; then
+              echo "::error::Proben feilet på EBADENGINE — en avhengighet krever nyere Node enn .nvmrc. Oppgrader .nvmrc (og ev. engines.node) først."
+              exit 1
+            fi
             if ! grep -q 'npm error code ERESOLVE' probe.log ||
                ! grep -q 'npm error.*peer typescript@' probe.log; then
               echo "::error::Proben feilet, men ikke på en typescript-peer-konflikt — se loggen. Workflowen er ødelagt, ikke oppgraderingen."
