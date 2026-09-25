@@ -14,10 +14,6 @@
 
 ## Pågående
 
-- [ ] **Kort nettleser-cache for `/tiles/*`** ([spec](docs/designs/2026-09-25-tiles-nettleser-cache.md)) ([plan](docs/plans/2026-09-25-tiles-nettleser-cache.md))
-  - CARTO sender `Cache-Control: public,max-age=15552000` (180 dager) og proxyen videresender den til nettleseren — en vannmerket tile ble derfor liggende hos besøkende i et halvt år (se «Cache-bust kart-tiles»)
-  - Valgt løsning: ny viewer-response-funksjon `tiles-browser-cache` som setter `max-age=86400` på `200`/`304` — ingen kopi av `tot-security-headers` (unngår drift fra CSP-synken)
-
 - [ ] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/2026-04-28-sikkerhetshardening.md))
   - Task 1, 2, 4–9, 11, 12 er fullført. Gjenstående tasks:
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
