@@ -3,6 +3,12 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **Cache-bust kart-tiles** ([plan](docs/plans/archive/2026-09-25-cache-bust-kart-tiles.md))
+  - **Årsak:** besøkende så fortsatt «API KEY REQUIRED» selv om CloudFront var friskt (verifisert visuelt 2026-09-25). CARTO sender `max-age=15552000` (180 dager), og proxyen videresender den — vannmerkede tiles fra perioden før 2026-09-08 lå i nettlesercachen til ca. mars 2027. CloudFront-invalidering når ikke nettlesere.
+  - **Fiks:** tile-URL i `mapInit.ts` → `/tiles/{z}/{x}/{y}.png?v=2`. Verifisert mot prod at `?v=2` gir CloudFront-hit og md5-identisk tile (`CachingOptimized` ignorerer query; `carto-tiles-key-forward` slipper kun `key` til origin).
+  - **Runbook:** `sikkerhet.md`, `aws-infrastruktur.md` og kommentaren i `deploy.yml` sier nå: invalider `/tiles/*`, verifiser ren edge, bump **deretter** `v` — i motsatt rekkefølge får nettleserne det dårlige objektet på nytt under ny URL.
+  - **Oppfølging i backlog:** «Kort nettleser-cache for `/tiles/*`» (egen response headers policy som overstyrer `Cache-Control`).
+
 - [x] **Stabiliser ustabile tester** ([spec](docs/designs/archive/2026-09-22-stabiliser-ustabile-tester.md)) ([plan](docs/plans/archive/2026-09-22-stabiliser-ustabile-tester.md))
   - **Tre last-avhengige tester, tre ulike mekanismer.** Kun én av dem (A) har faktisk feilet i CI (1 av 5 røde kjøringer siste 60 — resten var npm audit/build). Alle tre ble målt før noe ble endret; TODO-punktets hypoteser ble delvis tilbakevist.
   - **A — `accessibility.spec.ts` (/admin):** `waitForLoadState('networkidle')` ventet på en *seriell* kjede av tre Google-verter (`gapi.load` → `gapi.client.init` → discovery-dokumenter → stille token-forespørsel): målt `load` 0,7–1,9 s, `networkidle` 2,7–3,6 s. Historikken viste ping-pong (`8bae670` → `185a044` → `24fc6b4`) der `networkidle` ble stående som dev-reload-workaround etter at warm-upen i `global-setup.ts` allerede hadde tatt over den jobben. Fiks: hjelperen `ventTilKlarForAxe` — `domcontentloaded` + `main` + alle `link[rel~=stylesheet]` har `.sheet` (10 s eget timeout) + `document.fonts.ready`. Første utkast brukte `load`; mekanismetesten (35 s `page.route`-forsinkelse på `*google*`) viste at `load` også timet ut, fordi `<script async defer>` inngår i `load`. Kun `domcontentloaded` er uavhengig av de eksterne skriptene. Gjelder alle a11y-tester, ikke bare admin.

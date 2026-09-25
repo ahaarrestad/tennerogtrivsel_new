@@ -429,7 +429,9 @@ jobs:
       # på nytt med vannmerkede tiles som blir liggende i 180 dager. Denne kjører sist og er
       # billig, og reduserer vinduet kraftig. Den lukker det ikke helt — varer propageringen
       # lenger enn hele jobben, kan vannmerkede tiles rekke å bli cachet også etter dette
-      # steget, og da må /tiles/* invalideres manuelt.
+      # steget, og da må /tiles/* invalideres manuelt. Invalidering når ikke nettleserne som
+      # allerede har hentet vannmerkede tiles (180 dagers max-age) — bump deretter `v` i
+      # tile-URL-en i src/scripts/mapInit.ts (se docs/architecture/sikkerhet.md).
       - name: Invalidate CloudFront tiles PROD
         run: |
           aws cloudfront create-invalidation \
