@@ -10,7 +10,7 @@
 #   # ... kjør tester mot http://localhost:$PORT ...
 #   stop_secure_server
 #
-# Bruker PORT (default 4321). Sett PORT=4322 e.l. per worktree.
+# Bruker PORT (default 4321). run-e2e.sh velger egen port per worktree.
 # Dreper IKKE en eksisterende secure server — sjekker CSP-header først og gjenbruker den.
 #
 # Krever at sandkassen er av (den er av i settings.local.json):
@@ -25,7 +25,7 @@ ensure_secure_server() {
     return 0
   fi
   lsof -ti:$PORT | xargs kill -9 2>/dev/null || true; sleep 1
-  PORT=$PORT npm run dev:secure:fixtures > /tmp/dev-secure.log 2>&1 &
+  PORT=$PORT npm run dev:secure:fixtures > "/tmp/dev-secure-$PORT.log" 2>&1 &
   STARTED_SERVER=true
   for i in $(seq 1 45); do
     sleep 2

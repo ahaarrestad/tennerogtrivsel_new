@@ -13,19 +13,32 @@ Eneste kilde for kvalitetsporten. `/commit` kaller denne — ikke kopier stegene
 
 Se på hvilke filer som er endret siden sist porten var grønn:
 
+Enkle, separate kommandoer (worktree-isolerte økter nekter git inni `$(...)`):
+
 ```bash
 git rev-parse -q --verify refs/worktree/gated          # settes av /commit etter grønn port
+git merge-base --is-ancestor refs/worktree/gated HEAD; echo $?
 git merge-base HEAD origin/main
-git diff --name-only <BASE> ; git diff --name-only HEAD   # committet siden BASE + uncommittet
+git diff --name-only <BASE>    # committet + uncommittet siden BASE
+git status --porcelain         # også usporede filer (nye tester o.l.)
 ```
 
-`<BASE>` = `refs/worktree/gated` hvis den finnes og er stamfar til HEAD
-(`git merge-base --is-ancestor`), ellers merge-basen. Da fanges også fix-commits fra
-`review-loop`, ikke bare uncommittede endringer.
+`<BASE>` = `refs/worktree/gated` hvis den finnes og er stamfar til HEAD (`0`), ellers
+merge-basen. Da fanges også fix-commits fra `review-loop`, ikke bare uncommittede endringer.
 
-- **Berører `src/`, `scripts/`, `api/`, `lambda/`, `tests/`, config (`*.config.*`, `tsconfig`, `.github/`) eller `package*.json`** → kjør hele porten.
-- **Kun dokumentasjon / `.claude/`-prosa / `TODO*.md`** → hopp over porten og si eksplisitt hvorfor. Endringen kan ikke påvirke tester, build eller audit.
-- **Blandet** → kjør hele porten.
+- **Minst én sti som ikke er dokumentasjon** (se under) → kjør hele porten.
+- **Kun dokumentasjon** → hopp over porten og si eksplisitt hvorfor. Endringen kan ikke påvirke
+  tester, build eller audit.
+
+### Hva regnes som dokumentasjon
+
+Eneste definisjon — `/commit` (4.5 og 5a) viser hit. En sti er dokumentasjon bare hvis den er
+`*.md` under `docs/`, `TODO*.md`, eller `*.md` under `.claude/`. Alt annet — inkludert
+`.claude/**/*.sh`, `.claude/settings*.json`, `CLAUDE.md`-endringer sammen med kode — utløser porten.
+
+Unntak for review i `/commit` 4.5: `.claude/skills/**` regnes **ikke** som dokumentasjon der.
+Skills er kjørbare agent-instruksjoner (`allowed-tools`, push-godkjenning), så endringer i dem
+skal sees av en fersk reviewer, ikke bare av agenten som skrev dem.
 
 Er du i tvil, kjør den. Stopp ved første feil og rapporter — ikke fortsett til neste steg.
 
@@ -85,7 +98,8 @@ i `.github/workflows/` for både test- og build-steg.
 
 ## Steg 8: Rapport
 
-Ved grønn port på et rent arbeidstre: `git update-ref refs/worktree/gated HEAD`. (Kjøres porten
+Ved grønn port på et rent arbeidstre (`git status --porcelain` tom, også uten usporede filer):
+`git update-ref refs/worktree/gated HEAD`. (Kjøres porten
 før commit, setter `/commit` refen etter commit i stedet.) Refen avgjør om porten må kjøres på
 nytt før push.
 
