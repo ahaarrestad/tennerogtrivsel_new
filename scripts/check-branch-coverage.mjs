@@ -34,7 +34,7 @@ export function run(data, cwd, log = console.log) {
     return results.some((r) => r.pct < THRESHOLD) ? 1 : 0;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
     const data = JSON.parse(readFileSync('coverage/coverage-final.json', 'utf8'));
     process.exit(run(data, process.cwd()));
 }

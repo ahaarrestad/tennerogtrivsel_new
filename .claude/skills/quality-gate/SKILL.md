@@ -11,7 +11,17 @@ Eneste kilde for kvalitetsporten. `/commit` kaller denne — ikke kopier stegene
 
 ## Når porten gjelder
 
-Se på hvilke filer som faktisk endres (`git diff --name-only` mot basen, pluss staged/unstaged):
+Se på hvilke filer som er endret siden sist porten var grønn:
+
+```bash
+git rev-parse -q --verify refs/worktree/gated          # settes av /commit etter grønn port
+git merge-base HEAD origin/main
+git diff --name-only <BASE> ; git diff --name-only HEAD   # committet siden BASE + uncommittet
+```
+
+`<BASE>` = `refs/worktree/gated` hvis den finnes og er stamfar til HEAD
+(`git merge-base --is-ancestor`), ellers merge-basen. Da fanges også fix-commits fra
+`review-loop`, ikke bare uncommittede endringer.
 
 - **Berører `src/`, `scripts/`, `api/`, `lambda/`, `tests/`, config (`*.config.*`, `tsconfig`, `.github/`) eller `package*.json`** → kjør hele porten.
 - **Kun dokumentasjon / `.claude/`-prosa / `TODO*.md`** → hopp over porten og si eksplisitt hvorfor. Endringen kan ikke påvirke tester, build eller audit.
@@ -45,8 +55,12 @@ AI-agent, så Playwrights `webServer` kan ikke starte den — bruk det delte scr
 gjenbruker serveren, kjører testene, rydder opp):
 
 ```bash
-bash .claude/skills/_shared/run-e2e.sh 2>&1 | tail -15   # i worktree: PORT=4322 e.l.
+bash .claude/skills/_shared/run-e2e.sh > "$SCRATCH/e2e.txt" 2>&1; echo "exit=$?"
 ```
+
+`$SCRATCH` = øktens scratchpad-katalog (skriv stien literalt). Les sammendraget og ev. feilede
+tester fra fila. Scriptet velger selv port: 4321 i hovedrepoet, en fast port utledet fra stien i
+en worktree — slik at E2E aldri kjører mot en annen checkouts server.
 
 ## Steg 5: Build
 
@@ -71,8 +85,9 @@ i `.github/workflows/` for både test- og build-steg.
 
 ## Steg 8: Rapport
 
-Noter `git rev-parse HEAD` og om arbeidstreet var rent — `/commit` bruker det til å avgjøre om
-porten må kjøres på nytt før push.
+Ved grønn port på et rent arbeidstre: `git update-ref refs/worktree/gated HEAD`. (Kjøres porten
+før commit, setter `/commit` refen etter commit i stedet.) Refen avgjør om porten må kjøres på
+nytt før push.
 
 ```
 ## Quality Gate Report  (HEAD <sha>)
