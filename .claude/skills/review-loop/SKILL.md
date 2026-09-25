@@ -1,77 +1,66 @@
 ---
 name: review-loop
-description: "Use after implementing a feature or task, as part of a /goal loop. Runs one code review pass: reviews the diff, fixes Critical and Important issues, commits the fixes. Designed to be called repeatedly by /goal until the review is clean."
+description: "Use after implementing a feature or task (TODO-flyten Fase 4). Reviews the branch diff, fixes Critical and Important issues, commits the fixes and re-reviews until clean (max 3 rounds)."
 disable-model-invocation: false
 allowed-tools: ["Read", "Edit", "Write", "Glob", "Grep", "Bash(git *)", "Agent"]
 ---
 
-# Review Loop (én gjennomgang)
+# Review Loop
 
-Kjør én review-pass over diff-en fra denne branchen. Ment å kalles av `/goal` som looper til reviewen er ren.
+Review diffen på denne branchen, fiks blokkerende funn og review på nytt — i samme tur — til
+reviewen er ren eller 3 runder er brukt.
 
 ## Steg 1: Finn git-range
 
-**Fetch alltid først.** `BASE_SHA` regnes ut mot `origin/main` — er den refen utdatert, blir
-review-rangen feil, og feilen er stille: reviewen kjører og rapporterer «ren», men på feil
-commits. Samme krav som `/commit` Step 4.4.
+Fetch først: `BASE_SHA` regnes mot `origin/main`, og en utdatert ref gir stille feil range.
 
 ```bash
 git fetch origin
-BASE_SHA=$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse HEAD~1)
+BASE_SHA=$(git merge-base HEAD origin/main)
 HEAD_SHA=$(git rev-parse HEAD)
-
-git log --oneline $BASE_SHA..$HEAD_SHA   # kontroller: nøyaktig de forventede commitene
+git log --oneline $BASE_SHA..$HEAD_SHA
 ```
 
-Viser rangen andre commits enn du forventer — stopp og finn ut hvorfor før du dispatcher
-agenten. En for vid range gir review av allerede merget kode; en for smal går glipp av
-endringer som faktisk skal reviewes.
+Viser rangen andre commits enn forventet — finn ut hvorfor før du går videre. For vid range
+gir review av allerede merget kode; for smal går glipp av endringer.
 
-## Steg 2: Kjør review-agent
+## Steg 2: Review
 
-Dispatch en `general-purpose` Agent med den delte reviewer-prompten i
+Dispatch en `general-purpose` Agent med den delte prompten i
 [`../_shared/reviewer-prompt.md`](../_shared/reviewer-prompt.md). Fyll inn
-`{WHAT_WAS_IMPLEMENTED}`, `{BASE_SHA}` og `{HEAD_SHA}`.
+`{WHAT_WAS_IMPLEMENTED}` (fra TODO-oppgaven, eller en kort oppsummering av
+`git diff --stat $BASE_SHA..$HEAD_SHA`), `{BASE_SHA}` og `{HEAD_SHA}`.
 
-`{WHAT_WAS_IMPLEMENTED}`: Hent fra TODO.md-oppgaven som ble fullført, eller skriv en
-kortfattet oppsummering av diff-en (`git diff --stat {BASE_SHA}..{HEAD_SHA}`).
+En fersk agent er poenget: den har ikke implementasjonens antakelser. Vurder funnene kritisk
+før du fikser — er edge caset realistisk her, strider forslaget mot en tidligere beslutning?
 
-## Steg 3: Evaluer og avslutt
+## Steg 3: Evaluer og loop
 
-**Ingen Critical eller Important issues:**
+**Critical eller Important funnet:** fiks dem, stage kun berørte filer (`git add <fil>` — aldri
+`-A`/`.`, aldri `.env*`, credentials, `node_modules/`, `coverage/`) og commit:
 
-Avslutt med:
-```
-REVIEW_LOOP: CLEAN
-Ingen Critical eller Important issues. Klar for /commit.
-```
-
-**Kun Minor issues:**
-
-Vis dem, avslutt med:
-```
-REVIEW_LOOP: CLEAN (minor issues listed above)
-Ingen blokkerende issues. Klar for /commit.
-```
-
-**Critical eller Important issues funnet:**
-
-Fiks alle issues. Stage og commit kun de berørte filene (aldri `git add .` eller `git add -A` — aldri `.env*`, credentials, `node_modules/`, `coverage/`):
 ```bash
-git add <spesifikke filer — én og én>
 git commit -m "$(cat <<'EOF'
 fix: reviewfiks — <kort beskrivelse>
 
-Co-Authored-By: Claude Code <noreply@anthropic.com>
+<attribusjonslinjene harnessen oppgir for denne økten>
 EOF
 )"
 ```
 
-Avslutt med:
-```
-REVIEW_LOOP: ISSUES_FIXED
-Fikset: <liste over hva som ble gjort>
-Ny runde nødvendig.
+Sett `HEAD_SHA=$(git rev-parse HEAD)`, behold `BASE_SHA`, og gå til Steg 2 igjen. Etter 3 runder
+uten ren review: stopp og presenter gjenstående funn for brukeren.
+
+**Ren (ingen Critical/Important):** marker rangen som reviewet, så `/commit` ikke reviewer den
+samme koden på nytt:
+
+```bash
+git update-ref refs/worktree/reviewed $HEAD_SHA
 ```
 
-`/goal`-systemet starter automatisk ny tur og kaller `review-loop` igjen.
+Avslutt med:
+```
+REVIEW_LOOP: CLEAN  (<antall> runder, HEAD <kort-sha>)
+<ev. Minor-funn>
+Klar for arkivering (Fase 5) og /commit.
+```

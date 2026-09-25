@@ -11,7 +11,7 @@ Analyze dependencies in this Astro project for bloat, security issues, misplacem
 
 ## Context
 
-This is an Astro 5 static site with Google Sheets/Drive as CMS. Pay special attention to these historically problematic patterns (verify current state before reporting):
+This is an Astro 7 static site with Google Sheets/Drive as CMS. Pay special attention to these historically problematic patterns (verify current state before reporting):
 - `googleapis` (full SDK, ~196 MB) — check if lighter alternatives like `@googleapis/sheets` + `@googleapis/drive` would suffice
 - `dotenv` — Node 20+ has built-in `.env` support; check if it's still needed
 - `@types/*` packages — verify they're in `devDependencies`, not `dependencies`

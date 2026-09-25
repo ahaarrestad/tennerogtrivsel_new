@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Delt dev:secure-oppstart for /commit (Step 2.5 E2E + Step 5 push).
+# Delt dev:secure-oppstart — brukes av run-e2e.sh (/quality-gate Steg 4).
 # Bruker dev:secure:fixtures — E2E kjører mot syntetiske fixtures (ikke live Drive),
 # samme som playwright.config.ts lokalt og CI. Slik er testdata deterministiske.
 # Kilde (source) denne, ikke kjør den: den setter STARTED_SERVER i kallerens scope
@@ -13,7 +13,7 @@
 # Bruker PORT (default 4321). Sett PORT=4322 e.l. per worktree.
 # Dreper IKKE en eksisterende secure server — sjekker CSP-header først og gjenbruker den.
 #
-# MÅ kjøres under `dangerouslyDisableSandbox: true` (samme som /commit Step 2.5/5):
+# Krever at sandkassen er av (den er av i settings.local.json):
 # readiness-loopen bruker foreground `sleep`, som er blokkert i sandkassen.
 
 ensure_secure_server() {

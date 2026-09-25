@@ -3,7 +3,7 @@
 > Denne fila lastes av `todo`-skillen når brukeren vil **fortsette på en oppgave som
 > allerede er i Pågående** (fra en tidligere sesjon).
 
-**ALLTID første steg — ingen unntak:**
+**Første steg — verifiser, ikke anta:**
 
 1. Kjør worktree-sjekk for å bekrefte at arbeidet skjer på riktig sted:
    ```bash

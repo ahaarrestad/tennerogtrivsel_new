@@ -24,7 +24,8 @@
     "generate-csp-hashes": "node scripts/generate-csp-hashes.mjs",
     "audit:sigs": "npm audit signatures",
     "audit": "npm audit --audit-level=critical",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "coverage:check": "node scripts/check-branch-coverage.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",

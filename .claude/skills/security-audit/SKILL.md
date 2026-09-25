@@ -14,7 +14,7 @@ Perform a structured security review of this Astro + Google OAuth project. The s
 - **Frontend**: Static Astro site on AWS S3 + CloudFront (no server runtime in production)
 - **Admin panel**: Client-side SPA at `/admin/` using Google OAuth (gapi + GIS)
 - **Data**: Google Sheets as CMS, Google Drive for images
-- **Middleware**: `src/middleware.ts` sets security headers (CSP, etc.) — only active in dev/SSR, NOT in S3 production
+- **Security headers**: defined in `src/utils/security-headers.ts`, applied by `src/middleware.ts` in dev only. In prod/test they come from a CloudFront Response Headers Policy (`scripts/setup-response-headers-policy.mjs`) — see `docs/architecture/sikkerhet.md`
 - **Sanitization**: DOMPurify for all innerHTML with user/CMS content
 - **Build pipeline**: `sync-data.js` fetches data from Google Sheets/Drive at build time
 
@@ -70,7 +70,7 @@ Check for `javascript:` URLs in href attributes, especially from CMS content.
 
 ### 4. Content Security Policy (CSP)
 
-Read `src/middleware.ts` and verify the CSP directives:
+Read `src/utils/security-headers.ts` (and `src/middleware.ts`) and verify the CSP directives:
 
 - `script-src`: Should not include `unsafe-inline` or `unsafe-eval` (except where strictly necessary with nonces)
 - `style-src`: Tailwind may need `unsafe-inline` for utility classes
