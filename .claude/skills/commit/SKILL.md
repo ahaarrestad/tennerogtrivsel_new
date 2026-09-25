@@ -2,7 +2,7 @@
 name: commit
 description: "Use when the user says 'commit', 'committ', 'lagre endringer', 'push', 'send til review', or asks to save/commit their work."
 disable-model-invocation: false
-allowed-tools: ["Bash(git *)", "Bash(cat *)", "Bash(npm test*)", "Bash(npm run *)", "Bash(bash scripts/setup-worktree.sh)", "Bash(bash .claude/skills/_shared/run-e2e.sh*)", "Bash(npx playwright*)", "Bash(npm audit*)", "Bash(lsof *)", "Bash(kill *)", "Bash(curl *)", "Bash(sleep *)", "Skill(quality-gate)", "Agent", "ExitWorktree"]
+allowed-tools: ["Bash(git *)", "Bash(cat *)", "Bash(npm test*)", "Bash(npm run *)", "Bash(bash scripts/setup-worktree.sh)", "Bash(bash .claude/skills/_shared/run-e2e.sh*)", "Bash(npx playwright*)", "Bash(npm audit*)", "Bash(lsof *)", "Bash(kill *)", "Bash(curl *)", "Bash(sleep *)", "Skill(quality-gate)", "Agent", "ExitWorktree", "EnterWorktree"]
 ---
 
 # Commit Skill
@@ -149,8 +149,6 @@ historikk og rent tre. `auto-pr.yml` auto-merger PR-en med `gh pr merge --auto -
 `origin/main` ikke har beveget seg blir det en fast-forward, ellers selv-heler
 `git pull --rebase` divergensen via patch-id.
 
-Committer du direkte på main (ingen worktree): hopp over steg 1–2 og 4, kjør bare steg 3.
-
 Worktree-isolerte økter nekter `git -C <primær-tre>` og git inni `$(...)`. Derfor: skriv ut
 verdiene først, og bytt til primær-treet med `ExitWorktree (action: keep)` før main røres.
 
@@ -159,25 +157,37 @@ git branch --show-current     # → <BRANCH>
 git rev-parse --show-toplevel # → <WT>
 ```
 
+Committer du direkte på main (ingen worktree): kjør bare steg 2 og 4.
+
 1. **Rebase på lokal main** (i worktreet — fanger upushede main-commits):
    `git rebase main` — forvent ev. konflikt i `TODO.md`; løs og `git rebase --continue`.
-   **Hard sjekk før du går videre** — to separate kall, sammenlign de literale verdiene:
+2. **Hard sjekk** (i treet der reviewen ble gjort — refen er per worktree). To separate kall,
+   sammenlign de literale verdiene:
    ```bash
-   git rev-parse refs/worktree/reviewed
+   git rev-parse refs/worktree/reviewed   # → <REVIEWED_SHA>
    git rev-parse HEAD
    ```
-   Er de ulike, har rebasen endret SHA-er eller dratt inn upushede main-commits (eller en
-   konfliktløsning) som verken reviewer eller bruker har sett. Gå tilbake til 5a → 4.5 (ancestor-
-   sjekken tvinger da full range) → 5b ny godkjenning. Aldri `git review` uten like verdier.
-2. **Fast-forward lokal main.** Kall `ExitWorktree` (action: `keep`) — cwd blir primær-treet,
-   der `main` er utsjekket. Så:
-   `git merge --ff-only <BRANCH>` — feiler den, har main beveget seg: gå inn i worktreet igjen
-   og start på nytt fra steg 1 (inkl. den harde sjekken). Aldri en ekte merge-commit.
-3. **Send til review** (fra primær-treet, HEAD == `<BRANCH>`): `git review` (pusher
-   `origin/main..HEAD` til `review/<slug>` og lager PR). **Aldri `git push`** — blokkeres uansett
-   av `git-guard.sh`.
-4. **Rydd opp worktreet** (commits ligger nå på main, så fjerning er trygg):
-   `git worktree remove <WT>` og deretter `git branch -d <BRANCH>`.
+   Er de ulike, har rebasen endret SHA-er, dratt inn upushede main-commits (eller en
+   konfliktløsning), eller det har kommet commits etter reviewen — kode verken reviewer eller
+   bruker har sett. Gå tilbake til 5a → 4.5 (ancestor-sjekken tvinger da full range) → 5b ny
+   godkjenning. Aldri `git review` uten like verdier.
+3. **Fast-forward lokal main.** Kall `ExitWorktree` (action: `keep`). Verktøyet er no-op for
+   worktrees som ikke ble entret med `EnterWorktree` i denne sesjonen — verifiser derfor, som
+   separate kall, før merge:
+   ```bash
+   git rev-parse --show-toplevel   # skal være primær-treet, ikke <WT>
+   git branch --show-current       # skal være main
+   git status --porcelain          # skal være tom
+   ```
+   Feiler én av dem: stopp og spør brukeren. Ellers `git merge --ff-only <BRANCH>`, og deretter
+   `git rev-parse HEAD` — skal være `<REVIEWED_SHA>`. Feiler merge, har main beveget seg:
+   `EnterWorktree (path: <WT>)` og start på nytt fra steg 1. Aldri en ekte merge-commit.
+4. **Send til review** (HEAD == `<REVIEWED_SHA>`): `git review` (pusher `origin/main..HEAD` til
+   `review/<slug>` og lager PR). **Aldri `git push`** — blokkeres uansett av `git-guard.sh`.
+5. **Rydd opp worktreet** (commits ligger nå på main, så fjerning er trygg). `EnterWorktree`
+   låser worktreet, så lås opp først — og bruk aldri `--force`, så fjerning fortsatt nektes ved
+   ucommittede filer:
+   `git worktree unlock <WT>`, `git worktree remove <WT>`, deretter `git branch -d <BRANCH>`.
 
 ### 5d. Etter merge
 
