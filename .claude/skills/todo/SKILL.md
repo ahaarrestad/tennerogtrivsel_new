@@ -2,7 +2,7 @@
 name: todo
 description: "Vis og administrer prosjektets TODO-liste (TODO.md). Bruk når brukeren sier 'todo', 'TODO', 'oppgaveliste', 'vis oppgaver', 'backlog', 'hva gjenstår', 'neste oppgave', 'legg til oppgave', 'ny oppgave', 'flytt oppgave', 'marker ferdig', 'start oppgave', 'begynn på', 'gjenoppta', 'fortsett med', eller spør om status på oppgaver."
 disable-model-invocation: false
-allowed-tools: ["Read(TODO.md)", "Read(TODO-archive.md)", "Read(TODO-abandoned.md)", "Edit(TODO.md)", "Edit(TODO-archive.md)", "Edit(TODO-abandoned.md)", "Write(TODO-abandoned.md)", "Glob(docs/**)", "Read(docs/**)", "Write(docs/**)", "Read(.claude/skills/todo/references/**)", "Bash(mv *)", "Bash(mkdir *)", "Bash(git *)", "Skill(superpowers:brainstorming)", "Skill(superpowers:using-git-worktrees)", "Skill(review-loop)", "Skill(commit)", "Skill(quality-gate)"]
+allowed-tools: ["Read(TODO.md)", "Read(TODO-archive.md)", "Read(TODO-abandoned.md)", "Edit(TODO.md)", "Edit(TODO-archive.md)", "Edit(TODO-abandoned.md)", "Write(TODO-abandoned.md)", "Glob(docs/**)", "Read(docs/**)", "Write(docs/**)", "Read(.claude/skills/todo/references/**)", "Bash(mv *)", "Bash(mkdir *)", "Bash(git *)", "Skill(superpowers:brainstorming)", "Skill(superpowers:using-git-worktrees)", "Skill(review-loop)", "Skill(commit)", "Skill(quality-gate)", "EnterWorktree"]
 ---
 
 # TODO-liste Skill

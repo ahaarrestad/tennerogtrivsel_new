@@ -13,7 +13,9 @@
    ```
    - To like stier: vi er i hovedrepoet, IKKE i en worktree — stopp og korriger
    - Ulike stier: vi er allerede i en worktree — fortsett
-2. Invoke `superpowers:using-git-worktrees` for å entre riktig worktree (eller opprette ny ved behov)
+2. Entre det eksisterende worktreet med `EnterWorktree (path: <sti fra git worktree list>)` — da
+   virker `ExitWorktree (keep)` i `/commit` 5c senere. Finnes det ikke: opprett nytt via
+   `superpowers:using-git-worktrees`.
 3. Bekreft hvilken branch/worktree som er aktiv før arbeidet begynner
 
 **Aldri anta at worktree-oppsettet fra forrige sesjon er på plass — verifiser alltid.**

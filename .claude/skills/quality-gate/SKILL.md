@@ -33,12 +33,13 @@ merge-basen. Da fanges også fix-commits fra `review-loop`, ikke bare uncommitte
 ### Hva regnes som dokumentasjon
 
 Eneste definisjon — `/commit` (4.5 og 5a) viser hit. En sti er dokumentasjon bare hvis den er
-`*.md` under `docs/`, `TODO*.md`, eller `*.md` under `.claude/`. Alt annet — inkludert
-`.claude/**/*.sh`, `.claude/settings*.json`, `CLAUDE.md`-endringer sammen med kode — utløser porten.
+`*.md` under `docs/`, `TODO*.md`, `README.md`, `CLAUDE.md`, eller `*.md` under `.claude/`. Alt
+annet — inkludert `.claude/**/*.sh` og `.claude/settings*.json` — utløser porten.
 
-Unntak for review i `/commit` 4.5: `.claude/skills/**` regnes **ikke** som dokumentasjon der.
-Skills er kjørbare agent-instruksjoner (`allowed-tools`, push-godkjenning), så endringer i dem
-skal sees av en fersk reviewer, ikke bare av agenten som skrev dem.
+Unntak for review i `/commit` 4.5: `.claude/**` og `CLAUDE.md` regnes **ikke** som dokumentasjon
+der. Skills, agenter og kommandoer er kjørbare agent-instruksjoner (`allowed-tools`,
+push-godkjenning), så endringer i dem skal sees av en fersk reviewer, ikke bare av agenten som
+skrev dem.
 
 Er du i tvil, kjør den. Stopp ved første feil og rapporter — ikke fortsett til neste steg.
 
@@ -73,7 +74,8 @@ bash .claude/skills/_shared/run-e2e.sh > "$SCRATCH/e2e.txt" 2>&1; echo "exit=$?"
 
 `$SCRATCH` = øktens scratchpad-katalog (skriv stien literalt). Les sammendraget og ev. feilede
 tester fra fila. Scriptet velger selv port: 4321 i hovedrepoet, en fast port utledet fra stien i
-en worktree — slik at E2E aldri kjører mot en annen checkouts server.
+en worktree — slik at E2E aldri kjører mot en annen checkouts server. Starter ikke serveren, se
+`/tmp/dev-secure-<port>.log` (porten står øverst i output-fila).
 
 ## Steg 5: Build
 
