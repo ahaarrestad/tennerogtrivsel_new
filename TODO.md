@@ -21,6 +21,11 @@
 
 ## Backlog
 
+- [ ] **Kort nettleser-cache for `/tiles/*`** — *ingen plan ennå*
+  - CARTO sender `Cache-Control: public,max-age=15552000` (180 dager) og proxyen videresender den til nettleseren — en vannmerket tile ble derfor liggende hos besøkende i et halvt år (se «Cache-bust kart-tiles»)
+  - Tiltak: egen response headers policy for `/tiles/*` (kopi av `tot-security-headers` + `Cache-Control` med override, f.eks. `public, max-age=86400`). CloudFront-TTL styres fortsatt av origin-headeren, så edge-cachen er upåvirket
+  - Kan ikke gjøres i `tot-security-headers` — den gjelder hele nettstedet. Manuell AWS-endring; oppdater `docs/architecture/aws-infrastruktur.md`
+
 - [ ] **a11y-tester i WebKit er CPU-bundet og timer ut under tung ytre last** — *ingen plan ennå*
   - Målt 2026-09-22: i WebKit tar `goto` 3–4 s og `AxeBuilder.analyze()` 4–5 s per side allerede ved load 7 (chromium: 1–2 s + 1,5–2 s). Med fire WebKit-workere under load ~22 sprenger både gammel og ny ventelogikk 30 s-timeouten (13/14 vs. 12/14 røde) — uavhengig av mekanismen som ble fikset i «Stabiliser ustabile tester»
   - Har ikke slått ut i CI (2 kjerner, 4 workere, ingen ytre last). Vurder eget `test.setTimeout` for webkit-prosjektene i `accessibility.spec.ts`, eller færre workere for dem — ikke global timeout-økning

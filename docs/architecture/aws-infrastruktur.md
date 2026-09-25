@@ -295,7 +295,10 @@ målrettet invalidering av `/tiles/*`. Det **reduserer** vinduet kraftig — fra
 `/*`-invalideringens forsprang ned til sekundene mellom siste steg og propagering — men
 eliminerer det ikke: varer propageringen lenger enn jobben, kan vannmerkede tiles rekke å bli
 cachet på nytt også etter den siste invalideringen. Verifiser derfor kartet visuelt etter
-deploy, og invalider `/tiles/*` manuelt hvis vannmerket henger igjen.
+deploy. Henger vannmerket igjen: invalider `/tiles/*` manuelt, verifiser at edge leverer rene
+tiles, og bump **deretter** `v` i tile-URL-en i `src/scripts/mapInit.ts`. Invalidering alene
+når ikke nettleserne — de har allerede fått `max-age=15552000` — se
+[Sikkerhet → Leaflet](sikkerhet.md#cloudfront-tile-proxy-gdpr).
 
 **Ny kobling å være klar over:** når funksjons-steget ligger først, stopper en feil der hele
 innholds-deployen. Tidligere gikk innholdet ut og kun funksjons-steget ble rødt. Det er

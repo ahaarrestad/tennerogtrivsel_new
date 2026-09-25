@@ -248,7 +248,7 @@ describe('initMap', () => {
         initMap();
 
         expect(L.tileLayer).toHaveBeenCalledWith(
-            '/tiles/{z}/{x}/{y}.png',
+            '/tiles/{z}/{x}/{y}.png?v=2',
             expect.objectContaining({
                 maxZoom: 19,
             }),

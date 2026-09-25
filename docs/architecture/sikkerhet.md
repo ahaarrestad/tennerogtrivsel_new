@@ -152,7 +152,7 @@ Karttiles serveres via CloudFront-proxy (`/tiles/*`) for å **begrense** hva som
 **Arkitektur:**
 - **Prod:** CloudFront behavior `/tiles/*` → origin `basemaps.cartocdn.com` med CloudFront Function som omskriver `/tiles/{z}/{x}/{y}.png` til `/rastertiles/voyager/{z}/{x}/{y}.png` og setter `?key=`
 - **Dev:** Vite dev server proxy i `astro.config.mjs` gjør det samme lokalt
-- **Leaflet:** Tile URL er `/tiles/{z}/{x}/{y}.png` (relativ path, fungerer i begge miljøer)
+- **Leaflet:** Tile URL er `/tiles/{z}/{x}/{y}.png?v=2` (relativ path, fungerer i begge miljøer). `v` er cache-busting mot nettleseren: CARTO sender `max-age=15552000` (180 dager), og proxyen videresender den, så en dårlig tile blir liggende lokalt lenge etter at CloudFront er friskt — CloudFront-invalidering når ikke nettleserne. Bump `v` for å tvinge ny henting — men **først etter** at edge er invalidert og verifisert ren: `v` inngår ikke i cache-nøkkelen, så en bump mens CloudFront fortsatt har en dårlig tile gir nettleserne det samme dårlige objektet på ny URL, igjen med 180 dagers levetid. Parameteren inngår ikke i CloudFront-cache-nøkkelen (`CachingOptimized`) og forwardes ikke til origin (`carto-tiles-key-forward` slipper kun `key` gjennom). Bumpet til `2` 2026-09-25 etter vannmerke-episoden.
 
 ### CARTO API-nøkkel (`CARTO_API_KEY`)
 
