@@ -1,6 +1,6 @@
 # Plan: kort nettleser-cache for `/tiles/*`
 
-*Skrevet 2026-09-25. Spec: [`docs/designs/2026-09-25-tiles-nettleser-cache.md`](../designs/2026-09-25-tiles-nettleser-cache.md)*
+*Skrevet 2026-09-25. Spec: [`docs/designs/2026-09-25-tiles-nettleser-cache.md`](../../designs/archive/2026-09-25-tiles-nettleser-cache.md)*
 
 ## Mål og avgrensninger
 
