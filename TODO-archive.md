@@ -3,6 +3,13 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **Lås Node-versjonen på tvers av lokalt og CI** ([spec](docs/designs/archive/2026-09-25-node-version-lock.md)) ([plan](docs/plans/archive/2026-09-25-node-version-lock.md))
+  - **Problem:** ingenting pinnet Node. CI hentet siste 24.x (`node-version: '24'`), lokalt sto 24.12.0, og `jsdom@30` (#466) krever `^24.15.0` — driften traff bare én side.
+  - **Lås:** `.nvmrc` = `24.21.0` er eneste kilde; alle åtte `setup-node`-steg bruker `node-version-file: '.nvmrc'`. `engines.node` = `>=24.15.0 <25.0.0` (gulv = det avhengighetene krever, så patch-bump rører bare `.nvmrc`) og `engine-strict=true` i `.npmrc`. Verifisert: `npm ci` på 24.12.0 feiler med `EBADENGINE`, på 24.21.0 er alt grønt (1627 tester).
+  - **Oppgradering:** ny `node-version-watch.yml` (mandag 06:45 UTC) sammenligner `.nvmrc` med `nodejs.org/dist/index.json` og åpner issue ved nyere *sikkerhetsutgivelse* i samme major (`node-security-watch`) eller nyere *LTS-linje* (`node-lts-watch`). Egne etiketter fordi en langvarig LTS-issue ellers ville skjult sikkerhetsvarsler. Feiler rødt hvis data/`.nvmrc` ikke henger sammen, så den ikke dør stille.
+  - **`blocked-upgrades-watch.yml`** skiller nå `EBADENGINE` (Node for gammel) fra ødelagt probe.
+  - **Etter merge:** kjør `node-version-watch.yml` via `workflow_dispatch` (forventet grønn), og trigg Dependabot for `/` manuelt — `engine-strict` kan stoppe den hvis Dependabots Node er utenfor range; fallback er å fjerne `engine-strict`. Lokalt: `nvm install` i repo-roten.
+
 - [x] **Kort nettleser-cache for `/tiles/*`** ([spec](docs/designs/archive/2026-09-25-tiles-nettleser-cache.md)) ([plan](docs/plans/archive/2026-09-25-tiles-nettleser-cache.md))
   - **Problem:** CARTO sender `max-age=15552000` (180 dager), og proxyen videresendte den til nettleseren — en dårlig tile ble liggende hos besøkende i et halvt år, utenfor rekkevidde for CloudFront-invalidering.
   - **Fiks:** ny viewer-response-funksjon `tiles-browser-cache` setter `Cache-Control: public, max-age=86400` på `200` og `304` (304 må med — CloudFront sender cache-objektets 180-dagers header ved revalidering, verifisert mot prod). Andre statuser røres ikke. Egen funksjon, ikke response headers policy: én policy per behavior, og en kopi av `tot-security-headers` ville ikke blitt oppdatert av CSP-synken. Deployes via `setup-cloudfront-functions.mjs`; 100 % branch coverage.
