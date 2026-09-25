@@ -14,18 +14,16 @@
 
 ## Pågående
 
+- [ ] **Kort nettleser-cache for `/tiles/*`** ([spec](docs/designs/2026-09-25-tiles-nettleser-cache.md)) ([plan](docs/plans/2026-09-25-tiles-nettleser-cache.md))
+  - CARTO sender `Cache-Control: public,max-age=15552000` (180 dager) og proxyen videresender den til nettleseren — en vannmerket tile ble derfor liggende hos besøkende i et halvt år (se «Cache-bust kart-tiles»)
+  - Valgt løsning: ny viewer-response-funksjon `tiles-browser-cache` som setter `max-age=86400` på `200`/`304` — ingen kopi av `tot-security-headers` (unngår drift fra CSP-synken)
+
 - [ ] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/2026-04-28-sikkerhetshardening.md))
   - Task 1, 2, 4–9, 11, 12 er fullført. Gjenstående tasks:
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
 ## Backlog
-
-- [ ] **Kort nettleser-cache for `/tiles/*`** — *ingen plan ennå*
-  - CARTO sender `Cache-Control: public,max-age=15552000` (180 dager) og proxyen videresender den til nettleseren — en vannmerket tile ble derfor liggende hos besøkende i et halvt år (se «Cache-bust kart-tiles»)
-  - Tiltak: egen response headers policy for `/tiles/*` (kopi av `tot-security-headers` + `Cache-Control` med override, f.eks. `public, max-age=86400`). CloudFront-TTL styres fortsatt av origin-headeren, så edge-cachen er upåvirket
-  - Kan ikke gjøres i `tot-security-headers` — den gjelder hele nettstedet. Manuell AWS-endring; oppdater `docs/architecture/aws-infrastruktur.md`
-  - **Fallgruve:** en kopi-policy må holdes i sync med `src/utils/security-headers.ts`, men CSP-synken i CI (`update-cloudfront-csp.mjs`, `CLOUDFRONT_CSP_POLICY_ID`) oppdaterer kun `tot-security-headers` — CSP/HSTS på `/tiles/*` vil drifte stille. Utvid synk-rutinen og dokumentasjonen (`sikkerhet.md`) til å dekke begge policyene, eller vurder et alternativ som ikke dupliserer security-headerne
 
 - [ ] **a11y-tester i WebKit er CPU-bundet og timer ut under tung ytre last** — *ingen plan ennå*
   - Målt 2026-09-22: i WebKit tar `goto` 3–4 s og `AxeBuilder.analyze()` 4–5 s per side allerede ved load 7 (chromium: 1–2 s + 1,5–2 s). Med fire WebKit-workere under load ~22 sprenger både gammel og ny ventelogikk 30 s-timeouten (13/14 vs. 12/14 røde) — uavhengig av mekanismen som ble fikset i «Stabiliser ustabile tester»
