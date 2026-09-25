@@ -41,8 +41,9 @@ EOF
 )"
 ```
 
-Kjørte porten fullt (ikke hoppet over) og `git status --porcelain --untracked-files=no` er tom
-etter commit, marker at denne tilstanden er testet:
+Kjørte porten fullt (ikke hoppet over) og `git status --porcelain` er tom etter commit — også
+uten usporede filer, ellers kan porten ha testet en ny fil som ikke ble committet — marker at
+denne tilstanden er testet:
 
 ```bash
 git update-ref refs/worktree/gated HEAD
@@ -79,27 +80,36 @@ Invariant: **hver commit som pushes er reviewet** — også fix-commits. Men en 
 bare én gang: `review-loop` (og denne stegen) setter per-worktree-refen `refs/worktree/reviewed`
 ved ren review, og vi reviewer kun det som har kommet etter.
 
+Kjør som **enkle, separate kommandoer** og bruk de utskrevne SHA-ene literalt videre. Shell-state
+lever ikke mellom Bash-kall, og worktree-isolerte økter nekter git inni `$(...)`.
+
 ```bash
-MERGE_BASE=$(git merge-base HEAD origin/main)
-REVIEWED=$(git rev-parse -q --verify refs/worktree/reviewed)
-if [ -n "$REVIEWED" ] && git merge-base --is-ancestor "$MERGE_BASE" "$REVIEWED" \
-   && git merge-base --is-ancestor "$REVIEWED" HEAD; then
-  BASE_SHA=$REVIEWED          # kun commits etter siste rene review
-else
-  BASE_SHA=$MERGE_BASE        # ingen gyldig markør (f.eks. etter rebase) → hele rangen
-fi
-HEAD_SHA=$(git rev-parse HEAD)
-git log --oneline $BASE_SHA..$HEAD_SHA
+git merge-base HEAD origin/main                 # → <MERGE_BASE>
+git rev-parse HEAD                              # → <HEAD_SHA>
+git rev-parse -q --verify refs/worktree/reviewed   # → <REVIEWED> (tom = ingen markør)
 ```
 
-Shell-state lever ikke mellom Bash-kall — bruk de **literale SHA-ene** som ble skrevet ut her i
-senere steg (aldri `HEAD` i stedet for `HEAD_SHA`). Kontroller at lista er nøyaktig de commitene
-du forventer.
+Finnes `<REVIEWED>`, sjekk at den ligger mellom merge-basen og HEAD (begge skal gi `0`):
+
+```bash
+git merge-base --is-ancestor <MERGE_BASE> <REVIEWED>; echo $?
+git merge-base --is-ancestor <REVIEWED> <HEAD_SHA>; echo $?
+```
+
+`<BASE_SHA>` = `<REVIEWED>` hvis begge ga `0` (kun commits etter siste rene review), ellers
+`<MERGE_BASE>` (ingen gyldig markør, f.eks. etter rebase → hele rangen). Vis rangen og kontroller
+at den er nøyaktig de commitene du forventer:
+
+```bash
+git log --oneline <BASE_SHA>..<HEAD_SHA>
+```
 
 - **Tom range** (alt allerede reviewet) → hopp rett til Step 5.
-- **Kun dokumentasjon** — avgjøres mekanisk, ikke ut fra commit-type: hver sti i
-  `git diff --name-only <BASE_SHA>..<HEAD_SHA>` er `*.md` under `docs/`, `TODO*.md` eller
-  `.claude/**/*.md` → les diffen selv; ingen reviewer-agent. Én annen sti → agent.
+- **Kun dokumentasjon** — avgjøres mekanisk etter definisjonen i `/quality-gate` («Hva regnes
+  som dokumentasjon»), ikke ut fra commit-type: sjekk hver sti i
+  `git diff --name-only <BASE_SHA>..<HEAD_SHA>`. Kun docs → les diffen selv, ingen
+  reviewer-agent; er den ren, sett `git update-ref refs/worktree/reviewed <HEAD_SHA>` (ellers
+  feiler den harde sjekken i 5c). Én annen sti → agent.
 - **Ellers:** dispatch en `general-purpose` Agent med den delte prompten i
   [`../_shared/reviewer-prompt.md`](../_shared/reviewer-prompt.md). Fyll inn
   `{WHAT_WAS_IMPLEMENTED}` (commit-meldingen), `{BASE_SHA}` og `{HEAD_SHA}`.
@@ -107,8 +117,8 @@ du forventer.
 Etter review:
 - **Ingen Critical/Important:** `git update-ref refs/worktree/reviewed <HEAD_SHA>` og gå videre.
   Minor-funn vises i push-spørsmålet i 5b.
-- **Critical/Important:** fiks, commit, sett `HEAD_SHA=$(git rev-parse HEAD)` — behold `BASE_SHA`
-  — og review på nytt. Maks 3 runder; deretter presenter gjenstående funn og spør brukeren.
+- **Critical/Important:** fiks, commit, les ny `<HEAD_SHA>` med `git rev-parse HEAD` — behold
+  `<BASE_SHA>` — og review på nytt. Maks 3 runder; deretter presenter gjenstående funn og spør brukeren.
 
 ## Step 5: Push / «ship it» (kun hvis bedt om)
 
@@ -116,10 +126,13 @@ Etter review:
 
 ```bash
 git rev-parse -q --verify refs/worktree/gated && git diff --name-only refs/worktree/gated..HEAD
+git merge-base --is-ancestor refs/worktree/gated HEAD; echo $?
+git status --porcelain
 ```
 
-- Refen finnes, er stamfar til HEAD (`git merge-base --is-ancestor refs/worktree/gated HEAD`),
-  og diffen er tom eller kun dokumentasjon → forrige grønne port gjelder; si det i rapporten.
+- Refen finnes, er stamfar til HEAD (`0`), diffen er tom eller kun dokumentasjon (definisjon i
+  `/quality-gate`), og `git status --porcelain` er tom → forrige grønne port gjelder; si det i
+  rapporten.
 - Ellers (review-fikser, fix-commits fra `review-loop`, rebase i 4.4, manglende ref) → kjør
   `/quality-gate` på nytt og sett `refs/worktree/gated` til HEAD når den er grønn.
 
@@ -136,34 +149,35 @@ historikk og rent tre. `auto-pr.yml` auto-merger PR-en med `gh pr merge --auto -
 `origin/main` ikke har beveget seg blir det en fast-forward, ellers selv-heler
 `git pull --rebase` divergensen via patch-id.
 
-**Rekkefølgen er kritisk:** merge til main MÅ skje før worktreet fjernes. `ExitWorktree
-(action: remove)` nekter å fjerne et worktree med commits som ikke ligger på main, og er no-op
-for worktrees laget med `git worktree add` eller i en tidligere sesjon.
+Committer du direkte på main (ingen worktree): hopp over steg 1–2 og 4, kjør bare steg 3.
 
-Fang stier og branch-navn (i worktreet):
+Worktree-isolerte økter nekter `git -C <primær-tre>` og git inni `$(...)`. Derfor: skriv ut
+verdiene først, og bytt til primær-treet med `ExitWorktree (action: keep)` før main røres.
+
 ```bash
-PRIMARY=$(git rev-parse --git-common-dir); PRIMARY=${PRIMARY%/.git}
-WT=$(git rev-parse --show-toplevel)
-BRANCH=$(git branch --show-current)
+git branch --show-current     # → <BRANCH>
+git rev-parse --show-toplevel # → <WT>
 ```
 
-1. **Rebase på lokal main** (fanger upushede main-commits):
+1. **Rebase på lokal main** (i worktreet — fanger upushede main-commits):
    `git rebase main` — forvent ev. konflikt i `TODO.md`; løs og `git rebase --continue`.
-   **Hard sjekk før du går videre:**
+   **Hard sjekk før du går videre** — to separate kall, sammenlign de literale verdiene:
    ```bash
-   [ "$(git rev-parse refs/worktree/reviewed)" = "$(git rev-parse HEAD)" ] && echo REVIEWED_OK
+   git rev-parse refs/worktree/reviewed
+   git rev-parse HEAD
    ```
-   Uten `REVIEWED_OK` har rebasen endret SHA-er eller dratt inn upushede main-commits (eller en
+   Er de ulike, har rebasen endret SHA-er eller dratt inn upushede main-commits (eller en
    konfliktløsning) som verken reviewer eller bruker har sett. Gå tilbake til 5a → 4.5 (ancestor-
-   sjekken tvinger da full range) → 5b ny godkjenning. Aldri `git review` uten `REVIEWED_OK`.
-2. **Fast-forward lokal main** fra primær-treet:
-   `git -C "$PRIMARY" merge --ff-only "$BRANCH"` — feiler den, har main beveget seg: rebase på
-   nytt og prøv igjen. Aldri en ekte merge-commit.
-3. **Send til review:** `git review` (pusher `origin/main..HEAD` til `review/<slug>` og lager
-   PR). **Aldri `git push`** — blokkeres uansett av `git-guard.sh`.
-4. **Rydd opp worktreet:**
-   - Laget via `EnterWorktree` i denne sesjonen → `ExitWorktree` (action: `remove`).
-   - Ellers: `git -C "$PRIMARY" worktree remove "$WT" && git -C "$PRIMARY" branch -d "$BRANCH"`
+   sjekken tvinger da full range) → 5b ny godkjenning. Aldri `git review` uten like verdier.
+2. **Fast-forward lokal main.** Kall `ExitWorktree` (action: `keep`) — cwd blir primær-treet,
+   der `main` er utsjekket. Så:
+   `git merge --ff-only <BRANCH>` — feiler den, har main beveget seg: gå inn i worktreet igjen
+   og start på nytt fra steg 1 (inkl. den harde sjekken). Aldri en ekte merge-commit.
+3. **Send til review** (fra primær-treet, HEAD == `<BRANCH>`): `git review` (pusher
+   `origin/main..HEAD` til `review/<slug>` og lager PR). **Aldri `git push`** — blokkeres uansett
+   av `git-guard.sh`.
+4. **Rydd opp worktreet** (commits ligger nå på main, så fjerning er trygg):
+   `git worktree remove <WT>` og deretter `git branch -d <BRANCH>`.
 
 ### 5d. Etter merge
 

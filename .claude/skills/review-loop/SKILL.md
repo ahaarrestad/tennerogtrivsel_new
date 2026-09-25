@@ -14,15 +14,15 @@ reviewen er ren eller 3 runder er brukt.
 
 Fetch først: `BASE_SHA` regnes mot `origin/main`, og en utdatert ref gir stille feil range.
 
+Enkle, separate kommandoer — shell-state lever ikke mellom Bash-kall, og worktree-isolerte økter
+nekter git inni `$(...)`. Bruk de **literale SHA-ene** som skrives ut i senere steg:
+
 ```bash
 git fetch origin
-BASE_SHA=$(git merge-base HEAD origin/main)
-HEAD_SHA=$(git rev-parse HEAD)
-git log --oneline $BASE_SHA..$HEAD_SHA
+git merge-base HEAD origin/main   # → <BASE_SHA>
+git rev-parse HEAD                # → <HEAD_SHA>
+git log --oneline <BASE_SHA>..<HEAD_SHA>
 ```
-
-Shell-state lever ikke mellom Bash-kall — bruk de **literale SHA-ene** som skrives ut her i
-senere steg (aldri `HEAD` i stedet for `HEAD_SHA`).
 
 Viser rangen andre commits enn forventet — finn ut hvorfor før du går videre. For vid range
 gir review av allerede merget kode; for smal går glipp av endringer.
@@ -32,7 +32,7 @@ gir review av allerede merget kode; for smal går glipp av endringer.
 Dispatch en `general-purpose` Agent med den delte prompten i
 [`../_shared/reviewer-prompt.md`](../_shared/reviewer-prompt.md). Fyll inn
 `{WHAT_WAS_IMPLEMENTED}` (fra TODO-oppgaven, eller en kort oppsummering av
-`git diff --stat $BASE_SHA..$HEAD_SHA`), `{BASE_SHA}` og `{HEAD_SHA}`.
+`git diff --stat <BASE_SHA>..<HEAD_SHA>`), `{BASE_SHA}` og `{HEAD_SHA}`.
 
 En fersk agent er poenget: den har ikke implementasjonens antakelser. Vurder funnene kritisk
 før du fikser — er edge caset realistisk her, strider forslaget mot en tidligere beslutning?
@@ -51,7 +51,7 @@ EOF
 )"
 ```
 
-Sett `HEAD_SHA=$(git rev-parse HEAD)`, behold `BASE_SHA`, og gå til Steg 2 igjen. Etter 3 runder
+Les ny `<HEAD_SHA>` med `git rev-parse HEAD`, behold `<BASE_SHA>`, og gå til Steg 2 igjen. Etter 3 runder
 uten ren review: stopp og presenter gjenstående funn for brukeren.
 
 **Ren (ingen Critical/Important):** marker rangen som reviewet, så `/commit` ikke reviewer den

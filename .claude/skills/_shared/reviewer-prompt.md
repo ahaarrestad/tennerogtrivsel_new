@@ -12,7 +12,7 @@ Dispatch en `general-purpose` Agent med prompten under. Fyll inn placeholderne:
 - `{BASE_SHA}` / `{HEAD_SHA}` — regnes ut av den kallende skillen (`review-loop` Steg 1,
   `/commit` Step 4.5), alltid etter `git fetch origin`. `/commit` kan sende en inkrementell
   range (kun commits etter `refs/worktree/reviewed`); reviewen gjelder da bare den.
-  Verifiser rangen før agenten dispatches — `git log --oneline $BASE_SHA..$HEAD_SHA` skal vise
+  Verifiser rangen før agenten dispatches — `git log --oneline <BASE_SHA>..<HEAD_SHA>` skal vise
   nøyaktig de commitene du forventer, verken flere eller færre.
 
 ## Prompt

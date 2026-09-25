@@ -7,13 +7,12 @@
 
 1. Kjør worktree-sjekk for å bekrefte at arbeidet skjer på riktig sted:
    ```bash
-   GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-   GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
+   git rev-parse --path-format=absolute --git-dir --git-common-dir
    git worktree list
    git branch --show-current
    ```
-   - Hvis `GIT_DIR == GIT_COMMON`: vi er i hovedrepoet, IKKE i en worktree — stopp og korriger
-   - Hvis `GIT_DIR != GIT_COMMON`: vi er allerede i en worktree — fortsett
+   - To like stier: vi er i hovedrepoet, IKKE i en worktree — stopp og korriger
+   - Ulike stier: vi er allerede i en worktree — fortsett
 2. Invoke `superpowers:using-git-worktrees` for å entre riktig worktree (eller opprette ny ved behov)
 3. Bekreft hvilken branch/worktree som er aktiv før arbeidet begynner
 
