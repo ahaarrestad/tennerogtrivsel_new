@@ -5,6 +5,7 @@ name: Blocked Upgrades Watch
 #
 # Normaltilstanden er «fortsatt blokkert», og den skal gi GRØNN kjøring. Rødt her
 # betyr at workflowen selv er ødelagt, ikke at oppgraderingen er blokkert.
+# Unntak: rødt med EBADENGINE betyr at Node-versjonen i `.nvmrc` er for gammel.
 
 on:
   schedule:
