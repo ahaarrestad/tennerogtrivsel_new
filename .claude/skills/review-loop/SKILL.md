@@ -21,6 +21,9 @@ HEAD_SHA=$(git rev-parse HEAD)
 git log --oneline $BASE_SHA..$HEAD_SHA
 ```
 
+Shell-state lever ikke mellom Bash-kall — bruk de **literale SHA-ene** som skrives ut her i
+senere steg (aldri `HEAD` i stedet for `HEAD_SHA`).
+
 Viser rangen andre commits enn forventet — finn ut hvorfor før du går videre. For vid range
 gir review av allerede merget kode; for smal går glipp av endringer.
 
@@ -55,8 +58,11 @@ uten ren review: stopp og presenter gjenstående funn for brukeren.
 samme koden på nytt:
 
 ```bash
-git update-ref refs/worktree/reviewed $HEAD_SHA
+git update-ref refs/worktree/reviewed <HEAD_SHA>
 ```
+
+Fix-commits herfra er ikke testet ennå. Det fanges av `refs/worktree/gated`: neste `/commit`
+ser kodeendringer siden forrige grønne port og kjører `/quality-gate` på nytt.
 
 Avslutt med:
 ```

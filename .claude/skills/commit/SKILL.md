@@ -41,6 +41,15 @@ EOF
 )"
 ```
 
+Kjørte porten fullt (ikke hoppet over) og `git status --porcelain --untracked-files=no` er tom
+etter commit, marker at denne tilstanden er testet:
+
+```bash
+git update-ref refs/worktree/gated HEAD
+```
+
+`/quality-gate` bruker refen til å avgjøre hva som er endret siden sist porten var grønn.
+
 ## Step 4.4: Synk med origin (før review og push)
 
 **Hopp over hvis push ikke er bedt om.**
@@ -83,17 +92,20 @@ HEAD_SHA=$(git rev-parse HEAD)
 git log --oneline $BASE_SHA..$HEAD_SHA
 ```
 
-Kontroller at lista er nøyaktig de commitene du forventer.
+Shell-state lever ikke mellom Bash-kall — bruk de **literale SHA-ene** som ble skrevet ut her i
+senere steg (aldri `HEAD` i stedet for `HEAD_SHA`). Kontroller at lista er nøyaktig de commitene
+du forventer.
 
 - **Tom range** (alt allerede reviewet) → hopp rett til Step 5.
-- **Kun docs-/arkiv-commits** (f.eks. TODO-arkivering etter `review-loop`) → rask egen lesing av
-  diffen holder; ingen reviewer-agent.
+- **Kun dokumentasjon** — avgjøres mekanisk, ikke ut fra commit-type: hver sti i
+  `git diff --name-only <BASE_SHA>..<HEAD_SHA>` er `*.md` under `docs/`, `TODO*.md` eller
+  `.claude/**/*.md` → les diffen selv; ingen reviewer-agent. Én annen sti → agent.
 - **Ellers:** dispatch en `general-purpose` Agent med den delte prompten i
   [`../_shared/reviewer-prompt.md`](../_shared/reviewer-prompt.md). Fyll inn
   `{WHAT_WAS_IMPLEMENTED}` (commit-meldingen), `{BASE_SHA}` og `{HEAD_SHA}`.
 
 Etter review:
-- **Ingen Critical/Important:** `git update-ref refs/worktree/reviewed $HEAD_SHA` og gå videre.
+- **Ingen Critical/Important:** `git update-ref refs/worktree/reviewed <HEAD_SHA>` og gå videre.
   Minor-funn vises i push-spørsmålet i 5b.
 - **Critical/Important:** fiks, commit, sett `HEAD_SHA=$(git rev-parse HEAD)` — behold `BASE_SHA`
   — og review på nytt. Maks 3 runder; deretter presenter gjenstående funn og spør brukeren.
@@ -102,9 +114,14 @@ Etter review:
 
 ### 5a. Tester på nytt — kun ved endring
 
-Sammenlign HEAD med SHA-en `/quality-gate` rapporterte i Step 3. Har review-fikser (eller
-rebase i 4.4) endret koden siden, kjør `/quality-gate` på nytt. Er HEAD uendret, eller er
-endringene kun docs, er forrige kjøring fortsatt gyldig — si det i rapporten.
+```bash
+git rev-parse -q --verify refs/worktree/gated && git diff --name-only refs/worktree/gated..HEAD
+```
+
+- Refen finnes, er stamfar til HEAD (`git merge-base --is-ancestor refs/worktree/gated HEAD`),
+  og diffen er tom eller kun dokumentasjon → forrige grønne port gjelder; si det i rapporten.
+- Ellers (review-fikser, fix-commits fra `review-loop`, rebase i 4.4, manglende ref) → kjør
+  `/quality-gate` på nytt og sett `refs/worktree/gated` til HEAD når den er grønn.
 
 ### 5b. Brukergodkjenning før push
 
@@ -132,7 +149,13 @@ BRANCH=$(git branch --show-current)
 
 1. **Rebase på lokal main** (fanger upushede main-commits):
    `git rebase main` — forvent ev. konflikt i `TODO.md`; løs og `git rebase --continue`.
-   Endret rebasen innhold (ikke bare SHA-er), gå tilbake til 5a.
+   **Hard sjekk før du går videre:**
+   ```bash
+   [ "$(git rev-parse refs/worktree/reviewed)" = "$(git rev-parse HEAD)" ] && echo REVIEWED_OK
+   ```
+   Uten `REVIEWED_OK` har rebasen endret SHA-er eller dratt inn upushede main-commits (eller en
+   konfliktløsning) som verken reviewer eller bruker har sett. Gå tilbake til 5a → 4.5 (ancestor-
+   sjekken tvinger da full range) → 5b ny godkjenning. Aldri `git review` uten `REVIEWED_OK`.
 2. **Fast-forward lokal main** fra primær-treet:
    `git -C "$PRIMARY" merge --ff-only "$BRANCH"` — feiler den, har main beveget seg: rebase på
    nytt og prøv igjen. Aldri en ekte merge-commit.
