@@ -11,7 +11,7 @@ Perform a structured UX review of one or more pages/components in this Astro + T
 
 ## Context
 
-- **Stack**: Astro 5 (static), Tailwind CSS v4, deployed to AWS S3 + CloudFront
+- **Stack**: Astro 7 (static), Tailwind CSS v4, deployed to AWS S3 + CloudFront
 - **Audience**: Dental patients (broad age range, varying tech literacy)
 - **Design system**: Uses `variant` prop for section backgrounds (brand/white alternating pattern on frontpage)
 - **Components**: SectionHeader, Card, Button, Navbar, Footer, Kontakt, Galleri, Tjenester, Tannleger, Forside

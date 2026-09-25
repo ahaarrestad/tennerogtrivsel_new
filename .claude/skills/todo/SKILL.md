@@ -1,6 +1,5 @@
 ---
 name: todo
-model: sonnet
 description: "Vis og administrer prosjektets TODO-liste (TODO.md). Bruk når brukeren sier 'todo', 'TODO', 'oppgaveliste', 'vis oppgaver', 'backlog', 'hva gjenstår', 'neste oppgave', 'legg til oppgave', 'ny oppgave', 'flytt oppgave', 'marker ferdig', 'start oppgave', 'begynn på', 'gjenoppta', 'fortsett med', eller spør om status på oppgaver."
 disable-model-invocation: false
 allowed-tools: ["Read(TODO.md)", "Read(TODO-archive.md)", "Read(TODO-abandoned.md)", "Edit(TODO.md)", "Edit(TODO-archive.md)", "Edit(TODO-abandoned.md)", "Write(TODO-abandoned.md)", "Glob(docs/**)", "Read(docs/**)", "Write(docs/**)", "Read(.claude/skills/todo/references/**)", "Bash(mv *)", "Bash(mkdir *)", "Bash(git *)", "Skill(superpowers:brainstorming)", "Skill(superpowers:using-git-worktrees)", "Skill(review-loop)"]
@@ -21,11 +20,11 @@ for å holde denne skillen lett ved vanlig statusbruk.
 | Legge til ny oppgave | Følg «Legg til oppgave» nedenfor (inline) |
 | Oppdatere/endre en oppgave | Følg «Oppdater oppgave» nedenfor (inline) |
 | Forkaste / droppe en oppgave (bruker vil *ikke* gjøre den) | Følg «Forkast oppgave» nedenfor (inline) |
-| **Starte / flytte oppgave fra Backlog** | **Du MÅ først `Read references/start-oppgave.md`** og følge hele flyten der — ikke gå rett til implementasjon, ikke gjengi flyten fra hukommelsen |
-| **Markere oppgave som fullført / arkivere** | **Du MÅ først `Read references/start-oppgave.md`** (delen «Marker oppgave som fullført») |
-| **Gjenoppta pågående oppgave** | **Du MÅ først `Read references/gjenoppta.md`** og følge worktree-sjekken der |
+| **Starte / flytte oppgave fra Backlog** | **Les først `references/start-oppgave.md`** og følge hele flyten der — ikke gå rett til implementasjon, ikke gjengi flyten fra hukommelsen |
+| **Markere oppgave som fullført / arkivere** | **Les først `references/start-oppgave.md`** (delen «Marker oppgave som fullført») |
+| **Gjenoppta pågående oppgave** | **Les først `references/gjenoppta.md`** og følge worktree-sjekken der |
 
-Referansefilene er den autoritative kilden for disse flytene. Når en rad sier «Read … MÅ»,
+Referansefilene er den autoritative kilden for disse flytene. Når en rad sier «Les først»,
 les fila *før* du gjør noe annet — disse flytene har disiplin-gates (spec+plan-review,
 worktree før impl., arkiver før commit) som ikke kan utføres riktig fra hukommelsen.
 

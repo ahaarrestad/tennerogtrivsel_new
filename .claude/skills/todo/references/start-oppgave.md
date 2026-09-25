@@ -6,7 +6,7 @@
 
 Når brukeren ber om å starte eller flytte en oppgave fra Backlog — **aldri gå rett til implementasjon**.
 
-**Fase 1: Spec + plan (ALLTID først — stopp her til brukeren godkjenner)**
+**Fase 1: Spec + plan (først — stopp her til brukeren godkjenner)**
 
 Hver oppgave skal ha **både** en spec (hva/hvorfor) og en plan (hvordan). Begge
 opprettes/hentes og reviewes før de presenteres — ingen oppgave starter på kun én av dem.
@@ -88,33 +88,32 @@ opprettes/hentes og reviewes før de presenteres — ingen oppgave starter på k
 
 10. Start implementasjonen i henhold til godkjent plan
 
-**Fase 4: Review-gate (ALLTID etter implementasjon — ingen unntak)**
+**Fase 4: Review-gate (etter implementasjon)**
 
-Etter at implementasjonen er ferdig:
-
-11. Sett følgende `/goal` i neste svar:
-    ```
-    /goal review-loop rapporterer REVIEW_LOOP: CLEAN
-    ```
-12. Invoke `review-loop` — kjører én review-pass, fikser Critical/Important issues og committer fiksen
-13. `/goal`-systemet starter automatisk ny tur og kaller `review-loop` på nytt inntil betingelsen er møtt
+11. Commit implementasjonen i worktreet via `/commit` **uten push** (kvalitetsport + commit;
+    review-loop reviewer commits, ikke uncommittede endringer).
+12. Invoke `review-loop`. Den looper selv — review, fiks, review på nytt — til
+    `REVIEW_LOOP: CLEAN` (maks 3 runder) og markerer rangen som reviewet, slik at `/commit`
+    senere bare reviewer det som kommer etter (typisk arkiv-commiten).
 
 **Fase 5: Arkiver TODO (FØR commit — eksplisitt gate)**
 
-14. Når `review-loop` er ren: marker oppgaven ferdig og arkiver den **før** `/commit`
-    foreslås. Følg «Marker oppgave som fullført» nedenfor (sett `[x]`, flytt til
+13. Når `review-loop` er ren: marker oppgaven ferdig og arkiver den **før** `/commit`
+    kjøres. Følg «Marker oppgave som fullført» nedenfor (sett `[x]`, flytt til
     `TODO-archive.md`, arkiver plan/spec, oppdater lenker). Arkivering er ikke et
     etterskritt — det er en del av å fullføre oppgaven.
 
 **Fase 6: Commit + «ship it»**
 
-15. Foreslå `/commit`. Commit-skillen eier all git-mekanikk: kvalitetsport → commit →
-    code-review-loop → (ved godkjent push) «ship it»-sekvensen i Step 5 (rebase på lokal
+14. Kjør `/commit` (ikke bare foreslå den — jf. selvstendig arbeidsstil; push-godkjenningen
+    i `/commit` Step 5b er stoppunktet). Commit-skillen eier all git-mekanikk: kvalitetsport →
+    commit → inkrementell review → (ved godkjent push) «ship it»-sekvensen i Step 5 (rebase på lokal
     main → `merge --ff-only` → `git-review` fra main → opprydding med `ExitWorktree`).
     Rekkefølgen er kritisk: merge MÅ skje før worktreet fjernes — se `/commit` Step 5c.
 
-**Forbudt:** Foreslå `/commit` før (a) `/goal` har bekreftet at `review-loop` er ren **og**
-(b) oppgaven er arkivert (Fase 5).
+**Rekkefølge:** `/commit` kjøres først når (a) `review-loop` har rapportert CLEAN **og**
+(b) oppgaven er arkivert (Fase 5) — ellers havner arkiveringen utenfor PR-en, eller
+ureviewet kode i den.
 
 ---
 

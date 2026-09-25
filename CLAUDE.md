@@ -11,7 +11,7 @@ Fullstendig prosedyre finnes i `/quality-gate`-skill. Kjernekrav:
 - **80% branch coverage per fil** for kjerne-logikk (scripts og API).
 - Ved nye miljøvariabler: sjekk og oppdater `.github/workflows/`-filer.
 
-**AGENT-REGEL:** Du har ikke lov til å si deg ferdig eller foreslå en commit før du har presentert en fersk testrapport som viser at kravene er møtt for alle berørte filer. Hvis dekningsgraden faller pga. nye funksjoner, SKAL du skrive tester før du går videre.
+**AGENT-REGEL:** Når en endring berører kjørende kode (`src/`, `scripts/`, `api/`, `lambda/`, tester, config eller avhengigheter), skal en fersk rapport fra `/quality-gate` vise at kravene er møtt før du sier deg ferdig eller committer. Faller dekningsgraden pga. nye funksjoner, skriv tester før du går videre. Rene dokumentasjonsendringer trenger ikke porten — si i så fall eksplisitt at den er hoppet over og hvorfor.
 
 ## Design-system
 
