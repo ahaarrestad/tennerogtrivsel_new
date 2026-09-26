@@ -22,7 +22,7 @@ Perform a structured security review of this Astro + Google OAuth project. The s
 
 ### 1. Determine Scope
 
-Ask the user what to audit. Options:
+Use the scope from the user's request or the current task (e.g. the files in the branch diff). If it is unclear, ask the user what to audit. Options:
 - **Full audit**: Everything below
 - **Admin panel**: Authentication, data handling, API interactions
 - **Public site**: CSP, content injection, client-side security

@@ -20,7 +20,7 @@ Perform a structured UX review of one or more pages/components in this Astro + T
 
 ### 1. Identify Scope
 
-Ask the user which page(s) or component(s) to review. If not specified, review the page they're currently working on. For a full-site review, go through each page systematically.
+Use the page(s) or component(s) named in the request. If none are named, review the page being worked on in the current task; ask the user only if that is unclear. For a full-site review, go through each page systematically.
 
 ### 2. Read the Code
 

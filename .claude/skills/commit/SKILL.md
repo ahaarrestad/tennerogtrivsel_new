@@ -175,19 +175,23 @@ Committer du direkte på main (ingen worktree): kjør bare steg 2 og 4.
    worktrees som ikke ble entret med `EnterWorktree` i denne sesjonen — verifiser derfor, som
    separate kall, før merge:
    ```bash
-   git rev-parse --show-toplevel   # skal være primær-treet, ikke <WT>
-   git branch --show-current       # skal være main
+   git rev-parse --show-toplevel   # skal være ulik <WT>
+   git branch --show-current       # skal være main (avgjørende: main kan bare være utsjekket ett sted)
    git status --porcelain          # skal være tom
    ```
-   Feiler én av dem: stopp og spør brukeren. Ellers `git merge --ff-only <BRANCH>`, og deretter
+   Feiler én av dem — typisk fordi økten ble startet med `claude -w` og `ExitWorktree` er no-op —
+   stopp og gi brukeren kommandoene å kjøre i primær-treet: `git merge --ff-only <BRANCH>`,
+   `git rev-parse HEAD` (skal være `<REVIEWED_SHA>`), `git review`. Ellers `git merge --ff-only <BRANCH>`, og deretter
    `git rev-parse HEAD` — skal være `<REVIEWED_SHA>`. Feiler merge, har main beveget seg:
    `EnterWorktree (path: <WT>)` og start på nytt fra steg 1. Aldri en ekte merge-commit.
 4. **Send til review** (HEAD == `<REVIEWED_SHA>`): `git review` (pusher `origin/main..HEAD` til
    `review/<slug>` og lager PR). **Aldri `git push`** — blokkeres uansett av `git-guard.sh`.
-5. **Rydd opp worktreet** (commits ligger nå på main, så fjerning er trygg). `EnterWorktree`
-   låser worktreet, så lås opp først — og bruk aldri `--force`, så fjerning fortsatt nektes ved
-   ucommittede filer:
-   `git worktree unlock <WT>`, `git worktree remove <WT>`, deretter `git branch -d <BRANCH>`.
+5. **Rydd opp worktreet** (commits ligger nå på main, så fjerning er trygg). Bruk aldri
+   `--force`, så fjerning fortsatt nektes ved ucommittede filer:
+   `git worktree remove <WT>`, deretter `git branch -d <BRANCH>`.
+   Nekter `remove` fordi worktreet er låst (`ExitWorktree` frigjør normalt låsen selv): sjekk med
+   `git worktree list --porcelain` at låsen ikke tilhører en annen aktiv økt, så
+   `git worktree unlock <WT>` og `remove` på nytt.
 
 ### 5d. Etter merge
 

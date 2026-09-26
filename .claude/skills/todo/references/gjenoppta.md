@@ -11,10 +11,10 @@
    git worktree list
    git branch --show-current
    ```
-   - To like stier: vi er i hovedrepoet, IKKE i en worktree — stopp og korriger
-   - Ulike stier: vi er allerede i en worktree — fortsett
-2. Entre det eksisterende worktreet med `EnterWorktree (path: <sti fra git worktree list>)` — da
-   virker `ExitWorktree (keep)` i `/commit` 5c senere. Finnes det ikke: opprett nytt via
+   - **Ulike stier** (vi står allerede i et worktree, f.eks. `claude -w`): fortsett til steg 3.
+   - **Like stier** (hovedrepoet): gå til steg 2.
+2. Entre oppgavens eksisterende worktree med `EnterWorktree (path: <sti fra git worktree list>)`
+   — da virker `ExitWorktree (keep)` i `/commit` 5c senere. Finnes det ikke: opprett nytt via
    `superpowers:using-git-worktrees`.
 3. Bekreft hvilken branch/worktree som er aktiv før arbeidet begynner
 
