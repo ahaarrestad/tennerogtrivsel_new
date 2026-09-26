@@ -33,7 +33,7 @@ merge-basen. Da fanges også fix-commits fra `review-loop`, ikke bare uncommitte
 ### Hva regnes som dokumentasjon
 
 Eneste definisjon — `/commit` (4.5 og 5a) viser hit. En sti er dokumentasjon bare hvis den er
-`*.md` under `docs/`, `TODO*.md`, `README.md`, `CLAUDE.md`, eller `*.md` under `.claude/`. Alt
+`*.md` under `docs/`, `TODO*.md`, rot-`README.md`, rot-`CLAUDE.md`, eller `*.md` under `.claude/`. Alt
 annet — inkludert `.claude/**/*.sh` og `.claude/settings*.json` — utløser porten.
 
 Unntak for review i `/commit` 4.5: `.claude/**` og `CLAUDE.md` regnes **ikke** som dokumentasjon
