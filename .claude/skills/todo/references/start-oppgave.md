@@ -109,7 +109,7 @@ opprettes/hentes og reviewes før de presenteres — ingen oppgave starter på k
     i `/commit` Step 5b er stoppunktet). Commit-skillen eier all git-mekanikk: kvalitetsport →
     commit → inkrementell review → (ved godkjent push) «ship it»-sekvensen i Step 5 (rebase på lokal
     main → hard review-sjekk → `ExitWorktree(keep)` → `merge --ff-only` → `git review` fra main →
-    `git worktree unlock/remove` + `git branch -d`).
+    `git worktree remove` + `git branch -d`).
     Rekkefølgen er kritisk: merge MÅ skje før worktreet fjernes — se `/commit` Step 5c.
 
 **Rekkefølge:** `/commit` kjøres først når (a) `review-loop` har rapportert CLEAN **og**

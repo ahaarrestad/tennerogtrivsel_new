@@ -2,7 +2,7 @@
 name: commit
 description: "Use when the user says 'commit', 'committ', 'lagre endringer', 'push', 'send til review', or asks to save/commit their work."
 disable-model-invocation: false
-allowed-tools: ["Bash(git *)", "Bash(cat *)", "Bash(npm test*)", "Bash(npm run *)", "Bash(bash scripts/setup-worktree.sh)", "Bash(bash .claude/skills/_shared/run-e2e.sh*)", "Bash(npx playwright*)", "Bash(npm audit*)", "Bash(lsof *)", "Bash(kill *)", "Bash(curl *)", "Bash(sleep *)", "Skill(quality-gate)", "Agent", "ExitWorktree", "EnterWorktree"]
+allowed-tools: ["Bash(git *)", "Bash(cat *)", "Bash(npm test*)", "Bash(npm run *)", "Bash(bash scripts/setup-worktree.sh)", "Bash(bash .claude/skills/_shared/run-e2e.sh*)", "Bash(npx playwright*)", "Bash(npm audit*)", "Bash(lsof *)", "Bash(ps *)", "Bash(kill *)", "Bash(curl *)", "Bash(sleep *)", "Skill(quality-gate)", "Agent", "ExitWorktree", "EnterWorktree"]
 ---
 
 # Commit Skill
@@ -179,19 +179,30 @@ Committer du direkte på main (ingen worktree): kjør bare steg 2 og 4.
    git branch --show-current       # skal være main (avgjørende: main kan bare være utsjekket ett sted)
    git status --porcelain          # skal være tom
    ```
-   Feiler én av dem — typisk fordi økten ble startet med `claude -w` og `ExitWorktree` er no-op —
-   stopp og gi brukeren kommandoene å kjøre i primær-treet: `git merge --ff-only <BRANCH>`,
-   `git rev-parse HEAD` (skal være `<REVIEWED_SHA>`), `git review`. Ellers `git merge --ff-only <BRANCH>`, og deretter
-   `git rev-parse HEAD` — skal være `<REVIEWED_SHA>`. Feiler merge, har main beveget seg:
-   `EnterWorktree (path: <WT>)` og start på nytt fra steg 1. Aldri en ekte merge-commit.
+   **Alle tre OK:** `git merge --ff-only <BRANCH>`, deretter `git rev-parse HEAD` — skal være
+   `<REVIEWED_SHA>`. Feiler merge, har main beveget seg: `EnterWorktree (path: <WT>)` og start
+   på nytt fra steg 1. Aldri en ekte merge-commit.
+
+   **Én feiler** (typisk `claude -w`-økt der `ExitWorktree` er no-op, eller primær-treet står på
+   annen branch / er skittent): stopp. Gi brukeren kommandoene for primær-treet, i rekkefølge:
+   1. `git switch main` og `git status --porcelain` (skal være tom)
+   2. `git merge --ff-only <BRANCH>` — feiler den, har main beveget seg: ikke fortsett, si fra
+      (da må flyten starte på nytt fra steg 1 i worktreet)
+   3. `git rev-parse HEAD` — skal være `<REVIEWED_SHA>`
+   4. `git review`
+   5. Etter at `-w`-økten er avsluttet: `git worktree remove <WT>` og `git branch -d <BRANCH>`
+
+   Vent på at brukeren bekrefter at `git review` er kjørt; følg så opp PR-en (5d). Hopp over
+   steg 4–5 her — brukeren har gjort dem.
 4. **Send til review** (HEAD == `<REVIEWED_SHA>`): `git review` (pusher `origin/main..HEAD` til
    `review/<slug>` og lager PR). **Aldri `git push`** — blokkeres uansett av `git-guard.sh`.
 5. **Rydd opp worktreet** (commits ligger nå på main, så fjerning er trygg). Bruk aldri
    `--force`, så fjerning fortsatt nektes ved ucommittede filer:
    `git worktree remove <WT>`, deretter `git branch -d <BRANCH>`.
-   Nekter `remove` fordi worktreet er låst (`ExitWorktree` frigjør normalt låsen selv): sjekk med
-   `git worktree list --porcelain` at låsen ikke tilhører en annen aktiv økt, så
-   `git worktree unlock <WT>` og `remove` på nytt.
+   Nekter `remove` fordi worktreet er låst (`ExitWorktree` frigjør normalt låsen selv): les
+   låsårsaken i `git worktree list --porcelain` (Claude-låser har formen `locked claude session
+   <navn> (pid <PID> …)`) og sjekk med `ps -p <PID>` at den prosessen ikke lever. Død prosess →
+   `git worktree unlock <WT>` og `remove` på nytt. Lever den, eller eieren er uklar → spør brukeren.
 
 ### 5d. Etter merge
 
