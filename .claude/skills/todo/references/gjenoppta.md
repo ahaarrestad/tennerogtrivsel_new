@@ -11,7 +11,7 @@
    git worktree list
    git branch --show-current
    ```
-   - **Ulike stier** (vi står allerede i et worktree, f.eks. `claude -w`): fortsett til steg 3.
+   - **Ulike stier** (vi står allerede i et worktree): fortsett til steg 3.
    - **Like stier** (hovedrepoet): gå til steg 2.
 2. Entre oppgavens eksisterende worktree med `EnterWorktree (path: <sti fra git worktree list>)`
    — da virker `ExitWorktree (keep)` i `/commit` 5c senere. Finnes det ikke: opprett nytt via
