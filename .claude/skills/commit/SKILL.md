@@ -183,17 +183,8 @@ Committer du direkte på main (ingen worktree): kjør bare steg 2 og 4.
    `<REVIEWED_SHA>`. Feiler merge, har main beveget seg: `EnterWorktree (path: <WT>)` og start
    på nytt fra steg 1. Aldri en ekte merge-commit.
 
-   **Én feiler** (typisk `claude -w`-økt der `ExitWorktree` er no-op, eller primær-treet står på
-   annen branch / er skittent): stopp. Gi brukeren kommandoene for primær-treet, i rekkefølge:
-   1. `git switch main` og `git status --porcelain` (skal være tom)
-   2. `git merge --ff-only <BRANCH>` — feiler den, har main beveget seg: ikke fortsett, si fra
-      (da må flyten starte på nytt fra steg 1 i worktreet)
-   3. `git rev-parse HEAD` — skal være `<REVIEWED_SHA>`
-   4. `git review`
-   5. Etter at `-w`-økten er avsluttet: `git worktree remove <WT>` og `git branch -d <BRANCH>`
-
-   Vent på at brukeren bekrefter at `git review` er kjørt; følg så opp PR-en (5d). Hopp over
-   steg 4–5 her — brukeren har gjort dem.
+   **Én feiler** (f.eks. `ExitWorktree` var no-op, eller primær-treet står på annen branch / er
+   skittent): stopp og spør brukeren. Aldri merge eller `git review` fra feil tre.
 4. **Send til review** (HEAD == `<REVIEWED_SHA>`): `git review` (pusher `origin/main..HEAD` til
    `review/<slug>` og lager PR). **Aldri `git push`** — blokkeres uansett av `git-guard.sh`.
 5. **Rydd opp worktreet** (commits ligger nå på main, så fjerning er trygg). Bruk aldri
