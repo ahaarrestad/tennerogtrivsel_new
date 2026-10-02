@@ -1,7 +1,7 @@
 name: Scheduled Security Audit
 
 # Selvhelende: feiler auditen, prøver `auto-fix` `npm audit fix` på lockfilene og
-# åpner en PR med auto-merge. CI (`build`-sjekken i rulesettet) avgjør om den merges.
+# åpner en PR med auto-merge. CI (`ci-ok`-sjekken i rulesettet) avgjør om den merges.
 # Kan ikke fiksen løse alt, åpnes en issue med etiketten `security-audit`. Den lukkes
 # automatisk første gang auditen er grønn igjen.
 
@@ -9,6 +9,9 @@ on:
   schedule:
     - cron: '0 6 * * *' # daglig 06:00 UTC
   workflow_dispatch: # manuell dispatch for testing
+
+# Overlappende kjøringer ville force-pushet samme branch og kappløpt om issue-dedupe.
+concurrency: scheduled-audit
 
 jobs:
   npm-audit:
@@ -48,11 +51,12 @@ jobs:
       contents: read
       issues: write
     steps:
-      # MY_GITHUB_PAT: en push med GITHUB_TOKEN trigger ikke CI, og uten CI blir
-      # PR-en aldri merget (rulesettet krever `build`).
+      # persist-credentials: false + --ignore-scripts: `npm audit fix` kan dra inn
+      # versjoner forbi Dependabot-cooldownen, så ingen install-scripts skal kjøre mens
+      # en token ligger i .git/config. PAT-en brukes kun i push-steget.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          token: ${{ secrets.MY_GITHUB_PAT }}
+          persist-credentials: false
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -63,19 +67,32 @@ jobs:
       # Ingen --force — major-bump er en manuell beslutning.
       - name: npm audit fix (root og lambda)
         run: |
-          set -euo pipefail
-          npm audit fix --package-lock-only || true
-          (cd lambda/kontakt-form-handler && npm audit fix --package-lock-only) || true
+          npm audit fix --package-lock-only --ignore-scripts || true
+          (cd lambda/kontakt-form-handler && npm audit fix --package-lock-only --ignore-scripts) || true
 
-      # Verifiser på installert tre: ci feiler om lockfila er inkonsistent.
-      - name: Verifiser at auditen er grønn etter fiks
+      # ci_ok: lockfilene er konsistente (npm ci lykkes) — kun da pushes de.
+      # vulns: antall høy+kritisk etter fiks. Tom = auditen selv feilet (nett, registry),
+      # som ikke skal rapporteres som sårbarheter.
+      - name: Verifiser fiksen
         id: verify
         run: |
           set -uo pipefail
-          OK=true
-          npm ci && npm audit --audit-level=high || OK=false
-          (cd lambda/kontakt-form-handler && npm ci && npm audit --audit-level=high) || OK=false
-          echo "ok=$OK" >> "$GITHUB_OUTPUT"
+          CI_OK=true
+          VULNS=0
+          for DIR in . lambda/kontakt-form-handler; do
+            (cd "$DIR" && npm ci --ignore-scripts) || CI_OK=false
+            N=$(cd "$DIR" && npm audit --json 2>/dev/null \
+                  | jq -r '.metadata.vulnerabilities | .high + .critical' 2>/dev/null)
+            if [[ "$N" =~ ^[0-9]+$ ]]; then
+              VULNS=$((VULNS + N))
+            else
+              VULNS=""
+              break
+            fi
+          done
+          echo "ci_ok=$CI_OK" >> "$GITHUB_OUTPUT"
+          echo "vulns=$VULNS" >> "$GITHUB_OUTPUT"
+          echo "npm ci ok: $CI_OK, høy+kritisk etter fiks: ${VULNS:-ukjent (audit feilet)}"
           if git diff --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
@@ -85,8 +102,10 @@ jobs:
 
       # Fast branchnavn: en ny kjøring oppdaterer samme PR i stedet for å lage en ny.
       # Ikke review/** — da ville auto-pr.yml også prøvd å lage PR-en.
+      # MY_GITHUB_PAT: en push med GITHUB_TOKEN trigger ikke CI, og uten CI blir
+      # PR-en aldri merget (rulesettet krever `ci-ok`).
       - name: Push fiks og åpne PR med auto-merge
-        if: steps.verify.outputs.changed == 'true'
+        if: steps.verify.outputs.changed == 'true' && steps.verify.outputs.ci_ok == 'true'
         env:
           GH_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
         run: |
@@ -97,27 +116,30 @@ jobs:
           git switch -c "$BRANCH"
           git add package-lock.json lambda/kontakt-form-handler/package-lock.json
           git commit -m "chore(deps): npm audit fix — automatisk fra scheduled-audit"
-          git push --force origin "$BRANCH"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$BRANCH"
 
           PR_URL=$(gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url // empty')
           if [ -z "$PR_URL" ]; then
             {
               echo "Automatisk \`npm audit fix --package-lock-only\` fra \`scheduled-audit.yml\`."
               echo
-              echo "Kun lockfilene er endret. Auto-merge er slått på — PR-en merges når CI er grønn."
+              echo "Kun lockfilene er endret. Auto-merge er slått på — PR-en merges når \`ci-ok\` er grønn."
               echo "Feiler CI, står den åpen til den fikses manuelt eller lukkes."
             } > body.md
             PR_URL=$(gh pr create --base main --head "$BRANCH" \
               --title "chore(deps): npm audit fix (automatisk)" --body-file body.md)
           fi
-          gh pr merge --auto --rebase "$PR_URL"
+          # Kan feile om PR-en allerede har auto-merge eller er «clean» — ufarlig.
+          gh pr merge --auto --rebase "$PR_URL" || echo "::warning::Kunne ikke slå på auto-merge for $PR_URL"
           echo "PR: $PR_URL"
 
       # github.token holder for issues (samme valg som node-version-watch.yml).
       - name: Åpne issue når fiksen ikke holder
-        if: steps.verify.outputs.ok != 'true'
+        if: steps.verify.outputs.vulns != '0' || steps.verify.outputs.ci_ok != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          VULNS: ${{ steps.verify.outputs.vulns }}
+          CI_OK: ${{ steps.verify.outputs.ci_ok }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
@@ -127,12 +149,20 @@ jobs:
             echo "Åpen security-audit-issue finnes allerede — gjør ingenting."
             exit 0
           fi
+          if [ -z "$VULNS" ]; then
+            GRUNN="\`npm audit\` feilet uten å gi resultat (nettverk/registry?) — ikke nødvendigvis sårbarheter."
+          elif [ "$CI_OK" != "true" ]; then
+            GRUNN="\`npm audit fix\` ga lockfiler der \`npm ci\` feiler — fiksen er ikke pushet."
+          else
+            GRUNN="$VULNS sårbarheter (høy/kritisk) gjenstår etter \`npm audit fix\`. Typisk krever fiksen en major-oppdatering eller en override i \`package.json\`."
+          fi
           {
-            echo "@ahaarrestad \`scheduled-audit.yml\` fant sårbarheter (høy/kritisk) som \`npm audit fix\` ikke løser."
+            echo "@ahaarrestad \`scheduled-audit.yml\` klarte ikke å fikse auditen automatisk."
+            echo
+            echo "$GRUNN"
             echo
             echo "Kjøring: $RUN_URL"
             echo
-            echo "Typisk krever fiksen en major-oppdatering eller en override i \`package.json\`."
             echo "Kjør \`npm audit\` lokalt for detaljer. Issuen lukkes automatisk når auditen er grønn."
           } > body.md
           gh issue create --label security-audit --title "npm audit feiler — krever manuell fiks" --body-file body.md
