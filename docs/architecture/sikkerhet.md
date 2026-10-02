@@ -295,7 +295,9 @@ Auto-merge av Dependabot-PR-er fungerer trygt kun fordi vi har en **cooldown**-p
 
 **Cooldown er et supplement, ikke en erstatning.** CI-sjekker (`npm audit signatures`, unit-/E2E-tester, `npm audit --audit-level=critical`) skal passere før auto-merge fyrer. Cooldown beskytter mot ukjente angrep i nye versjoner; audit-sjekker og tester beskytter mot kjente (signaturbrudd, regresjoner).
 
-**Security-advisory-splitting i `dependabot-auto-merge.yml`:** `dependabot/fetch-metadata` eksponerer `alert-state`-output — tom streng for ordinære version-updates, satt (f.eks. `OPEN`) for GHSA-advisory-PR-er. Auto-merge kjøres for version-updates når `update-type != 'version-update:semver-major'`, og for security-PR-er kun når `update-type == 'version-update:semver-patch'`. En patch-fiks for en kjent CVE er lav risiko, og å la den vente på manuell review holder sårbarheten åpen lenger. Security-PR-er på minor/major flagges fortsatt for manuell review.
+**PR-porten er `ci-ok`, ikke `build`.** Rulesettet på main krever status-sjekken `ci-ok` (job i `deploy.yml`), som feiler med mindre unit-tests, e2e-tests, lint og type-check alle er `success`. `build` hoppes over på `pull_request`, og en overhoppet jobb teller som *bestått* for en påkrevd sjekk — fram til oktober 2026 var `build` den påkrevde sjekken, så auto-merge ventet i praksis ikke på testene.
+
+**Security-splitting i `dependabot-auto-merge.yml`:** Security-PR-er kjennes på `dependency-group` fra `dependabot/fetch-metadata` — gruppene heter `*security-updates` i `dependabot.yml`. `alert-state` er også sjekket, men er alltid tom uten `alert-lookup: true` og en token med tilgang til Dependabot-alerts; fram til oktober 2026 var den eneste sjekk, så security-PR-er på minor ble auto-merget uten flagging. Auto-merge kjøres for version-updates når `update-type != 'version-update:semver-major'`, og for security-PR-er kun når `update-type == 'version-update:semver-patch'`. En patch-fiks for en kjent CVE er lav risiko, og å la den vente på manuell review holder sårbarheten åpen lenger. Security-PR-er på minor/major flagges for manuell review.
 
 ### Selvhelende drift: audit-fiks og oppetidssjekk
 
@@ -303,12 +305,16 @@ Målet er at siden holder seg trygg uten at noen må følge med. To planlagte wo
 
 | Workflow | Når | Gjør selv | Issue (etikett) |
 |----------|-----|-----------|-----------------|
-| `scheduled-audit.yml` | Daglig 06:00 UTC | Feiler `npm audit --audit-level=high`: `npm audit fix --package-lock-only` (rot + lambda), verifiserer med `npm ci` + audit, og åpner PR fra `auto/npm-audit-fix` med auto-merge. CI avgjør om den merges. | `security-audit` — når fiksen ikke gjør auditen grønn (typisk major-bump eller override). Lukkes automatisk når auditen er grønn. |
+| `scheduled-audit.yml` | Daglig 06:00 UTC | Feiler `npm audit --audit-level=high`: `npm audit fix --package-lock-only` (rot + lambda), verifiserer med `npm ci` + audit, og åpner PR fra `auto/npm-audit-fix` med auto-merge. CI avgjør om den merges. | `security-audit` — når fiksen ikke gjør auditen grønn (typisk major-bump eller override), når `npm ci` feiler på den fiksede lockfila, eller når `npm audit` selv feiler (teksten sier hvilket). Lukkes automatisk når auditen er grønn. |
 | `uptime-check.yml` | Hver time | Sjekker at forsiden gir 200 med riktig `<title>`, at sikkerhetsheaderne fra CloudFront finnes, at http/apex ender på `https://www…/`, og at TLS har ≥ 14 dager igjen. | `uptime` — ved første feil (dedupes mot åpne). Lukkes automatisk når sjekken er grønn. |
 
 Begge dedupes på etikett mot åpne issues, så et vedvarende problem gir én issue, ikke én per kjøring. `uptime-check.yml` er grønn også når den finner feil — rød kjøring betyr at selve workflowen er ødelagt.
 
-**Hvorfor `auto/npm-audit-fix` og ikke `review/**`:** `auto-pr.yml` lager PR for `review/**`-pusher, og ville kappløpt med workflowen. Pushen gjøres med `MY_GITHUB_PAT` fordi en push med `GITHUB_TOKEN` ikke trigger CI, og uten `build`-sjekken merges PR-en aldri.
+**Hvorfor `auto/npm-audit-fix` og ikke `review/**`:** `auto-pr.yml` lager PR for `review/**`-pusher, og ville kappløpt med workflowen. Pushen gjøres med `MY_GITHUB_PAT` fordi en push med `GITHUB_TOKEN` ikke trigger CI, og uten `ci-ok`-sjekken merges PR-en aldri.
+
+**Ingen token under install-scripts:** `npm audit fix` kan dra inn versjoner forbi Dependabot-cooldownen. Derfor kjøres alt med `--ignore-scripts`, checkouten har `persist-credentials: false`, og PAT-en brukes kun i selve push-kommandoen. Lockfila pushes bare hvis `npm ci` lykkes på den.
+
+**Restrisiko:** GitHub skrur av planlagte workflows i offentlige repoer etter 60 dager uten aktivitet. Dependabot-merger holder repoet aktivt i dag; stopper de, må workflowene skrus på igjen under Actions.
 
 ### SHA-pinning av GitHub Actions
 

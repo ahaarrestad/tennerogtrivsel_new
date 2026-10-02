@@ -14,6 +14,8 @@ on:
     - cron: '17 * * * *' # hver time, skjevt fra hel time (GitHub-kø er tregest da)
   workflow_dispatch: # manuell dispatch for testing
 
+concurrency: uptime-check
+
 permissions:
   contents: read
   issues: write
@@ -34,10 +36,10 @@ jobs:
           FEIL=()
 
           # Retry: én enkelt nettverkshikke skal ikke gi issue.
-          if ! curl -sS --retry 3 --retry-all-errors --max-time 20 -D headers.txt -o body.html "$SITE/"; then
+          # Status fra -w, ikke headers.txt: -D kan beholde headere fra et tidligere forsøk.
+          if ! STATUS=$(curl -sS --retry 3 --retry-all-errors --max-time 20 -D headers.txt -o body.html -w '%{http_code}' "$SITE/"); then
             FEIL+=("Forsiden svarer ikke (curl feilet)")
           else
-            STATUS=$(head -1 headers.txt | awk '{print $2}')
             [ "$STATUS" = "200" ] || FEIL+=("Forsiden gir HTTP $STATUS, forventet 200")
             grep -q '<title>Tenner og Trivsel' body.html || FEIL+=("Forsiden mangler forventet <title> — feil innhold?")
 
@@ -53,7 +55,7 @@ jobs:
             [ "$LOC" = "200 $SITE/" ] || FEIL+=("$URL ender ikke på $SITE/ (fikk: $LOC)")
           done
 
-          if EXPIRY=$(echo | openssl s_client -connect "$HOST:443" -servername "$HOST" 2>/dev/null \
+          if EXPIRY=$(echo | timeout 20 openssl s_client -connect "$HOST:443" -servername "$HOST" 2>/dev/null \
                         | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2) && [ -n "$EXPIRY" ]; then
             DAGER=$(( ($(date -d "$EXPIRY" +%s) - $(date +%s)) / 86400 ))
             echo "TLS utløper om $DAGER dager ($EXPIRY)"

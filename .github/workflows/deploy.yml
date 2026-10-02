@@ -284,6 +284,23 @@ jobs:
           name: build-output
           path: dist/
 
+  # PR-porten — dette er sjekken rulesettet på main skal kreve. `build` hoppes over på
+  # pull_request, og en overhoppet jobb teller som bestått for en påkrevd sjekk; uten
+  # denne jobben ville auto-merge (Dependabot, scheduled-audit, auto-pr) ikke ventet på
+  # testene. Krever `success` — ikke `skipped` — fra alle fire.
+  ci-ok:
+    needs: [unit-tests, e2e-tests, lint, type-check]
+    if: always() && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Alle PR-sjekker grønne?
+        env:
+          RESULTS: ${{ needs.unit-tests.result }} ${{ needs.e2e-tests.result }} ${{ needs.lint.result }} ${{ needs.type-check.result }}
+        run: |
+          echo "unit/e2e/lint/type-check: $RESULTS"
+          [ "$RESULTS" = "success success success success" ]
+
   deploy:
     needs: build
     if: always() && needs.build.result == 'success' && github.event_name != 'pull_request'

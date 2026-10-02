@@ -16,14 +16,20 @@ jobs:
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-      # Versjonsoppdateringer: alt unntatt major. Security-oppdateringer (alert-state
-      # satt): kun patch — de er forbi cooldown, men en patch-fiks er lav risiko og
-      # CI (`build`) må uansett være grønn før merge.
+      # Security-PR-er kjennes på gruppen (`*security-updates` i dependabot.yml).
+      # `alert-state` er tom uten `alert-lookup: true` + token med alert-tilgang, så den
+      # alene fanger dem ikke — den er med som ekstra sikring.
+      #
+      # Versjonsoppdateringer: alt unntatt major. Security-oppdateringer: kun patch —
+      # de er forbi cooldown, men en patch-fiks er lav risiko. `ci-ok` (påkrevd sjekk)
+      # må uansett være grønn før merge.
       - name: Approve and Enable Auto-Merge
         if: >-
-          (steps.metadata.outputs.alert-state == ''
+          (!endsWith(steps.metadata.outputs.dependency-group, 'security-updates')
+           && steps.metadata.outputs.alert-state == ''
            && steps.metadata.outputs.update-type != 'version-update:semver-major')
-          || (steps.metadata.outputs.alert-state != ''
+          || ((endsWith(steps.metadata.outputs.dependency-group, 'security-updates')
+               || steps.metadata.outputs.alert-state != '')
            && steps.metadata.outputs.update-type == 'version-update:semver-patch')
         run: |
           gh pr review --approve "$PR_URL"
@@ -35,6 +41,7 @@ jobs:
       - name: Flag major updates for manual review
         if: >-
           steps.metadata.outputs.update-type == 'version-update:semver-major'
+          && !endsWith(steps.metadata.outputs.dependency-group, 'security-updates')
           && steps.metadata.outputs.alert-state == ''
         run: |
           gh pr edit "$PR_URL" --add-assignee ahaarrestad || true
@@ -47,14 +54,15 @@ jobs:
 
       - name: Flag security updates for manual review
         if: >-
-          steps.metadata.outputs.alert-state != ''
+          (endsWith(steps.metadata.outputs.dependency-group, 'security-updates')
+           || steps.metadata.outputs.alert-state != '')
           && steps.metadata.outputs.update-type != 'version-update:semver-patch'
         run: |
           gh pr edit "$PR_URL" --add-assignee ahaarrestad || true
           gh pr edit "$PR_URL" --add-reviewer ahaarrestad || true
-          gh pr comment "$PR_URL" --body "@ahaarrestad Security-advisory (\`${DEPS}\`, alert: ${ALERT}). Cooldown er omgått for CVE-fix, og det er ikke en patch-oppdatering — krever manuell review før merge."
+          gh pr comment "$PR_URL" --body "@ahaarrestad Security-oppdatering (\`${DEPS}\`, ${UPDATE_TYPE}). Cooldown er omgått for CVE-fix, og det er ikke en patch-oppdatering — krever manuell review før merge."
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           DEPS: ${{ steps.metadata.outputs.dependency-names }}
-          ALERT: ${{ steps.metadata.outputs.alert-state }}
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
