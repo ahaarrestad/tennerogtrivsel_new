@@ -79,6 +79,9 @@ jobs:
           set -uo pipefail
           CI_OK=true
           VULNS=0
+          AUDIT_FEIL=false
+          # Ingen break: npm ci skal kjøre i begge kataloger — dette er eneste sjekk av
+          # lambda-lockfila før push (PR-CI installerer ikke lambda).
           for DIR in . lambda/kontakt-form-handler; do
             (cd "$DIR" && npm ci --ignore-scripts) || CI_OK=false
             N=$(cd "$DIR" && npm audit --json 2>/dev/null \
@@ -86,10 +89,10 @@ jobs:
             if [[ "$N" =~ ^[0-9]+$ ]]; then
               VULNS=$((VULNS + N))
             else
-              VULNS=""
-              break
+              AUDIT_FEIL=true
             fi
           done
+          [ "$AUDIT_FEIL" = false ] || VULNS=""
           echo "ci_ok=$CI_OK" >> "$GITHUB_OUTPUT"
           echo "vulns=$VULNS" >> "$GITHUB_OUTPUT"
           echo "npm ci ok: $CI_OK, høy+kritisk etter fiks: ${VULNS:-ukjent (audit feilet)}"
