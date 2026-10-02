@@ -290,11 +290,25 @@ Auto-merge av Dependabot-PR-er fungerer trygt kun fordi vi har en **cooldown**-p
 |------|----------|------------|----------------|
 | `version-updates` (patch/minor) | 3–7 dager | Ja, etter alle CI-sjekker er grønne | Nei |
 | `version-updates` (major) | 30 dager | Nei | Ja — flagges med assignee/reviewer |
-| `security-updates` (CVE via GHSA) | Ingen | Nei | Ja — flagges med assignee/reviewer |
+| `security-updates` (CVE via GHSA, patch) | Ingen | Ja, etter alle CI-sjekker er grønne | Nei |
+| `security-updates` (CVE via GHSA, minor/major) | Ingen | Nei | Ja — flagges med assignee/reviewer |
 
 **Cooldown er et supplement, ikke en erstatning.** CI-sjekker (`npm audit signatures`, unit-/E2E-tester, `npm audit --audit-level=critical`) skal passere før auto-merge fyrer. Cooldown beskytter mot ukjente angrep i nye versjoner; audit-sjekker og tester beskytter mot kjente (signaturbrudd, regresjoner).
 
-**Security-advisory-splitting i `dependabot-auto-merge.yml`:** `dependabot/fetch-metadata` eksponerer `alert-state`-output — tom streng for ordinære version-updates, satt (f.eks. `OPEN`) for GHSA-advisory-PR-er. Auto-merge kjøres kun når `alert-state == ''` og `update-type != 'version-update:semver-major'`. Security-PR-er går alltid til manuell review.
+**Security-advisory-splitting i `dependabot-auto-merge.yml`:** `dependabot/fetch-metadata` eksponerer `alert-state`-output — tom streng for ordinære version-updates, satt (f.eks. `OPEN`) for GHSA-advisory-PR-er. Auto-merge kjøres for version-updates når `update-type != 'version-update:semver-major'`, og for security-PR-er kun når `update-type == 'version-update:semver-patch'`. En patch-fiks for en kjent CVE er lav risiko, og å la den vente på manuell review holder sårbarheten åpen lenger. Security-PR-er på minor/major flagges fortsatt for manuell review.
+
+### Selvhelende drift: audit-fiks og oppetidssjekk
+
+Målet er at siden holder seg trygg uten at noen må følge med. To planlagte workflows gir bare lyd når noe faktisk krever et menneske — som en issue med `@ahaarrestad`-omtale (gir varsel):
+
+| Workflow | Når | Gjør selv | Issue (etikett) |
+|----------|-----|-----------|-----------------|
+| `scheduled-audit.yml` | Daglig 06:00 UTC | Feiler `npm audit --audit-level=high`: `npm audit fix --package-lock-only` (rot + lambda), verifiserer med `npm ci` + audit, og åpner PR fra `auto/npm-audit-fix` med auto-merge. CI avgjør om den merges. | `security-audit` — når fiksen ikke gjør auditen grønn (typisk major-bump eller override). Lukkes automatisk når auditen er grønn. |
+| `uptime-check.yml` | Hver time | Sjekker at forsiden gir 200 med riktig `<title>`, at sikkerhetsheaderne fra CloudFront finnes, at http/apex ender på `https://www…/`, og at TLS har ≥ 14 dager igjen. | `uptime` — ved første feil (dedupes mot åpne). Lukkes automatisk når sjekken er grønn. |
+
+Begge dedupes på etikett mot åpne issues, så et vedvarende problem gir én issue, ikke én per kjøring. `uptime-check.yml` er grønn også når den finner feil — rød kjøring betyr at selve workflowen er ødelagt.
+
+**Hvorfor `auto/npm-audit-fix` og ikke `review/**`:** `auto-pr.yml` lager PR for `review/**`-pusher, og ville kappløpt med workflowen. Pushen gjøres med `MY_GITHUB_PAT` fordi en push med `GITHUB_TOKEN` ikke trigger CI, og uten `build`-sjekken merges PR-en aldri.
 
 ### SHA-pinning av GitHub Actions
 

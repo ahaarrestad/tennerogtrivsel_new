@@ -1,0 +1,107 @@
+name: Uptime Check
+
+# Sjekker prod hver time: forsiden svarer 200 med riktig innhold, sikkerhets-
+# headerne fra CloudFront Response Headers Policy er på plass, http/apex
+# redirecter til https://www, og TLS-sertifikatet har minst 14 dager igjen.
+#
+# Ved feil åpnes én issue med etiketten `uptime` (dedupes mot åpne). Den lukkes
+# automatisk når sjekken er grønn igjen. Selve kjøringen er grønn i begge tilfeller —
+# rødt betyr at workflowen er ødelagt, ikke at siden er nede. Samme filosofi som
+# node-version-watch.yml.
+
+on:
+  schedule:
+    - cron: '17 * * * *' # hver time, skjevt fra hel time (GitHub-kø er tregest da)
+  workflow_dispatch: # manuell dispatch for testing
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  uptime:
+    name: Prod svarer og er trygg
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Sjekk prod
+        id: probe
+        env:
+          SITE: https://www.tennerogtrivsel.no
+          HOST: www.tennerogtrivsel.no
+        run: |
+          set -uo pipefail
+          FEIL=()
+
+          # Retry: én enkelt nettverkshikke skal ikke gi issue.
+          if ! curl -sS --retry 3 --retry-all-errors --max-time 20 -D headers.txt -o body.html "$SITE/"; then
+            FEIL+=("Forsiden svarer ikke (curl feilet)")
+          else
+            STATUS=$(head -1 headers.txt | awk '{print $2}')
+            [ "$STATUS" = "200" ] || FEIL+=("Forsiden gir HTTP $STATUS, forventet 200")
+            grep -q '<title>Tenner og Trivsel' body.html || FEIL+=("Forsiden mangler forventet <title> — feil innhold?")
+
+            for H in strict-transport-security content-security-policy x-content-type-options \
+                     x-frame-options referrer-policy permissions-policy; do
+              grep -qi "^$H:" headers.txt || FEIL+=("Mangler sikkerhetsheader: $H")
+            done
+          fi
+
+          for URL in http://tennerogtrivsel.no/ http://www.tennerogtrivsel.no/ https://tennerogtrivsel.no/; do
+            # -L: apex over http går i to hopp (http → https → www). Sluttadressen avgjør.
+            LOC=$(curl -sSL --retry 3 --retry-all-errors --max-time 20 -o /dev/null -w '%{http_code} %{url_effective}' "$URL" || echo "curl-feil")
+            [ "$LOC" = "200 $SITE/" ] || FEIL+=("$URL ender ikke på $SITE/ (fikk: $LOC)")
+          done
+
+          if EXPIRY=$(echo | openssl s_client -connect "$HOST:443" -servername "$HOST" 2>/dev/null \
+                        | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2) && [ -n "$EXPIRY" ]; then
+            DAGER=$(( ($(date -d "$EXPIRY" +%s) - $(date +%s)) / 86400 ))
+            echo "TLS utløper om $DAGER dager ($EXPIRY)"
+            [ "$DAGER" -ge 14 ] || FEIL+=("TLS-sertifikatet utløper om $DAGER dager ($EXPIRY)")
+          else
+            FEIL+=("Kunne ikke lese TLS-sertifikatet")
+          fi
+
+          if [ ${#FEIL[@]} -eq 0 ]; then
+            echo "Alt OK."
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            printf -- '- %s\n' "${FEIL[@]}" | tee feil.md
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Åpne issue ved feil
+        if: steps.probe.outputs.ok == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          gh label create uptime --description "Watchdog: prod er nede eller usikker" --color d93f0b --force
+          AAPNE=$(gh issue list --label uptime --state open --limit 1 --json number --jq 'length')
+          if [ "$AAPNE" != "0" ]; then
+            echo "Åpen uptime-issue finnes allerede — gjør ingenting."
+            exit 0
+          fi
+          {
+            echo "@ahaarrestad \`uptime-check.yml\` fant problemer med www.tennerogtrivsel.no:"
+            echo
+            cat feil.md
+            echo
+            echo "Kjøring: $RUN_URL"
+            echo
+            echo "Issuen lukkes automatisk når sjekken er grønn igjen."
+          } > body.md
+          gh issue create --label uptime --title "Prod-sjekk feiler: www.tennerogtrivsel.no" --body-file body.md
+
+      - name: Lukk issue når alt er OK
+        if: steps.probe.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          for NR in $(gh issue list --label uptime --state open --json number --jq '.[].number'); do
+            gh issue close "$NR" --comment "Prod-sjekken er grønn igjen — lukkes automatisk."
+          done
