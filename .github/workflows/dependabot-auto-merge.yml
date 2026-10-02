@@ -18,7 +18,9 @@ jobs:
 
       # Security-PR-er kjennes på gruppen (`*security-updates` i dependabot.yml).
       # `alert-state` er tom uten `alert-lookup: true` + token med alert-tilgang, så den
-      # alene fanger dem ikke — den er med som ekstra sikring.
+      # alene fanger dem ikke — den er med som ekstra sikring. Forutsetter at alle
+      # security-oppdateringer er gruppert (`patterns: ["*"]`); en ugruppert
+      # security-PR ville blitt behandlet som versjonsoppdatering.
       #
       # Versjonsoppdateringer: alt unntatt major. Security-oppdateringer: kun patch —
       # de er forbi cooldown, men en patch-fiks er lav risiko. `ci-ok` (påkrevd sjekk)
