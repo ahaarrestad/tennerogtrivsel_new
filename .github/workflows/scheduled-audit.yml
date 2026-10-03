@@ -162,7 +162,7 @@ jobs:
             exit 0
           fi
           if [ -z "$VULNS" ]; then
-            GRUNN="\`npm audit\` feilet uten å gi resultat (nettverk/registry?) — ikke nødvendigvis sårbarheter."
+            GRUNN="\`npm audit\` feilet uten å gi resultat (nettverk/registry?), eller \`osv-scanner.toml\` har et unntak uten gyldig \`ignoreUntil\` — se loggen. Ikke nødvendigvis sårbarheter."
           elif [ "$CI_OK" != "true" ]; then
             GRUNN="\`npm audit fix\` ga lockfiler der \`npm ci\` feiler — fiksen er ikke pushet."
           else
