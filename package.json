@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
-    "@googleapis/drive": "^21.0.0",
+    "@googleapis/drive": "^22.0.0",
     "@googleapis/sheets": "^14.0.0",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.5",
@@ -48,15 +48,15 @@
     "@playwright/test": "^1.63.0",
     "@tailwindcss/typography": "^0.5.20",
     "@types/leaflet": "^1.9.22",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.3",
     "eslint": "^10.11.0",
     "eslint-plugin-security": "^4.0.1",
     "globals": "^17.12.0",
-    "jsdom": "^30.1.0",
-    "sharp": "^0.35.3",
+    "jsdom": "^30.1.1",
+    "sharp": "^0.35.5",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.1",
-    "vitest": "^4.0.18"
+    "vitest": "^5.0.3"
   },
   "overrides": {
     "rimraf": "^6.1.3",
