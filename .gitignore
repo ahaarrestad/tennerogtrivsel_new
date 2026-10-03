@@ -46,6 +46,7 @@ coverage/
 !.claude/skills/coverage/
 playwright-report/
 test-results/
+.vitest/
 /.claude/settings.local.json
 /.claude/agents
 !/.claude/agents/
