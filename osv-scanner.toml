@@ -2,6 +2,7 @@
 # Én liste for begge sjekkene i scheduled-audit.yml: OSV-scanneren (--config) og
 # .github/scripts/npm-audit-check.sh. Hvert unntak MÅ ha ignoreUntil = YYYY-MM-DD.
 # Etter datoen varsler begge igjen. Forleng bare etter ny vurdering.
+# id må være GHSA-id-en i doble anførselstegn (det npm-skriptet matcher på).
 
 [[IgnoredVulns]]
 id = "GHSA-ch52-4w7c-c8xp"

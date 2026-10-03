@@ -19,8 +19,8 @@ if ! IGNORERT=$(awk -v idag="$(date -u +%F)" '
       id = ""; til = ""
     }
     /^\[\[IgnoredVulns\]\]/ { avslutt() }
-    /^id *=/          { v = $0; sub(/^[^"]*"/, "", v); sub(/".*/, "", v); id = v }
-    /^ignoreUntil *=/ { v = $0; sub(/^[^=]*= */, "", v); sub(/[ #].*/, "", v); til = v }
+    /^[ \t]*id *=/          { v = $0; sub(/^[^"]*"/, "", v); sub(/".*/, "", v); id = v }
+    /^[ \t]*ignoreUntil *=/ { v = $0; sub(/^[^=]*= */, "", v); sub(/[ #].*/, "", v); til = v }
     END { avslutt(); exit feil }' "$LISTE"); then
   exit 2
 fi
@@ -28,18 +28,26 @@ fi
 JSON=$(npm audit --json 2>/dev/null) || true
 if ! jq -e '.vulnerabilities | type == "object"' >/dev/null 2>&1 <<<"$JSON"; then
   echo "::error::npm audit ga ikke gyldig resultat" >&2
+  jq -r '.error.summary // empty' <<<"$JSON" >&2 2>/dev/null || true
   exit 2
 fi
 
 # Advisories ligger som objekter i `via`; strenger der peker bare videre til en annen pakke.
-FUNN=$(jq -r --arg ign "$IGNORERT" '
+# Mangler url, brukes npm sitt source-nummer som id, slik at funnet telles i stedet for å
+# krasje. Feiler jq likevel, er det exit 2, aldri «0 funn».
+if ! FUNN=$(jq -r --arg ign "$IGNORERT" '
   ($ign | split("\n")) as $ignorert
   | [.vulnerabilities[].via[] | objects
      | select(.severity == "high" or .severity == "critical")
-     | {ghsa: (.url | split("/") | last), name, severity, title}]
+     | . as $a
+     | {ghsa: ((.url // "") | split("/") | (last // "") | if . == "" then ($a.source | tostring) else . end),
+        name, severity, title}]
   | unique_by(.ghsa)[]
   | "\(if .ghsa | IN($ignorert[]) then "IGNORERT" else "FUNN" end) \(.ghsa) \(.name) (\(.severity)): \(.title)"
-  ' <<<"$JSON")
+  ' <<<"$JSON"); then
+  echo "::error::kunne ikke tolke advisories fra npm audit" >&2
+  exit 2
+fi
 
 [ -z "$FUNN" ] || echo "$FUNN" >&2
 grep -c '^FUNN ' <<<"$FUNN" || true
