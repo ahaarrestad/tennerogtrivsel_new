@@ -2,6 +2,7 @@ name: Scheduled Security Audit
 
 # Selvhelende: feiler auditen, prøver `auto-fix` `npm audit fix` på lockfilene og
 # åpner en PR med auto-merge. CI (`ci-ok`-sjekken i rulesettet) avgjør om den merges.
+# Kjente funn uten fiks kan unntas midlertidig i osv-scanner.toml (med utløpsdato).
 # Kan ikke fiksen løse alt, åpnes en issue med etiketten `security-audit`. Den lukkes
 # automatisk første gang auditen er grønn igjen.
 
@@ -30,15 +31,22 @@ jobs:
       - name: Install dependencies (root)
         run: npm ci
 
+      # Som `npm audit --audit-level=high`, men med unntakene i osv-scanner.toml.
       - name: npm audit (root) — høy og kritisk
-        run: npm audit --audit-level=high
+        run: |
+          N=$(bash .github/scripts/npm-audit-check.sh)
+          echo "Høy/kritisk uten unntak: $N"
+          [ "$N" = 0 ]
 
       - name: Install dependencies (lambda)
         run: npm ci
         working-directory: lambda/kontakt-form-handler
 
       - name: npm audit (lambda) — høy og kritisk
-        run: npm audit --audit-level=high
+        run: |
+          N=$(bash "$GITHUB_WORKSPACE/.github/scripts/npm-audit-check.sh")
+          echo "Høy/kritisk uten unntak: $N"
+          [ "$N" = 0 ]
         working-directory: lambda/kontakt-form-handler
 
   auto-fix:
@@ -71,8 +79,8 @@ jobs:
           (cd lambda/kontakt-form-handler && npm audit fix --package-lock-only --ignore-scripts) || true
 
       # ci_ok: lockfilene er konsistente (npm ci lykkes) — kun da pushes de.
-      # vulns: antall høy+kritisk etter fiks. Tom = auditen selv feilet (nett, registry),
-      # som ikke skal rapporteres som sårbarheter.
+      # vulns: antall høy+kritisk etter fiks, minus unntakene i osv-scanner.toml. Tom =
+      # auditen selv feilet (nett, registry, ugyldig unntak), som ikke er sårbarheter.
       - name: Verifiser fiksen
         id: verify
         run: |
@@ -84,8 +92,9 @@ jobs:
           # lambda-lockfila før push (PR-CI installerer ikke lambda).
           for DIR in . lambda/kontakt-form-handler; do
             (cd "$DIR" && npm ci --ignore-scripts) || CI_OK=false
-            N=$(cd "$DIR" && npm audit --json 2>/dev/null \
-                  | jq -r '.metadata.vulnerabilities | .high + .critical' 2>/dev/null)
+            # || true: Actions kjører med `bash -e`, og exit 2 fra skriptet ville drept
+            # steget før issuen ble åpnet. N valideres under.
+            N=$(cd "$DIR" && bash "$GITHUB_WORKSPACE/.github/scripts/npm-audit-check.sh") || true
             if [[ "$N" =~ ^[0-9]+$ ]]; then
               VULNS=$((VULNS + N))
             else
@@ -157,7 +166,7 @@ jobs:
           elif [ "$CI_OK" != "true" ]; then
             GRUNN="\`npm audit fix\` ga lockfiler der \`npm ci\` feiler — fiksen er ikke pushet."
           else
-            GRUNN="$VULNS sårbarheter (høy/kritisk) gjenstår etter \`npm audit fix\`. Typisk krever fiksen en major-oppdatering eller en override i \`package.json\`."
+            GRUNN="$VULNS sårbarheter (høy/kritisk) gjenstår etter \`npm audit fix\`. Typisk krever fiksen en major-oppdatering eller en override i \`package.json\`. Finnes ingen fiks, kan funnet unntas midlertidig i \`osv-scanner.toml\`."
           fi
           {
             echo "@ahaarrestad \`scheduled-audit.yml\` klarte ikke å fikse auditen automatisk."
@@ -196,6 +205,8 @@ jobs:
       contents: read
       actions: read
     with:
+      # --config: samme unntaksliste for alle lockfiler, også lambda.
       scan-args: |-
+        --config=./osv-scanner.toml
         -r
         ./

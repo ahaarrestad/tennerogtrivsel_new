@@ -1,0 +1,9 @@
+# Midlertidige unntak for kjente sårbarheter som ikke har noen fiks ennå.
+# Én liste for begge sjekkene i scheduled-audit.yml: OSV-scanneren (--config) og
+# .github/scripts/npm-audit-check.sh. Hvert unntak MÅ ha ignoreUntil = YYYY-MM-DD.
+# Etter datoen varsler begge igjen. Forleng bare etter ny vurdering.
+
+[[IgnoredVulns]]
+id = "GHSA-ch52-4w7c-c8xp"
+ignoreUntil = 2026-11-02
+reason = "http-cache-semantics via astro, ingen fiks finnes. Astro bruker pakken bare til å cache remote-bilder under build, og det gjør ikke siden. Angrepet krever i tillegg en delt cache med flere brukere."

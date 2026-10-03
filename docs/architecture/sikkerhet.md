@@ -305,10 +305,12 @@ Målet er at siden holder seg trygg uten at noen må følge med. To planlagte wo
 
 | Workflow | Når | Gjør selv | Issue (etikett) |
 |----------|-----|-----------|-----------------|
-| `scheduled-audit.yml` | Daglig 06:00 UTC | Feiler `npm audit --audit-level=high`: `npm audit fix --package-lock-only` (rot + lambda), verifiserer med `npm ci` + audit, og åpner PR fra `auto/npm-audit-fix` med auto-merge. CI avgjør om den merges. | `security-audit` — når fiksen ikke gjør auditen grønn (typisk major-bump eller override), når `npm ci` feiler på den fiksede lockfila, eller når `npm audit` selv feiler (teksten sier hvilket). Lukkes automatisk når auditen er grønn. |
+| `scheduled-audit.yml` | Daglig 06:00 UTC | Feiler auditen (høy/kritisk, minus unntak — se under): `npm audit fix --package-lock-only` (rot + lambda), verifiserer med `npm ci` + audit, og åpner PR fra `auto/npm-audit-fix` med auto-merge. CI avgjør om den merges. | `security-audit` — når fiksen ikke gjør auditen grønn (typisk major-bump eller override), når `npm ci` feiler på den fiksede lockfila, eller når `npm audit` selv feiler (teksten sier hvilket). Lukkes automatisk når auditen er grønn. |
 | `uptime-check.yml` | Hver time | Sjekker at forsiden gir 200 med riktig `<title>`, at sikkerhetsheaderne fra CloudFront finnes, at http/apex ender på `https://www…/`, og at TLS har ≥ 14 dager igjen. | `uptime` — ved første feil (dedupes mot åpne). Lukkes automatisk når sjekken er grønn. |
 
-Begge dedupes på etikett mot åpne issues, så et vedvarende problem gir én issue, ikke én per kjøring. `uptime-check.yml` er grønn også når den finner feil — rød kjøring betyr at selve workflowen er ødelagt.
+**Kjente funn uten fiks:** `osv-scanner.toml` i roten er eneste unntaksliste. OSV-scanneren leser den med `--config` (gjelder alle lockfiler), og npm-auditen leser den via `.github/scripts/npm-audit-check.sh`, som teller høy/kritisk-advisories minus unntakene. Hvert unntak må ha `ignoreUntil = YYYY-MM-DD` og en `reason`. Uten dato feiler skriptet, så evige unntak er umulige. Når datoen passeres, varsler begge igjen. Unntak gjelder bare den planlagte auditen. Deploy-gaten (`--audit-level=critical`) har ingen unntak.
+
+Begge workflowene dedupes på etikett mot åpne issues, så et vedvarende problem gir én issue, ikke én per kjøring. `uptime-check.yml` er grønn også når den finner feil — rød kjøring betyr at selve workflowen er ødelagt.
 
 **Hvorfor `auto/npm-audit-fix` og ikke `review/**`:** `auto-pr.yml` lager PR for `review/**`-pusher, og ville kappløpt med workflowen. Pushen gjøres med `MY_GITHUB_PAT` fordi en push med `GITHUB_TOKEN` ikke trigger CI, og uten `ci-ok`-sjekken merges PR-en aldri.
 
