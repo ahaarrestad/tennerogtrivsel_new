@@ -1,7 +1,8 @@
 name: Blocked Upgrades Watch
 
-# Overvåker oppgraderinger vi har måttet blokkere i dependabot.yml, og sier fra når
-# blokkeringen er borte — så en `ignore`-regel ikke blir en glemt lapp.
+# Overvåker oppgraderinger vi har måttet blokkere i dependabot.yml eller overstyre i
+# package.json, og sier fra når blokkeringen er borte — så en `ignore`-regel eller en
+# override ikke blir en glemt lapp.
 #
 # Normaltilstanden er «fortsatt blokkert», og den skal gi GRØNN kjøring. Rødt her
 # betyr at workflowen selv er ødelagt, ikke at oppgraderingen er blokkert.
@@ -146,4 +147,78 @@ jobs:
           det, åpner watchdogen en ny hver mandag — det er tilsiktet, ikke en feil.
 
           Se `docs/plans/archive/2026-08-09-ts7-blokkering.md` for bakgrunnen.
+          EOF
+
+  postcss-selector-parser-override:
+    name: Trengs postcss-selector-parser-overriden fortsatt?
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version-file: '.nvmrc'
+
+      # @tailwindcss/typography 0.5.20 låser postcss-selector-parser til nøyaktig
+      # 6.0.10 (GHSA-rj75-hqrm-r3gf), så package.json overstyrer til ^7.1.6. Endrer
+      # typography kravet sitt, skal overriden vurderes: ^7 gjør den overflødig, og
+      # ^8 ville den holdt stille tilbake.
+      - name: Har typography endret kravet sitt?
+        id: probe
+        run: |
+          set -e
+          if ! jq -e '.overrides["postcss-selector-parser"]' package.json >/dev/null; then
+            echo "::notice::Overriden er borte fra package.json — denne jobben kan slettes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Tom eller manglende verdi betyr at registeret svarte rart — feil høyt i
+          # stedet for å rapportere «uendret».
+          KRAV=$(npm view @tailwindcss/typography@latest dependencies.postcss-selector-parser)
+          VERSJON=$(npm view @tailwindcss/typography@latest version)
+          if [ -z "$KRAV" ] || [ -z "$VERSJON" ]; then
+            echo "::error::Fikk ikke lest typographys krav fra registeret."
+            exit 1
+          fi
+          echo "typography $VERSJON krever postcss-selector-parser $KRAV"
+          if [ "$KRAV" = "6.0.10" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "krav=$KRAV" >> "$GITHUB_OUTPUT"
+            echo "versjon=$VERSJON" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Åpne issue om at overriden bør vurderes
+        if: steps.probe.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KRAV: ${{ steps.probe.outputs.krav }}
+          VERSJON: ${{ steps.probe.outputs.versjon }}
+        run: |
+          set -e
+          gh label create override-watch \
+            --description "Watchdog: en npm-override bør vurderes" \
+            --color 0e8a16 --force
+          AAPNE=$(gh issue list --label override-watch --state open --limit 1 --json number --jq 'length')
+          if [ "$AAPNE" != "0" ]; then
+            echo "Åpen issue finnes allerede — gjør ingenting."
+            exit 0
+          fi
+          gh issue create \
+            --label override-watch \
+            --title "postcss-selector-parser-overriden bør vurderes" \
+            --body-file - <<EOF
+          \`@tailwindcss/typography@${VERSJON}\` krever nå \`postcss-selector-parser ${KRAV}\`
+          (var nøyaktig \`6.0.10\`). \`package.json\` overstyrer til \`^7.1.6\` pga.
+          GHSA-rj75-hqrm-r3gf.
+
+          1. Dekker kravet ≥ 7.1.6: fjern overriden, kjør \`npm install\` og porten.
+          2. Er kravet ^8 eller nyere: overriden holder pakken tilbake — fjern den.
+          3. Slett jobben \`postcss-selector-parser-override\` i
+             \`.github/workflows/blocked-upgrades-watch.yml\`.
           EOF
