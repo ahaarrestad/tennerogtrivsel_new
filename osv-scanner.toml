@@ -3,8 +3,10 @@
 # .github/scripts/npm-audit-check.sh. Hvert unntak MÅ ha ignoreUntil = YYYY-MM-DD.
 # Etter datoen varsler begge igjen. Forleng bare etter ny vurdering.
 # id må være GHSA-id-en i doble anførselstegn (det npm-skriptet matcher på).
-
-[[IgnoredVulns]]
-id = "GHSA-ch52-4w7c-c8xp"
-ignoreUntil = 2026-11-02
-reason = "http-cache-semantics via astro, ingen fiks finnes. Astro bruker pakken bare til å cache remote-bilder under build, og det gjør ikke siden. Angrepet krever i tillegg en delt cache med flere brukere."
+#
+# Ingen aktive unntak. Format:
+#
+# [[IgnoredVulns]]
+# id = "GHSA-xxxx-xxxx-xxxx"
+# ignoreUntil = 2026-12-31
+# reason = "Hvorfor funnet ikke kan utnyttes her, og hvorfor det ikke kan fikses nå."
