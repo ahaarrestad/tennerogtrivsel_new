@@ -16,8 +16,9 @@
 //   Kjør funksjonen manuelt én gang etter installasjon, så LAST_CHECK finnes.
 // - Varer midlertidige feil lenger enn ALARM_MS, kaster hver kjøring. Da kommer én e-post per
 //   kjøring (eller én samlet per døgn, avhengig av varslingsinnstillingen for triggeren).
-// - isTransient matcher på feilteksten. En GitHub-feil som inneholder et av ordene (f.eks. 503
-//   «Service Unavailable») regnes også som midlertidig; andre GitHub-feil gir e-post med en gang.
+// - isTransient matcher på feilteksten, som for UrlFetchApp inkluderer svaret fra GitHub. En
+//   GitHub-feil der svaret inneholder et av ordene (f.eks. «Server Error» ved 500) regnes også
+//   som midlertidig; andre GitHub-feil gir e-post med en gang.
 
 var FOLDER_IDS = [
   "1iU57zpLtE27OUHTQcvTTIAp5iYXfL9zd",
