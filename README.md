@@ -10,7 +10,7 @@ www.tennerogtrivsel.no
 * **"CMS løsning"** er markdown filer på google drive https://drive.google.com/drive/folders/1AemDdd7cZhX5_pe-sVqJ-fyGtIczYmDd som synces inn ved bygg. Bruk gjerne https://stackedit.io/ for å redigere disse filene. 
 * **Innstillinger** for siden er i et google regneark på https://docs.google.com/spreadsheets/d/1XTRkjyJpAk7hMNe4tfhhA3nI0BwmOfrR0dzj5iC_Hoo og gjør at innholdet på siden kan endres ganske enkelt.
 * **Tannleger** ligger i samme fil som innstillinger, men i annen tab. Bildene lastes opp på google drive i egen mappe og kun filnavnet refereres til i regnearket.
-* Når filene på google drive endres brukes et script på google disk (SyncOnEdit) for å trigge en webhook på github for å bygge nytt innhold og deploye til S3
+* Når filene på google drive endres brukes et script på google disk (SyncOnEdit) for å trigge en webhook på github for å bygge nytt innhold og deploye til S3. En versjonert kopi ligger i [`scripts/apps-script/SyncOnEdit.gs`](scripts/apps-script/SyncOnEdit.gs) — endres scriptet i Apps Script, oppdater kopien også.
 
 ### Oppsett notater
 * 404.html er feil-siden. Denne må legges inn i s3 som standard feil-side manuelt.

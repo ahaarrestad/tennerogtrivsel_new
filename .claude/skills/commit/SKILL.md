@@ -197,10 +197,30 @@ Committer du direkte på main (ingen worktree): kjør bare steg 2 og 4.
 
 ### 5d. Etter merge
 
-Følg opp selv: poll `gh pr view` til PR-en er merget, synk lokal main, og kjør eventuelle
-etter-merge-steg (workflow-kjøringer, verifisering) uten å gi brukeren en huskeliste.
+Følg opp selv, uten å gi brukeren en huskeliste:
 
-## Step 6: Rapport
+1. Poll `gh pr view` til PR-en er merget, og synk lokal main.
+2. Vent på CI/CD-kjøringen på main og sjekk at deployen er grønn.
+3. **Bekreft at det opprinnelige problemet er borte** — ikke bare at fiksen er merget. Det som
+   utløste oppgaven skal sees løst: varselet er lukket, issuen er lukket, eller jobben som feilet
+   er grønn (start den med `gh workflow run` hvis neste planlagte kjøring er langt unna). Kan det
+   ikke bekreftes ennå, si hva som gjenstår og når det kan sjekkes.
+4. Kjør eventuelle andre etter-merge-steg (workflows, Dependabot, lokalt oppsett).
 
-Én kort oppsummering: commit-melding(er), filer, porten (kjørt/hoppet over + hvorfor),
-review-resultat, pushet eller ikke, PR-lenke.
+## Step 6: Kvittering
+
+Avslutt alltid med denne sjekklisten, slik at brukeren ikke trenger å spørre hva som er gjort.
+Hver linje er ✅ (gjort og verifisert), ⏭️ (hoppet over — med grunn) eller ❌ (feilet — med hva).
+Ikke utelat linjer: et steg som ikke er nådd ennå, står som ⏭️ med grunn.
+
+```
+Commit         <melding(er)>
+Kvalitetsport  ✅ lint · <N> tester · dekning · E2E · build · audit   (eller ⏭️ kun docs)
+Review         ✅ ren (<N> minor — listet over)                        (eller ⏭️ kun docs, egen lesing)
+Push/PR        ✅ #<nr> merget                                         (eller ⏭️ venter på godkjenning)
+Deploy         ✅ CI/CD grønn, siden svarer 200
+Problemet      ✅ <hva som bekrefter at det er løst>
+Gjenstår       ingenting                                               (eller hva, og hvem/når)
+```
+
+«Gjenstår» er den viktigste linjen. Står det «ingenting», skal det stemme.
