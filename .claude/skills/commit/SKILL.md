@@ -2,7 +2,7 @@
 name: commit
 description: "Use when the user says 'commit', 'committ', 'lagre endringer', 'push', 'send til review', or asks to save/commit their work."
 disable-model-invocation: false
-allowed-tools: ["Bash(git *)", "Bash(cat *)", "Bash(npm test*)", "Bash(npm run *)", "Bash(bash scripts/setup-worktree.sh)", "Bash(bash .claude/skills/_shared/run-e2e.sh*)", "Bash(npx playwright*)", "Bash(npm audit*)", "Bash(lsof *)", "Bash(ps *)", "Bash(kill *)", "Bash(curl *)", "Bash(sleep *)", "Skill(quality-gate)", "Agent", "ExitWorktree", "EnterWorktree"]
+allowed-tools: ["Bash(git *)", "Bash(cat *)", "Bash(npm test*)", "Bash(npm run *)", "Bash(bash scripts/setup-worktree.sh)", "Bash(bash .claude/skills/_shared/run-e2e.sh*)", "Bash(npx playwright*)", "Bash(npm audit*)", "Bash(lsof *)", "Bash(ps *)", "Bash(kill *)", "Bash(curl *)", "Bash(sleep *)", "Bash(gh *)", "Skill(quality-gate)", "Agent", "ExitWorktree", "EnterWorktree"]
 ---
 
 # Commit Skill
@@ -20,7 +20,7 @@ Konvensjonell melding på norsk:
 - Format: `type: kort beskrivelse` — typer: `feat` `fix` `chore` `test` `docs` `refactor` `a11y`
 - Én kort linje om «hvorfor»; bruk `—` ved flere tema: `fix: småfiks — typo, typesikkerhet m.m.`
 
-Ikke spør om bekreftelse på meldingen — vis den i sluttrapporten.
+Ikke spør om bekreftelse på meldingen — vis den i kvitteringen (Step 6).
 
 ## Step 3: Kvalitetsport
 
@@ -223,4 +223,8 @@ Problemet      ✅ <hva som bekrefter at det er løst>
 Gjenstår       ingenting                                               (eller hva, og hvem/når)
 ```
 
-«Gjenstår» er den viktigste linjen. Står det «ingenting», skal det stemme.
+Ble push ikke bedt om (Step 4.4–5 hoppet over): Review, Push/PR, Deploy og Problemet står som
+«⏭️ push ikke bedt om», og «Gjenstår» skal da nevne review, push og deploy.
+
+«Gjenstår» er den viktigste linjen. Står det «ingenting», skal det stemme — endringen er ute og
+problemet bekreftet løst.
