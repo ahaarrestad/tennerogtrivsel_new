@@ -21,10 +21,11 @@
 //   som midlertidig; andre GitHub-feil gir e-post med en gang.
 
 var FOLDER_IDS = [
-  "1iU57zpLtE27OUHTQcvTTIAp5iYXfL9zd",
-  "1h_iXI-fFrIpfDfT1yZvkGpbOZKgbd1n6",
-  "1zv20tkhQpZfHL3wx-ePNlPbqHNC54DwM",
-  "1k9mfvdC8j7YioKtXj1NuabC5c1xAVQZU"
+  "1iU57zpLtE27OUHTQcvTTIAp5iYXfL9zd",  // meldinger
+  "1h_iXI-fFrIpfDfT1yZvkGpbOZKgbd1n6",  // tjenester
+  "1zv20tkhQpZfHL3wx-ePNlPbqHNC54DwM",  // innstillinger (regnearket «Innhold på siden»)
+  "1k9mfvdC8j7YioKtXj1NuabC5c1xAVQZU",  // tannleger (portretter)
+  "1ZV_N-WEhDWikkZ-idLwSLL_rKNI13zzJ"   // bilder (galleri og forsidebilde)
 ];
 var SLACK_MS = 60 * 1000;               // overlapp, så filer lagret midt i en sjekk ikke glipper
 var FIRST_RUN_MS = 6 * 60 * 1000;       // første kjøring: se 6 min tilbake, som før
@@ -79,7 +80,9 @@ function findChange(sinceMs) {
     while (files.hasNext()) {
       var file = files.next();
       count++;
-      var updated = file.getLastUpdated().getTime();
+      // Opplastede filer kan beholde gammel endringsdato (f.eks. fra Drive for desktop),
+      // så opprettelsesdatoen teller også.
+      var updated = Math.max(file.getLastUpdated().getTime(), file.getDateCreated().getTime());
       if (updated > sinceMs) {
         return { folder: folder.getName(), file: file.getName(), updated: updated };
       }
