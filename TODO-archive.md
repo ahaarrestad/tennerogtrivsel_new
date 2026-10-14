@@ -3,6 +3,10 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **`/status` → `/helsesjekk`**
+  - **Problem:** Claude Code har en innebygd `/status`, så skillen dukket opp som to like oppføringer.
+  - **Fiks:** skillen heter nå `/helsesjekk` (`.claude/skills/helsesjekk/`); innholdet er uendret.
+
 - [x] **SyncOnEdit følger også bilder-mappen**
   - **Problem:** galleri- og forsidebilder i bilder-mappen startet ikke bygg — mappen manglet i `FOLDER_IDS` (sjekket med service-kontoen: de fire andre er meldinger, tjenester, innstillinger og tannleger).
   - **Fiks:** bilder-mappen lagt til og alle ID-er navngitt; en fil teller som endret også etter opprettelsesdato, siden opplastinger kan beholde gammel endringsdato.

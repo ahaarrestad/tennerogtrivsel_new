@@ -1,11 +1,11 @@
 ---
-name: status
-description: "Use when the user asks 'funker alt?', 'status', 'hvordan ser det ut', 'virker siden', 'helsesjekk', or otherwise wants to know whether the site, builds and security checks are OK."
+name: helsesjekk
+description: "Use when the user asks 'funker alt?', 'hvordan er status', 'hvordan ser det ut', 'virker siden', 'helsesjekk', or otherwise wants to know whether the site, builds and security checks are OK."
 disable-model-invocation: false
 allowed-tools: ["Bash(gh *)", "Bash(curl *)"]
 ---
 
-# Status — helsesjekk
+# Helsesjekk
 
 Svarer på «funker alt?» med de samme sjekkene og samme tabell hver gang. Kun lesing — endrer
 ingenting. Finner du noe rødt: forklar hva det er og foreslå fiks, men start ikke arbeidet uten
