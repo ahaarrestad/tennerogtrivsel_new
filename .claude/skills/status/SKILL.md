@@ -14,7 +14,7 @@ at brukeren ber om det.
 ## Viktig: issues er signalet, ikke røde kjøringer
 
 Uptime-sjekken og vaktjobbene er **grønne også når de har funnet et problem** — funnet kommer som
-en issue (etiketter `uptime`, `security-audit`, `ts7-watch`, `override-watch`,
+en issue (etiketter `uptime`, `security-audit`, `sikkerhet-auto`, `ts7-watch`, `override-watch`,
 `node-security-watch`, `node-lts-watch`). En rød kjøring av dem betyr at selve workflowen er
 ødelagt. Åpne issues er derfor den viktigste sjekken.
 
@@ -51,8 +51,8 @@ dynamiske), så `--workflow "CodeQL"` feiler.
 
 ## Tolkning
 
-- **Uptime:** OK = ingen åpen `uptime`-issue **og** siste kjøring er under ~6 timer gammel
-  (GitHub dropper mange timeskjøringer, så ~4 per døgn er normalt). Eldre enn det → ⚠️, vakta kan
+- **Uptime:** OK = ingen åpen `uptime`-issue **og** siste kjøring er under ~8 timer gammel
+  (GitHub dropper mange timeskjøringer, så ~4 per døgn og hull på 6 timer er normalt). Eldre enn det → ⚠️, vakta kan
   ha stoppet.
 - **Dependabot Updates:** kjøringene gjelder ulike pakker/kataloger. Er den nyeste kjøringen rød,
   eller en rød kjøring ikke etterfulgt av en grønn for samme `displayTitle`-område, er den åpen.

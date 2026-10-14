@@ -6,7 +6,7 @@
 - [x] **Fast kvittering, `/status` og versjonert SyncOnEdit** ([plan](docs/plans/archive/2026-10-14-kvittering-og-status.md))
   - **Problem:** brukeren måtte spørre «funker alt?» og om ting var sjekket/reviewet — rapportene varierte og helsesjekken ble improvisert hver gang.
   - **`/commit`:** Step 6 er nå en fast kvittering (✅/⏭️/❌ per steg, «Gjenstår» sist); 5d krever at det opprinnelige problemet bekreftes løst, ikke bare at fiksen er merget.
-  - **`/status`:** ny skill med faste sjekker (side, uptime, kjøringer, Dependabot, issues/PR-er, Drive-bygg) og fast tabell.
+  - **`/status`:** ny skill med faste sjekker og fast tabell. Åpne issues er hovedsignalet (vaktjobbene er grønne også ved funn); i tillegg side, Dependabot- og CodeQL-varsler, og siste kjøring per workflow.
   - **SyncOnEdit:** versjonert kopi i `scripts/apps-script/SyncOnEdit.gs` (versjonen med `LAST_CHECK` og logging, verifisert med Drive-bygg 2026-10-12), lenket fra README.
 
 - [x] **Lås Node-versjonen på tvers av lokalt og CI** ([spec](docs/designs/archive/2026-09-25-node-version-lock.md)) ([plan](docs/plans/archive/2026-09-25-node-version-lock.md))
