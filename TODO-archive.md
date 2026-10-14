@@ -3,6 +3,10 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **SyncOnEdit følger også bilder-mappen**
+  - **Problem:** galleri- og forsidebilder i bilder-mappen startet ikke bygg — mappen manglet i `FOLDER_IDS` (sjekket med service-kontoen: de fire andre er meldinger, tjenester, innstillinger og tannleger).
+  - **Fiks:** bilder-mappen lagt til og alle ID-er navngitt; en fil teller som endret også etter opprettelsesdato, siden opplastinger kan beholde gammel endringsdato.
+
 - [x] **Fast kvittering, `/status` og versjonert SyncOnEdit** ([plan](docs/plans/archive/2026-10-14-kvittering-og-status.md))
   - **Problem:** brukeren måtte spørre «funker alt?» og om ting var sjekket/reviewet — rapportene varierte og helsesjekken ble improvisert hver gang.
   - **`/commit`:** Step 6 er nå en fast kvittering (✅/⏭️/❌ per steg, «Gjenstår» sist); 5d krever at det opprinnelige problemet bekreftes løst, ikke bare at fiksen er merget.
