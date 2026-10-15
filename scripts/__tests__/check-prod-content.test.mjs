@@ -88,6 +88,7 @@ describe('pngInfo', () => {
 describe('clean', () => {
     it('fjerner @ og backticks og kutter til 80 tegn', () => {
         expect(clean('@admin `kode`')).toBe('admin kode');
+        expect(clean('<b>[lenke](x)</b>\r\nny linje')).toBe('blenke(x)/bny linje');
         expect(clean('x'.repeat(200))).toHaveLength(80);
     });
 });
@@ -304,6 +305,13 @@ describe('runChecks', () => {
     it('klinikk-tile som HTML-feilside gir funn for både type og innhold', async () => {
         const { funn } = await run(makeFetch({ clinicTile: () => response(200, '<html>', { 'content-type': 'text/html' }) }));
         expect(funn).toEqual([expect.stringContaining('content-type «text/html»'), expect.stringContaining('er ikke en PNG')]);
+    });
+
+    it('fanger «Bilde mangler» i galleriet selv om andre bilder finnes', async () => {
+        const { funn } = await run(makeFetch({
+            [`${SITE}/galleri/`]: () => response(200, `${GALLERI}<div>Bilde mangler</div>`),
+        }));
+        expect(funn).toEqual([expect.stringContaining('/galleri/ viser «Bilde mangler»')]);
     });
 
     it('tåler site med avsluttende skråstrek', async () => {
