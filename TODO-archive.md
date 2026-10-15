@@ -3,6 +3,11 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **Deteksjon av stille degradering på kart-tiles og innhold** ([spec](docs/designs/archive/2026-10-15-stille-degradering.md)) ([plan](docs/plans/archive/2026-10-15-stille-degradering.md))
+  - **Problem:** CARTO-vannmerket sto på siden uten varsel (200 OK, gyldig PNG), og tomt innhold fra Drive/Sheets bygges også stille.
+  - **Fiks:** `scripts/check-prod-content.mjs` kjøres fra `uptime-check.yml` når forsiden svarer. Kart: klinikk-tile og en tilfeldig z17-tile må være gyldig 256×256 PNG, og den tilfeldige (trolig ucachet — edge-cachen holder 180 dager) sammenlignes med CARTO uten nøkkel; byte-likt = nøkkelen virker ikke. Cachet tile eller CARTO nede = «ikke avgjort»-notat i jobbsammendraget, ikke issue. Innhold: tjenester på forsiden (+ første tjenesteside), tannleger med bilder og uten «Bilde mangler», galleri med bilder og uten «Bilde mangler», prisliste ikke tom.
+  - Funn går inn i den eksisterende `uptime`-issuen; krasj i scriptet gir funnlinje og rød jobb. Dokumentert i `docs/architecture/sikkerhet.md#overvåking-av-kart-tiles`.
+
 - [x] **`/status` → `/helsesjekk`**
   - **Problem:** Claude Code har en innebygd `/status`, så skillen dukket opp som to like oppføringer.
   - **Fiks:** skillen heter nå `/helsesjekk` (`.claude/skills/helsesjekk/`); innholdet er uendret.

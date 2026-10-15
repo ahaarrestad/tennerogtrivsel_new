@@ -1,6 +1,6 @@
 # Plan: deteksjon av stille degradering (kart-tiles og innhold)
 
-Spec: [docs/designs/2026-10-15-stille-degradering.md](../designs/2026-10-15-stille-degradering.md)
+Spec: [docs/designs/archive/2026-10-15-stille-degradering.md](../../designs/archive/2026-10-15-stille-degradering.md)
 
 ## Mål og avgrensninger
 
