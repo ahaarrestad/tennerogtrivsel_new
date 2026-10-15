@@ -3,6 +3,10 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **Scheduled Security Audit bør opprette issue, ikke bare feile**
+  - **Problem:** en rød scheduled-kjøring ga bare en e-post; kjøring `34843733661` (2026-09-14) fanget GHSA-26w7-cxv4-gfx2 uten at noen handlet, og en innholdsdeploy ble blokkert ~32 timer senere.
+  - **Løst underveis i andre oppgaver** (oppdaget 2026-10-15): `scheduled-audit.yml` prøver først en automatisk fiks, og holder den ikke åpnes en issue med etiketten `security-audit` (dedupe på etikett, ikke tittel). Issuen lukkes automatisk når auditen er grønn igjen, og `/helsesjekk` leser den som signal. Ingen egen plan.
+
 - [x] **Deteksjon av stille degradering på kart-tiles og innhold** ([spec](docs/designs/archive/2026-10-15-stille-degradering.md)) ([plan](docs/plans/archive/2026-10-15-stille-degradering.md))
   - **Problem:** CARTO-vannmerket sto på siden uten varsel (200 OK, gyldig PNG), og tomt innhold fra Drive/Sheets bygges også stille.
   - **Fiks:** `scripts/check-prod-content.mjs` kjøres fra `uptime-check.yml` når forsiden svarer. Kart: klinikk-tile og en tilfeldig z17-tile må være gyldig 256×256 PNG, og den tilfeldige (trolig ucachet — edge-cachen holder 180 dager) sammenlignes med CARTO uten nøkkel; byte-likt = nøkkelen virker ikke. Cachet tile eller CARTO nede = «ikke avgjort»-notat i jobbsammendraget, ikke issue. Innhold: tjenester på forsiden (+ første tjenesteside), tannleger med bilder og uten «Bilde mangler», galleri med bilder og uten «Bilde mangler», prisliste ikke tom.
