@@ -4,7 +4,7 @@
 // `uptime`-issuen; notater (f.eks. «nøkkelsjekken ikke avgjort») går til stderr og jobbsammendraget.
 // Scriptet krasjer ikke fordi prod er nede — en henting som feiler, blir et funn.
 //
-// Spec: docs/designs/2026-10-15-stille-degradering.md
+// Spec: docs/designs/archive/2026-10-15-stille-degradering.md
 import { appendFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
