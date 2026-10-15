@@ -53,7 +53,8 @@ dynamiske), så `--workflow "CodeQL"` feiler.
 
 - **Uptime:** OK = ingen åpen `uptime`-issue **og** siste kjøring er under ~8 timer gammel
   (GitHub dropper mange timeskjøringer, så ~4 per døgn og hull på 6 timer er normalt). Eldre enn det → ⚠️, vakta kan
-  ha stoppet.
+  ha stoppet. Uptime-issuen dekker også kart-tiles (CARTO-nøkkelen) og tomt innhold fra
+  Drive/Sheets — les funnlinjene i issuen, de sier hva som er galt.
 - **Dependabot Updates:** kjøringene gjelder ulike pakker/kataloger. Er den nyeste kjøringen rød,
   eller en rød kjøring ikke etterfulgt av en grønn for samme `displayTitle`-område, er den åpen.
 - **Andre rader:** den **nyeste** kjøringen avgjør. En eldre rød etterfulgt av grønn er løst —

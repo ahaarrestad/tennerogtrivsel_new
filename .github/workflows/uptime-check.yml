@@ -4,6 +4,12 @@ name: Uptime Check
 # headerne fra CloudFront Response Headers Policy er på plass, http/apex
 # redirecter til https://www, og TLS-sertifikatet har minst 14 dager igjen.
 #
+# Når forsiden svarer, sjekker scripts/check-prod-content.mjs også stille degradering:
+# kart-tiles via /tiles/* (gyldig PNG, og at CARTO-nøkkelen virker — sammenlignet med
+# CARTO uten nøkkel på en tilfeldig, trolig ucachet tile) og at innholdet fra Drive/Sheets
+# ikke er tomt (tjenester, tannleger med bilder, galleri, prisliste). Se
+# docs/architecture/sikkerhet.md#overvåking-av-kart-tiles.
+#
 # Ved feil åpnes én issue med etiketten `uptime` (dedupes mot åpne). Den lukkes
 # automatisk når sjekken er grønn igjen. Selve kjøringen er grønn i begge tilfeller —
 # rødt betyr at workflowen er ødelagt, ikke at siden er nede. Samme filosofi som
@@ -24,8 +30,20 @@ jobs:
   uptime:
     name: Prod svarer og er trygg
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/check-prod-content.mjs
+            .nvmrc
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
       - name: Sjekk prod
         id: probe
         env:
@@ -62,6 +80,17 @@ jobs:
             [ "$DAGER" -ge 14 ] || FEIL+=("TLS-sertifikatet utløper om $DAGER dager ($EXPIRY)")
           else
             FEIL+=("Kunne ikke lese TLS-sertifikatet")
+          fi
+
+          # Kart og innhold — bare når forsiden svarte, ellers blir det bare støy.
+          # Scriptet skriver ett funn per linje på stdout; logg og notater går til stderr.
+          if [ "${STATUS:-}" = "200" ]; then
+            if INNHOLD=$(node scripts/check-prod-content.mjs); then
+              while IFS= read -r L; do [ -n "$L" ] && FEIL+=("$L"); done <<< "$INNHOLD"
+            else
+              FEIL+=("Innholdssjekken (check-prod-content.mjs) krasjet — se loggen")
+              echo "krasj=true" >> "$GITHUB_OUTPUT"
+            fi
           fi
 
           if [ ${#FEIL[@]} -eq 0 ]; then
@@ -107,3 +136,9 @@ jobs:
           for NR in $(gh issue list --label uptime --state open --json number --jq '.[].number'); do
             gh issue close "$NR" --comment "Prod-sjekken er grønn igjen — lukkes automatisk."
           done
+
+      - name: Feil jobben hvis innholdssjekken krasjet
+        if: steps.probe.outputs.krasj == 'true'
+        run: |
+          echo "::error::check-prod-content.mjs krasjet — workflowen er ødelagt, se probe-steget."
+          exit 1

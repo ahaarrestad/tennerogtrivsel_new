@@ -19,6 +19,12 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
+- [ ] **Deteksjon av stille degradering på kart-tiles** ([spec](docs/designs/2026-10-15-stille-degradering.md)) ([plan](docs/plans/2026-10-15-stille-degradering.md))
+  - CARTO-vannmerket sto på siden i ukjent tid uten at noe varslet. Endepunktet svarte `200 OK` med gyldig `image/png` i normal størrelse hele veien — kun pikslene endret seg. `mapInit.test.ts` mocker Leaflet fullstendig og asserter bare at `L.tileLayer` kalles med riktig URL-mønster; ingen E2E-test laster en ekte tile
+  - Vurder: visuell regresjonstest på en kjent tile, størrelses-/checksum-sjekk i en scheduled workflow, eller oppetidsovervåking av `/tiles/*` som ser på innhold og ikke bare statuskode
+  - Generaliser gjerne: hvilke andre tredjeparts-avhengigheter kan degradere stille uten å bryte HTTP-status?
+  - **Merk:** løses «Kart-tiles: selvhost vektor-tiles med Protomaps PMTiles» først, endrer kart-delen av denne karakter — tiles ligger da i vår egen bøtte, så *runtime*-avhengigheten til en tredjepart forsvinner. Men uttrekket stammer fortsatt fra et tredjeparts planetbygg og eldes: et utdatert eller malformert uttrekk kan degradere like stille som et vannmerke. Den generelle delen står uansett
+
 ## Backlog
 
 - [ ] **a11y-tester i WebKit er CPU-bundet og timer ut under tung ytre last** — *ingen plan ennå*
@@ -86,12 +92,6 @@
   - Mulig tiltak: en rask `lockfile-check`-jobb som kun kjører `npm ci --ignore-scripts`, og som de øvrige jobbene `needs:`-avhenger av — gir én rød jobb med tydelig årsak i stedet for fire
   - Alternativt/i tillegg: la jobben tolke `Missing: X from lock file` og kommentere diagnosen på PR-en, og/eller dokumentere feilmønsteret i `docs/guides/`
   - Vurder kostnad/nytte i planfasen: en ekstra jobb koster litt ekstra kjøretid per PR, men de fire jobbene kjører allerede `npm ci` hver for seg
-
-- [ ] **Deteksjon av stille degradering på kart-tiles** — *ingen plan ennå*
-  - CARTO-vannmerket sto på siden i ukjent tid uten at noe varslet. Endepunktet svarte `200 OK` med gyldig `image/png` i normal størrelse hele veien — kun pikslene endret seg. `mapInit.test.ts` mocker Leaflet fullstendig og asserter bare at `L.tileLayer` kalles med riktig URL-mønster; ingen E2E-test laster en ekte tile
-  - Vurder: visuell regresjonstest på en kjent tile, størrelses-/checksum-sjekk i en scheduled workflow, eller oppetidsovervåking av `/tiles/*` som ser på innhold og ikke bare statuskode
-  - Generaliser gjerne: hvilke andre tredjeparts-avhengigheter kan degradere stille uten å bryte HTTP-status?
-  - **Merk:** løses «Kart-tiles: selvhost vektor-tiles med Protomaps PMTiles» først, endrer kart-delen av denne karakter — tiles ligger da i vår egen bøtte, så *runtime*-avhengigheten til en tredjepart forsvinner. Men uttrekket stammer fortsatt fra et tredjeparts planetbygg og eldes: et utdatert eller malformert uttrekk kan degradere like stille som et vannmerke. Den generelle delen står uansett
 
 - [ ] **Kart-tiles: selvhost vektor-tiles med Protomaps PMTiles** — *ingen plan ennå*
   - Utsatt veivalg fra CARTO-nøkkel-oppgaven (2026-09-08). Utredet 2026-09-08 — **konklusjonen er tatt: selvhost vektor**. Gjenstår å planlegge og gjennomføre. Valgt variant: **Leaflet + `protomaps-leaflet` + PMTiles-arkiv på S3**

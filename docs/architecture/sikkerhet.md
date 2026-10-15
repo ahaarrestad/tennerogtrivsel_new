@@ -159,8 +159,9 @@ Karttiles serveres via CloudFront-proxy (`/tiles/*`) for å **begrense** hva som
 
 CARTO innførte nøkkelkrav for `basemaps.cartocdn.com` i slutten av august 2026. Uten `?key=`
 leveres tiles med et diagonalt «API KEY REQUIRED»-vannmerke — men fortsatt som `200 OK` med
-gyldig `image/png` i normal størrelse. Degraderingen er altså **usynlig for enhver HTTP-basert
-sjekk**; kun pikslene avslører den.
+gyldig `image/png` i normal størrelse. Degraderingen er altså **usynlig for status, type og
+størrelse**; kun innholdet avslører den. Uptime-sjekken fanger den ved å sammenligne med CARTO
+uten nøkkel, se [Overvåking av kart-tiles](#overvåking-av-kart-tiles).
 
 Nøkkelen håndteres som en hemmelighet og finnes aldri i git eller i klient-JS:
 
@@ -208,6 +209,34 @@ tillitsnivå som AWS-kontoen selv, og nøkkelen er gratis.
   knytt policyen på etterpå.** Skal policyen fjernes igjen, gjør det i motsatt rekkefølge.
 - **Domenerestriksjon på nøkkelen er per 2026-09-08 ikke slått på.** Verifisert: samme tile med gyldig nøkkel gir byte-identisk svar med `Referer: https://ondsinnet-side.example/` og med vårt eget domene. Restriksjonen kan skrus på hos CARTO uten at noe går i stykker — men *bare* fordi funksjonen normaliserer `Referer` selv, og *bare* hvis `www.tennerogtrivsel.no`, `test2.aarrestad.com` og `localhost` er registrert på nøkkelen. Det er de eneste tre verdiene som kan nå CARTO.
 - Policyen er knyttet til `/tiles/*` på **begge** distribusjoner: prod `E9Z51DQB2K1G4` og test `E2WXX7ZUR5NNP3`. Endringen er gjort manuelt via AWS CLI, jf. «Hvorfor ikke IaC?».
+
+### Overvåking av kart-tiles
+
+`uptime-check.yml` kjører `scripts/check-prod-content.mjs` hver time (når forsiden svarer). For
+kartet gjør den to ting:
+
+- **T1 – tilen leveres:** klinikkens z17-tile og én tilfeldig tile (se under) hentes via
+  `/tiles/*` og må være `200`, `image/png`, gyldig PNG og 256×256.
+- **T3 – nøkkelen virker:** den tilfeldige tilen hentes også direkte fra CARTO **uten** nøkkel.
+  Er svaret fra proxyen byte-likt CARTOs nøkkelløse svar, er det vannmerket vi får, og det blir
+  et funn i `uptime`-issuen. Rettes ved å rotere nøkkelen (se over) og invalidere `/tiles/*`.
+
+**Hvorfor en tilfeldig tile:** edge-cachen holder tiles i 180 dager (se gotchas over). En fast tile
+ville vært cachet fra før og testet en gammel tilstand — et brudd på nøkkelen ville ikke vist seg
+før cachen gikk ut. Scriptet trekker derfor en tilfeldig z17-tile rundt Stavanger (ca. 8 700
+tiles, så nesten alltid ucachet) per kjøring.
+
+**«Ikke avgjort» er ikke et funn.** Svarer CloudFront med `x-cache: Hit`, sier sammenligningen
+ingenting om nøkkelen nå, og feiler CARTO direkte, mangler fasiten. Begge blir et notat i
+jobbsammendraget, ikke en issue. Ved `Miss` står «Nøkkelsjekken OK» i sammendraget.
+
+**Begrensning:** dårlige tiles som *allerede* ligger i edge-cachen fanges ikke — sjekken ser bare
+nye hentinger. Pikselanalyse er bevisst utelatt.
+
+Samme script sjekker at innholdet fra Drive/Sheets ikke har blitt stille tomt: tjenester på
+forsiden (og at første tjenesteside svarer), tannleger med bilder og uten «Bilde mangler»,
+bilder i galleriet og at prislisten ikke er tom. Se
+`docs/designs/archive/2026-10-15-stille-degradering.md` for bakgrunnen.
 
 **CSP:** `tile.openstreetmap.org` er fjernet fra `img-src` og `connect-src` — tiles lastes nå fra `'self'`. Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) er også fjernet — fontene er self-hosted.
 
