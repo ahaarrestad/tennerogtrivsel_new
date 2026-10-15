@@ -61,9 +61,9 @@ export function pngInfo(buf) {
     return { isPng: true, width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
 }
 
-/** Kort verdier fra prod ned og fjern tegn som kan bli mentions eller markdown i issuen. */
+/** Kort verdier fra prod ned og fjern tegn som kan bli mentions, markdown/HTML eller ekstra funnlinjer i issuen. */
 export function clean(value) {
-    return String(value).replace(/[@`]/g, '').slice(0, 80);
+    return String(value).replace(/[@`<>[\]\r\n]/g, '').slice(0, 80);
 }
 
 function tileUrl(base, { z, x, y }, suffix) {
@@ -214,8 +214,10 @@ export async function runChecks({
     // C3: galleri
     const galleriFeil = pageOk('/galleri/', galleri);
     funn.push(...galleriFeil);
-    if (galleriFeil.length === 0 && extractContentImages(html(galleri)).length === 0) {
-        funn.push('/galleri/ viser ingen bilder');
+    if (galleriFeil.length === 0) {
+        const side = html(galleri);
+        if (extractContentImages(side).length === 0) funn.push('/galleri/ viser ingen bilder');
+        else if (side.includes('Bilde mangler')) funn.push('/galleri/ viser «Bilde mangler» — et galleribilde ble ikke lastet ned ved bygg');
     }
 
     // C7: prisliste

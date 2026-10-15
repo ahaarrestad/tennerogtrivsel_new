@@ -224,18 +224,22 @@ kartet gjør den to ting:
 **Hvorfor en tilfeldig tile:** edge-cachen holder tiles i 180 dager (se gotchas over). En fast tile
 ville vært cachet fra før og testet en gammel tilstand — et brudd på nøkkelen ville ikke vist seg
 før cachen gikk ut. Scriptet trekker derfor en tilfeldig z17-tile rundt Stavanger (ca. 8 700
-tiles, så nesten alltid ucachet) per kjøring.
+tiles) per kjøring. Hver kjøring cacher sin tile i 180 dager, så over tid treffer anslagsvis 8–40 %
+av kjøringene en cachet tile — de fleste er fortsatt ucachet.
 
 **«Ikke avgjort» er ikke et funn.** Svarer CloudFront med `x-cache: Hit`, sier sammenligningen
 ingenting om nøkkelen nå, og feiler CARTO direkte, mangler fasiten. Begge blir et notat i
-jobbsammendraget, ikke en issue. Ved `Miss` står «Nøkkelsjekken OK» i sammendraget.
+jobbsammendraget, ikke en issue. Ved `Miss` står «Nøkkelsjekken OK» i sammendraget. Ulempen: blir
+sjekken *alltid* «ikke avgjort» (f.eks. fordi CARTO blokkerer GitHub-runnere på direktehentingen),
+er det bare synlig i jobbsammendraget. Står det ikke «Nøkkelsjekken OK» i noen av de siste
+kjøringene, se på notatene.
 
 **Begrensning:** dårlige tiles som *allerede* ligger i edge-cachen fanges ikke — sjekken ser bare
 nye hentinger. Pikselanalyse er bevisst utelatt.
 
 Samme script sjekker at innholdet fra Drive/Sheets ikke har blitt stille tomt: tjenester på
 forsiden (og at første tjenesteside svarer), tannleger med bilder og uten «Bilde mangler»,
-bilder i galleriet og at prislisten ikke er tom. Se
+bilder i galleriet (uten «Bilde mangler») og at prislisten ikke er tom. Se
 `docs/designs/archive/2026-10-15-stille-degradering.md` for bakgrunnen.
 
 **CSP:** `tile.openstreetmap.org` er fjernet fra `img-src` og `connect-src` — tiles lastes nå fra `'self'`. Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) er også fjernet — fontene er self-hosted.

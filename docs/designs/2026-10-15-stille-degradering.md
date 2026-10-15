@@ -40,9 +40,10 @@ To tiles hentes gjennom proxyen (`/tiles/{z}/{x}/{y}.png?v=2`):
 - **Fast tile:** klinikken på z17 (`17/67625/38817`, zoomnivået kartet åpner på). Viser hva
   besøkende får, men er nesten alltid cachet.
 - **Fersk tile:** tilfeldig valgt per kjøring blant z17-tilene i Stavanger/Sandnes
-  (x 67567–67647, y 38787–38893, ~8 700 tiles). Med én per time tar det ~360 dager å gå gjennom
-  utvalget — lenger enn edge-levetiden — så tilen er i praksis aldri cachet og kommer rett fra CARTO
-  med vår nøkkel.
+  (x 67567–67647, y 38787–38893, ~8 700 tiles). Hver kjøring cacher sin tile i 180 dager, så
+  andelen cachede tiles vokser til ca. 8–40 % (4–24 kjøringer i døgnet, pluss det besøkende panorerer
+  til). De fleste kjøringer får likevel en ucachet tile rett fra CARTO med vår nøkkel; resten blir
+  «ikke avgjort».
 
 | # | Feiler når | Fanger |
 |---|---|---|
