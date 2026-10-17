@@ -45,7 +45,7 @@ async function editMelding(id, name) {
         const buttonHtml = id
             ? ''
             : `<button id="btn-save-melding" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Opprett melding</button>
-                    <button onclick="window.loadMeldingerModule()" class="admin-btn-cancel">Avbryt</button>`;
+                    <button id="btn-cancel-melding" class="admin-btn-cancel">Avbryt</button>`;
 
         // safe: formatDate returnerer norsk datostreng uten HTML-spesialtegn; resten er hardkodet HTML
         inner.innerHTML = `
@@ -174,6 +174,7 @@ async function editMelding(id, name) {
             document.getElementById('edit-end')?.addEventListener('change', triggerAutoSave);
         } else {
             // Manual create for new meldinger
+            document.getElementById('btn-cancel-melding')?.addEventListener('click', reloadMeldinger);
             const saveBtn = document.getElementById('btn-save-melding');
             if (saveBtn) {
                 saveBtn.onclick = async () => {

@@ -218,6 +218,22 @@ describe('loadPrislisteList', () => {
         // Should not throw
     });
 
+    it('klikk på en prisrad åpner redigering uten inline-handler (CSP blokkerer onclick)', async () => {
+        getPrislisteRaw.mockResolvedValue([
+            { rowIndex: 2, kategori: 'Test', behandling: 'A', pris: 100 },
+        ]);
+        reloadPrisliste();
+        await new Promise(r => setTimeout(r, 0));
+
+        const inner = document.getElementById('module-inner');
+        expect(inner.querySelector('[onclick]')).toBeNull();
+
+        inner.querySelector('.pris-rad').click();
+        await new Promise(r => setTimeout(r, 0));
+
+        expect(inner.querySelector('#edit-pris-kategori')).not.toBeNull();
+    });
+
     it('should open editor when edit button is clicked', async () => {
         getPrislisteRaw.mockResolvedValue([
             { rowIndex: 2, kategori: 'Test', behandling: 'A', pris: 100 },

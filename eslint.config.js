@@ -78,6 +78,11 @@ export default [
       // args: 'none' — callback-parametere mottas ofte men brukes ikke alle (vanlig mønster)
       // caughtErrors: 'none' — catch (err) {} er ofte bevisst ignorering
       'no-unused-vars': ['error', { vars: 'all', args: 'none', caughtErrors: 'none', ignoreRestSiblings: true }],
+      // Inline-handlere i HTML-strenger blokkeres av CSP (script-src med hasher) — bruk addEventListener
+      'no-restricted-syntax': ['error',
+        { selector: 'TemplateElement[value.raw=/\\son[a-z]+=/]', message: 'Inline on*-handler blokkeres av CSP — bruk addEventListener etter innsetting.' },
+        { selector: 'Literal[value=/\\son[a-z]+=/]', message: 'Inline on*-handler blokkeres av CSP — bruk addEventListener etter innsetting.' },
+      ],
     },
   },
 

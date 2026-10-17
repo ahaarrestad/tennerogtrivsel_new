@@ -289,6 +289,17 @@ describe('editMelding', () => {
             expect(saveBtn.textContent).toContain('Opprett melding');
         });
 
+        it('Avbryt går tilbake til lista uten inline-handler (CSP blokkerer onclick)', async () => {
+            await window.editMelding(null, null);
+            const cancelBtn = document.getElementById('btn-cancel-melding');
+            expect(cancelBtn.hasAttribute('onclick')).toBe(false);
+            loadMeldingerModule.mockClear();
+
+            cancelBtn.click();
+
+            expect(loadMeldingerModule).toHaveBeenCalledTimes(1);
+        });
+
         it('should create file on Opprett button click', async () => {
             stringifyMarkdown.mockReturnValue('md');
             createFile.mockResolvedValue();
