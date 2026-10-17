@@ -204,9 +204,12 @@ const BILDER_FOLDER = import.meta.env.PUBLIC_GOOGLE_DRIVE_BILDER_FOLDER_ID;
         <div class="flex flex-col h-full max-h-[85vh]">
             <div class="p-6 border-b border-admin-hover flex justify-between items-center bg-white sticky top-0 z-10">
                 <h3 class="text-lg font-black uppercase tracking-tight text-brand">Velg bilde</h3>
-                <button onclick="document.getElementById('image-picker-modal').close()" class="p-2 rounded-lg text-admin-muted-light hover:text-admin-muted hover:bg-admin-hover transition-colors cursor-pointer" aria-label="Lukk">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
+                <!-- method="dialog" lukker dialogen uten JS — inline onclick blokkeres av CSP -->
+                <form method="dialog">
+                    <button class="p-2 rounded-lg text-admin-muted-light hover:text-admin-muted hover:bg-admin-hover transition-colors cursor-pointer" aria-label="Lukk">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </form>
             </div>
             
             <div class="p-6 bg-admin-surface overflow-y-auto grow">

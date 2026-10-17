@@ -133,6 +133,16 @@ test.describe('Admin-panel Fase 1', () => {
     expect(criticalErrors, `Fant JS-feil i konsollen: ${criticalErrors.join(', ')}`).toHaveLength(0);
   });
 
+  test('lukkeknappen i bildevelgeren lukker dialogen (ingen inline-handler som CSP blokkerer)', async ({ page }) => {
+    await page.goto('/admin');
+    const modal = page.locator('#image-picker-modal');
+    await modal.evaluate((el: HTMLDialogElement) => el.showModal());
+    await expect(modal).toBeVisible();
+
+    await modal.getByRole('button', { name: 'Lukk' }).click();
+    await expect(modal).toBeHidden();
+  });
+
   test('skal kunne åpne meldinger og se sortert liste', async ({ page }) => {
     await setupMocks(page, {
         messages: [
