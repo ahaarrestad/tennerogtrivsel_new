@@ -80,8 +80,8 @@ export default [
       'no-unused-vars': ['error', { vars: 'all', args: 'none', caughtErrors: 'none', ignoreRestSiblings: true }],
       // Inline-handlere i HTML-strenger blokkeres av CSP (script-src med hasher) — bruk addEventListener
       'no-restricted-syntax': ['error',
-        { selector: 'TemplateElement[value.raw=/\\son[a-z]+=/]', message: 'Inline on*-handler blokkeres av CSP — bruk addEventListener etter innsetting.' },
-        { selector: 'Literal[value=/\\son[a-z]+=/]', message: 'Inline on*-handler blokkeres av CSP — bruk addEventListener etter innsetting.' },
+        { selector: 'TemplateElement[value.raw=/\\son[a-z]+\\s*=/i]', message: 'Inline on*-handler blokkeres av CSP — bruk addEventListener etter innsetting.' },
+        { selector: 'Literal[value=/\\son[a-z]+\\s*=/i]', message: 'Inline on*-handler blokkeres av CSP — bruk addEventListener etter innsetting.' },
       ],
     },
   },
