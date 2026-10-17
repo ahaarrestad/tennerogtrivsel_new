@@ -135,6 +135,10 @@ test.describe('Admin-panel Fase 1', () => {
 
   test('lukkeknappen i bildevelgeren lukker dialogen (ingen inline-handler som CSP blokkerer)', async ({ page }) => {
     await page.goto('/admin');
+    // CI tester mot `astro preview` uten CSP-header, så klikk-sjekken under biter bare lokalt.
+    // Denne sjekken biter overalt: inline-handlere blokkeres av script-src i prod.
+    await expect(page.locator('[onclick]')).toHaveCount(0);
+
     const modal = page.locator('#image-picker-modal');
     await modal.evaluate((el: HTMLDialogElement) => el.showModal());
     await expect(modal).toBeVisible();
