@@ -334,6 +334,17 @@ describe('editTjeneste', () => {
             expect(saveBtn.textContent).toContain('Opprett tjeneste');
         });
 
+        it('Avbryt går tilbake til lista uten inline-handler (CSP blokkerer onclick)', async () => {
+            await window.editTjeneste(null, null);
+            const cancelBtn = document.getElementById('btn-cancel-tjeneste');
+            expect(cancelBtn.hasAttribute('onclick')).toBe(false);
+            loadTjenesterModule.mockClear();
+
+            cancelBtn.click();
+
+            expect(loadTjenesterModule).toHaveBeenCalledTimes(1);
+        });
+
         it('should not render priority input for new tjeneste', async () => {
             await window.editTjeneste(null, null);
 

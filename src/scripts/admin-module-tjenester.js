@@ -59,7 +59,7 @@ async function editTjeneste(id, name) {
         const buttonHtml = id
             ? ''
             : `<button id="btn-save-tjeneste" class="btn-primary py-4 px-8 shadow-xl uppercase font-black tracking-widest text-xs">Opprett tjeneste</button>
-                    <button onclick="window.loadTjenesterModule()" class="admin-btn-cancel">Avbryt</button>`;
+                    <button id="btn-cancel-tjeneste" class="admin-btn-cancel">Avbryt</button>`;
 
         // safe: renderToggleHtml bruker hardkodet id og boolean isActive; buttonHtml er hardkodet HTML-streng
         inner.innerHTML = `
@@ -136,6 +136,7 @@ async function editTjeneste(id, name) {
         } else {
             // Manual create for new tjenester
             attachToggleClick('edit-active-toggle');
+            document.getElementById('btn-cancel-tjeneste')?.addEventListener('click', reloadTjenester);
             const saveBtn = document.getElementById('btn-save-tjeneste');
             if (saveBtn) {
                 saveBtn.onclick = async () => {

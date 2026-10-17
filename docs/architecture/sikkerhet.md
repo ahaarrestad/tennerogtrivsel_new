@@ -15,6 +15,13 @@ inner.querySelectorAll('.my-btn').forEach(btn => {
 });
 ```
 
+Det gjelder også HTML som **ikke** går gjennom DOMPurify, og statisk markup i `.astro`-filer: CSP-en
+(`script-src` med hasher, uten `'unsafe-hashes'`) blokkerer alle inline handlere i prod. De feiler stille
+— knappen gjør bare ingenting. Lukkeknapp i `<dialog>`: bruk `<form method="dialog"><button>`.
+ESLint-regelen `no-restricted-syntax` (i `eslint.config.js`) stopper `on…=` i strenger i `src/scripts/`,
+og E2E-testen i `tests/admin.spec.ts` sjekker at `/admin` ikke har `[onclick]`. Merk at CI kjører E2E mot
+`astro preview` uten CSP-header, så en klikk-test alene fanger ikke dette der.
+
 I node-miljø (Vitest) finnes ingen DOM, så DOMPurify må mockes i testfiler:
 ```js
 vi.mock('dompurify', () => ({ default: { sanitize: vi.fn(html => html) } }));

@@ -65,7 +65,7 @@ export function renderToggleSwitch(dataAttr, dataValue, isActive) {
  * Genererer HTML for edit- og delete-knapper.
  */
 export function renderActionButtons(editClass, deleteClass, dataAttrs) {
-    return `<div class="flex gap-2 shrink-0" onclick="event.stopPropagation()">
+    return `<div class="flex gap-2 shrink-0">
         <button ${dataAttrs} class="${editClass} admin-icon-btn group/btn" title="Rediger">${ICON_EDIT}</button>
         <button ${dataAttrs} class="${deleteClass} admin-icon-btn-danger group/btn" title="Slett">${ICON_DELETE}</button>
     </div>`;
@@ -438,7 +438,7 @@ export async function loadMeldingerModule(folderId, onEdit, onDelete) {
                 );
 
                 html += `
-                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${hasOverlap ? 'admin-status-warning' : ''}" onclick="this.querySelector('.edit-btn').click()">
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${hasOverlap ? 'admin-status-warning' : ''}"">
                         <div class="min-w-0 flex-grow w-full">
                             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 mb-1.5">
                                 <span class="admin-status-pill ${statusClass} shrink-0">
@@ -506,7 +506,7 @@ export async function loadTjenesterModule(folderId, onEdit, onDelete, onToggleAc
                 const isLast = idx === services.length - 1;
 
                 html += `
-                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!isActive ? 'opacity-60' : ''}" onclick="this.querySelector('.edit-btn').click()">
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!isActive ? 'opacity-60' : ''}"">
                         <div class="min-w-0 flex-grow">
                             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3 mb-1">
                                 ${renderToggleSwitch('id', s.driveId, isActive)}
@@ -581,7 +581,7 @@ export async function loadTannlegerModule(sheetId, onEdit, onDelete, parentFolde
             html += `<div class="grid grid-cols-1 gap-4 max-w-5xl">`;
             dentists.forEach((t) => {
                 html += `
-                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!t.active ? 'opacity-60' : ''}" onclick="this.querySelector('.edit-tannlege-btn').click()">
+                    <div class="admin-card-interactive group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${!t.active ? 'opacity-60' : ''}"">
                         <div class="flex items-center gap-3 flex-grow min-w-0 w-full">
                             <div class="shrink-0 w-12 sm:w-14 aspect-[3/4] rounded-lg overflow-hidden bg-admin-hover flex items-center justify-center" data-thumb-row="${t.rowIndex}">
                                 ${ICON_PERSON}
