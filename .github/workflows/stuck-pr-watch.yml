@@ -2,8 +2,8 @@ name: Stuck PR Watch
 
 # Finner PR-er med auto-merge som ikke er merget innen rimelig tid. En auto-merge-PR merges
 # normalt på under 5 minutter; står den fortsatt åpen etter 6 timer, sitter den fast —
-# rød ci-ok, en CodeQL-alert som code scanning-regelen i rulesettet blokkerer på, eller en
-# CodeQL-analyse som har feilet. Uten denne vakta ville en blokkert Dependabot- eller
+# branchen er bak main (klassisk branch protection er strict), rød ci-ok, en CodeQL-alert
+# som code scanning-regelen i rulesettet blokkerer på, eller en CodeQL-analyse som har feilet. Uten denne vakta ville en blokkert Dependabot- eller
 # sikkerhetsfiks-PR ligge stille. Se docs/architecture/sikkerhet.md#codeql-porten.
 #
 # Ved funn åpnes én issue med etiketten `pr-stuck` (dedupes mot åpne). Den lukkes automatisk
@@ -48,7 +48,7 @@ jobs:
           gh pr list --state open --limit 100 \
             --json number,title,url,autoMergeRequest,mergeStateStatus \
             --jq ".[] | select(.autoMergeRequest != null and .autoMergeRequest.enabledAt <= \"$GRENSE\")
-                  | \"- #\(.number) [\(.title)](\(.url)) — mergeStateStatus \`\(.mergeStateStatus)\`, auto-merge på siden \(.autoMergeRequest.enabledAt)\"" \
+                  | \"- #\(.number) \(.url) — \`\(.title | gsub(\"\`\"; \"'\"))\` — mergeStateStatus \`\(.mergeStateStatus)\`, auto-merge på siden \(.autoMergeRequest.enabledAt)\"" \
             > fastlaast.md
           if [ -s fastlaast.md ]; then
             echo "funn=true" >> "$GITHUB_OUTPUT"
@@ -77,8 +77,9 @@ jobs:
             echo
             cat fastlaast.md
             echo
-            echo "Vanlige årsaker: rød \`ci-ok\`, en CodeQL-alert (high/critical) som rulesettet blokkerer på,"
-            echo "eller en feilet CodeQL-analyse. Se docs/architecture/sikkerhet.md#codeql-porten."
+            echo "Vanlige årsaker: \`BEHIND\` (branchen ligger bak main — \`gh pr update-branch <nr>\` eller \`@dependabot rebase\`),"
+            echo "rød \`ci-ok\`, en CodeQL-alert (high/critical) som rulesettet blokkerer på, eller en feilet CodeQL-analyse."
+            echo "Se docs/architecture/sikkerhet.md#codeql-porten."
             echo
             echo "Kjøring: $RUN_URL"
             echo
