@@ -19,6 +19,12 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
+- [ ] **CI: gjør CodeQL til en blokkerende sjekk** ([plan](docs/plans/2026-10-20-codeql-blokkerende.md))
+  - PR #456 (2026-09-08) auto-merget mens CodeQL var rød med en **high**-alert: `js/incomplete-url-substring-sanitization` i `scripts/cloudfront-strip-tiles-prefix.js`. Funnet var reelt — `host.indexOf('aarrestad.com')` matcher også `aarrestad.com.angriper.example` — og ble fikset i #457, men først *etter* at den sårbare versjonen var deployet til prod
+  - `Analyze (javascript-typescript)` og `Analyze (actions)` er grønne selv når CodeQL rapporterer alerts; det er den separate `CodeQL`-sjekken (code scanning-resultatet) som blir rød. Den må inn i branch protection som required check
+  - Vurder samtidig: skal `gh pr merge --auto` i `auto-pr.yml` vente på den, og hva er terskelen — kun `high`/`critical`, eller alle nye alerts?
+  - Avveining å ta stilling til: en blokkerende CodeQL gjør at falske positiver stopper deployen. Trengs en dokumentert vei for å dismisse en alert med begrunnelse
+
 ## Backlog
 
 - [ ] **a11y-tester i WebKit er CPU-bundet og timer ut under tung ytre last** — *ingen plan ennå*
@@ -102,12 +108,6 @@
     - CSP: `connect-src` må dekke range-requests mot eget origin. Canvas-rendering trenger ikke `eval`
     - Panorering: `dragging` er på for desktop i `getMapOptions`, så en besøkende kan panorere ut av uttrekket. Vurder `maxBounds` eller et større uttrekk
   - Vektor overzoomer fra z15 (planetbyggets maks) til z17–19 uten mer data og holder seg skarpt. Individuelle OSM-bygninger finnes fra z15
-
-- [ ] **CI: gjør CodeQL til en blokkerende sjekk** — *ingen plan ennå*
-  - PR #456 (2026-09-08) auto-merget mens CodeQL var rød med en **high**-alert: `js/incomplete-url-substring-sanitization` i `scripts/cloudfront-strip-tiles-prefix.js`. Funnet var reelt — `host.indexOf('aarrestad.com')` matcher også `aarrestad.com.angriper.example` — og ble fikset i #457, men først *etter* at den sårbare versjonen var deployet til prod
-  - `Analyze (javascript-typescript)` og `Analyze (actions)` er grønne selv når CodeQL rapporterer alerts; det er den separate `CodeQL`-sjekken (code scanning-resultatet) som blir rød. Den må inn i branch protection som required check
-  - Vurder samtidig: skal `gh pr merge --auto` i `auto-pr.yml` vente på den, og hva er terskelen — kun `high`/`critical`, eller alle nye alerts?
-  - Avveining å ta stilling til: en blokkerende CodeQL gjør at falske positiver stopper deployen. Trengs en dokumentert vei for å dismisse en alert med begrunnelse
 
 - [ ] **Personvern: navngi overføringsgrunnlaget til USA (GDPR art. 13 nr. 1 bokstav f)** — *ingen plan ennå*
   - Personvernerklæringen opplyser nå (2026-09-08) at IP-adressen kan overføres til USA ved cache-miss på karttiles. Det utløser plikten til å oppgi *hvilken* garanti overføringen hviler på — EU-US Data Privacy Framework-sertifisering, standard personvernbestemmelser (SCC) eller annet — og hvor den kan etterses

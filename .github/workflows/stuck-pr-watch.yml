@@ -1,0 +1,98 @@
+name: Stuck PR Watch
+
+# Finner PR-er med auto-merge som ikke er merget innen rimelig tid. En auto-merge-PR merges
+# normalt på under 5 minutter; står den fortsatt åpen etter 6 timer, sitter den fast —
+# rød ci-ok, en CodeQL-alert som code scanning-regelen i rulesettet blokkerer på, eller en
+# CodeQL-analyse som har feilet. Uten denne vakta ville en blokkert Dependabot- eller
+# sikkerhetsfiks-PR ligge stille. Se docs/architecture/sikkerhet.md#codeql-porten.
+#
+# Ved funn åpnes én issue med etiketten `pr-stuck` (dedupes mot åpne). Den lukkes automatisk
+# når ingen PR sitter fast. Selve kjøringen er grønn i begge tilfeller — rødt betyr at
+# workflowen er ødelagt. Samme filosofi som uptime-check.yml.
+
+on:
+  schedule:
+    - cron: '41 */3 * * *' # hver 3. time, skjevt fra hel time
+  workflow_dispatch:
+    inputs:
+      min_age_hours:
+        description: 'Timer siden auto-merge ble slått på før PR-en regnes som fastlåst (0 for testing)'
+        default: '6'
+
+concurrency: stuck-pr-watch
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+
+jobs:
+  watch:
+    name: Ingen auto-merge-PR sitter fast
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Finn fastlåste PR-er
+        id: finn
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          MIN_AGE_HOURS: ${{ inputs.min_age_hours || '6' }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$MIN_AGE_HOURS" =~ ^[0-9]+$ ]]; then
+            echo "::error::min_age_hours må være et heltall, fikk '$MIN_AGE_HOURS'"
+            exit 1
+          fi
+          GRENSE=$(date -u -d "-${MIN_AGE_HOURS} hours" +%Y-%m-%dT%H:%M:%SZ)
+          gh pr list --state open --limit 100 \
+            --json number,title,url,autoMergeRequest,mergeStateStatus \
+            --jq ".[] | select(.autoMergeRequest != null and .autoMergeRequest.enabledAt <= \"$GRENSE\")
+                  | \"- #\(.number) [\(.title)](\(.url)) — mergeStateStatus \`\(.mergeStateStatus)\`, auto-merge på siden \(.autoMergeRequest.enabledAt)\"" \
+            > fastlaast.md
+          if [ -s fastlaast.md ]; then
+            echo "funn=true" >> "$GITHUB_OUTPUT"
+            cat fastlaast.md
+          else
+            echo "funn=false" >> "$GITHUB_OUTPUT"
+            echo "Ingen fastlåste PR-er (grense: auto-merge slått på før $GRENSE)."
+          fi
+
+      - name: Opprett issue
+        if: steps.finn.outputs.funn == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          gh label create pr-stuck --description "Watchdog: auto-merge-PR sitter fast" --color d93f0b --force
+          AAPNE=$(gh issue list --label pr-stuck --state open --limit 1 --json number --jq 'length')
+          if [ "$AAPNE" != "0" ]; then
+            echo "Åpen pr-stuck-issue finnes allerede — gjør ingenting."
+            exit 0
+          fi
+          {
+            echo "@ahaarrestad \`stuck-pr-watch.yml\` fant PR-er med auto-merge som ikke er merget:"
+            echo
+            cat fastlaast.md
+            echo
+            echo "Vanlige årsaker: rød \`ci-ok\`, en CodeQL-alert (high/critical) som rulesettet blokkerer på,"
+            echo "eller en feilet CodeQL-analyse. Se docs/architecture/sikkerhet.md#codeql-porten."
+            echo
+            echo "Kjøring: $RUN_URL"
+            echo
+            echo "Issuen lukkes automatisk når ingen PR sitter fast."
+          } > body.md
+          gh issue create --label pr-stuck --title "Auto-merge-PR sitter fast" --body-file body.md
+
+      - name: Lukk issue når ingen PR sitter fast
+        if: steps.finn.outputs.funn == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          for NR in $(gh issue list --label pr-stuck --state open --json number --jq '.[].number'); do
+            gh issue close "$NR" --comment "Ingen auto-merge-PR sitter fast lenger — lukkes automatisk."
+          done
