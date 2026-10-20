@@ -3,6 +3,11 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **CI: gjør CodeQL til en blokkerende sjekk** ([plan](docs/plans/archive/2026-10-20-codeql-blokkerende.md))
+  - **Problem:** PR #456 ble auto-merget og deployet med en high-alert (`js/incomplete-url-substring-sanitization`) fordi ingen regel på main krevde CodeQL.
+  - **Fiks:** regelen «Require code scanning results» i rulesettet «Status Checks» (CodeQL, security `high_or_higher`, alerts `errors`). Ny vakt `stuck-pr-watch.yml` åpner en `pr-stuck`-issue når en auto-merge-PR ikke er merget innen 6 t, så en blokkert PR ikke blir liggende stille. CodeQL-timeout 360 → 30 min. Dokumentert i `docs/architecture/sikkerhet.md#codeql-porten` (dismiss, nødopplåsing, begrensninger).
+  - **Verifisert 2026-10-20:** #506 merget automatisk med regelen aktiv. Probe-PR #507 (samme mønster som #456) var `BLOCKED` med high-alert #25 og grønn `ci-ok`, og gikk til `CLEAN` etter dismiss. Vakta åpnet og lukket #508. Probe lukket uten merge.
+
 - [x] **Scheduled Security Audit bør opprette issue, ikke bare feile**
   - **Problem:** en rød scheduled-kjøring ga bare en e-post; kjøring `34843733661` (2026-09-14) fanget GHSA-26w7-cxv4-gfx2 uten at noen handlet, og en innholdsdeploy ble blokkert ~32 timer senere.
   - **Løst underveis i andre oppgaver** (oppdaget 2026-10-15): `scheduled-audit.yml` prøver først en automatisk fiks, og holder den ikke åpnes en issue med etiketten `security-audit` (dedupe på etikett, ikke tittel). Issuen lukkes automatisk når auditen er grønn igjen, og `/helsesjekk` leser den som signal. Ingen egen plan.
