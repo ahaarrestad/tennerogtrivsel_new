@@ -12,7 +12,7 @@ jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30 # analysen tar ~1 min; en hengende kjøring blokkerer PR-en (code scanning-regelen) til den feiler
+    timeout-minutes: 30 # analysen tar ~1 min; en hengende kjøring feiler etter 30 min i stedet for 6 t, men PR-en er blokkert (code scanning-regelen) til CodeQL kjøres på nytt
     permissions:
       actions: read
       contents: read
