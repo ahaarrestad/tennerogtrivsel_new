@@ -12,7 +12,7 @@ jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 30 # analysen tar ~1 min; en hengende kjøring blokkerer PR-en (code scanning-regelen) til den feiler
     permissions:
       actions: read
       contents: read

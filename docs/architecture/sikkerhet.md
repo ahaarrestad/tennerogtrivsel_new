@@ -328,29 +328,47 @@ Auto-merge av Dependabot-PR-er fungerer trygt kun fordi vi har en **cooldown**-p
 
 | Flyt | Cooldown | Auto-merge | Manuell review |
 |------|----------|------------|----------------|
-| `version-updates` (patch/minor) | 3–7 dager | Ja, etter alle CI-sjekker er grønne | Nei |
+| `version-updates` (patch/minor) | 3–7 dager | Ja, etter alle CI-sjekker er grønne og CodeQL ikke har funnet nye high/critical | Nei |
 | `version-updates` (major) | 30 dager | Nei | Ja — flagges med assignee/reviewer |
-| `security-updates` (CVE via GHSA, patch) | Ingen | Ja, etter alle CI-sjekker er grønne | Nei |
+| `security-updates` (CVE via GHSA, patch) | Ingen | Ja, etter alle CI-sjekker er grønne og CodeQL ikke har funnet nye high/critical | Nei |
 | `security-updates` (CVE via GHSA, minor/major) | Ingen | Nei | Ja — flagges med assignee/reviewer |
 
 **Cooldown er et supplement, ikke en erstatning.** CI-sjekker (`npm audit signatures`, unit-/E2E-tester, `npm audit --audit-level=critical`) skal passere før auto-merge fyrer. Cooldown beskytter mot ukjente angrep i nye versjoner; audit-sjekker og tester beskytter mot kjente (signaturbrudd, regresjoner).
 
 **PR-porten er `ci-ok`, ikke `build`.** Rulesettet på main krever status-sjekken `ci-ok` (job i `deploy.yml`), som feiler med mindre unit-tests, e2e-tests, lint og type-check alle er `success`. `build` hoppes over på `pull_request`, og en overhoppet jobb teller som *bestått* for en påkrevd sjekk — fram til oktober 2026 var `build` den påkrevde sjekken, så auto-merge ventet i praksis ikke på testene.
 
+#### CodeQL-porten
+
+Rulesettet «Status Checks» (id 11887929, konfigurert i GitHub under Settings → Rules — ikke i repoet) har siden oktober 2026 også regelen «Require code scanning results»:
+
+```json
+{"type": "code_scanning", "parameters": {"code_scanning_tools": [
+  {"tool": "CodeQL", "security_alerts_threshold": "high_or_higher", "alerts_threshold": "errors"}]}}
+```
+
+- **Blokkerer:** en PR som innfører en CodeQL-alert med sikkerhetsalvorlighet high eller critical, eller en ikke-sikkerhetsalert på nivå `error`. Medium/low slipper gjennom. Regelen blokkerer også mens analysen pågår og når CodeQL ikke har rapportert, så `gh pr merge --auto` (alle auto-merge-stiene) venter på den. Bakgrunn: PR #456 ble auto-merget og deployet med en high-alert før fiksen i #457.
+- **Dekker ikke:** kun CodeQL er påkrevd verktøy. osv-scanner laster opp til code scanning bare fra `scheduled-audit.yml` på main og ville blokkert alle PR-er; osv- og Dependabot-alerts håndteres av scheduled-audit og Dependabot. Bare alerts der *alle* linjene ligger i PR-diffen teller — en ny dataflyt der kilden er endret, men sinken ligger i uendret kode, blokkerer ikke.
+- **To lag:** rulesettet (build + ci-ok + code scanning) og den eldre klassiske branch protection (unit-tests, e2e-tests, build; strict). Begge må være oppfylt.
+- **Uverifisert:** GitHub krever resultater for både commiten og ref-en som oppdateres. En feilet CodeQL-kjøring på main kan derfor tenkes å blokkere alle PR-er — kjør CodeQL på main på nytt.
+- **Falsk positiv:** Security → Code scanning → alerten → «Dismiss alert» med grunn «False positive», «Used in tests» eller «Won't fix», og alltid en kommentar som forklarer hvorfor. PR-en går da fra `BLOCKED` til `CLEAN` uten ny push.
+- **Nødopplåsing** (f.eks. CodeQL-utfall hos GitHub og en hastefiks): Settings → Rules → «Status Checks» → fjern code scanning-regelen, eller sett enforcement til «Evaluate». Husk å sette den tilbake.
+- **Varsling:** en blokkert PR er ellers stille. `stuck-pr-watch.yml` (se under) åpner en `pr-stuck`-issue når en auto-merge-PR ikke er merget innen 6 timer. Det fanger også en codeql-action-bump som får nye spørringer og blir blokkert, og en CodeQL-analyse som henger (job-timeout 30 min).
+
 **Security-splitting i `dependabot-auto-merge.yml`:** Security-PR-er kjennes på `dependency-group` fra `dependabot/fetch-metadata` — gruppene heter `*security-updates` i `dependabot.yml`. `alert-state` er også sjekket, men er alltid tom uten `alert-lookup: true` og en token med tilgang til Dependabot-alerts; fram til oktober 2026 var den eneste sjekk, så security-PR-er på minor ble auto-merget uten flagging. Auto-merge kjøres for version-updates når `update-type != 'version-update:semver-major'`, og for security-PR-er kun når `update-type == 'version-update:semver-patch'`. En patch-fiks for en kjent CVE er lav risiko, og å la den vente på manuell review holder sårbarheten åpen lenger. Security-PR-er på minor/major flagges for manuell review.
 
-### Selvhelende drift: audit-fiks og oppetidssjekk
+### Selvhelende drift: audit-fiks, oppetidssjekk og fastlåste PR-er
 
-Målet er at siden holder seg trygg uten at noen må følge med. To planlagte workflows gir bare lyd når noe faktisk krever et menneske — som en issue med `@ahaarrestad`-omtale (gir varsel):
+Målet er at siden holder seg trygg uten at noen må følge med. Tre planlagte workflows gir bare lyd når noe faktisk krever et menneske — som en issue med `@ahaarrestad`-omtale (gir varsel):
 
 | Workflow | Når | Gjør selv | Issue (etikett) |
 |----------|-----|-----------|-----------------|
-| `scheduled-audit.yml` | Daglig 06:00 UTC | Feiler auditen (høy/kritisk, minus unntak — se under): `npm audit fix --package-lock-only` (rot + lambda), verifiserer med `npm ci` + audit, og åpner PR fra `auto/npm-audit-fix` med auto-merge. CI avgjør om den merges. | `security-audit` — når fiksen ikke gjør auditen grønn (typisk major-bump eller override), når `npm ci` feiler på den fiksede lockfila, eller når `npm audit` selv feiler (teksten sier hvilket). Lukkes automatisk når auditen er grønn. |
+| `scheduled-audit.yml` | Daglig 06:00 UTC | Feiler auditen (høy/kritisk, minus unntak — se under): `npm audit fix --package-lock-only` (rot + lambda), verifiserer med `npm ci` + audit, og åpner PR fra `auto/npm-audit-fix` med auto-merge. CI og CodeQL-porten avgjør om den merges. | `security-audit` — når fiksen ikke gjør auditen grønn (typisk major-bump eller override), når `npm ci` feiler på den fiksede lockfila, eller når `npm audit` selv feiler (teksten sier hvilket). Lukkes automatisk når auditen er grønn. |
 | `uptime-check.yml` | Hver time | Sjekker at forsiden gir 200 med riktig `<title>`, at sikkerhetsheaderne fra CloudFront finnes, at http/apex ender på `https://www…/`, og at TLS har ≥ 14 dager igjen. | `uptime` — ved første feil (dedupes mot åpne). Lukkes automatisk når sjekken er grønn. |
+| `stuck-pr-watch.yml` | Hver 3. time | Finner åpne PR-er der auto-merge har vært på i over 6 timer (normalt merges de på under 5 min): rød `ci-ok`, CodeQL-blokkering eller feilet analyse. | `pr-stuck` — én issue som lister PR-ene (dedupes mot åpne). Lukkes automatisk når ingen sitter fast. |
 
 **Kjente funn uten fiks:** `osv-scanner.toml` i roten er eneste unntaksliste. OSV-scanneren leser den med `--config` (gjelder alle lockfiler), og npm-auditen leser den via `.github/scripts/npm-audit-check.sh`, som teller høy/kritisk-advisories minus unntakene. Hvert unntak må ha `ignoreUntil = YYYY-MM-DD` og en `reason`. Uten dato feiler skriptet, så evige unntak er umulige. Når datoen passeres, varsler begge igjen. Unntak gjelder bare den planlagte auditen (OSV leser også `osv-scanner.toml` automatisk fra lockfilens katalog, så legges OSV inn i PR-CI, gjelder de der også). Deploy-gaten (`--audit-level=critical`) har ingen unntak.
 
-Begge workflowene dedupes på etikett mot åpne issues, så et vedvarende problem gir én issue, ikke én per kjøring. `uptime-check.yml` er grønn også når den finner feil — rød kjøring betyr at selve workflowen er ødelagt.
+Workflowene dedupes på etikett mot åpne issues, så et vedvarende problem gir én issue, ikke én per kjøring. `uptime-check.yml` og `stuck-pr-watch.yml` er grønne også når de finner feil — rød kjøring betyr at selve workflowen er ødelagt.
 
 **Hvorfor `auto/npm-audit-fix` og ikke `review/**`:** `auto-pr.yml` lager PR for `review/**`-pusher, og ville kappløpt med workflowen. Pushen gjøres med `MY_GITHUB_PAT` fordi en push med `GITHUB_TOKEN` ikke trigger CI, og uten `ci-ok`-sjekken merges PR-en aldri.
 

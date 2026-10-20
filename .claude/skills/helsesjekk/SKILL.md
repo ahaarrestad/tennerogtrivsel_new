@@ -15,7 +15,7 @@ at brukeren ber om det.
 
 Uptime-sjekken og vaktjobbene er **grønne også når de har funnet et problem** — funnet kommer som
 en issue (etiketter `uptime`, `security-audit`, `sikkerhet-auto`, `ts7-watch`, `override-watch`,
-`node-security-watch`, `node-lts-watch`). En rød kjøring av dem betyr at selve workflowen er
+`node-security-watch`, `node-lts-watch`, `pr-stuck`). En rød kjøring av dem betyr at selve workflowen er
 ødelagt. Åpne issues er derfor den viktigste sjekken.
 
 ## Sjekker
@@ -43,6 +43,7 @@ gh run list --workflow "Scheduled Security Audit" --limit 3 --json createdAt,con
 gh run list --workflow "Dependabot Updates" --limit 5 --json createdAt,conclusion,displayTitle,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId) \(.displayTitle)"'
 gh run list --workflow "Blocked Upgrades Watch" --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
 gh run list --workflow "Node Version Watch" --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
+gh run list --workflow "Stuck PR Watch" --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
 gh run list --workflow codeql.yml --branch main --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
 ```
 
@@ -63,6 +64,7 @@ dynamiske), så `--workflow "CodeQL"` feiler.
 - **Gammelt Drive-bygg** er normalt — det betyr bare at ingen har endret innhold siden.
 - **Vaktjobbene** (Blocked Upgrades Watch, Node Version Watch) kjører mandager; en kjøring på
   inntil 8 dager er normal.
+  Stuck PR Watch kjører hver 3. time og hører til samme rad; eldre enn ~12 timer → ⚠️.
 
 ## Svar
 
