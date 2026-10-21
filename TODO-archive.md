@@ -3,6 +3,12 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **Mobil: hele telefonkortet i Kontakt er en tel:-lenke** ([plan](docs/plans/archive/2026-10-21-telefonkort-mobil-lenke.md))
+  - **Problem:** på mobil var bare telefonnummeret klikkbart på telefonkortet, og treffflaten var for liten.
+  - **Fiks:** ny `TelefonKort.astro` rendrer kortet i to varianter som `TelefonKnapp.astro`: under `lg` er hele kortet én `tel:`-lenke med «Ring oss →», fra `lg` et ikke-interaktivt kort som før. Mangler nummeret, rendres ett kort uten lenke. `Card.astro` fikk en `class`-prop, og pilene i kortlenkene er `aria-hidden`. Den døde `formatInfoText` (med sin `set:html`-bane) er fjernet fra `textFormatter.js`.
+  - Nummeret er nå vanlig brødtekst i kortet i stedet for en `text-brand`-lenke, fordi en lenke inni kort-lenka ville vært nestet.
+  - Testet med enhetstester (`Card`, `TelefonKort`) og E2E på `/` og `/kontakt/`: én synlig `tel:`-lenke som dekker hele kortet på 390 px, ingen på 1280 px.
+
 - [x] **CI: gjør CodeQL til en blokkerende sjekk** ([plan](docs/plans/archive/2026-10-20-codeql-blokkerende.md))
   - **Problem:** PR #456 ble auto-merget og deployet med en high-alert (`js/incomplete-url-substring-sanitization`) fordi ingen regel på main krevde CodeQL.
   - **Fiks:** regelen «Require code scanning results» i rulesettet «Status Checks» (CodeQL, security `high_or_higher`, alerts `errors`). Ny vakt `stuck-pr-watch.yml` åpner en `pr-stuck`-issue når en auto-merge-PR ikke er merget innen 6 t, så en blokkert PR ikke blir liggende stille. CodeQL-timeout 360 → 30 min. Dokumentert i `docs/architecture/sikkerhet.md#codeql-porten` (dismiss, nødopplåsing, begrensninger).
