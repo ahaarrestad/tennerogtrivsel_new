@@ -14,14 +14,6 @@
 
 ## Pågående
 
-- [ ] **HTTP/3 (QUIC) på CloudFront** ([plan](docs/plans/2026-10-21-http3-cloudfront.md))
-  - Prod-distribusjonen `E9Z51DQB2K1G4` kjører `HttpVersion: http2` — HTTP/3 er ikke aktivert
-  - Tiltak: endre til `http2and3`. Ingen ekstra kostnad, bakoverkompatibelt (klienter uten HTTP/3-støtte faller tilbake til HTTP/2)
-  - Nytte: raskere oppkobling (én rundtur), ingen head-of-line blocking ved pakketap, overlever nettverksbytte wifi↔mobil — treffer mobilbrukere på ujevnt nett
-  - Vurdert som større praktisk gevinst enn IPv6 for denne siden, og enklere (rører ikke DNS)
-  - Sjekk om test-distribusjonen `E2WXX7ZUR5NNP3` skal endres tilsvarende
-  - Beslektet med IPv6-oppgaven (nabo i samme CloudFront-config), men teknisk urelatert
-
 - [ ] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/2026-04-28-sikkerhetshardening.md))
   - Task 1, 2, 4–9, 11, 12 er fullført. Gjenstående tasks:
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*

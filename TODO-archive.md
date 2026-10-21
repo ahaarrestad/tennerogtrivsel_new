@@ -3,6 +3,12 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **HTTP/3 (QUIC) på CloudFront** ([plan](docs/plans/archive/2026-10-21-http3-cloudfront.md))
+  - **Problem:** begge distribusjonene sto på `HttpVersion: http2`. HTTP/3 gir raskere oppkobling, ingen head-of-line blocking ved pakketap og connection migration ved bytte mellom wifi og mobilnett.
+  - **Fiks:** `HttpVersion: http2and3` på test (`E2WXX7ZUR5NNP3`) og prod (`E9Z51DQB2K1G4`) som engangsendring med CLI (ingen kode forvalter feltet). Ingen ekstra kostnad ifølge AWS. Dokumentert i `docs/architecture/aws-infrastruktur.md`. IPv6-oppgaven har fått en merknad om at et fremtidig distribusjonsscript må beholde `http2and3`, og TLS-minimum på prod ligger som egen backlog-oppgave.
+  - **Verifisert 2026-10-21:** en normalisert config-diff viste bare `HttpVersion` (prod returnerte `FunctionAssociations` i annen rekkefølge, men med samme innhold). Begge distribusjonene står i Deployed. QUIC-sjekken (Chromium med tvunget QUIC) gir `nextHopProtocol h3` mot begge domenene, mot `ERR_QUIC_PROTOCOL_ERROR` før endringen. Prod svarer `HTTP/2 200` med `alt-svc: h3=":443"; ma=86400` på `/` og `/kontakt/`.
+  - **Rollback:** sett `http2` med samme fremgangsmåte. Nettlesere prøver QUIC i opptil 24 t etterpå (`ma=86400`).
+
 - [x] **Mobil: hele telefonkortet i Kontakt er en tel:-lenke** ([plan](docs/plans/archive/2026-10-21-telefonkort-mobil-lenke.md))
   - **Problem:** på mobil var bare telefonnummeret klikkbart på telefonkortet, og treffflaten var for liten.
   - **Fiks:** ny `TelefonKort.astro` rendrer kortet i to varianter som `TelefonKnapp.astro`: under `lg` er hele kortet én `tel:`-lenke med «Ring oss →», fra `lg` et ikke-interaktivt kort som før. Mangler nummeret, rendres ett kort uten lenke. `Card.astro` fikk en `class`-prop, og pilene i kortlenkene er `aria-hidden`. Den døde `formatInfoText` (med sin `set:html`-bane) er fjernet fra `textFormatter.js`.
