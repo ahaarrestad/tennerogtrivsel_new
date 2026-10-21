@@ -19,9 +19,6 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
-- [ ] **Mobil: hele telefonkortet i Kontakt skal være en tel:-lenke** ([plan](docs/plans/2026-10-21-telefonkort-mobil-lenke.md))
-  - På mobil er bare telefonnummeret klikkbart på telefonkortet, og treffflaten er for liten. Hele kortet skal være en `tel:`-lenke under `lg`; desktop uendret
-
 ## Backlog
 
 - [ ] **a11y-tester i WebKit er CPU-bundet og timer ut under tung ytre last** — *ingen plan ennå*
