@@ -28,6 +28,7 @@ AWS-konto: `382286755083`
 - **Aliases:** `tennerogtrivsel.no`, `www.tennerogtrivsel.no`, `tennerogtrivsel.net`, `www.tennerogtrivsel.net`, `tennerogtrivsel.com`, `www.tennerogtrivsel.com`
 - **Default root object:** `index.html`
 - **SSL:** SNI, TLSv1.1_2016 minimum
+- **HTTP-versjon:** HTTP/2 og HTTP/3 (`http2and3`)
 
 ### Test — `E2WXX7ZUR5NNP3`
 
@@ -35,6 +36,7 @@ AWS-konto: `382286755083`
 - **CloudFront-domene:** `dnpjnvcuk7ym7.cloudfront.net`
 - **Aliases:** `test2.aarrestad.com`, `test3.aarrestad.com`
 - **Default root object:** `index.html`
+- **HTTP-versjon:** HTTP/2 og HTTP/3 (`http2and3`)
 
 ---
 
@@ -382,6 +384,7 @@ en side som først finnes i det nye bygget, vil den kort gi 404 i vinduet mellom
    - Alternate domain names (CNAMEs): alle domener som skal peke hit
    - SSL certificate: velg ACM-sertifikat for domenet (us-east-1)
    - Security policy: TLSv1.1_2016 eller nyere
+   - Supported HTTP versions: HTTP/2, HTTP/3
 
 10. Klikk **Create distribution** og vent på status `Deployed`
 

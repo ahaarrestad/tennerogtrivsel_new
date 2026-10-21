@@ -14,6 +14,14 @@
 
 ## Pågående
 
+- [ ] **HTTP/3 (QUIC) på CloudFront** ([plan](docs/plans/2026-10-21-http3-cloudfront.md))
+  - Prod-distribusjonen `E9Z51DQB2K1G4` kjører `HttpVersion: http2` — HTTP/3 er ikke aktivert
+  - Tiltak: endre til `http2and3`. Ingen ekstra kostnad, bakoverkompatibelt (klienter uten HTTP/3-støtte faller tilbake til HTTP/2)
+  - Nytte: raskere oppkobling (én rundtur), ingen head-of-line blocking ved pakketap, overlever nettverksbytte wifi↔mobil — treffer mobilbrukere på ujevnt nett
+  - Vurdert som større praktisk gevinst enn IPv6 for denne siden, og enklere (rører ikke DNS)
+  - Sjekk om test-distribusjonen `E2WXX7ZUR5NNP3` skal endres tilsvarende
+  - Beslektet med IPv6-oppgaven (nabo i samme CloudFront-config), men teknisk urelatert
+
 - [ ] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/2026-04-28-sikkerhetshardening.md))
   - Task 1, 2, 4–9, 11, 12 er fullført. Gjenstående tasks:
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
@@ -64,14 +72,12 @@
   - Merk: apex redirecter kun til `www` (301), så IPv6 der gir en IPv6-tilgjengelig redirect, ikke IPv6-levering av siden
   - Route 53 avvist: hosted zone koster ~0,50 USD/mnd, og kravet var gratis
   - Ingen hast — verdien er læring og ryddighet, ikke brukergevinst
+  - Et fremtidig distribusjonsscript (f.eks. `setup-cloudfront-distribution.mjs`) må også sette `HttpVersion: http2and3`, ellers slår det av HTTP/3 igjen
 
-- [ ] **HTTP/3 (QUIC) på CloudFront** — *ingen plan ennå*
-  - Prod-distribusjonen `E9Z51DQB2K1G4` kjører `HttpVersion: http2` — HTTP/3 er ikke aktivert
-  - Tiltak: endre til `http2and3`. Ingen ekstra kostnad, bakoverkompatibelt (klienter uten HTTP/3-støtte faller tilbake til HTTP/2)
-  - Nytte: raskere oppkobling (én rundtur), ingen head-of-line blocking ved pakketap, overlever nettverksbytte wifi↔mobil — treffer mobilbrukere på ujevnt nett
-  - Vurdert som større praktisk gevinst enn IPv6 for denne siden, og enklere (rører ikke DNS)
-  - Sjekk om test-distribusjonen `E2WXX7ZUR5NNP3` skal endres tilsvarende
-  - Beslektet med IPv6-oppgaven (nabo i samme CloudFront-config), men teknisk urelatert
+- [ ] **Prod: hev minste TLS-versjon fra TLSv1.1_2016** — *ingen plan ennå*
+  - Prod-distribusjonen `E9Z51DQB2K1G4` har security policy `TLSv1.1_2016`; test har `TLSv1.2_2021`
+  - TLS 1.0 og 1.1 er utdatert. Sjekk om noen reelle klienter fortsatt trenger dem før policyen heves
+  - Funnet under HTTP/3-oppgaven (2026-10-21). HTTP/3 bruker alltid TLS 1.3 og påvirkes ikke
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
