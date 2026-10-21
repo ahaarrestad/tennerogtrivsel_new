@@ -36,6 +36,7 @@ AWS-konto: `382286755083`
 - **CloudFront-domene:** `dnpjnvcuk7ym7.cloudfront.net`
 - **Aliases:** `test2.aarrestad.com`, `test3.aarrestad.com`
 - **Default root object:** `index.html`
+- **SSL:** SNI, TLSv1.2_2021 minimum
 - **HTTP-versjon:** HTTP/2 og HTTP/3 (`http2and3`)
 
 ---

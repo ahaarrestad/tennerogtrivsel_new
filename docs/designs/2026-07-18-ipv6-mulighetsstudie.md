@@ -37,7 +37,9 @@ aws cloudfront get-distribution-config --id E9Z51DQB2K1G4 \
 | Prod | `E9Z51DQB2K1G4` | **`false`** | `http2` |
 | Test | `E2WXX7ZUR5NNP3` | **`true`** | `http2` |
 
-Prod og test er altså ute av sync på denne innstillingen. Test har IPv6 på, prod har det ikke.
+Prod og test er altså ute av sync på IPv6-innstillingen. Test har IPv6 på, prod har det ikke.
+(`HttpVersion` er siden endret til `http2and3` på begge, 2026-10-21, se
+[HTTP/3-planen](../plans/archive/2026-10-21-http3-cloudfront.md).)
 
 **Dette er et dokumentert avvik, ikke en ukjent.** Oppsettsplanen for prod-distribusjonen sier
 eksplisitt «**IPv6:** Behold aktivert»
@@ -287,5 +289,6 @@ Ingenting av dette haster, og ingenting bør gjøres før noen har lyst.
   CloudFront-, DNS- og AWS-oppsett
 - [`docs/plans/archive/2026-02-25-cloudfront-prod.md`](../plans/archive/2026-02-25-cloudfront-prod.md)
   — oppsettsplanen for prod-distribusjonen, som spesifiserte IPv6 aktivert
-- **HTTP/3 (QUIC) på CloudFront** — egen backlog-oppgave. Samme distribusjon, beslektet
-  innstilling (`HttpVersion`), men teknisk urelatert. Større brukergevinst enn IPv6.
+- [**HTTP/3 (QUIC) på CloudFront**](../plans/archive/2026-10-21-http3-cloudfront.md) — fullført
+  2026-10-21 (`HttpVersion: http2and3`). Samme distribusjon, beslektet innstilling, men teknisk
+  urelatert.
