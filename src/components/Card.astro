@@ -9,6 +9,7 @@ interface Props {
     isStack?: boolean;
     image?: boolean;
     external?: boolean;
+    class?: string;
 }
 
 const {
@@ -19,7 +20,8 @@ const {
     centered = true,
     isStack = true,
     image = false,
-    external = false
+    external = false,
+    class: className
 } = Astro.props;
 
 const Tag = href ? 'a' : 'div';
@@ -42,7 +44,8 @@ const cardStyles = {
                 "relative h-full": !isStack,
                 "items-center text-center justify-center": centered,
                 "items-start text-left": !centered
-            }
+            },
+            className
         ]}
 >
     <div class="card-accent-corner"></div>
@@ -83,7 +86,7 @@ const cardStyles = {
                     <slot name="link">
                         {href && (
                             <div class="card-link">
-                                Les mer <span class="ml-2 transition-transform group-hover:translate-x-1 inline-block">→</span>
+                                Les mer <span aria-hidden="true" class="ml-2 transition-transform group-hover:translate-x-1 inline-block">→</span>
                             </div>
                         )}
                     </slot>

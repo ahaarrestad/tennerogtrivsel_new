@@ -1,18 +1,4 @@
-// Formaterer tekst fra JSON for sikker visning i HTML.
-// Håndterer norske spesialtegn, e-post og telefonnummer.
-
-const emailRegex = /\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/gi;
-
-// Combined regex for all Norwegian phone number formats
-// Prioritize specific prefixed numbers first to avoid partial matches and nested links.
-const combinedPhoneRegex = new RegExp(
-    `(` +
-    `\\+47(?:\\s*\\d{2}){4}\\b` +
-    `|` +
-    `0047(?:\\s*\\d{2}){4}\\b` +
-    `|` +
-    `\\b[2-9]\\d{1}(?:\\s*\\d{2}){3}\\b` +
-    `)`, 'g');
+// Tekst- og datohjelpere: datoformat, StackEdit-opprydding, meldingssortering og slugs.
 
 const dateFormatter = new Intl.DateTimeFormat('no-NO', {
     day: 'numeric',
@@ -21,28 +7,6 @@ const dateFormatter = new Intl.DateTimeFormat('no-NO', {
 });
 
 const FALLBACK_END_DATE = '2099-12-31';
-
-const ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ESCAPE_MAP[c]);
-}
-
-export function formatInfoText(rawText) {
-    if (!rawText) return "";
-
-    let formattedText = escapeHtml(rawText)
-        .replace(emailRegex, '<a href="mailto:$1" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap">$1</a>');
-
-    formattedText = formattedText.replace(combinedPhoneRegex, (match, p1) => { // p1 will be the matched phone number string
-        const cleanNumber = p1.replace(/\s+/g, '');
-        // Mobil: tap-to-call-lenke. Desktop: ren tekst (<span>) utenfor tab-rekkefølgen,
-        // siden nummeret kun er informativt der og ikke skal være fokuserbart.
-        return `<a href="tel:${cleanNumber}" class="text-brand hover:text-brand-hover hover:no-underline whitespace-nowrap lg:hidden">${p1}</a>` +
-            `<span class="whitespace-nowrap hidden lg:inline">${p1}</span>`;
-    });
-
-    return formattedText;
-}
 
 /**
  * Formaterer en dato til "15. feb. 2026" formatet (norsk).
