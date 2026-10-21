@@ -66,6 +66,13 @@
   - Ingen hast — verdien er læring og ryddighet, ikke brukergevinst
   - Et fremtidig distribusjonsscript (f.eks. `setup-cloudfront-distribution.mjs`) må også sette `HttpVersion: http2and3`, ellers slår det av HTTP/3 igjen
 
+- [ ] **Audit-PR-er skal bli grønne selv, og fastlåste bot-PR-er skal varsles raskere** — *ingen plan ennå*
+  - **Problem (2026-10-21):** auto-PR #511 fra `scheduled-audit.yml` (vite 8.1.4 → 8.3.5, GHSA-587h-7wmj-h5pm) feilet på «Verify CSP hashes are in sync», fordi ny rolldown endret lightbox-scriptet i galleriet. PR-en endrer bare lockfila (`npm audit fix --package-lock-only`), så den kunne aldri bli grønn uten manuell regenerering av `src/generated/csp-hashes.json`
+  - **Varselet kom 6,5 t etter feilen:** `stuck-pr-watch.yml` regner en PR som fastlåst først etter 6 t og sjekker hver 3. time, og en rød bot-PR gir ingen e-post
+  - Tiltak 1: la auto-fiksen i `scheduled-audit.yml` kjøre `build:ci` + `generate-csp-hashes` og committe hashfila sammen med lockfila. Det samme kan gjelde Dependabot-PR-er som endrer bundleren
+  - Tiltak 2: varsle med en gang når `ci-ok` er rød på en auto-merge-PR, i stedet for å vente 6 t
+  - Tiltak 3 (fra review): prod-deployen legger ut ny HTML før CloudFront får ny CSP, så et endret inline-script kan blokkeres i noen minutter. Vurder å oppdatere CSP-en med gamle og nye hasher før S3-sync
+
 - [ ] **Prod: hev minste TLS-versjon fra TLSv1.1_2016** — *ingen plan ennå*
   - Prod-distribusjonen `E9Z51DQB2K1G4` har security policy `TLSv1.1_2016`; test har `TLSv1.2_2021`
   - TLS 1.0 og 1.1 er utdatert. Sjekk om noen reelle klienter fortsatt trenger dem før policyen heves
