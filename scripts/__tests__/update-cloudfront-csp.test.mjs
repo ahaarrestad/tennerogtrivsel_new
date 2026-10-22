@@ -81,12 +81,26 @@ describe('planCspUpdate', () => {
         expect(() => planCspUpdate({ currentCsp: cspFor([A]), buildHashes: [], merge })).toThrow(FatalError);
     });
 
-    it('for lang CSP gir FatalError med lengden i meldingen', () => {
-        const mange = Array.from({ length: 40 }, (_, i) => `sha256-${String(i).padStart(43, 'x')}=`);
+    const mange = Array.from({ length: 40 }, (_, i) => `sha256-${String(i).padStart(43, 'x')}=`);
+
+    it.each([true, false])('for lang CSP fra build alene gir FatalError med lengden (merge=%s)', (merge) => {
         const lengde = cspFor(mange).length;
         expect(lengde).toBeGreaterThan(MAX_CSP_LENGTH);
-        expect(() => planCspUpdate({ currentCsp: '', buildHashes: mange, merge: false }))
+        expect(() => planCspUpdate({ currentCsp: '', buildHashes: mange, merge }))
             .toThrow(new RegExp(`${lengde} tegn.*${MAX_CSP_LENGTH}`));
+    });
+
+    it('fletting over grensen dropper gamle hasher i stedet for å kaste', () => {
+        const plan = planCspUpdate({ currentCsp: cspFor(mange), buildHashes: [A], merge: true });
+        expect(plan.droppedStale).toBe(true);
+        expect(plan.hashes).toEqual([A]);
+        expect(plan.stale).toHaveLength(40);
+        expect(plan.csp.length).toBeLessThanOrEqual(MAX_CSP_LENGTH);
+    });
+
+    it('fletting under grensen beholder gamle hasher', () => {
+        const plan = planCspUpdate({ currentCsp: cspFor([A]), buildHashes: [B], merge: true });
+        expect(plan.droppedStale).toBe(false);
     });
 });
 

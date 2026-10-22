@@ -35,6 +35,8 @@ concurrency: stuck-pr-watch
 permissions:
   contents: read
   pull-requests: read
+  checks: read     # statusCheckRollup: uten den kommer `ci-ok` tom tilbake, og røde PR-er varsles aldri
+  statuses: read
   issues: write
 
 jobs:

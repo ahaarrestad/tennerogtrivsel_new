@@ -33,7 +33,7 @@ export function loadHashData(filePath) {
 
 // Runtime-injisert av apis.google.com/js/api.js. Oppdater også i
 // src/utils/security-headers.ts ved endring.
-export const GAPI_RUNTIME_HASHES =["sha256-Ck+oGpSYXC+PJqw/YXnosEZnlS+j6SnLwb3GZZzgTr8="];
+export const GAPI_RUNTIME_HASHES = ["sha256-Ck+oGpSYXC+PJqw/YXnosEZnlS+j6SnLwb3GZZzgTr8="];
 
 export function buildScriptSrc(scriptHashes) {
     if (!Array.isArray(scriptHashes)) {

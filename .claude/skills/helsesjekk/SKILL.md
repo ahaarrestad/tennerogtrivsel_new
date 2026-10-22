@@ -43,7 +43,7 @@ gh run list --workflow "Scheduled Security Audit" --limit 3 --json createdAt,con
 gh run list --workflow "Dependabot Updates" --limit 5 --json createdAt,conclusion,displayTitle,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId) \(.displayTitle)"'
 gh run list --workflow "Blocked Upgrades Watch" --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
 gh run list --workflow "Node Version Watch" --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
-gh run list --workflow "Stuck PR Watch" --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
+gh run list --workflow "Stuck PR Watch" --event schedule --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
 gh run list --workflow codeql.yml --branch main --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
 ```
 
@@ -66,8 +66,12 @@ dynamiske), så `--workflow "CodeQL"` feiler.
   inntil 8 dager er normal.
   Stuck PR Watch kjører hver 3. time og hører til samme rad; eldre enn ~12 timer → ⚠️.
   Den kjører også etter hver PR-CI (`workflow_run`) og varsler da straks om rød `ci-ok` på en
-  auto-merge-PR. Cron er gulvet, så 12-timersterskelen gjelder fortsatt. `skipped` er normalt
-  (CI-kjøringer som ikke er PR-er, f.eks. push til main).
+  auto-merge-PR. Kommandoen henter derfor bare cron-kjøringer (`--event schedule`) — ellers
+  ville workflow_run-kjøringene skjule at cron har stoppet. Blant workflow_run-kjøringene er
+  `skipped` (CI som ikke er PR, f.eks. push til main) og `cancelled` (køen fortrenger ventende
+  kjøringer) normalt.
+- **CI/CD-deploy `cancelled`:** deploy-jobben har én-om-gangen-kø; en ventende deploy avbrytes
+  når en nyere kommer. Normalt så lenge en senere kjøring er grønn.
 
 ## Svar
 
