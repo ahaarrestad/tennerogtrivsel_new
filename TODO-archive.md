@@ -3,6 +3,13 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **Bot-PR-er blir grønne selv, og røde varsles straks** ([plan](docs/plans/archive/2026-10-22-bot-pr-gronne-og-raskt-varsel.md)) ([spec](docs/designs/archive/2026-10-22-bot-pr-gronne-og-raskt-varsel.md))
+  - **Problem:** auto-PR #511 (2026-10-21) kunne aldri bli grønn, fordi CI krevde at den committede `csp-hashes.json` var i synk med bygget. Astro-oppdateringer endrer inline-script, og det kan ikke en bot rette. Varselet kom først 6,5 t senere.
+  - **Tiltak 1:** CSP-hash-porten er fjernet. Den bestemte aldri hva som havnet i prod-CSP-en, for deploy regenererer hashene fra `dist`. Tillitsgrensen er bygget (audit, Dependabot-cooldown, ingen auto-merge av major).
+  - **Tiltak 2:** `stuck-pr-watch.yml` kjører også etter hver PR-CI (`workflow_run`) og åpner `pr-stuck`-issue straks når `ci-ok` er ferdig og ikke grønn på en auto-merge-PR. Den har ingen checkout og bruker ingen hendelsesdata i `run:`. Jq-filteret ligger i en heredoc med `--arg`, og titlene er nøytralisert i code span. Køen ligger på jobbnivå, og vakta har `checks: read`/`statuses: read`.
+  - **Tiltak 3:** CSP-en byttes i to faser i deploy. Fase 1 (`--merge`) bruker gamle + nye hasher før S3-sync. Deretter følger `--wait-for` på edge, invalidering som deploy venter på, og fase 2 med bare nye hasher. Deploy-jobben har `concurrency: deploy-prod` og en timeout på 30 min, og `CICDDeploy` har fått `cloudfront:GetInvalidation`. `update-cloudfront-csp.mjs` er skrevet om til testbare funksjoner (40 tester).
+  - **Etter review:** går flettingen over grensen på 1783 tegn, dropper fase 1 de gamle hashene med advarsel i stedet for å låse alle senere deploys. Helsesjekk ser på cron-kjøringene til vakta (`--event schedule`). Den ekstra uavhengige sikkerhetsreviewen fant ingen sårbarheter som kan utnyttes.
+
 - [x] **AI-søk (GEO) del 1: strukturerte data, endringsdatoer og llms-tekst** ([plan](docs/plans/archive/2026-10-22-geo-strukturerte-data.md)) ([spec](docs/designs/archive/2026-10-22-geo-strukturerte-data.md))
   - **Problem:** en ekstern GEO-vurdering ga schema-kodingen 4/10. Den tok delvis feil, for `Dentist`-JSON-LD og `/llms.txt` fantes allerede. Det som manglet var en stabil identitet for klinikken, kobling til Google Business Profile, schema per side, ferskhet og en tydelig «ring oss».
   - **Klinikk-schema:** `['Dentist','MedicalClinic']` med `@id` `#klinikk`. `sameAs` og `hasMap` peker til Google Business Profile, og `contactPoint` (`reservations`) sier at timer bestilles på telefon. Inaktive tjenester er filtrert bort fra `availableService`, og `name` er uten «| …»-halen.
