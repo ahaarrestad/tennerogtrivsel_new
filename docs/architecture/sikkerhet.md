@@ -124,23 +124,51 @@ Repoet har ingen Terraform/CDK i dag. Innføring for ett enkelt CloudFront-objek
 
 ### Automatisk CSP-oppdatering i CI
 
-Hele CSP-strengen i CloudFront-policyen erstattes automatisk ved hver deploy:
+Hele CSP-strengen i CloudFront-policyen erstattes automatisk ved hver deploy.
+`scripts/generate-csp-hashes.mjs` skanner `dist/**/*.html` for inline `<script>`-blokker og
+skriver SHA256-hashene til `src/generated/csp-hashes.json`. Deretter oppdaterer
+`scripts/update-cloudfront-csp.mjs` CSP-en i to faser rundt S3-synken:
 
-1. `scripts/generate-csp-hashes.mjs` skanner `dist/**/*.html` for inline `<script>`-blokker
-2. Beregner SHA256-hashes og skriver til `src/generated/csp-hashes.json`
-3. `scripts/update-cloudfront-csp.mjs` henter gjeldende policy, bygger ny CSP via `buildCspString` og oppdaterer
+1. **Fase 1 (`--merge`), før S3-synk:** CSP-en får både de gamle hashene fra policyen og de
+   nye fra bygget. Både gammel og ny HTML er da lovlig mens synken og invalideringen pågår.
+   Er alle nye hasher allerede med, gjør steget ingenting.
+2. **Vent (`--wait-for`):** poller forsiden med HEAD til CSP-en med de nye hashene er ute
+   (maks 5 min, deretter advarsel). Én forespørsel treffer én edge, så vinduet blir mindre,
+   men lukkes ikke garantert.
+3. S3-synk og invalidering av `/*`. Deploy venter med `aws cloudfront wait
+   invalidation-completed` til invalideringen er ferdig.
+4. **Fase 2 (ingen flagg):** CSP-en bygges på nytt med bare hashene fra bygget pluss GAPI. De
+   gamle hashene forsvinner når gammel HTML er ute av edge-cachen.
+
+Deploy-jobben har `concurrency: deploy-prod`, så to deploys (push og Drive-dispatch) kan ikke
+blande fasene sine. Feiler en deploy mellom fasene, blir de gamle hashene liggende til neste
+vellykkede deploy. De tilhørte scripts som var lovlige rett før. CSP-en sjekkes mot
+CloudFronts grense på 1783 tegn før noe skrives.
+
+**Den committede `csp-hashes.json` trenger ikke være i synk.** Deploy, `dev:secure` og
+`dev:secure:fixtures` regenererer hashene fra bygget selv. Fila leses ellers bare av
+middlewaren i vanlig `npm run dev` og av `setup-response-headers-policy.mjs`. Det fantes
+tidligere en CI-port som krevde synk, men den stoppet bot-PR-er (Astro-oppdateringer endrer
+inline-skript) uten å beskytte noe. Endres fila lokalt etter `dev:secure`, committes den
+sammen med neste vanlige endring.
+
+**Tillitsgrensen er bygget.** Deploy hasher og tillater alle inline-scripts i `dist`, så alt
+som skriver til `dist` under bygget — avhengigheter og Drive-innhold — er implisitt betrodd.
+CSP-en beskytter mot injeksjon i nettleseren, ikke i bygget. Kontrollene mot ondsinnede
+avhengigheter er `npm audit`, Dependabot-cooldown, signaturverifisering og at
+major-oppdateringer ikke auto-merges.
 
 **Forutsetninger:**
 - GitHub secret `CLOUDFRONT_CSP_POLICY_ID` — ID-en til Response Headers Policy (ikke distribusjons-ID).
   Finn den i AWS Console → CloudFront → Policies → Response headers policies → klikk policy → kopier ID fra URL.
-- Deploy-jobbens IAM-rolle må ha:
+- Deploy-jobbens IAM-bruker (`githubTestDeploy`, inline-policy `CICDDeploy`) må ha:
   - `cloudfront:GetResponseHeadersPolicy`
   - `cloudfront:UpdateResponseHeadersPolicy`
+  - `cloudfront:GetInvalidation` (for `wait invalidation-completed`)
 
-**Lokal oppdatering (etter Astro-oppgradering eller endring av inline-skript):**
+**Lokal oppdatering** (vanlig `npm run dev` etter Astro-oppgradering eller endring av inline-skript):
 ```bash
 npm run build:ci && npm run generate-csp-hashes
-# Commit src/generated/csp-hashes.json
 ```
 
 ### Dev/preview-merknad

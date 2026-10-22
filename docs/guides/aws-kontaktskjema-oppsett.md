@@ -106,7 +106,7 @@ cat > /tmp/cicd-deploy-policy.json << 'EOF'
     {
       "Sid": "CloudFrontInvalidation",
       "Effect": "Allow",
-      "Action": "cloudfront:CreateInvalidation",
+      "Action": ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"],
       "Resource": "arn:aws:cloudfront::382286755083:distribution/*"
     },
     {
@@ -130,7 +130,7 @@ aws iam put-user-policy \
   --policy-document file:///tmp/cicd-deploy-policy.json
 ```
 
-> **Merk:** `sts:GetCallerIdentity` er påkrevd av `configure-aws-credentials@v6`. `lambda:GetFunction` og `lambda:GetFunctionConfiguration` brukes begge av `aws lambda wait function-updated`. Ikke legg til `AWSLambda_FullAccess`, `AmazonS3FullAccess` eller `CloudFrontFullAccess` — disse er erstattet av `CICDDeploy`.
+> **Merk:** `sts:GetCallerIdentity` er påkrevd av `configure-aws-credentials@v6`. `lambda:GetFunction` og `lambda:GetFunctionConfiguration` brukes begge av `aws lambda wait function-updated`. `cloudfront:GetInvalidation` brukes av `aws cloudfront wait invalidation-completed` i deploy (to-fase-CSP). Ikke legg til `AWSLambda_FullAccess`, `AmazonS3FullAccess` eller `CloudFrontFullAccess` — disse er erstattet av `CICDDeploy`.
 
 ---
 

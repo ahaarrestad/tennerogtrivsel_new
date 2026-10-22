@@ -39,8 +39,8 @@ export function run(distDir, outputFile) {
         extractInlineScripts(readFileSync(f, 'utf-8'))
     );
     // Sorter for kanonisk, deterministisk rekkefølge — readdirSync gir ikke stabil
-    // traverseringsrekkefølge på tvers av filsystemer, og CI-porten sammenligner
-    // byte-eksakt med `git diff`. Rekkefølgen er semantisk irrelevant for CSP.
+    // traverseringsrekkefølge på tvers av filsystemer. Stabil rekkefølge gir rene differ
+    // på den committede fila. Rekkefølgen er semantisk irrelevant for CSP.
     const uniqueHashes = [...new Set(allContents.map(computeHash))].sort();
     mkdirSync(dirname(outputFile), { recursive: true });
     writeFileSync(outputFile, JSON.stringify({ scriptHashes: uniqueHashes }, null, 2) + '\n');

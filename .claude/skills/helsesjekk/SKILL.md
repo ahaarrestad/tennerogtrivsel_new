@@ -65,6 +65,9 @@ dynamiske), så `--workflow "CodeQL"` feiler.
 - **Vaktjobbene** (Blocked Upgrades Watch, Node Version Watch) kjører mandager; en kjøring på
   inntil 8 dager er normal.
   Stuck PR Watch kjører hver 3. time og hører til samme rad; eldre enn ~12 timer → ⚠️.
+  Den kjører også etter hver PR-CI (`workflow_run`) og varsler da straks om rød `ci-ok` på en
+  auto-merge-PR. Cron er gulvet, så 12-timersterskelen gjelder fortsatt. `skipped` er normalt
+  (CI-kjøringer som ikke er PR-er, f.eks. push til main).
 
 ## Svar
 
