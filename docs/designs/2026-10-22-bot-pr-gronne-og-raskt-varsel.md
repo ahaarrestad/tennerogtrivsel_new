@@ -53,7 +53,7 @@ Den reelle tillitsgrensen for CSP-en er alt som skriver til `dist` under bygget:
   - `--merge` leser `script-src`-hashene i den gjeldende policyen, slår dem sammen med hashene fra builden og skriver tilbake. Endrer ikke sammenslåingen noe, gjøres ingen oppdatering.
   - `--wait-for <url>` venter til den nye CSP-en er synlig i prod.
 - Fra den gjeldende policyen tas bare tokens på formen `'sha256-<44 tegn base64>'` fra det første `script-src`-direktivet med. Alt annet ignoreres.
-- Blir CSP-strengen lengre enn CloudFronts grense (1783 tegn), feiler skriptet med en tydelig melding før noe er lastet opp.
+- Blir CSP-strengen lengre enn CloudFronts grense (1783 tegn), feiler skriptet med en tydelig melding før noe er lastet opp. Unntak (lagt til etter review): går bare fletting med gamle hasher over grensen, dropper fase 1 de gamle med en advarsel, så oppsamlede hasher ikke låser alle senere deploys.
 - `deploy.yml`, rekkefølgen i deploy-jobben:
   1. Generate CSP hashes
   2. **Flett** (`--merge`)

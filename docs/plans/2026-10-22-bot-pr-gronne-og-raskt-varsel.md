@@ -232,7 +232,7 @@ Ny trigger:
 
 - **Dependabot og `workflow_run`.** Ifølge dokumentasjonen gir `workflow_run` skrivetoken også når det var Dependabot som utløste CI, og `permissions:` gjelder. Det er verifisert i dokumentasjonen, men ikke empirisk. Blir det likevel rødt for Dependabot, er fallbacken et `if` på `github.event.workflow_run.actor.login` som hopper over issue-stegene med en notice. Da varsles Dependabot-PR-er via cron etter 6 timer, som i dag. Vi bytter ikke til `MY_GITHUB_PAT`, fordi det gir unødvendig brede rettigheter.
 - **Propagering kan måles feil.** Én HEAD-forespørsel fra runneren treffer én edge, og andre edges kan henge etter. Ventingen gjør vinduet mindre, men lukker det ikke garantert. Det gjelder bare deploys som endrer hasher.
-- **Deploy feiler mellom fase 1 og 2.** Da blir de gamle hashene liggende til neste vellykkede deploy. De tilhører scripts som nettopp var lovlige. Gjentatte feil kan hope opp hasher, men lengdesjekken stopper før S3-synk. Jobben blir rød og synlig.
+- **Deploy feiler mellom fase 1 og 2.** Da blir de gamle hashene liggende til neste vellykkede deploy. De tilhører scripts som nettopp var lovlige. Gjentatte feil kan hope opp hasher. Går flettingen over lengdegrensen, dropper fase 1 de gamle med `::warning::` (endret etter review — før stoppet den, og da ville alle senere deploys låst seg).
 - **Concurrency gjør at deploys står i kø.** En Drive-endring kan vente noen minutter på en pågående deploy. Det er akseptabelt.
 - **`wait invalidation-completed` legger 1–5 minutter til deploy.** Den har innebygd timeout (20 s × 30). Ved feil gis en advarsel, ikke stopp.
 - **Policyen deles med test-distribusjonen.** Fase 1 utvider bare CSP-en, og det er ufarlig.

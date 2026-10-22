@@ -60,7 +60,7 @@ export function planCspUpdate({ currentCsp, buildHashes, merge }) {
     // Gamle hasher hoper seg opp hvis deploys feiler mellom fasene. Heller et kort vindu med
     // blokkerte gamle inline-script enn at fase 1 kaster og alle senere deploys låses.
     let droppedStale = false;
-    if (merge && csp.length > MAX_CSP_LENGTH) {
+    if (stale.length > 0 && csp.length > MAX_CSP_LENGTH) {
         hashes = buildHashes;
         droppedStale = true;
         csp = buildCspString(buildScriptSrc(hashes));
@@ -68,7 +68,8 @@ export function planCspUpdate({ currentCsp, buildHashes, merge }) {
     if (csp.length > MAX_CSP_LENGTH) {
         throw new FatalError(
             `CSP-en blir ${csp.length} tegn, over CloudFront-grensen på ${MAX_CSP_LENGTH}. ` +
-            `script-src har ${hashes.length} hasher (${stale.length} gamle).`
+            `script-src har ${hashes.length} hasher fra bygget` +
+            (droppedStale ? ` (${stale.length} gamle er allerede droppet).` : '.')
         );
     }
     return { csp, hashes, stale, droppedStale };

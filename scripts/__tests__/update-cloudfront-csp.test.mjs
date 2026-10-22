@@ -98,6 +98,11 @@ describe('planCspUpdate', () => {
         expect(plan.csp.length).toBeLessThanOrEqual(MAX_CSP_LENGTH);
     });
 
+    it('for lang build etter at gamle er droppet sier at de gamle er droppet', () => {
+        expect(() => planCspUpdate({ currentCsp: cspFor([A]), buildHashes: mange, merge: true }))
+            .toThrow(/40 hasher fra bygget \(1 gamle er allerede droppet\)/);
+    });
+
     it('fletting under grensen beholder gamle hasher', () => {
         const plan = planCspUpdate({ currentCsp: cspFor([A]), buildHashes: [B], merge: true });
         expect(plan.droppedStale).toBe(false);

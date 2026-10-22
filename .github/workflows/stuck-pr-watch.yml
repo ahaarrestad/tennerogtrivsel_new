@@ -30,8 +30,6 @@ on:
     workflows: ['CI/CD']
     types: [completed]
 
-concurrency: stuck-pr-watch
-
 permissions:
   contents: read
   pull-requests: read
@@ -44,6 +42,9 @@ jobs:
     name: Ingen auto-merge-PR sitter fast
     # Bare PR-CI er interessant; push til main og Drive-dispatch hoppes over.
     if: github.event_name != 'workflow_run' || github.event.workflow_run.event == 'pull_request'
+    # På jobbnivå, ikke workflow-nivå: en hoppet-over kjøring (push til main) skal ikke
+    # fortrenge en ventende PR-kjøring i køen.
+    concurrency: stuck-pr-watch
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
