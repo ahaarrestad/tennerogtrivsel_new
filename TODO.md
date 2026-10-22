@@ -19,12 +19,6 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
-- [ ] **Bot-PR-er blir grønne selv, og røde varsles straks** ([spec](docs/designs/2026-10-22-bot-pr-gronne-og-raskt-varsel.md)) ([plan](docs/plans/2026-10-22-bot-pr-gronne-og-raskt-varsel.md))
-  - Utløst av auto-PR #511 (2026-10-21), som aldri kunne bli grønn pga. CSP-hash-porten, og som ble varslet først 6,5 t senere
-  - Tiltak 1: fjern CSP-hash-porten (deploy og `dev:secure` regenererer hashene selv)
-  - Tiltak 2: `stuck-pr-watch.yml` varsler straks via `workflow_run` når `ci-ok` ikke er grønn på en auto-merge-PR
-  - Tiltak 3: to-fase-CSP i deploy (gamle + nye hasher før S3-sync, bare nye etter fullført invalidering), `concurrency` på deploy
-
 ## Backlog
 
 - [ ] **AI-søk (GEO) del 2: FAQ** — *ingen plan ennå*

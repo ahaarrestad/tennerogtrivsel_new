@@ -1,6 +1,6 @@
 # Plan: bot-PR-er blir grønne selv, og røde varsles straks
 
-**Spec:** [docs/designs/2026-10-22-bot-pr-gronne-og-raskt-varsel.md](../designs/2026-10-22-bot-pr-gronne-og-raskt-varsel.md)
+**Spec:** [docs/designs/archive/2026-10-22-bot-pr-gronne-og-raskt-varsel.md](../../designs/archive/2026-10-22-bot-pr-gronne-og-raskt-varsel.md)
 
 ## Mål og avgrensninger
 
@@ -194,7 +194,7 @@ Ny trigger:
   ```
 - **Issue-teksten:** første linje blir «… fant PR-er med auto-merge som er røde eller ikke merget». Listen med vanlige årsaker får «`ci-ok` ikke grønn» øverst.
 - **Toppkommentaren** i workflowen beskriver begge triggerne.
-- **`concurrency: stuck-pr-watch`** og rettighetene blir som før. Ingen `actions/checkout`, ingen artefakter, og ingen `github.event.workflow_run.*` i `run:`.
+- **`concurrency: stuck-pr-watch`** flyttes til jobbnivå (endret etter review, så en hoppet-over push-kjøring ikke fortrenger en ventende PR-kjøring), og `checks: read`/`statuses: read` legges til for `statusCheckRollup`. Ingen `actions/checkout`, ingen artefakter, og ingen `github.event.workflow_run.*` i `run:`.
 - **`deploy.yml`, `ci-ok`-jobben:** legg til kommentaren «`stuck-pr-watch.yml` matcher på dette jobbnavnet — endres det, slutter straksvarselet å virke.»
 
 ### Steg 5 — TODO og helsesjekk
