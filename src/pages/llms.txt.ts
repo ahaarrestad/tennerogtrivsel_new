@@ -1,9 +1,10 @@
 // src/pages/llms.txt.ts
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
+import prislisteData from '../content/prisliste.json';
 import { generateLlmsTxt } from '../scripts/generate-llms.js';
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ site }) => {
     const innstillingerItems = await getCollection('innstillinger');
     const settings = Object.fromEntries(innstillingerItems.map(i => [i.id, i.data.value]));
 
@@ -27,7 +28,13 @@ export const GET: APIRoute = async () => {
             body: '',
         }));
 
-    const txt = generateLlmsTxt({ settings, tannleger, tjenester });
+    const txt = generateLlmsTxt({
+        settings,
+        tannleger,
+        tjenester,
+        siteUrl: site?.toString() ?? '',
+        prislisteDato: prislisteData.sistOppdatert ?? '',
+    });
 
     return new Response(txt, {
         headers: { 'Content-Type': 'text/plain; charset=utf-8' },

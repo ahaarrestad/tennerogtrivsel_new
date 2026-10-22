@@ -6,6 +6,9 @@ import MessageButton from "../../components/MessageButton.astro";
 import KontaktKnapp from "../../components/KontaktKnapp.astro";
 import { slugify } from '../../scripts/slugify';
 import { stripMarkdown, truncateDescription } from '../../scripts/metaDescription';
+import { buildTjenesteSideSchema } from '../../scripts/buildSchema';
+import { lesEndret } from '../../scripts/tjeneste-endret';
+import { basename, join } from 'node:path';
 
 // 1. Generer stier for alle tjenestene
 export async function getStaticPaths() {
@@ -27,8 +30,13 @@ const currentSlug = slugify(entry.data.title);
 const description = truncateDescription(
     `${entry.data.ingress} ${stripMarkdown(entry.body ?? '')}`.trim()
 );
+
+const site = Astro.site?.toString() ?? '';
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const dateModified = lesEndret(join(process.cwd(), 'src/content/tjenester'))[basename(entry.filePath ?? '')];
+const pageSchema = [buildTjenesteSideSchema(entry.data, canonical, site, dateModified)];
 ---
-<Layout title={`${entry.data.title} | Tenner og Trivsel`} description={description}>
+<Layout title={`${entry.data.title} | Tenner og Trivsel`} description={description} pageSchema={pageSchema}>
     <div class="flex-grow bg-white w-full">
 
         <section class="pt-12 md:pt-20 pb-0">

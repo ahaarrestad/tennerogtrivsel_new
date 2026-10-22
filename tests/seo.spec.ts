@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 test.describe('SEO og Metadata', () => {
   // Metadata er serverside-generert og identisk uavhengig av nettleser
@@ -106,14 +106,33 @@ test.describe('SEO og Metadata', () => {
   test('forsiden skal ha Schema.org JSON-LD for Dentist', async ({ page }) => {
     await page.goto('/');
     const jsonLd = page.locator('script[type="application/ld+json"]');
-    await expect(jsonLd).toBeAttached();
+    await expect(jsonLd).toHaveCount(1);
     const content = await jsonLd.textContent();
     const data = JSON.parse(content!);
-    expect(data['@type']).toBe('Dentist');
+    expect(data['@type']).toContain('Dentist');
     expect(data['@context']).toBe('https://schema.org');
     expect(data.name).toBeTruthy();
     expect(data.telephone).toBeTruthy();
     expect(data.address).toBeTruthy();
     expect(data.address['@type']).toBe('PostalAddress');
+  });
+
+  async function jsonLdPa(page: Page, path: string) {
+    await page.goto(path);
+    const scripts = await page.locator('script[type="application/ld+json"]').all();
+    return Promise.all(scripts.map(async s => JSON.parse((await s.textContent())!)));
+  }
+
+  test('tannlegesiden skal ha Person-schema knyttet til klinikken', async ({ page }) => {
+    const personer = (await jsonLdPa(page, '/tannleger/')).filter(d => d['@type'] === 'Person');
+    expect(personer.length).toBeGreaterThan(0);
+    expect(personer[0].worksFor['@id']).toMatch(/#klinikk$/);
+  });
+
+  test('tjenestesider skal ha MedicalWebPage-schema', async ({ page }) => {
+    const side = (await jsonLdPa(page, '/tjenester/tjeneste-en/')).find(d => d['@type'] === 'MedicalWebPage');
+    expect(side).toBeTruthy();
+    expect(side.about.name).toBe('Tjeneste En');
+    expect(side.publisher['@id']).toMatch(/#klinikk$/);
   });
 });

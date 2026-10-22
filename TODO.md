@@ -19,7 +19,30 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
+- [ ] **AI-søk (GEO) del 1: strukturerte data, endringsdatoer og llms-tekst** ([plan](docs/plans/2026-10-22-geo-strukturerte-data.md)) ([spec](docs/designs/2026-10-22-geo-strukturerte-data.md))
+  - Utgangspunkt: en ekstern GEO-vurdering (2026-10-21). Den ga lokal enhetsgjenkjenning 9/10, lesbarhet for LLM-er 8/10, Schema-koding 4/10 og E-E-A-T 6/10
+  - **Vurderingen tar delvis feil (sjekket mot prod 2026-10-22):** alle sider har allerede `Dentist`-JSON-LD fra `src/scripts/buildSchema.ts`, med `address`, `geo`, `telephone`, `url`, `image`, `hasMap`, `openingHoursSpecification` og 12 `availableService` (`MedicalProcedure`). `/llms.txt` finnes også (`generate-llms.js`). «Mangler Dentist-schema» stemmer altså ikke
+  - **Det som faktisk mangler:**
+    - `FAQPage`: ingen FAQ-seksjon eller FAQ-schema. Krever innhold, f.eks. «Hva koster en undersøkelse?», parkering (P4), heis og 5. etasje, akuttimer. Innholdet bør kunne redigeres fra Sheets/Drive som resten av CMS-et
+    - `sameAs`: lenker til Google Business Profile og helsekataloger, så AI kan koble enheten sikkert
+    - `priceRange` og/eller priser som `Offer`/`OfferCatalog` fra prislisten
+    - Tannlegene som `Person`/`Dentist` med `employee`/`member`, slik at fagpersonene blir synlige (E-E-A-T)
+    - `dateModified`/ferskhet: siden er statisk. Fagartikler eller en enkel fagblogg vil gi mer autoritet, men det er en innholdsbeslutning for klinikken, ikke bare teknikk
+  - Vurder også tjenestesidene: ha et eget `MedicalProcedure`-schema per tjeneste, med beskrivelse og URL
+  - Verifiser med Googles Rich Results Test og Schema Markup Validator. Pass på at schemaet bare beskriver det som står synlig på siden (Googles retningslinjer)
+
 ## Backlog
+
+- [ ] **AI-søk (GEO) del 2: FAQ** — *ingen plan ennå*
+  - Claude lager et utkast fra eksisterende innhold (tjenester, kontakt, prisliste), og klinikken godkjenner det
+  - FAQ-en skal kunne redigeres i admin, som resten av CMS-et. Siden får `FAQPage`-schema som bare beskriver det som står synlig
+  - Ta med «Kan jeg bestille time på nett?» (svar: nei, ring oss, og hvorfor). Ingen priser i FAQ-en — klinikken vil ikke ha priser i søkeresultatene
+  - Kandidater: parkering, heis og etasje, akuttimer, hva en undersøkelse innebærer
+  - Gulesider viser gammel adresse (Armauer Hansens vei 11). Det må klinikken rette selv, men det svekker enhetsgjenkjenningen så lenge det står
+
+- [ ] **AI-søk (GEO) del 3: fagartikler** — *ingen plan ennå*
+  - Fagartikler eller en enkel fagblogg gir ferskhet og autoritet (E-E-A-T). Det er en innholdsbeslutning for klinikken: hvem skriver, hvor ofte, og om det er verdt det
+  - Teknisk: egen innholdssamling fra Drive, `Article`/`MedicalWebPage` med `author` (tannlegen som `Person`) og `dateModified`
 
 - [ ] **a11y-tester i WebKit er CPU-bundet og timer ut under tung ytre last** — *ingen plan ennå*
   - Målt 2026-09-22: i WebKit tar `goto` 3–4 s og `AxeBuilder.analyze()` 4–5 s per side allerede ved load 7 (chromium: 1–2 s + 1,5–2 s). Med fire WebKit-workere under load ~22 sprenger både gammel og ny ventelogikk 30 s-timeouten (13/14 vs. 12/14 røde) — uavhengig av mekanismen som ble fikset i «Stabiliser ustabile tester»
@@ -108,18 +131,6 @@
   - Kunne ikke verifiseres under skrivingen: både `carto.com/privacy` og `dataprivacyframework.gov` er JS-rendrede SPA-er, så DPF-status for CARTO og for Fastly lot seg ikke slå opp fra CLI. Gjett aldri her — teksten er en juridisk erklæring
   - Samme uverifiserte punkt: CARTOs juridiske foretaksnavn. Bevisst utelatt framfor å gjengi en uverifisert påstand
   - **Merk:** løses «Kart-tiles: selvhost vektor-tiles med Protomaps PMTiles» først, faller hele punktet bort — ingen tredjepart, ingen overføring
-
-- [ ] **AI-søk (GEO): styrk strukturerte data, FAQ og autoritet** — *ingen plan ennå*
-  - Utgangspunkt: en ekstern GEO-vurdering (2026-10-21). Den ga lokal enhetsgjenkjenning 9/10, lesbarhet for LLM-er 8/10, Schema-koding 4/10 og E-E-A-T 6/10
-  - **Vurderingen tar delvis feil (sjekket mot prod 2026-10-22):** alle sider har allerede `Dentist`-JSON-LD fra `src/scripts/buildSchema.ts`, med `address`, `geo`, `telephone`, `url`, `image`, `hasMap`, `openingHoursSpecification` og 12 `availableService` (`MedicalProcedure`). `/llms.txt` finnes også (`generate-llms.js`). «Mangler Dentist-schema» stemmer altså ikke
-  - **Det som faktisk mangler:**
-    - `FAQPage`: ingen FAQ-seksjon eller FAQ-schema. Krever innhold, f.eks. «Hva koster en undersøkelse?», parkering (P4), heis og 5. etasje, akuttimer. Innholdet bør kunne redigeres fra Sheets/Drive som resten av CMS-et
-    - `sameAs`: lenker til Google Business Profile og helsekataloger, så AI kan koble enheten sikkert
-    - `priceRange` og/eller priser som `Offer`/`OfferCatalog` fra prislisten
-    - Tannlegene som `Person`/`Dentist` med `employee`/`member`, slik at fagpersonene blir synlige (E-E-A-T)
-    - `dateModified`/ferskhet: siden er statisk. Fagartikler eller en enkel fagblogg vil gi mer autoritet, men det er en innholdsbeslutning for klinikken, ikke bare teknikk
-  - Vurder også tjenestesidene: ha et eget `MedicalProcedure`-schema per tjeneste, med beskrivelse og URL
-  - Verifiser med Googles Rich Results Test og Schema Markup Validator. Pass på at schemaet bare beskriver det som står synlig på siden (Googles retningslinjer)
 
 ## Fullført
 

@@ -296,6 +296,10 @@ document.getElementById('edit-name').value = data.name; // Sikkert
 
 **Referanse-implementasjon:** `admin-module-bilder.js` — bruker DOMPurify.sanitize() + programmatisk verdi-setting.
 
+### JSON-LD
+
+`SchemaOrg.astro` skriver JSON-LD med `set:html`, og innholdet kommer fra Drive/Sheets (titler, ingresser, tannlegebeskrivelser). Det serialiseres derfor med `serializeJsonLd()` i `buildSchema.ts`, som escaper `<` til `<`. Da kan ikke en tekst som `</script>` avslutte taggen, og JSON-en er fortsatt gyldig. JSON-LD-scriptene er ikke kjørbare, så de er unntatt fra CSP-hashingen i `scripts/generate-csp-hashes.mjs`.
+
 ## Filopplastings-validering
 
 `uploadImage()` i `admin-client.js` validerer:

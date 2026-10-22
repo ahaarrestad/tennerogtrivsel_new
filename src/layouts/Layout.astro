@@ -4,6 +4,8 @@ export interface Props {
     description?: string;
     canonical?: string;
     noindex?: boolean;
+    /** Ekstra JSON-LD for siden (tjeneste, tannleger), i tillegg til klinikk-schemaet. */
+    pageSchema?: object[];
 }
 import Footer from '../components/Footer.astro';
 import '../styles/global.css';
@@ -32,6 +34,7 @@ const {
     description = settings.siteDescription,
     canonical,
     noindex = false,
+    pageSchema = [],
 } = Astro.props;
 
 const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).href;
@@ -74,6 +77,7 @@ const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).href;
     <meta name="twitter:image" content={new URL('/hovedbilde.png', Astro.site).href} />
 
     <SchemaOrg schema={schema} />
+    {pageSchema.map(s => <SchemaOrg schema={s} />)}
 </head>
 
 <body class="text-brand flex flex-col min-h-full">
