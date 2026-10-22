@@ -3,6 +3,15 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **AI-søk (GEO) del 1: strukturerte data, endringsdatoer og llms-tekst** ([plan](docs/plans/archive/2026-10-22-geo-strukturerte-data.md)) ([spec](docs/designs/archive/2026-10-22-geo-strukturerte-data.md))
+  - **Problem:** en ekstern GEO-vurdering ga schema-kodingen 4/10. Den tok delvis feil, for `Dentist`-JSON-LD og `/llms.txt` fantes allerede. Det som manglet var en stabil identitet for klinikken, kobling til Google Business Profile, schema per side, ferskhet og en tydelig «ring oss».
+  - **Klinikk-schema:** `['Dentist','MedicalClinic']` med `@id` `#klinikk`. `sameAs` og `hasMap` peker til Google Business Profile, og `contactPoint` (`reservations`) sier at timer bestilles på telefon. Inaktive tjenester er filtrert bort fra `availableService`, og `name` er uten «| …»-halen.
+  - **Side-schema:** tjenestesidene har `MedicalWebPage` med `about: MedicalProcedure`, `publisher` → klinikken og `dateModified`. `/tannleger/` har `Person` med `worksFor` → klinikken. All JSON-LD går gjennom `serializeJsonLd()` (`<` → `\u003c`).
+  - **Endringsdato fra Drive:** sync skriver `modifiedTime` per fil til `_endret.json`. `tjeneste-endret.ts` leser den uten å kunne kaste, og gir `lastmod` i sitemapen for tjenestesidene og `/tjenester/`.
+  - **llms-tekst:** linja «Timebestilling: ring oss …, ingen nettbestilling, fordi …» står i begge filene. Lenkene er absolutte. Prisene i llms-full har dato, «veiledende» og lenke til `/prisliste/`, og `prisliste.astro` bruker Europe/Oslo.
+  - **Bevisst utelatt:** priser i schema (klinikken vil ikke ha priser i søkeresultatene, og `/prisliste` forblir noindex), `ReserveAction`/nettbestilling og `priceRange`. FAQ (del 2) og fagartikler (del 3) ligger i backlog.
+  - **Verifisert lokalt 2026-10-22:** build med og uten `_endret.json` (lastmod bare når data finnes), JSON-LD i bygget HTML, nye E2E-tester for Person og MedicalWebPage. Reviewen var ren. Validering i validator.schema.org og Rich Results Test, og kontroll av lastmod i prod-sitemapen, gjøres etter deploy.
+
 - [x] **Prod: hev minste TLS-versjon fra TLSv1.1_2016** ([plan](docs/plans/archive/2026-10-22-tls-minimum-prod.md))
   - **Problem:** prod (`E9Z51DQB2K1G4`) hadde security policy `TLSv1.1_2016` og godtok TLS 1.1. Det er utdatert (RFC 8996) og fjernet fra alle store nettlesere. Test hadde allerede `TLSv1.2_2021`.
   - **Fiks:** `MinimumProtocolVersion: TLSv1.2_2021` på prod som engangsendring med CLI, samme policy som test. Ingen kostnad. CloudFront-logging er av, så ekte klienter ble ikke målt. Klienter uten TLS 1.2 + GCM (Windows XP, IE ≤ 10, Android ≤ 4.3) er ikke realistiske besøkende. `docs/architecture/aws-infrastruktur.md` er oppdatert.

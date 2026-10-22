@@ -322,8 +322,10 @@ async function syncMarkdownCollection(collection) {
     }));
 
     // Endringsdato per fil fra Drive — brukes til dateModified og sitemap-lastmod.
-    // Skrives på nytt ved hver sync, så slettede filer faller ut. Understrek-prefikset
-    // holder fila utenfor content-collectionens glob.
+    // Skrives på nytt ved hver sync med filer, så slettede filer faller ut (en tom mappe
+    // returnerer over, men da finnes heller ingen sider å slå opp). Skrives for alle
+    // markdown-samlinger, men leses bare for tjenester. .json-endelsen holder fila utenfor
+    // content-collectionens glob (`*.{md,mdoc}`).
     const endret = Object.fromEntries(
         files.filter(f => f.modifiedTime).map(f => [f.name, f.modifiedTime])
     );
