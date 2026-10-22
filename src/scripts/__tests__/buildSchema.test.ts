@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildSchema } from '../buildSchema';
+import { buildSchema, buildPersonSchema, buildTjenesteSideSchema, klinikkId, serializeJsonLd } from '../buildSchema';
 
 const baseSettings: Record<string, string> = {
     siteTitle: 'Tenner og Trivsel',
@@ -20,12 +20,28 @@ describe('buildSchema – toppnivå', () => {
     it('returnerer @context og @type', () => {
         const schema = buildSchema(baseSettings, [], 'https://tennerogtrivsel.no');
         expect(schema['@context']).toBe('https://schema.org');
-        expect(schema['@type']).toBe('Dentist');
+        expect(schema['@type']).toEqual(['Dentist', 'MedicalClinic']);
     });
 
     it('mapper siteTitle til name', () => {
         const schema = buildSchema(baseSettings, [], '');
         expect(schema['name']).toBe('Tenner og Trivsel');
+    });
+
+    it('bruker bare delen av siteTitle før |', () => {
+        const schema = buildSchema({ ...baseSettings, siteTitle: 'Tenner og Trivsel | Din Tannlege i Stavanger' }, [], '');
+        expect(schema['name']).toBe('Tenner og Trivsel');
+    });
+
+    it('har @id når siteUrl er satt, og utelater den ellers', () => {
+        expect(buildSchema(baseSettings, [], 'https://www.tennerogtrivsel.no/')['@id'])
+            .toBe('https://www.tennerogtrivsel.no/#klinikk');
+        expect(buildSchema(baseSettings, [], '')).not.toHaveProperty('@id');
+    });
+
+    it('lenker til Google Business Profile i sameAs', () => {
+        const schema = buildSchema(baseSettings, [], '');
+        expect(schema['sameAs']).toEqual(['https://maps.google.com/?cid=1532811702748545219']);
     });
 
     it('mapper siteDescription til description', () => {
@@ -126,11 +142,9 @@ describe('buildSchema – geo', () => {
 });
 
 describe('buildSchema – hasMap', () => {
-    it('konstruerer Google Maps-URL fra lat/lng', () => {
+    it('peker til Google Business Profile', () => {
         const schema = buildSchema(baseSettings, [], '');
-        expect(schema['hasMap']).toBe(
-            'https://www.google.com/maps/search/?api=1&query=58.9690,5.7331'
-        );
+        expect(schema['hasMap']).toBe('https://maps.google.com/?cid=1532811702748545219');
     });
 });
 
@@ -165,5 +179,107 @@ describe('buildSchema – tjenester', () => {
             { '@type': 'MedicalProcedure', name: 'Tannbleking' },
             { '@type': 'MedicalProcedure', name: 'Tannrens' },
         ]);
+    });
+
+    it('utelater inaktive tjenester', () => {
+        const tjenester = [
+            { data: { title: 'Aktiv' } },
+            { data: { title: 'Skjult', active: false } },
+        ];
+        const schema = buildSchema(baseSettings, tjenester, '');
+        expect(schema['availableService']).toEqual([{ '@type': 'MedicalProcedure', name: 'Aktiv' }]);
+    });
+
+    it('utelater availableService når alle tjenester er inaktive', () => {
+        const schema = buildSchema(baseSettings, [{ data: { title: 'Skjult', active: false } }], '');
+        expect(schema).not.toHaveProperty('availableService');
+    });
+});
+
+describe('buildSchema – contactPoint', () => {
+    it('beskriver telefonen som veien til timebestilling', () => {
+        const schema = buildSchema(baseSettings, [], '');
+        expect(schema['contactPoint']).toEqual({
+            '@type': 'ContactPoint',
+            telephone: '51 84 34 40',
+            contactType: 'reservations',
+            availableLanguage: ['nb'],
+            hoursAvailable: schema['openingHoursSpecification'],
+        });
+    });
+
+    it('utelates når phone1 er tom', () => {
+        const schema = buildSchema({ ...baseSettings, phone1: '' }, [], '');
+        expect(schema).not.toHaveProperty('contactPoint');
+    });
+});
+
+describe('klinikkId', () => {
+    it.each([
+        ['https://www.tennerogtrivsel.no/', 'https://www.tennerogtrivsel.no/#klinikk'],
+        ['https://www.tennerogtrivsel.no', 'https://www.tennerogtrivsel.no/#klinikk'],
+        ['', ''],
+    ])('klinikkId(%j) → %j', (siteUrl, forventet) => {
+        expect(klinikkId(siteUrl)).toBe(forventet);
+    });
+});
+
+describe('buildPersonSchema', () => {
+    const tannlege = { name: 'Kari Nordmann', title: 'Tannlege', description: 'Spesialist i kjeveortopedi' };
+
+    it('beskriver tannlegen som Person som jobber på klinikken', () => {
+        expect(buildPersonSchema(tannlege, 'https://www.tennerogtrivsel.no/')).toEqual({
+            '@context': 'https://schema.org',
+            '@type': 'Person',
+            name: 'Kari Nordmann',
+            jobTitle: 'Tannlege',
+            description: 'Spesialist i kjeveortopedi',
+            worksFor: { '@id': 'https://www.tennerogtrivsel.no/#klinikk' },
+        });
+    });
+
+    it('utelater tom description', () => {
+        expect(buildPersonSchema({ ...tannlege, description: '' }, 'https://www.tennerogtrivsel.no/'))
+            .not.toHaveProperty('description');
+    });
+
+    it('utelater worksFor uten siteUrl', () => {
+        expect(buildPersonSchema(tannlege, '')).not.toHaveProperty('worksFor');
+    });
+});
+
+describe('buildTjenesteSideSchema', () => {
+    const tjeneste = { title: 'Tannbleking', ingress: 'Hvitere tenner.' };
+    const url = 'https://www.tennerogtrivsel.no/tjenester/tannbleking/';
+
+    it('beskriver siden som MedicalWebPage om behandlingen', () => {
+        expect(buildTjenesteSideSchema(tjeneste, url, 'https://www.tennerogtrivsel.no/', '2026-10-01T10:00:00.000Z')).toEqual({
+            '@context': 'https://schema.org',
+            '@type': 'MedicalWebPage',
+            url,
+            name: 'Tannbleking',
+            description: 'Hvitere tenner.',
+            dateModified: '2026-10-01T10:00:00.000Z',
+            publisher: { '@id': 'https://www.tennerogtrivsel.no/#klinikk' },
+            about: { '@type': 'MedicalProcedure', name: 'Tannbleking' },
+        });
+    });
+
+    it('utelater dateModified når datoen mangler', () => {
+        expect(buildTjenesteSideSchema(tjeneste, url, 'https://www.tennerogtrivsel.no/'))
+            .not.toHaveProperty('dateModified');
+    });
+
+    it('utelater publisher uten siteUrl', () => {
+        expect(buildTjenesteSideSchema(tjeneste, url, '')).not.toHaveProperty('publisher');
+    });
+});
+
+describe('serializeJsonLd', () => {
+    it('escaper < så innholdet ikke kan avslutte script-taggen', () => {
+        const obj = { a: '</script><b>' };
+        const json = serializeJsonLd(obj);
+        expect(json).not.toContain('<');
+        expect(JSON.parse(json)).toEqual(obj);
     });
 });

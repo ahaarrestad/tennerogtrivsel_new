@@ -4,7 +4,7 @@ import { getCollection } from 'astro:content';
 import prislisteData from '../content/prisliste.json';
 import { generateLlmsFullTxt } from '../scripts/generate-llms.js';
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ site }) => {
     const innstillingerItems = await getCollection('innstillinger');
     const settings = Object.fromEntries(innstillingerItems.map(i => [i.id, i.data.value]));
 
@@ -33,11 +33,12 @@ export const GET: APIRoute = async () => {
         }));
 
     const prisliste = {
+        sistOppdatert: prislisteData.sistOppdatert ?? '',
         kategoriOrder: prislisteData.kategoriOrder ?? [],
         items: prislisteData.items ?? [],
     };
 
-    const txt = generateLlmsFullTxt({ settings, tannleger, tjenester, prisliste });
+    const txt = generateLlmsFullTxt({ settings, tannleger, tjenester, prisliste, siteUrl: site?.toString() ?? '' });
 
     return new Response(txt, {
         headers: { 'Content-Type': 'text/plain; charset=utf-8' },

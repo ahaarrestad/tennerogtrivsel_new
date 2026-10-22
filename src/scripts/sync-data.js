@@ -286,7 +286,7 @@ async function syncMarkdownCollection(collection) {
 
     const res = await drive.files.list({
         q: `'${escapeDriveQuery(collection.folderId)}' in parents and trashed = false`,
-        fields: 'files(id, name, md5Checksum)',
+        fields: 'files(id, name, md5Checksum, modifiedTime)',
         supportsAllDrives: true,
         includeItemsFromAllDrives: true
     });
@@ -320,6 +320,14 @@ async function syncMarkdownCollection(collection) {
             console.log(`    ⏭️ Skip: ${collection.name}/${file.name} er uendret`);
         }
     }));
+
+    // Endringsdato per fil fra Drive — brukes til dateModified og sitemap-lastmod.
+    // Skrives på nytt ved hver sync, så slettede filer faller ut. Understrek-prefikset
+    // holder fila utenfor content-collectionens glob.
+    const endret = Object.fromEntries(
+        files.filter(f => f.modifiedTime).map(f => [f.name, f.modifiedTime])
+    );
+    fs.writeFileSync(path.join(collection.dest, '_endret.json'), JSON.stringify(endret, null, 2));
 }
 
 /**

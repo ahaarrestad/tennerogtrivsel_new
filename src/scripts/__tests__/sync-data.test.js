@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import fs from 'fs';
 import crypto from 'crypto';
+import path from 'path';
 
 // sharp-mock – hoisted så factory-funksjonen kan referere til den
 const { mockSharp, mockSharpInstance } = vi.hoisted(() => {
@@ -338,6 +339,40 @@ describe('sync-data.js', () => {
             mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
             await syncMarkdownCollection({ name: 'tom', folderId: '123', dest: '/tmp' });
             expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Ingen filer funnet'));
+            expect(fs.writeFileSync).not.toHaveBeenCalledWith(expect.stringContaining('_endret.json'), expect.anything());
+        });
+
+        it('bør be Drive om modifiedTime', async () => {
+            mockDrive.files.list.mockResolvedValue({ data: { files: [] } });
+            await syncMarkdownCollection({ name: 'test', folderId: '123', dest: '/tmp' });
+            expect(mockDrive.files.list).toHaveBeenCalledWith(
+                expect.objectContaining({ fields: expect.stringContaining('modifiedTime') })
+            );
+        });
+
+        it('bør skrive _endret.json for både nedlastede og uendrede filer', async () => {
+            const dummyHash = crypto.createHash('md5').update(Buffer.from('dummy')).digest('hex');
+            mockDrive.files.list.mockResolvedValue({
+                data: {
+                    files: [
+                        { id: 'file-1', name: 'ny.md', md5Checksum: 'different', modifiedTime: '2026-10-01T10:00:00.000Z' },
+                        { id: 'file-2', name: 'uendret.md', md5Checksum: dummyHash, modifiedTime: '2026-09-15T08:30:00.000Z' },
+                        { id: 'file-3', name: 'uten-dato.md', md5Checksum: dummyHash },
+                        { id: 'file-4', name: 'bilde.png', modifiedTime: '2026-10-02T10:00:00.000Z' },
+                    ],
+                },
+            });
+            mockDrive.files.get.mockResolvedValue({ data: { on: vi.fn() } });
+            fs.existsSync.mockImplementation((p) => p.includes('uendret.md') || p.includes('uten-dato.md'));
+
+            await syncMarkdownCollection({ name: 'test', folderId: '123', dest: '/tmp' });
+
+            const kall = fs.writeFileSync.mock.calls.find(([p]) => String(p).endsWith('_endret.json'));
+            expect(kall?.[0]).toBe(path.join('/tmp', '_endret.json'));
+            expect(JSON.parse(kall[1])).toEqual({
+                'ny.md': '2026-10-01T10:00:00.000Z',
+                'uendret.md': '2026-09-15T08:30:00.000Z',
+            });
         });
 
         it('bør slette lokale filer som ikke finnes i Drive', async () => {

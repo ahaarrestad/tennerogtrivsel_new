@@ -2,12 +2,18 @@ import {defineConfig} from 'astro/config';
 import {loadEnv} from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
+import {join} from 'node:path';
+import {tjenesteLastmod} from './src/scripts/tjeneste-endret.ts';
 
 // CARTO krever ?key= på tile-URL-er. I prod settes nøkkelen av CloudFront-funksjonen;
 // lokalt leses den fra .env (gitignorert). Vite laster .env først etter at denne fila er
 // evaluert, så process.env er tom her — derfor loadEnv. Uten nøkkel fungerer proxyen
 // fortsatt, men tiles kommer vannmerket.
 const CARTO_API_KEY = loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), '').CARTO_API_KEY;
+
+// Drive-endringsdato per tjenesteside. tjenesteLastmod kaster aldri — en feil i serialize
+// ville fjernet hele sitemapen uten at bygget feiler.
+const tjenesteDatoer = tjenesteLastmod(join(process.cwd(), 'src/content/tjenester'));
 
 export default defineConfig({
     vite: {
@@ -43,5 +49,10 @@ export default defineConfig({
     site: 'https://www.tennerogtrivsel.no',
     integrations: [sitemap({
         filter: (page) => !page.includes('/admin') && !page.includes('/robots.txt') && !page.includes('/prisliste'),
+        serialize(item) {
+            const dato = tjenesteDatoer.get(new URL(item.url).pathname);
+            if (dato) item.lastmod = dato;
+            return item;
+        },
     })],
 });

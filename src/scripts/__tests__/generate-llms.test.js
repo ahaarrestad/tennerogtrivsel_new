@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { generateLlmsTxt, generateLlmsFullTxt } from '../generate-llms.js';
 
+const SITE = 'https://www.tennerogtrivsel.no/';
+
 const baseData = {
     settings: {
         siteDescription: 'Moderne tannklinikk i Stavanger.',
@@ -88,11 +90,50 @@ describe('generateLlmsTxt', () => {
         expect(result).toContain('/llms-full.txt');
     });
 
-    it('skal inneholde lenker til tjenester, prisliste og kontakt', () => {
+    it('skal inneholde relative lenker til tjenester, prisliste og kontakt uten siteUrl', () => {
         const result = generateLlmsTxt(baseData);
-        expect(result).toContain('[Tjenester](/tjenester)');
-        expect(result).toContain('[Prisliste](/prisliste)');
-        expect(result).toContain('[Kontakt](/kontakt)');
+        expect(result).toContain('[Tjenester](/tjenester/)');
+        expect(result).toContain('[Prisliste](/prisliste/)');
+        expect(result).toContain('[Kontakt](/kontakt/)');
+        expect(result).toContain('[Fullstendig innhold](/llms-full.txt)');
+    });
+
+    it('skal bruke absolutte lenker med siteUrl', () => {
+        const result = generateLlmsTxt({ ...baseData, siteUrl: SITE });
+        expect(result).toContain('[Tjenester](https://www.tennerogtrivsel.no/tjenester/)');
+        expect(result).toContain('[Prisliste](https://www.tennerogtrivsel.no/prisliste/)');
+        expect(result).toContain('[Kontakt](https://www.tennerogtrivsel.no/kontakt/)');
+        expect(result).toContain('[Fullstendig innhold](https://www.tennerogtrivsel.no/llms-full.txt)');
+    });
+
+    it('skal vise når prislisten sist ble oppdatert', () => {
+        const result = generateLlmsTxt({ ...baseData, siteUrl: SITE, prislisteDato: '2026-01-15T00:00:00.000Z' });
+        expect(result).toContain('- [Prisliste](https://www.tennerogtrivsel.no/prisliste/): sist oppdatert januar 2026');
+    });
+
+    it.each([
+        ['uten dato', ''],
+        ['med ugyldig dato', 'tull'],
+    ])('skal vise prislistelenken uten suffiks %s', (_navn, prislisteDato) => {
+        const result = generateLlmsTxt({ ...baseData, prislisteDato });
+        expect(result).toContain('- [Prisliste](/prisliste/)\n');
+        expect(result).not.toContain('Invalid Date');
+    });
+});
+
+describe('timebestilling', () => {
+    const TIMEBESTILLING = 'Timebestilling: ring oss på 51 52 96 18. Vi har ikke nettbestilling, fordi vi vil snakke med deg for å finne riktig time og behandling.';
+
+    it.each([
+        ['generateLlmsTxt', generateLlmsTxt],
+        ['generateLlmsFullTxt', generateLlmsFullTxt],
+    ])('%s ber leseren ringe for time', (_navn, generer) => {
+        expect(generer(baseData)).toContain(TIMEBESTILLING);
+    });
+
+    it('utelater linja uten telefonnummer', () => {
+        const result = generateLlmsTxt({ ...baseData, settings: { ...baseData.settings, phone1: '' } });
+        expect(result).not.toContain('Timebestilling');
     });
 });
 
@@ -164,6 +205,33 @@ describe('generateLlmsFullTxt', () => {
     it('skal utelate tjeneste-seksjonen ved tom tjenesteliste', () => {
         const result = generateLlmsFullTxt({ ...baseData, tjenester: [] });
         expect(result).not.toContain('## Tjenester');
+    });
+
+    it('skal datere prisene, si at de er veiledende og lenke til gjeldende prisliste', () => {
+        const result = generateLlmsFullTxt({
+            ...baseData,
+            siteUrl: SITE,
+            prisliste: { ...baseData.prisliste, sistOppdatert: '2026-01-15T00:00:00.000Z' },
+        });
+        expect(result).toContain('Sist oppdatert: januar 2026');
+        expect(result).toContain('Prisene er veiledende og kan variere etter behandlingens omfang.');
+        expect(result).toContain('Gjeldende priser: https://www.tennerogtrivsel.no/prisliste/');
+    });
+
+    it.each([
+        ['uten dato', undefined],
+        ['med ugyldig dato', 'tull'],
+    ])('skal utelate datolinja %s', (_navn, sistOppdatert) => {
+        const result = generateLlmsFullTxt({ ...baseData, prisliste: { ...baseData.prisliste, sistOppdatert } });
+        expect(result).not.toContain('Sist oppdatert');
+        expect(result).not.toContain('Invalid Date');
+        expect(result).toContain('Prisene er veiledende');
+        expect(result).toContain('Gjeldende priser: /prisliste/');
+    });
+
+    it('skal bruke absolutte footer-lenker med siteUrl', () => {
+        const result = generateLlmsFullTxt({ ...baseData, siteUrl: SITE });
+        expect(result).toContain('[Tjenester](https://www.tennerogtrivsel.no/tjenester/)');
     });
 });
 
