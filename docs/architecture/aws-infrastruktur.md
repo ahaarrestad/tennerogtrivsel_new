@@ -27,7 +27,7 @@ AWS-konto: `382286755083`
 - **CloudFront-domene:** `d19b7g2frcrx6i.cloudfront.net`
 - **Aliases:** `tennerogtrivsel.no`, `www.tennerogtrivsel.no`, `tennerogtrivsel.net`, `www.tennerogtrivsel.net`, `tennerogtrivsel.com`, `www.tennerogtrivsel.com`
 - **Default root object:** `index.html`
-- **SSL:** SNI, TLSv1.1_2016 minimum
+- **SSL:** SNI, TLSv1.2_2021 minimum
 - **HTTP-versjon:** HTTP/2 og HTTP/3 (`http2and3`)
 
 ### Test — `E2WXX7ZUR5NNP3`
@@ -384,7 +384,7 @@ en side som først finnes i det nye bygget, vil den kort gi 404 i vinduet mellom
    - Default root object: `index.html`
    - Alternate domain names (CNAMEs): alle domener som skal peke hit
    - SSL certificate: velg ACM-sertifikat for domenet (us-east-1)
-   - Security policy: TLSv1.1_2016 eller nyere
+   - Security policy: TLSv1.2_2021 (anbefalt)
    - Supported HTTP versions: HTTP/2, HTTP/3
 
 10. Klikk **Create distribution** og vent på status `Deployed`

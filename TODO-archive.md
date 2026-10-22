@@ -3,6 +3,12 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **Prod: hev minste TLS-versjon fra TLSv1.1_2016** ([plan](docs/plans/archive/2026-10-22-tls-minimum-prod.md))
+  - **Problem:** prod (`E9Z51DQB2K1G4`) hadde security policy `TLSv1.1_2016` og godtok TLS 1.1. Det er utdatert (RFC 8996) og fjernet fra alle store nettlesere. Test hadde allerede `TLSv1.2_2021`.
+  - **Fiks:** `MinimumProtocolVersion: TLSv1.2_2021` på prod som engangsendring med CLI, samme policy som test. Ingen kostnad. CloudFront-logging er av, så ekte klienter ble ikke målt. Klienter uten TLS 1.2 + GCM (Windows XP, IE ≤ 10, Android ≤ 4.3) er ikke realistiske besøkende. `docs/architecture/aws-infrastruktur.md` er oppdatert.
+  - **Verifisert 2026-10-22:** normalisert config-diff før/etter viste bare `MinimumProtocolVersion`. `openssl s_client` mot `www.` og apex: TLS 1.1 avvises (godtatt før endringen), TLS 1.2 og 1.3 virker. Alle seks aliasene gir 200 eller 301 til `https://www.tennerogtrivsel.no/`. QUIC-sjekken gir `h3`. Uptime Check kjørt manuelt er grønn.
+  - **Rollback:** sett `TLSv1.1_2016` med samme fremgangsmåte.
+
 - [x] **HTTP/3 (QUIC) på CloudFront** ([plan](docs/plans/archive/2026-10-21-http3-cloudfront.md))
   - **Problem:** begge distribusjonene sto på `HttpVersion: http2`. HTTP/3 gir raskere oppkobling, ingen head-of-line blocking ved pakketap og connection migration ved bytte mellom wifi og mobilnett.
   - **Fiks:** `HttpVersion: http2and3` på test (`E2WXX7ZUR5NNP3`) og prod (`E9Z51DQB2K1G4`) som engangsendring med CLI (ingen kode forvalter feltet). Ingen ekstra kostnad ifølge AWS. Dokumentert i `docs/architecture/aws-infrastruktur.md`. IPv6-oppgaven har fått en merknad om at et fremtidig distribusjonsscript må beholde `http2and3`, og TLS-minimum på prod ligger som egen backlog-oppgave.

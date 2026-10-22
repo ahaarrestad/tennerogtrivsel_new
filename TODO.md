@@ -73,11 +73,6 @@
   - Tiltak 2: varsle med en gang når `ci-ok` er rød på en auto-merge-PR, i stedet for å vente 6 t
   - Tiltak 3 (fra review): prod-deployen legger ut ny HTML før CloudFront får ny CSP, så et endret inline-script kan blokkeres i noen minutter. Vurder å oppdatere CSP-en med gamle og nye hasher før S3-sync
 
-- [ ] **Prod: hev minste TLS-versjon fra TLSv1.1_2016** — *ingen plan ennå*
-  - Prod-distribusjonen `E9Z51DQB2K1G4` har security policy `TLSv1.1_2016`; test har `TLSv1.2_2021`
-  - TLS 1.0 og 1.1 er utdatert. Sjekk om noen reelle klienter fortsatt trenger dem før policyen heves
-  - Funnet under HTTP/3-oppgaven (2026-10-21). HTTP/3 bruker alltid TLS 1.3 og påvirkes ikke
-
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod
     - Legg til `workflow_dispatch` input i deploy.yml for å velge miljø (test/prod/both)
