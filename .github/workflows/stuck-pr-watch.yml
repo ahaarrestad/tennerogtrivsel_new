@@ -1,10 +1,18 @@
 name: Stuck PR Watch
 
-# Finner PR-er med auto-merge som ikke er merget innen rimelig tid. En auto-merge-PR merges
-# normalt på under 5 minutter; står den fortsatt åpen etter 6 timer, sitter den fast —
-# branchen er bak main (klassisk branch protection er strict), rød ci-ok, en CodeQL-alert
-# som code scanning-regelen i rulesettet blokkerer på, eller en CodeQL-analyse som har feilet. Uten denne vakta ville en blokkert Dependabot- eller
-# sikkerhetsfiks-PR ligge stille. Se docs/architecture/sikkerhet.md#codeql-porten.
+# Finner PR-er med auto-merge som er røde eller ikke merget innen rimelig tid. To triggere:
+# - workflow_run etter hver PR-CI (CI/CD): en auto-merge-PR med `ci-ok` som ikke er grønn
+#   varsles straks — den blir aldri merget av seg selv.
+# - cron hver 3. time: en auto-merge-PR merges normalt på under 5 minutter; står den fortsatt
+#   åpen etter 6 timer, sitter den fast — branchen er bak main (klassisk branch protection er
+#   strict), en CodeQL-alert som code scanning-regelen i rulesettet blokkerer på, eller en
+#   CodeQL-analyse som har feilet. Begge triggerne sjekker begge kriteriene.
+# Uten denne vakta ville en blokkert Dependabot- eller sikkerhetsfiks-PR ligge stille.
+# Se docs/architecture/sikkerhet.md#codeql-porten. `ci-ok` er jobbnavnet i deploy.yml.
+#
+# workflow_run kjører fila fra main med denne fila sine rettigheter, også når CI ble utløst
+# av Dependabot. Ingen checkout og ingen data fra den utløsende kjøringen brukes — vakta
+# leser bare PR-listen via API.
 #
 # Ved funn åpnes én issue med etiketten `pr-stuck` (dedupes mot åpne). Den lukkes automatisk
 # når ingen PR sitter fast. Selve kjøringen er grønn i begge tilfeller — rødt betyr at
@@ -18,6 +26,9 @@ on:
       min_age_hours:
         description: 'Timer siden auto-merge ble slått på før PR-en regnes som fastlåst (0 for testing)'
         default: '6'
+  workflow_run:
+    workflows: ['CI/CD']
+    types: [completed]
 
 concurrency: stuck-pr-watch
 
@@ -29,6 +40,8 @@ permissions:
 jobs:
   watch:
     name: Ingen auto-merge-PR sitter fast
+    # Bare PR-CI er interessant; push til main og Drive-dispatch hoppes over.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -45,17 +58,27 @@ jobs:
             exit 1
           fi
           GRENSE=$(date -u -d "-${MIN_AGE_HOURS} hours" +%Y-%m-%dT%H:%M:%SZ)
+          # Funn: auto-merge på, og enten `ci-ok` ferdig og ikke grønn (alt annet enn
+          # SUCCESS/NEUTRAL/SKIPPED, også TIMED_OUT og CANCELLED), eller auto-merge på før GRENSE.
+          # `ci-ok` som pågår har tom conclusion og teller ikke som rød.
+          cat > filter.jq <<'JQ'
+          .[] | select(.autoMergeRequest != null)
+              | ([.statusCheckRollup[]? | select(.name == "ci-ok") | .conclusion // ""]
+                 | map(select(. != "" and . != "SUCCESS" and . != "NEUTRAL" and . != "SKIPPED")) | first) as $roed
+              | select($roed != null or .autoMergeRequest.enabledAt <= $grense)
+              | "- #\(.number) \(.url) — `\(.title | gsub("`"; "'"))` — "
+                + (if $roed != null then "`ci-ok`: \($roed)"
+                   else "mergeStateStatus `\(.mergeStateStatus)`, auto-merge på siden \(.autoMergeRequest.enabledAt)" end)
+          JQ
           gh pr list --state open --limit 100 \
-            --json number,title,url,autoMergeRequest,mergeStateStatus \
-            --jq ".[] | select(.autoMergeRequest != null and .autoMergeRequest.enabledAt <= \"$GRENSE\")
-                  | \"- #\(.number) \(.url) — \`\(.title | gsub(\"\`\"; \"'\"))\` — mergeStateStatus \`\(.mergeStateStatus)\`, auto-merge på siden \(.autoMergeRequest.enabledAt)\"" \
-            > fastlaast.md
+            --json number,title,url,autoMergeRequest,mergeStateStatus,statusCheckRollup \
+            | jq -r --arg grense "$GRENSE" -f filter.jq > fastlaast.md
           if [ -s fastlaast.md ]; then
             echo "funn=true" >> "$GITHUB_OUTPUT"
             cat fastlaast.md
           else
             echo "funn=false" >> "$GITHUB_OUTPUT"
-            echo "Ingen fastlåste PR-er (grense: auto-merge slått på før $GRENSE)."
+            echo "Ingen røde eller fastlåste auto-merge-PR-er (grense: auto-merge slått på før $GRENSE)."
           fi
 
       - name: Opprett issue
@@ -73,12 +96,13 @@ jobs:
             exit 0
           fi
           {
-            echo "@ahaarrestad \`stuck-pr-watch.yml\` fant PR-er med auto-merge som ikke er merget:"
+            echo "@ahaarrestad \`stuck-pr-watch.yml\` fant PR-er med auto-merge som er røde eller ikke merget:"
             echo
             cat fastlaast.md
             echo
-            echo "Vanlige årsaker: \`BEHIND\` (branchen ligger bak main — \`gh pr update-branch <nr>\` eller \`@dependabot rebase\`),"
-            echo "rød \`ci-ok\`, en CodeQL-alert (high/critical) som rulesettet blokkerer på, eller en feilet CodeQL-analyse."
+            echo "Vanlige årsaker: \`ci-ok\` ikke grønn (se PR-ens sjekker — en flaky test kan kjøres på nytt),"
+            echo "\`BEHIND\` (branchen ligger bak main — \`gh pr update-branch <nr>\` eller \`@dependabot rebase\`),"
+            echo "en CodeQL-alert (high/critical) som rulesettet blokkerer på, eller en feilet CodeQL-analyse."
             echo "Se docs/architecture/sikkerhet.md#codeql-porten."
             echo
             echo "Kjøring: $RUN_URL"

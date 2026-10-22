@@ -19,6 +19,12 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
+- [ ] **Bot-PR-er blir grønne selv, og røde varsles straks** ([spec](docs/designs/2026-10-22-bot-pr-gronne-og-raskt-varsel.md)) ([plan](docs/plans/2026-10-22-bot-pr-gronne-og-raskt-varsel.md))
+  - Utløst av auto-PR #511 (2026-10-21), som aldri kunne bli grønn pga. CSP-hash-porten, og som ble varslet først 6,5 t senere
+  - Tiltak 1: fjern CSP-hash-porten (deploy og `dev:secure` regenererer hashene selv)
+  - Tiltak 2: `stuck-pr-watch.yml` varsler straks via `workflow_run` når `ci-ok` ikke er grønn på en auto-merge-PR
+  - Tiltak 3: to-fase-CSP i deploy (gamle + nye hasher før S3-sync, bare nye etter fullført invalidering), `concurrency` på deploy
+
 ## Backlog
 
 - [ ] **AI-søk (GEO) del 2: FAQ** — *ingen plan ennå*
@@ -76,13 +82,6 @@
   - Route 53 avvist: hosted zone koster ~0,50 USD/mnd, og kravet var gratis
   - Ingen hast — verdien er læring og ryddighet, ikke brukergevinst
   - Et fremtidig distribusjonsscript (f.eks. `setup-cloudfront-distribution.mjs`) må også sette `HttpVersion: http2and3`, ellers slår det av HTTP/3 igjen
-
-- [ ] **Audit-PR-er skal bli grønne selv, og fastlåste bot-PR-er skal varsles raskere** — *ingen plan ennå*
-  - **Problem (2026-10-21):** auto-PR #511 fra `scheduled-audit.yml` (vite 8.1.4 → 8.3.5, GHSA-587h-7wmj-h5pm) feilet på «Verify CSP hashes are in sync», fordi ny rolldown endret lightbox-scriptet i galleriet. PR-en endrer bare lockfila (`npm audit fix --package-lock-only`), så den kunne aldri bli grønn uten manuell regenerering av `src/generated/csp-hashes.json`
-  - **Varselet kom 6,5 t etter feilen:** `stuck-pr-watch.yml` regner en PR som fastlåst først etter 6 t og sjekker hver 3. time, og en rød bot-PR gir ingen e-post
-  - Tiltak 1: la auto-fiksen i `scheduled-audit.yml` kjøre `build:ci` + `generate-csp-hashes` og committe hashfila sammen med lockfila. Det samme kan gjelde Dependabot-PR-er som endrer bundleren
-  - Tiltak 2: varsle med en gang når `ci-ok` er rød på en auto-merge-PR, i stedet for å vente 6 t
-  - Tiltak 3 (fra review): prod-deployen legger ut ny HTML før CloudFront får ny CSP, så et endret inline-script kan blokkeres i noen minutter. Vurder å oppdatere CSP-en med gamle og nye hasher før S3-sync
 
 - [ ] **Dev-Test-Prod miljø oppsett** ([plan](docs/plans/2026-02-27-dev-test-prod.md))
     - Deployment-kontroll: push til main → test, manuell dispatch → prod, Google Drive-oppdatering → prod

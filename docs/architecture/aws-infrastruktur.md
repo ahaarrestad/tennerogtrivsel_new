@@ -277,6 +277,7 @@ Bruk dette når du skal sette opp prod eller test fra bunnen av.
 ```bash
 node scripts/setup-dynamodb.mjs
 CARTO_API_KEY=... node scripts/setup-cloudfront-functions.mjs
+npm run build:ci && npm run generate-csp-hashes   # csp-hashes.json i repoet kan være utdatert
 node scripts/setup-response-headers-policy.mjs
 ```
 

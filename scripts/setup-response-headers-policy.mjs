@@ -33,7 +33,7 @@ export function loadHashData(filePath) {
 
 // Runtime-injisert av apis.google.com/js/api.js. Oppdater også i
 // src/utils/security-headers.ts ved endring.
-const GAPI_RUNTIME_HASHES = ["sha256-Ck+oGpSYXC+PJqw/YXnosEZnlS+j6SnLwb3GZZzgTr8="];
+export const GAPI_RUNTIME_HASHES =["sha256-Ck+oGpSYXC+PJqw/YXnosEZnlS+j6SnLwb3GZZzgTr8="];
 
 export function buildScriptSrc(scriptHashes) {
     if (!Array.isArray(scriptHashes)) {
@@ -212,6 +212,12 @@ export function ensurePolicy(cspString) {
 
 /* v8 ignore start */
 if (import.meta.url === `file://${process.argv[1]}`) {
+    // Den committede csp-hashes.json trenger ikke være i synk med koden — deploy regenererer hashene selv.
+    console.warn(
+        'OBS: CSP-en bygges fra src/generated/csp-hashes.json. Regenerer den først:\n' +
+        '  npm run build:ci && npm run generate-csp-hashes'
+    );
+
     try {
         checkAccount();
     } catch (err) {
