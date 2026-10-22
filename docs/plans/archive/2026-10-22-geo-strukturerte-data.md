@@ -1,6 +1,6 @@
 # Plan: GEO del 1 — strukturerte data, endringsdatoer og llms-tekst
 
-**Spec:** [docs/designs/2026-10-22-geo-strukturerte-data.md](../designs/2026-10-22-geo-strukturerte-data.md)
+**Spec:** [docs/designs/archive/2026-10-22-geo-strukturerte-data.md](../../designs/archive/2026-10-22-geo-strukturerte-data.md)
 **Kjøring:** inline i én worktree. Node: `/home/asbjorn/.nvm/versions/node/v24.21.0/bin` (standard-node feiler engine-strict).
 
 Hver oppgave skriver testene først, deretter koden, og kjører så `npx vitest run <testfil>`.

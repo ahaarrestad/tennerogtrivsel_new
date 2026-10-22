@@ -67,7 +67,7 @@ export function tjenesteLastmod(dir: string): Map<string, string> {
             if (!title || active === 'false') continue;
 
             lastmod.set(`/tjenester/${slugify(title)}/`, dato);
-            if (Date.parse(dato) > Date.parse(nyeste || '0')) nyeste = dato;
+            if (!nyeste || Date.parse(dato) > Date.parse(nyeste)) nyeste = dato;
         }
         if (nyeste) lastmod.set('/tjenester/', nyeste);
     } catch {
