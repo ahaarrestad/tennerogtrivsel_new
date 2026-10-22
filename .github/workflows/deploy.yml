@@ -296,7 +296,8 @@ jobs:
     runs-on: ubuntu-latest
     # Én deploy om gangen. Flettingen og sluttoppdateringen av CSP-en må ikke blandes
     # mellom to deploys (push og Drive-dispatch kan overlappe), ellers kan prod ende med
-    # HTML fra den ene og hasher fra den andre.
+    # HTML fra den ene og hasher fra den andre. Kommer en tredje mens én venter, avbryter
+    # GitHub den ventende (vises som cancelled) — greit, den siste bygger fra nyere main.
     concurrency:
       group: deploy-prod
       cancel-in-progress: false

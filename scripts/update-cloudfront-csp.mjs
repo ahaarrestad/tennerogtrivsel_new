@@ -56,14 +56,22 @@ export function planCspUpdate({ currentCsp, buildHashes, merge }) {
         stale = current.filter(h => !buildHashes.includes(h));
     }
 
-    const csp = buildCspString(buildScriptSrc(hashes));
+    let csp = buildCspString(buildScriptSrc(hashes));
+    // Gamle hasher hoper seg opp hvis deploys feiler mellom fasene. Heller et kort vindu med
+    // blokkerte gamle inline-script enn at fase 1 kaster og alle senere deploys låses.
+    let droppedStale = false;
+    if (merge && csp.length > MAX_CSP_LENGTH) {
+        hashes = buildHashes;
+        droppedStale = true;
+        csp = buildCspString(buildScriptSrc(hashes));
+    }
     if (csp.length > MAX_CSP_LENGTH) {
         throw new FatalError(
             `CSP-en blir ${csp.length} tegn, over CloudFront-grensen på ${MAX_CSP_LENGTH}. ` +
             `script-src har ${hashes.length} hasher (${stale.length} gamle).`
         );
     }
-    return { csp, hashes, stale };
+    return { csp, hashes, stale, droppedStale };
 }
 
 export function cspHasAllHashes(csp, hashes) {
@@ -181,6 +189,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
             process.exit(0);
         }
 
+        if (plan.droppedStale) {
+            console.log(
+                `::warning::Gamle + nye hasher går over ${MAX_CSP_LENGTH} tegn — ${plan.stale.length} gamle ` +
+                'hasher droppes allerede i fase 1. Gamle sider i cache kan få blokkerte inline-script til invalideringen er ferdig.'
+            );
+        }
         csp.ContentSecurityPolicy = plan.csp;
         writePolicy(policyId, etag, config);
 

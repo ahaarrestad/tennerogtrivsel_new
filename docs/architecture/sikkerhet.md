@@ -143,7 +143,10 @@ skriver SHA256-hashene til `src/generated/csp-hashes.json`. Deretter oppdaterer
 Deploy-jobben har `concurrency: deploy-prod`, så to deploys (push og Drive-dispatch) kan ikke
 blande fasene sine. Feiler en deploy mellom fasene, blir de gamle hashene liggende til neste
 vellykkede deploy. De tilhørte scripts som var lovlige rett før. CSP-en sjekkes mot
-CloudFronts grense på 1783 tegn før noe skrives.
+CloudFronts grense på 1783 tegn før noe skrives. Hoper gamle hasher seg opp så fletting går
+over grensen, dropper fase 1 de gamle med en `::warning::` i stedet for å feile — ellers ville
+alle senere deploys låse seg. Manuell opprydding: `node scripts/update-cloudfront-csp.mjs`
+(fase 2) etter en build med `generate-csp-hashes`.
 
 **Den committede `csp-hashes.json` trenger ikke være i synk.** Deploy, `dev:secure` og
 `dev:secure:fixtures` regenererer hashene fra bygget selv. Fila leses ellers bare av
