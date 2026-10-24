@@ -18,6 +18,7 @@ MIN_MINUTES="${MIN_MINUTES:-30}"
 
 KOMMANDO='@dependabot rebase'
 MAKS_KOMMENTARER=2
+ISO_TID='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'
 
 # Skrivende gh-kall går hit, så tørrkjøring aldri endrer noe.
 skriv() {
@@ -60,6 +61,7 @@ gyldig_pr() {
 
 modus_push() {
   local prs linjer linje nr forfatter sha signert
+  # gh sin standardgrense (30) som i den gamle inline-versjonen; retry tar opptil 100.
   prs=$(gh pr list --state open --json number,author,headRefOid \
     --jq '.[] | "\(.number) \(.author.login) \(.headRefOid)"')
   mapfile -t linjer <<<"$prs"
@@ -84,17 +86,19 @@ modus_push() {
 
 # Ett nytt forsøk på én BEHIND-PR. Rc ≠ 0 gir en warning hos kalleren.
 behandle_retry() {
-  local nr="$1" forfatter="$2" sha="$3" info signert head_tid telling antall siste
-  info=$(head_info "$sha") || return 1
-  read -r signert head_tid <<<"$info"
+  local nr="$1" forfatter="$2" sha="$3" info signert=false head_tid telling antall siste
+  if er_dependabot_forfatter "$forfatter"; then
+    info=$(head_info "$sha") || return 1
+    read -r signert head_tid <<<"$info"
+  fi
 
-  if ! er_dependabot_forfatter "$forfatter" || [[ "$signert" != "true" ]]; then
+  if [[ "$signert" != "true" ]]; then
     echo "PR #$nr: står bak main, oppdaterer via API"
     oppdater_branch "$nr" || return 1
     return 0
   fi
 
-  if [[ ! "$head_tid" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]; then
+  if [[ ! "$head_tid" =~ $ISO_TID ]]; then
     echo "::warning::PR #$nr: uventet committer-dato «$head_tid»"
     return 1
   fi
@@ -129,6 +133,11 @@ modus_retry() {
   GRENSE=$(date -u -d "-${MIN_MINUTES} minutes" +%Y-%m-%dT%H:%M:%SZ)
 
   main_tid=$(gh api "repos/$GH_REPO/commits/main" --jq .commit.committer.date)
+  # Uten sjekk ville f.eks. «null» sortert etter alle datoer og stille gitt «venter» hver time.
+  if [[ ! "$main_tid" =~ $ISO_TID ]]; then
+    echo "::error::Uventet committer-dato på main: «$main_tid»"
+    return 1
+  fi
   if [[ "$main_tid" > "$GRENSE" ]]; then
     echo "main ble endret $main_tid (under $MIN_MINUTES min siden); push-kjøringen har nettopp prøvd"
     return 0

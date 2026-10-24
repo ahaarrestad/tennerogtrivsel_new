@@ -95,6 +95,7 @@ describe('push-modus', () => {
         expect(oppdateringer(kall)).toEqual([
             ['api', '--method', 'PUT', 'repos/eier/repo/pulls/7/update-branch', '-f', 'update_method=rebase'],
         ]);
+        expect(kall.some((a) => a[1]?.includes('/commits/'))).toBe(false);
     });
 
     it('Dependabot-PR med usignert head (eskalert før) oppdateres i stedet for å kommenteres', () => {
@@ -271,6 +272,74 @@ describe('retry-modus', () => {
         expect(rc).toBe(0);
         expect(skrivende(kall)).toEqual([]);
         expect(ut).toContain('::warning::Hopper over');
+    });
+
+    it('annen forfatter slår ikke opp head-commiten', () => {
+        const { kall } = kjør({ MODUS: 'retry' }, [
+            mainRute(),
+            liste([pr(9, 'eier', SHA_A)]),
+            { match: 'PUT', out: '' },
+        ]);
+        expect(kall.some((a) => a[1] === `repos/eier/repo/commits/${SHA_A}`)).toBe(false);
+        expect(oppdateringer(kall)).toHaveLength(1);
+    });
+
+    it('uventet committer-dato på main → rc 1 uten PR-oppslag', () => {
+        const { rc, kall } = kjør({ MODUS: 'retry' }, [
+            { match: '^api repos/eier/repo/commits/main', out: { commit: { committer: { date: null } } } },
+        ]);
+        expect(rc).toBe(1);
+        expect(kall.some((a) => a[0] === 'pr')).toBe(false);
+    });
+
+    it('uventet committer-dato på head → warning, ingen skrivende kall', () => {
+        const { rc, kall, ut } = kjør({ MODUS: 'retry' }, [
+            mainRute(),
+            liste([pr(522, 'app/dependabot', SHA_A)]),
+            commitRute(SHA_A, true, 'i går'),
+        ]);
+        expect(rc).toBe(0);
+        expect(skrivende(kall)).toEqual([]);
+        expect(ut).toContain('uventet committer-dato');
+    });
+
+    it.each([
+        ['kommentaren', [], { match: '^pr comment', rc: 1 }],
+        ['eskaleringen', [150, 90], { match: 'PUT', rc: 1 }],
+    ])('feiler %s → warning, rc 0', (_navn, tider, feilRute) => {
+        const { rc, ut } = kjør({ MODUS: 'retry' }, [
+            mainRute(),
+            liste([pr(522, 'app/dependabot', SHA_A)]),
+            commitRute(SHA_A, true),
+            kommentarRute(522, tider),
+            feilRute,
+        ]);
+        expect(rc).toBe(0);
+        expect(ut).toContain('::warning::PR #522: forsøket feilet');
+    });
+
+    it('feiler update-branch på annen PR → warning, rc 0', () => {
+        const { rc, ut } = kjør({ MODUS: 'retry' }, [
+            mainRute(),
+            liste([pr(9, 'eier', SHA_A)]),
+            { match: 'PUT', rc: 1 },
+        ]);
+        expect(rc).toBe(0);
+        expect(ut).toContain('::warning::PR #9: forsøket feilet');
+    });
+
+    it.each([
+        ['kommentar', []],
+        ['eskalering', [150, 90]],
+    ])('DRY_RUN=true i retry (%s) → ingen skrivende kall', (_navn, tider) => {
+        const { kall, ut } = kjør({ MODUS: 'retry', DRY_RUN: 'true' }, [
+            mainRute(),
+            liste([pr(522, 'app/dependabot', SHA_A)]),
+            commitRute(SHA_A, true),
+            kommentarRute(522, tider),
+        ]);
+        expect(skrivende(kall)).toEqual([]);
+        expect(ut).toContain('(tørrkjøring) ville kjørt');
     });
 
     it('MIN_MINUTES=abc → rc 1 uten kall', () => {
