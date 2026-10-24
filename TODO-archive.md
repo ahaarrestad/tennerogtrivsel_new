@@ -3,6 +3,13 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **Dependabot: auto-merge-PR-er som havner bak main skal oppdateres selv** ([plan](docs/plans/archive/2026-10-24-rebase-retry.md)) ([spec](docs/designs/archive/2026-10-24-rebase-retry.md))
+  - **Problem:** 2026-10-24 sto Dependabot-PR-ene #521 og #522 `BEHIND` i timer med grønne sjekker og auto-merge på. Branch protection er `strict`, og `dependabot-rebase.yml` gjorde ett forsøk ved push uten å sjekke resultatet. Dependabot ignorerte `@dependabot rebase`, også en manuell kommentar på #522.
+  - **Forsøk før implementering:** update-branch med `expected_head_sha` på #522 ga en usignert commit, men auto-merge sto fortsatt på, og PR-en ble merget av seg selv. #472-problemet (fetch-metadata nekter usignerte commits) gjelder bare før auto-merge er slått på. PAT-en kan oppdatere PR-er som endrer workflows (#472).
+  - **Tiltak:** logikken er flyttet til `.github/scripts/dependabot-rebase.sh` (41 tester med falsk `gh`). Workflowen har fått en timeskjøring (`23 * * * *`). Retry tar bare auto-merge-PR-er som står `BEHIND`, og venter til main har vært i ro i 30 min. Dependabot-PR-er med signert head får ny kommentar. Etter to ubesvarte kommentarer siden head-commiten eskalerer den til update-branch med `expected_head_sha`. Andre PR-er og allerede eskalerte PR-er (usignert head) oppdateres direkte.
+  - **Robusthet:** én kø per hendelse, så en timeskjøring ikke fortrenger en ventende push-kjøring. Rc 1 når oppslaget av main eller PR-lista feiler, eller datoen er ugyldig. Feil på én PR gir warning, og resten behandles. `workflow_dispatch` har `dry_run` og `min_minutes`.
+  - **Dokumentert:** ny rad i vakttabellen i `sikkerhet.md` (bevisst unntak fra 2026-09-21-fiksen, og at «Require approval of the most recent reviewable push» ville stoppe eskaleringen). Alle PAT-brukere er listet. Helsesjekk følger timeskjøringen, og teksten i `stuck-pr-watch.yml` viser til retry.
+
 - [x] **Bot-PR-er blir grønne selv, og røde varsles straks** ([plan](docs/plans/archive/2026-10-22-bot-pr-gronne-og-raskt-varsel.md)) ([spec](docs/designs/archive/2026-10-22-bot-pr-gronne-og-raskt-varsel.md))
   - **Problem:** auto-PR #511 (2026-10-21) kunne aldri bli grønn, fordi CI krevde at den committede `csp-hashes.json` var i synk med bygget. Astro-oppdateringer endrer inline-script, og det kan ikke en bot rette. Varselet kom først 6,5 t senere.
   - **Tiltak 1:** CSP-hash-porten er fjernet. Den bestemte aldri hva som havnet i prod-CSP-en, for deploy regenererer hashene fra `dist`. Tillitsgrensen er bygget (audit, Dependabot-cooldown, ingen auto-merge av major).
