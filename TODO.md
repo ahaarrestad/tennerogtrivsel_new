@@ -19,6 +19,11 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
+- [ ] **Dependabot: auto-merge-PR-er som havner bak main skal oppdateres selv** ([plan](docs/plans/2026-10-24-rebase-retry.md)) ([spec](docs/designs/2026-10-24-rebase-retry.md))
+  - Konkret tilfelle 2026-10-24: Dependabot-PR-ene #521 og #522 ble `BEHIND` med grønne sjekker og auto-merge på. Dependabot ignorerte `@dependabot rebase` fra workflowen (og en manuell på #522), så de sto i timer
+  - Årsak: `strict` branch protection, og `dependabot-rebase.yml` gjør ett forsøk ved push uten å sjekke resultatet. Dependabot svarer ikke pålitelig på kommentarer enkelte dager
+  - Tiltak: timeskjøring i `dependabot-rebase.yml` som prøver igjen og eskalerer til update-branch etter to ubesvarte kommentarer (bare når auto-merge er på); logikken i et testet skript
+
 ## Backlog
 
 - [ ] **AI-søk (GEO) del 2: FAQ** — *ingen plan ennå*

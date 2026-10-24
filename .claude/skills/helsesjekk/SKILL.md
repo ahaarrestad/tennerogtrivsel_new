@@ -44,6 +44,7 @@ gh run list --workflow "Dependabot Updates" --limit 5 --json createdAt,conclusio
 gh run list --workflow "Blocked Upgrades Watch" --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
 gh run list --workflow "Node Version Watch" --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
 gh run list --workflow "Stuck PR Watch" --event schedule --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
+gh run list --workflow "Auto-Rebase Open PRs" --event schedule --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
 gh run list --workflow codeql.yml --branch main --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
 ```
 
@@ -70,6 +71,9 @@ dynamiske), så `--workflow "CodeQL"` feiler.
   ville workflow_run-kjøringene skjule at cron har stoppet. Blant workflow_run-kjøringene er
   `skipped` (CI som ikke er PR, f.eks. push til main) og `cancelled` (køen fortrenger ventende
   kjøringer) normalt.
+  Auto-Rebase Open PRs hører også til raden: timeskjøringen (`--event schedule`) prøver
+  `BEHIND`-PR-er på nytt. Eldre enn ~4 timer eller `conclusion` ≠ `success` → ⚠️. Den er grønn
+  også når den har kommentert eller eskalert; loggen viser hva den gjorde.
 - **CI/CD-deploy `cancelled`:** deploy-jobben har én-om-gangen-kø; en ventende deploy avbrytes
   når en nyere kommer. Normalt så lenge en senere kjøring er grønn.
 
