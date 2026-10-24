@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Holder åpne PR-er à jour med main (branch protection er `strict`). Kalles fra
-# .github/workflows/dependabot-rebase.yml. Spec: docs/designs/2026-10-24-rebase-retry.md
+# .github/workflows/dependabot-rebase.yml. Spec: docs/designs/archive/2026-10-24-rebase-retry.md
 #
 # MODUS=push   Etter push til main: ett forsøk på alle åpne PR-er.
 # MODUS=retry  Hver time: auto-merge-PR-er som fortsatt står BEHIND får nytt forsøk,

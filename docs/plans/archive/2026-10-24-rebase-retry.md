@@ -1,6 +1,6 @@
 # Plan: Auto-merge-PR-er som ligger bak main skal løsne selv
 
-Spec: [docs/designs/2026-10-24-rebase-retry.md](../designs/2026-10-24-rebase-retry.md)
+Spec: [docs/designs/archive/2026-10-24-rebase-retry.md](../../designs/archive/2026-10-24-rebase-retry.md)
 
 ## Mål og avgrensninger
 
