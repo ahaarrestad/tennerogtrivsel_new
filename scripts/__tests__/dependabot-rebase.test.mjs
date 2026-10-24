@@ -304,9 +304,9 @@ describe('retry-modus', () => {
     });
 
     it.each([
-        ['kommentaren', [], { match: '^pr comment', rc: 1 }],
-        ['eskaleringen', [150, 90], { match: 'PUT', rc: 1 }],
-    ])('feiler %s → warning, rc 0', (_navn, tider, feilRute) => {
+        ['kommentaren', [], { match: '^pr comment', rc: 1 }, 'kommenterer igjen'],
+        ['eskaleringen', [150, 90], { match: 'PUT', rc: 1 }, 'eskalerer til update-branch'],
+    ])('feiler %s → warning, rc 0', (_navn, tider, feilRute, gren) => {
         const { rc, ut } = kjør({ MODUS: 'retry' }, [
             mainRute(),
             liste([pr(522, 'app/dependabot', SHA_A)]),
@@ -315,6 +315,7 @@ describe('retry-modus', () => {
             feilRute,
         ]);
         expect(rc).toBe(0);
+        expect(ut).toContain(gren);
         expect(ut).toContain('::warning::PR #522: forsøket feilet');
     });
 
@@ -329,9 +330,9 @@ describe('retry-modus', () => {
     });
 
     it.each([
-        ['kommentar', []],
-        ['eskalering', [150, 90]],
-    ])('DRY_RUN=true i retry (%s) → ingen skrivende kall', (_navn, tider) => {
+        ['kommentar', [], 'kommenterer igjen'],
+        ['eskalering', [150, 90], 'eskalerer til update-branch'],
+    ])('DRY_RUN=true i retry (%s) → ingen skrivende kall', (_navn, tider, gren) => {
         const { kall, ut } = kjør({ MODUS: 'retry', DRY_RUN: 'true' }, [
             mainRute(),
             liste([pr(522, 'app/dependabot', SHA_A)]),
@@ -339,6 +340,7 @@ describe('retry-modus', () => {
             kommentarRute(522, tider),
         ]);
         expect(skrivende(kall)).toEqual([]);
+        expect(ut).toContain(gren);
         expect(ut).toContain('(tørrkjøring) ville kjørt');
     });
 
