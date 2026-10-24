@@ -7,6 +7,8 @@ name: Stuck PR Watch
 #   åpen etter 6 timer, sitter den fast — branchen er bak main (klassisk branch protection er
 #   strict), en CodeQL-alert som code scanning-regelen i rulesettet blokkerer på, eller en
 #   CodeQL-analyse som har feilet. Begge triggerne sjekker begge kriteriene.
+#   `BEHIND` prøves først løst av dependabot-rebase.yml (hver time, eskalering etter to
+#   ubesvarte `@dependabot rebase`). Har auto-merge vært på lenge, kan issuen komme før det.
 # Uten denne vakta ville en blokkert Dependabot- eller sikkerhetsfiks-PR ligge stille.
 # Se docs/architecture/sikkerhet.md#codeql-porten. `ci-ok` er jobbnavnet i deploy.yml.
 #
@@ -104,7 +106,8 @@ jobs:
             cat fastlaast.md
             echo
             echo "Vanlige årsaker: \`ci-ok\` ikke grønn (se PR-ens sjekker — en flaky test kan kjøres på nytt),"
-            echo "\`BEHIND\` (branchen ligger bak main — \`gh pr update-branch <nr>\` eller \`@dependabot rebase\`),"
+            echo "\`BEHIND\` (branchen ligger bak main — \`dependabot-rebase.yml\` prøver igjen hver time;"
+            echo "ellers \`gh pr update-branch <nr>\` eller \`@dependabot rebase\`),"
             echo "en CodeQL-alert (high/critical) som rulesettet blokkerer på, eller en feilet CodeQL-analyse."
             echo "Se docs/architecture/sikkerhet.md#codeql-porten."
             echo

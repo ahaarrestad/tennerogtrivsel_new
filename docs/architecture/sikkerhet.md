@@ -393,17 +393,18 @@ Rulesettet «Status Checks» (id 11887929, konfigurert i GitHub under Settings �
 
 ### Selvhelende drift: audit-fiks, oppetidssjekk og fastlåste PR-er
 
-Målet er at siden holder seg trygg uten at noen må følge med. Tre planlagte workflows gir bare lyd når noe faktisk krever et menneske — som en issue med `@ahaarrestad`-omtale (gir varsel):
+Målet er at siden holder seg trygg uten at noen må følge med. Fire planlagte workflows gir bare lyd når noe faktisk krever et menneske — som en issue med `@ahaarrestad`-omtale (gir varsel):
 
 | Workflow | Når | Gjør selv | Issue (etikett) |
 |----------|-----|-----------|-----------------|
 | `scheduled-audit.yml` | Daglig 06:00 UTC | Feiler auditen (høy/kritisk, minus unntak — se under): `npm audit fix --package-lock-only` (rot + lambda), verifiserer med `npm ci` + audit, og åpner PR fra `auto/npm-audit-fix` med auto-merge. CI og CodeQL-porten avgjør om den merges. | `security-audit` — når fiksen ikke gjør auditen grønn (typisk major-bump eller override), når `npm ci` feiler på den fiksede lockfila, eller når `npm audit` selv feiler (teksten sier hvilket). Lukkes automatisk når auditen er grønn. |
 | `uptime-check.yml` | Hver time | Sjekker at forsiden gir 200 med riktig `<title>`, at sikkerhetsheaderne fra CloudFront finnes, at http/apex ender på `https://www…/`, og at TLS har ≥ 14 dager igjen. | `uptime` — ved første feil (dedupes mot åpne). Lukkes automatisk når sjekken er grønn. |
 | `stuck-pr-watch.yml` | Hver 3. time, og etter hver PR-CI (`workflow_run`) | Finner åpne PR-er med auto-merge der `ci-ok` er ferdig og ikke grønn (varsles straks), eller der auto-merge har vært på i over 6 timer (normalt merges de på under 5 min): branchen er bak main (`BEHIND`), CodeQL-blokkering eller feilet analyse. | `pr-stuck` — én issue som lister PR-ene (dedupes mot åpne). Lukkes automatisk når ingen sitter fast. |
+| `dependabot-rebase.yml` | Ved push til main, og hver time | Ved push: `@dependabot rebase` på Dependabot-PR-er, update-branch på andre. Hver time: auto-merge-PR-er som fortsatt står `BEHIND` (og main er minst 30 min gammel) får nytt forsøk; har Dependabot ikke svart på to kommentarer siden head-commiten, oppdateres PR-en med update-branch (eskalering). Kommenterer og oppdaterer som PAT-eieren, fordi Dependabot ser ut til å ta kommandoer bare fra brukere med skrivetilgang, og en oppdatering med `GITHUB_TOKEN` ikke trigger CI. Eskaleringen er et bevisst unntak fra fiksen 2026-09-21 (ikke rebase Dependabot-PR-er med PAT): den gjelder bare når auto-merge allerede er på, så `fetch-metadata` ikke kan nekte det. Slås «Require approval of the most recent reviewable push» på i branch protection, stopper eskaleringen. | Ingen — `stuck-pr-watch.yml` varsler hvis PR-en likevel blir stående. |
 
 **Kjente funn uten fiks:** `osv-scanner.toml` i roten er eneste unntaksliste. OSV-scanneren leser den med `--config` (gjelder alle lockfiler), og npm-auditen leser den via `.github/scripts/npm-audit-check.sh`, som teller høy/kritisk-advisories minus unntakene. Hvert unntak må ha `ignoreUntil = YYYY-MM-DD` og en `reason`. Uten dato feiler skriptet, så evige unntak er umulige. Når datoen passeres, varsler begge igjen. Unntak gjelder bare den planlagte auditen (OSV leser også `osv-scanner.toml` automatisk fra lockfilens katalog, så legges OSV inn i PR-CI, gjelder de der også). Deploy-gaten (`--audit-level=critical`) har ingen unntak.
 
-Workflowene dedupes på etikett mot åpne issues, så et vedvarende problem gir én issue, ikke én per kjøring. `uptime-check.yml` og `stuck-pr-watch.yml` er grønne også når de finner feil — rød kjøring betyr at selve workflowen er ødelagt.
+Workflowene dedupes på etikett mot åpne issues, så et vedvarende problem gir én issue, ikke én per kjøring. `uptime-check.yml`, `stuck-pr-watch.yml` og `dependabot-rebase.yml` er grønne også når de finner feil — rød kjøring betyr at selve workflowen er ødelagt.
 
 **Hvorfor `auto/npm-audit-fix` og ikke `review/**`:** `auto-pr.yml` lager PR for `review/**`-pusher, og ville kappløpt med workflowen. Pushen gjøres med `MY_GITHUB_PAT` fordi en push med `GITHUB_TOKEN` ikke trigger CI, og uten `ci-ok`-sjekken merges PR-en aldri.
 
@@ -466,7 +467,9 @@ Utløsende hendelse: 2026-09-15 stoppet gaten en Drive-oppdatering på GHSA-26w7
 
 ### PAT-rotering (`MY_GITHUB_PAT`)
 
-`MY_GITHUB_PAT` brukes i `dependabot-auto-merge.yml` og `auto-pr.yml` for å trigge workflows etter Dependabot-merge (standard `GITHUB_TOKEN` har en anti-loop-sikring som blokkerer dette).
+`MY_GITHUB_PAT` brukes i `dependabot-auto-merge.yml`, `auto-pr.yml`, `dependabot-rebase.yml` og `scheduled-audit.yml`, fordi handlinger med standard `GITHUB_TOKEN` ikke trigger nye workflows (anti-loop-sikring) og Dependabot ikke tar imot kommandoer fra den. Bruk `grep -l 'secrets.MY_GITHUB_PAT' .github/workflows/*` for å se gjeldende liste ved rotering.
+
+Update-branch med PAT-en virker også på PR-er som endrer workflow-filer: #472 (endret `codeql.yml`) ble oppdatert slik 2026-09-19.
 
 **Gjeldende token-scope:** `Contents: read/write`, `Pull requests: write` — begrenset til dette repoet.
 
