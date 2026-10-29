@@ -113,6 +113,12 @@
   - Samme uverifiserte punkt: CARTOs juridiske foretaksnavn. Bevisst utelatt framfor å gjengi en uverifisert påstand
   - **Merk:** løses «Kart-tiles: selvhost vektor-tiles med Protomaps PMTiles» først, faller hele punktet bort — ingen tredjepart, ingen overføring
 
+- [ ] **Security Audit: OSV-funn skal fikses automatisk eller varsles** — *ingen plan ennå*
+  - Selvhelingen i `scheduled-audit.yml` (auto-fix-PR + `security-audit`-issue) dekker bare `npm audit` på høy/kritisk. `osv-scan`-jobben feiler også på middels/lav, men da skjer ingenting: ingen fiks-PR, ingen issue — workflowen er bare rød
+  - Konkret tilfelle: `qs@6.16.0` (CVE-2026-110816 / GHSA-6pq8-jhm2-2vcw, middels), publisert 2026-10-27. Kjøringen 2026-10-28 ble rød uten varsel; Dependabot ga heller ikke varsel. Oppdaget først av `/helsesjekk` 2026-10-29 og fikset manuelt med `npm update qs`
+  - Mulig tiltak: la fiks-jobben også kjøre når `osv-scan` feiler (prøv `npm update <pakke>` for transitive funn med fiks innenfor semver-området), og åpne/lukk en issue på samme måte som for `npm audit`
+  - Avklar i planfasen: skal middels/lav gi auto-fiks-PR, eller bare en issue? Og skal funn uten fiks unntas i `osv-scanner.toml` som i dag
+
 ## Fullført
 
 Se [TODO-archive.md](TODO-archive.md) for alle fullførte oppgaver.
