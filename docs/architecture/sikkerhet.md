@@ -519,6 +519,9 @@ Alvor er det strengeste av CVSS (`max_severity`) og GitHubs nivå (det `npm audi
 - Feiler `npm-audit`-jobben (f.eks. `npm ci`) eller `osv-scan` (SARIF-opplasting), blir kjøringen rød uten issue, og `close-issue` hoppes over. Sjeldent; helsesjekken fanger den røde kjøringen.
 - Feiler `npm update` (nettverk), står funnet igjen og varsles som «ikke innenfor package.json-rangene» — riktig rødt, men feil grunn. Se loggen.
 - Slås ikke auto-merge på for PR-en, feiler jobben og åpner issue — ellers ville `stuck-pr-watch.yml` (som bare ser auto-merge-PR-er) aldri sett den.
+- Timeout (15 min, f.eks. en hengende `npm update` eller `docker pull`) avbryter jobben: rød kjøring uten issue, og `close-issue` hoppes over.
+- Blir lockfila uendret (f.eks. fordi Dependabot rettet main), lukkes ikke en gammel åpen `auto/npm-audit-fix`-PR. Den merges eller får konflikt, og konflikt fanges av `stuck-pr-watch.yml`.
+- En ung fiks utenfor package.json-rangene gir `venter` til cooldownen er ute, og blir `varsle` først da.
 
 **Nivåforskjell:** her teller høy/kritisk fra `npm audit` og medium+ fra OSV, mens `deploy.yml` bare stopper på `critical`. Scheduled-workflowen er et tidlig varslingssystem som retter selv; deploy.yml er den harde CI-gaten. Lav ignoreres for å holde støyen nede.
 
