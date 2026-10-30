@@ -71,7 +71,10 @@ function områderFor(vuln, pakke) {
     return områder;
 }
 
-/** Gjør osv-scanner-JSON om til én post per (katalog, pakke, sårbarhet). */
+/**
+ * Gjør osv-scanner-JSON om til én post per (katalog, pakke, versjon, sårbarhet). Versjonen er med
+ * fordi samme pakke kan ligge i flere versjoner, og hver har sin egen fiks.
+ */
 export function lesFunn(osv, rot) {
     const funn = new Map();
     for (const r of osv.results ?? []) {
@@ -80,7 +83,7 @@ export function lesFunn(osv, rot) {
             if (p.package.ecosystem !== 'npm') continue;
             for (const v of p.vulnerabilities ?? []) {
                 const id = [v.id, ...(v.aliases ?? [])].find((s) => s.startsWith('GHSA-')) ?? v.id;
-                const nøkkel = `${katalog}\0${p.package.name}\0${id}`;
+                const nøkkel = `${katalog}\0${p.package.name}\0${p.package.version}\0${id}`;
                 if (funn.has(nøkkel)) continue;
                 const gruppe = (p.groups ?? []).find((g) => g.ids?.includes(v.id));
                 funn.set(nøkkel, {

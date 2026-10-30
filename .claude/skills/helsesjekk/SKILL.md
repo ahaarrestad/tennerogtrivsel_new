@@ -97,7 +97,8 @@ alltid med alle radene:
 | Uptime             | ✅ ingen uptime-issue · siste sjekk <tid> siden           |
 | Deploy (CI/CD)     | ✅ siste på main grønn <dato>                             |
 | Drive-bygg         | ✅ siste <dato> grønn                                     |
-| Security Audit     | ✅ grønn <dato> · 0 Dependabot-varsler · 0 CodeQL-varsler  || Dependabot         | ✅ siste kjøringer grønne                                 |
+| Security Audit     | ✅ grønn <dato> · 0 Dependabot-varsler · 0 CodeQL-varsler  |
+| Dependabot         | ✅ siste kjøringer grønne                                 |
 | Vaktjobber         | ✅ grønne <dato>, ingen watch-issues                      |
 | CodeQL             | ✅ grønn <dato>                                           |
 | Issues / PR-er     | ✅ ingen åpne                                             |
