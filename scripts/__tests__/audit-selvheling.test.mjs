@@ -192,7 +192,13 @@ describe('lesFunn', () => {
         ]);
     });
 
-    it('dedupliserer på katalog, pakke og id, og hopper over pakker utenfor npm', () => {
+    it('holder hver installerte versjon av samme pakke som eget funn', () => {
+        const toVersjoner = resultat('.', 'qs', '6.16.0', [QS_VULN]);
+        toVersjoner.packages.push(resultat('.', 'qs', '6.10.0', [QS_VULN]).packages[0]);
+        expect(lesFunn({ results: [toVersjoner] }, ROT).map((f) => f.versjon)).toEqual(['6.16.0', '6.10.0']);
+    });
+
+    it('dedupliserer på katalog, pakke, versjon og id, og hopper over pakker utenfor npm', () => {
         const dobbel = { ...resultat('.', 'qs', '6.16.0', [QS_VULN, QS_VULN]) };
         const go = {
             source: { path: `${ROT}/go.sum` },
