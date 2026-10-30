@@ -40,6 +40,8 @@ gh run list --workflow "Uptime Check" --limit 3 --json createdAt,conclusion --jq
 gh run list --workflow "CI/CD" --branch main --event push --limit 3 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
 gh run list --workflow "CI/CD" --event repository_dispatch --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
 gh run list --workflow "Scheduled Security Audit" --limit 3 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
+# … og deretter, med id-en til den nyeste (fanger funn som venter på cooldown):
+gh run view <id>
 gh run list --workflow "Dependabot Updates" --limit 5 --json createdAt,conclusion,displayTitle,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId) \(.displayTitle)"'
 gh run list --workflow "Blocked Upgrades Watch" --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
 gh run list --workflow "Node Version Watch" --limit 1 --json createdAt,conclusion,databaseId --jq '.[] | "\(.createdAt) \(.conclusion) \(.databaseId)"'
@@ -62,6 +64,12 @@ dynamiske), så `--workflow "CodeQL"` feiler.
 - **Andre rader:** den **nyeste** kjøringen avgjør. En eldre rød etterfulgt av grønn er løst —
   nevn den kort, ikke som et åpent problem.
 - **Rød og åpen:** hent årsaken med `gh run view <id> --log-failed` (begrens til relevante linjer).
+- **Security Audit:** retter funn selv (PR fra `auto/npm-audit-fix`) og åpner `security-audit`-issue
+  når noe krever handling. Er nyeste kjøring grønn, hent advarslene med
+  `gh run view <id>` og se etter «venter på cooldown» under ANNOTATIONS (ignorer runner-image-
+  meldinger; GitHub viser maks 10 advarsler per steg). Treff → ⚠️ med pakke og dato fiksen blir
+  aktuell, f.eks. «⚠️ grønn <dato> · venter: qs (rot) til 2026-11-05 — ingen handling». Eieren
+  trenger ikke gjøre noe: fiksen tas automatisk da, og ellers kommer issuen av seg selv.
 - **Gammelt Drive-bygg** er normalt — det betyr bare at ingen har endret innhold siden.
 - **Vaktjobbene** (Blocked Upgrades Watch, Node Version Watch) kjører mandager; en kjøring på
   inntil 8 dager er normal.
@@ -89,8 +97,7 @@ alltid med alle radene:
 | Uptime             | ✅ ingen uptime-issue · siste sjekk <tid> siden           |
 | Deploy (CI/CD)     | ✅ siste på main grønn <dato>                             |
 | Drive-bygg         | ✅ siste <dato> grønn                                     |
-| Security Audit     | ✅ grønn <dato> · 0 Dependabot-varsler · 0 CodeQL-varsler  |
-| Dependabot         | ✅ siste kjøringer grønne                                 |
+| Security Audit     | ✅ grønn <dato> · 0 Dependabot-varsler · 0 CodeQL-varsler  || Dependabot         | ✅ siste kjøringer grønne                                 |
 | Vaktjobber         | ✅ grønne <dato>, ingen watch-issues                      |
 | CodeQL             | ✅ grønn <dato>                                           |
 | Issues / PR-er     | ✅ ingen åpne                                             |

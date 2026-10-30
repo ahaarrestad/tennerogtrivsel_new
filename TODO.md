@@ -19,6 +19,14 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
+- [ ] **Security Audit: OSV-funn skal fikses automatisk eller varsles** ([plan](docs/plans/2026-10-30-osv-selvheling.md)) ([spec](docs/designs/2026-10-30-osv-selvheling.md))
+  - Selvhelingen i `scheduled-audit.yml` (auto-fix-PR + `security-audit`-issue) dekker bare `npm audit` på høy/kritisk. `osv-scan`-jobben feiler også på middels/lav, men da skjer ingenting: ingen fiks-PR, ingen issue — workflowen er bare rød
+  - Konkret tilfelle: `qs@6.16.0` (CVE-2026-110816 / GHSA-6pq8-jhm2-2vcw, middels), advisory publisert 2026-10-27. Kjøringen 2026-10-28 ble rød uten issue eller PR (bare ev. GitHubs standard Actions-e-post), og det kom ikke noe Dependabot-varsel. Oppdaget først av `/helsesjekk` 2026-10-29 og fikset manuelt
+  - Mulig tiltak: la fiks-jobben også kjøre når `osv-scan` feiler, og åpne/lukk en issue på samme måte som for `npm audit`
+  - **Cooldown:** `npm update <pakke>` tar nyeste versjon i området — i qs-tilfellet en 14 timer gammel minor (6.17.1), mot Dependabots 7-dagers cooldown (`docs/architecture/sikkerhet.md`). Fiksen lå i 6.16.1, en patch forbi cooldownen. En automatisk fiks må velge eldste fiksede versjon som har passert cooldown, ikke nyeste
+  - **`close-issue`** kjører på `needs: npm-audit` + `success()`. Bruker en OSV-issue samme `security-audit`-etikett, lukkes den selv om `osv-scan` fortsatt er rød — gi den egen etikett eller gjør lukkingen avhengig av begge jobbene
+  - Avklar i planfasen: skal middels/lav gi auto-fiks-PR, eller bare en issue? Og skal funn uten fiks unntas i `osv-scanner.toml` som i dag
+
 ## Backlog
 
 - [ ] **AI-søk (GEO) del 2: FAQ** — *ingen plan ennå*
@@ -112,14 +120,6 @@
   - Kunne ikke verifiseres under skrivingen: både `carto.com/privacy` og `dataprivacyframework.gov` er JS-rendrede SPA-er, så DPF-status for CARTO og for Fastly lot seg ikke slå opp fra CLI. Gjett aldri her — teksten er en juridisk erklæring
   - Samme uverifiserte punkt: CARTOs juridiske foretaksnavn. Bevisst utelatt framfor å gjengi en uverifisert påstand
   - **Merk:** løses «Kart-tiles: selvhost vektor-tiles med Protomaps PMTiles» først, faller hele punktet bort — ingen tredjepart, ingen overføring
-
-- [ ] **Security Audit: OSV-funn skal fikses automatisk eller varsles** — *ingen plan ennå*
-  - Selvhelingen i `scheduled-audit.yml` (auto-fix-PR + `security-audit`-issue) dekker bare `npm audit` på høy/kritisk. `osv-scan`-jobben feiler også på middels/lav, men da skjer ingenting: ingen fiks-PR, ingen issue — workflowen er bare rød
-  - Konkret tilfelle: `qs@6.16.0` (CVE-2026-110816 / GHSA-6pq8-jhm2-2vcw, middels), advisory publisert 2026-10-27. Kjøringen 2026-10-28 ble rød uten issue eller PR (bare ev. GitHubs standard Actions-e-post), og det kom ikke noe Dependabot-varsel. Oppdaget først av `/helsesjekk` 2026-10-29 og fikset manuelt
-  - Mulig tiltak: la fiks-jobben også kjøre når `osv-scan` feiler, og åpne/lukk en issue på samme måte som for `npm audit`
-  - **Cooldown:** `npm update <pakke>` tar nyeste versjon i området — i qs-tilfellet en 14 timer gammel minor (6.17.1), mot Dependabots 7-dagers cooldown (`docs/architecture/sikkerhet.md`). Fiksen lå i 6.16.1, en patch forbi cooldownen. En automatisk fiks må velge eldste fiksede versjon som har passert cooldown, ikke nyeste
-  - **`close-issue`** kjører på `needs: npm-audit` + `success()`. Bruker en OSV-issue samme `security-audit`-etikett, lukkes den selv om `osv-scan` fortsatt er rød — gi den egen etikett eller gjør lukkingen avhengig av begge jobbene
-  - Avklar i planfasen: skal middels/lav gi auto-fiks-PR, eller bare en issue? Og skal funn uten fiks unntas i `osv-scanner.toml` som i dag
 
 ## Fullført
 

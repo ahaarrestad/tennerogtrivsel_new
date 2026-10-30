@@ -1,10 +1,18 @@
 name: Scheduled Security Audit
 
-# Selvhelende: feiler auditen, prøver `auto-fix` `npm audit fix` på lockfilene og
-# åpner en PR med auto-merge. CI (`ci-ok`-sjekken i rulesettet) avgjør om den merges.
+# Selvhelende. `selvheling` kjører hver dag og retter det som kan rettes i lockfilene:
+#   1. `npm audit fix` og en målrettet `npm update` for pakker OSV fortsatt flagger.
+#      Høy/kritisk rettes straks; lav/medium bare med versjoner eldre enn 7 dager
+#      (samme cooldown som Dependabot).
+#   2. Endrede lockfiler pushes til `auto/npm-audit-fix` med en auto-merge-PR. CI (`ci-ok`)
+#      avgjør om den merges; står den fast, fanges det av stuck-pr-watch.yml.
+#   3. Et nytt OSV-skann er fasiten (scripts/audit-selvheling.mjs avgjør):
+#      ren/venter → grønn (venting vises som advarsel med dato), varsle/feil → rød kjøring og
+#      en issue med etiketten `security-audit`. Nye funn i en åpen issue gir én kommentar.
+#      Lave funn som står igjen, ignoreres.
+# Issuen lukkes automatisk når status er ren eller venter. «Ren» gjelder lockfila i PR-en.
+# `npm-audit` er bare informativ, og `osv-scan` laster bare opp SARIF til code scanning.
 # Kjente funn uten fiks kan unntas midlertidig i osv-scanner.toml (med utløpsdato).
-# Kan ikke fiksen løse alt, åpnes en issue med etiketten `security-audit`. Den lukkes
-# automatisk første gang auditen er grønn igjen.
 
 on:
   schedule:
@@ -15,6 +23,8 @@ on:
 concurrency: scheduled-audit
 
 jobs:
+  # Informativ: viser tellingen og advarer, men avgjør ingenting — det gjør `selvheling`.
+  # Exit 2 fra skriptet (ugyldig osv-scanner.toml, npm audit feilet) gjør den fortsatt rød.
   npm-audit:
     name: npm audit
     runs-on: ubuntu-latest
@@ -36,7 +46,7 @@ jobs:
         run: |
           N=$(bash .github/scripts/npm-audit-check.sh)
           echo "Høy/kritisk uten unntak: $N"
-          [ "$N" = 0 ]
+          [ "$N" = 0 ] || echo "::warning::npm audit (root): $N høy/kritisk — selvheling-jobben retter eller varsler"
 
       - name: Install dependencies (lambda)
         run: npm ci
@@ -46,21 +56,22 @@ jobs:
         run: |
           N=$(bash "$GITHUB_WORKSPACE/.github/scripts/npm-audit-check.sh")
           echo "Høy/kritisk uten unntak: $N"
-          [ "$N" = 0 ]
+          [ "$N" = 0 ] || echo "::warning::npm audit (lambda): $N høy/kritisk — selvheling-jobben retter eller varsler"
         working-directory: lambda/kontakt-form-handler
 
-  auto-fix:
-    name: npm audit fix → PR
+  selvheling:
+    name: Selvheling (npm audit fix + OSV) → PR eller issue
     needs: npm-audit
-    if: failure() && needs.npm-audit.result == 'failure'
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
       issues: write
+    outputs:
+      status: ${{ steps.vurder.outputs.status }}
     steps:
-      # persist-credentials: false + --ignore-scripts: `npm audit fix` kan dra inn
-      # versjoner forbi Dependabot-cooldownen, så ingen install-scripts skal kjøre mens
+      # persist-credentials: false + --ignore-scripts: ingen install-scripts skal kjøre mens
       # en token ligger i .git/config. PAT-en brukes kun i push-steget.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -71,12 +82,58 @@ jobs:
           node-version-file: '.nvmrc'
           cache: npm
 
+      # Regnes én gang, så npm og vurderingen bruker samme tidspunkter. Kopiene av
+      # lockfilene er utgangspunktet for nedgraderingsvakten.
+      - name: Tidspunkter og utgangspunkt
+        run: |
+          set -euo pipefail
+          echo "CUTOFF=$(date -u -d '7 days ago' +%FT%TZ)" >> "$GITHUB_ENV"
+          echo "NAA=$(date -u +%FT%TZ)" >> "$GITHUB_ENV"
+          cp package-lock.json "$RUNNER_TEMP/lock-rot.json"
+          cp lambda/kontakt-form-handler/package-lock.json "$RUNNER_TEMP/lock-lambda.json"
+
       # --package-lock-only: endrer bare lockfila, aldri package.json-rangene.
       # Ingen --force — major-bump er en manuell beslutning.
       - name: npm audit fix (root og lambda)
         run: |
-          npm audit fix --package-lock-only --ignore-scripts || true
-          (cd lambda/kontakt-form-handler && npm audit fix --package-lock-only --ignore-scripts) || true
+          npm audit fix --package-lock-only --ignore-scripts --before="$CUTOFF" || true
+          (cd lambda/kontakt-form-handler && npm audit fix --package-lock-only --ignore-scripts --before="$CUTOFF") || true
+
+      - name: OSV-skann 1
+        run: bash .github/scripts/osv-skann.sh "$RUNNER_TEMP/osv-1.json"
+
+      # OSV finner også medium/lav og funn npm audit ikke kjenner. Høy/kritisk (`straks`)
+      # får nyeste fiks; ellers bare versjoner eldre enn cooldownen.
+      - name: Målrettet npm update for OSV-funn
+        if: env.OSV_FEIL != '1'
+        run: |
+          set -uo pipefail
+          if ! node scripts/audit-selvheling.mjs pakker "$RUNNER_TEMP/osv-1.json" > "$RUNNER_TEMP/pakker.tsv"; then
+            echo "OSV_FEIL=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          while IFS=$'\t' read -r KATALOG PAKKE TEMPO; do
+            GRENSE=$CUTOFF
+            if [ "$TEMPO" = straks ]; then GRENSE=$NAA; fi
+            echo "npm update $PAKKE i $KATALOG (--before=$GRENSE)"
+            (cd "$KATALOG" && npm update "$PAKKE" --package-lock-only --ignore-scripts --before="$GRENSE") || true
+          done < "$RUNNER_TEMP/pakker.tsv"
+
+      # `npm update` på en transitiv pakke skal aldri gå bakover. Gjør den det, pushes ingenting.
+      - name: Nedgraderingsvakt
+        run: |
+          set -uo pipefail
+          RC=0
+          node scripts/audit-selvheling.mjs nedgradert "$RUNNER_TEMP/lock-rot.json" package-lock.json || RC=1
+          node scripts/audit-selvheling.mjs nedgradert "$RUNNER_TEMP/lock-lambda.json" lambda/kontakt-form-handler/package-lock.json || RC=1
+          if [ "$RC" != 0 ]; then
+            echo "::error::En pakke ble nedgradert — lockfilene pushes ikke"
+            echo "NEDGRADERT=1" >> "$GITHUB_ENV"
+          fi
+
+      # Før `npm ci`, så node_modules ikke finnes og ikke skannes.
+      - name: OSV-skann 2
+        run: bash .github/scripts/osv-skann.sh "$RUNNER_TEMP/osv-2.json"
 
       # ci_ok: lockfilene er konsistente (npm ci lykkes) — kun da pushes de.
       # vulns: antall høy+kritisk etter fiks, minus unntakene i osv-scanner.toml. Tom =
@@ -112,12 +169,46 @@ jobs:
             git diff --stat
           fi
 
+      # status: ren | venter | varsle | feil. `feil` betyr at resultatet ikke kan stoles på
+      # (skann, registry, nedgradering, npm ci eller npm audit feilet) — aldri `ren`.
+      - name: Vurder
+        id: vurder
+        env:
+          CI_OK: ${{ steps.verify.outputs.ci_ok }}
+          VULNS: ${{ steps.verify.outputs.vulns }}
+        run: |
+          set -uo pipefail
+          skriv() { # status, id-er, tekst
+            local SKILLE
+            SKILLE=$(cat /proc/sys/kernel/random/uuid)
+            printf 'status=%s\nvarsle_ider=%s\nvarsle_tekst<<%s\n%s\n%s\n' "$1" "$2" "$SKILLE" "$3" "$SKILLE" >> "$GITHUB_OUTPUT"
+            echo "Status: $1"
+            exit 0
+          }
+          feil() { echo "::error::$1"; skriv feil selvheling-feil "- $1"; }
+
+          [ "${OSV_FEIL:-}" != 1 ] || feil "OSV-skannet feilet — se loggen"
+          [ "${NEDGRADERT:-}" != 1 ] || feil "Fiksforsøket nedgraderte en pakke — lockfilene er ikke pushet"
+          [ -s "$RUNNER_TEMP/osv-2.json" ] || feil "OSV-resultatet mangler"
+          [ "$CI_OK" = true ] || feil "npm ci feiler på den fiksede lockfila — fiksen er ikke pushet"
+          [ -n "$VULNS" ] || feil "npm audit feilet uten resultat (nett/registry), eller osv-scanner.toml har et unntak uten gyldig ignoreUntil"
+
+          UT="$RUNNER_TEMP/vurder.out"
+          GITHUB_OUTPUT="$UT" node scripts/audit-selvheling.mjs vurder "$RUNNER_TEMP/osv-2.json" --cutoff "$CUTOFF" --na "$NAA" \
+            || feil "Vurderingen av OSV-funnene feilet (exit $?) — se loggen"
+          STATUS=$(sed -n 's/^status=//p' "$UT")
+          if [ "$VULNS" != 0 ] && [ "$STATUS" != varsle ]; then
+            skriv varsle npm-audit "- \`npm audit\` finner $VULNS høy/kritisk som OSV ikke har — kjør \`npm audit\` lokalt"
+          fi
+          cat "$UT" >> "$GITHUB_OUTPUT"
+          echo "Status: $STATUS"
+
       # Fast branchnavn: en ny kjøring oppdaterer samme PR i stedet for å lage en ny.
       # Ikke review/** — da ville auto-pr.yml også prøvd å lage PR-en.
       # MY_GITHUB_PAT: en push med GITHUB_TOKEN trigger ikke CI, og uten CI blir
       # PR-en aldri merget (rulesettet krever `ci-ok`).
       - name: Push fiks og åpne PR med auto-merge
-        if: steps.verify.outputs.changed == 'true' && steps.verify.outputs.ci_ok == 'true'
+        if: steps.verify.outputs.changed == 'true' && steps.vurder.outputs.status != 'feil'
         env:
           GH_TOKEN: ${{ secrets.MY_GITHUB_PAT }}
         run: |
@@ -127,62 +218,94 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$BRANCH"
           git add package-lock.json lambda/kontakt-form-handler/package-lock.json
-          git commit -m "chore(deps): npm audit fix — automatisk fra scheduled-audit"
+          git commit -m "chore(deps): sikkerhetsfiks i lockfilene — automatisk fra scheduled-audit"
           git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$BRANCH"
 
           PR_URL=$(gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url // empty')
           if [ -z "$PR_URL" ]; then
             {
-              echo "Automatisk \`npm audit fix --package-lock-only\` fra \`scheduled-audit.yml\`."
+              echo "Automatisk sikkerhetsfiks fra \`scheduled-audit.yml\`: \`npm audit fix\` og målrettet \`npm update\` for OSV-funn."
               echo
-              echo "Kun lockfilene er endret. Auto-merge er slått på — PR-en merges når \`ci-ok\` er grønn."
+              echo "Kun lockfilene er endret, innenfor package.json-rangene. Høy/kritisk rettes straks;"
+              echo "lav/medium bare med versjoner som er eldre enn 7 dager (samme cooldown som Dependabot)."
+              echo
+              echo "Auto-merge er slått på — PR-en merges når \`ci-ok\` er grønn."
               echo "Feiler CI, står den åpen til den fikses manuelt eller lukkes."
-            } > body.md
+            } > "$RUNNER_TEMP/body.md"
             PR_URL=$(gh pr create --base main --head "$BRANCH" \
-              --title "chore(deps): npm audit fix (automatisk)" --body-file body.md)
+              --title "chore(deps): sikkerhetsfiks (automatisk)" --body-file "$RUNNER_TEMP/body.md")
           fi
           # Kan feile om PR-en allerede har auto-merge eller er «clean» — ufarlig.
           gh pr merge --auto --rebase "$PR_URL" || echo "::warning::Kunne ikke slå på auto-merge for $PR_URL"
           echo "PR: $PR_URL"
 
-      # github.token holder for issues (samme valg som node-version-watch.yml).
-      - name: Åpne issue når fiksen ikke holder
-        if: steps.verify.outputs.vulns != '0' || steps.verify.outputs.ci_ok != 'true'
+      # github.token holder for issues (samme valg som node-version-watch.yml). Markøren
+      # (skjult HTML-kommentar) husker hvilke funn issuen alt nevner; bare nye funn gir en
+      # kommentar. Den leses bare fra issue-teksten og workflowens egne kommentarer.
+      - name: Åpne eller oppdater issue
+        if: ${{ !cancelled() && (steps.vurder.outputs.status == 'varsle' || steps.vurder.outputs.status == 'feil' || failure()) }}
         env:
           GH_TOKEN: ${{ github.token }}
-          VULNS: ${{ steps.verify.outputs.vulns }}
-          CI_OK: ${{ steps.verify.outputs.ci_ok }}
+          JOBB: ${{ job.status }}
+          IDER: ${{ steps.vurder.outputs.varsle_ider }}
+          TEKST: ${{ steps.vurder.outputs.varsle_tekst }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          gh label create security-audit --description "Watchdog: npm audit feiler og kan ikke fikses automatisk" --color d93f0b --force
-          AAPNE=$(gh issue list --label security-audit --state open --limit 1 --json number --jq 'length')
-          if [ "$AAPNE" != "0" ]; then
-            echo "Åpen security-audit-issue finnes allerede — gjør ingenting."
+          # Et steg som krasjet (f.eks. push), kommer i tillegg til det vurderingen fant.
+          if [ "$JOBB" = failure ]; then
+            IDER="${IDER:+$IDER,}selvheling-feil"
+            TEKST="${TEKST:+$TEKST$'\n'}- Et steg i selvheling-jobben feilet uventet — se loggen."
+          fi
+          MARKOR=$(node scripts/audit-selvheling.mjs markør "$IDER")
+          gh label create security-audit --description "Watchdog: sikkerhetsfunn som ikke kan fikses automatisk" --color d93f0b --force
+          NR=$(gh issue list --label security-audit --state open --limit 1 --json number --jq '.[0].number // empty')
+          if [ -z "$NR" ]; then
+            {
+              echo "@ahaarrestad \`scheduled-audit.yml\` klarte ikke å fikse alle sikkerhetsfunn automatisk."
+              echo
+              echo "$TEKST"
+              echo
+              echo "Kjøring: $RUN_URL"
+              echo
+              echo "Utenfor rangene: fiksen krever en major-oppdatering eller en override i \`package.json\`."
+              echo "Ingen fiks publisert: funnet kan unntas midlertidig i \`osv-scanner.toml\` (med \`ignoreUntil\`)."
+              echo "Issuen lukkes automatisk når ingen funn krever handling lenger."
+              echo
+              echo "$MARKOR"
+            } > "$RUNNER_TEMP/body.md"
+            gh issue create --label security-audit --title "Sikkerhetsfunn — krever manuell fiks" --body-file "$RUNNER_TEMP/body.md"
             exit 0
           fi
-          if [ -z "$VULNS" ]; then
-            GRUNN="\`npm audit\` feilet uten å gi resultat (nettverk/registry?), eller \`osv-scanner.toml\` har et unntak uten gyldig \`ignoreUntil\` — se loggen. Ikke nødvendigvis sårbarheter."
-          elif [ "$CI_OK" != "true" ]; then
-            GRUNN="\`npm audit fix\` ga lockfiler der \`npm ci\` feiler — fiksen er ikke pushet."
-          else
-            GRUNN="$VULNS sårbarheter (høy/kritisk) gjenstår etter \`npm audit fix\`. Typisk krever fiksen en major-oppdatering eller en override i \`package.json\`. Finnes ingen fiks, kan funnet unntas midlertidig i \`osv-scanner.toml\`."
+          gh issue view "$NR" --json body,comments > "$RUNNER_TEMP/issue.json"
+          NYE=$(ISSUE_JSON="$RUNNER_TEMP/issue.json" node scripts/audit-selvheling.mjs nye "$IDER")
+          if [ -z "$NYE" ]; then
+            echo "Issue #$NR nevner alt disse funnene — ingen ny kommentar."
+            exit 0
           fi
           {
-            echo "@ahaarrestad \`scheduled-audit.yml\` klarte ikke å fikse auditen automatisk."
+            echo "Nye funn ($NYE):"
             echo
-            echo "$GRUNN"
+            echo "$TEKST"
             echo
             echo "Kjøring: $RUN_URL"
             echo
-            echo "Kjør \`npm audit\` lokalt for detaljer. Issuen lukkes automatisk når auditen er grønn."
-          } > body.md
-          gh issue create --label security-audit --title "npm audit feiler — krever manuell fiks" --body-file body.md
+            echo "$MARKOR"
+          } > "$RUNNER_TEMP/kommentar.md"
+          gh issue comment "$NR" --body-file "$RUNNER_TEMP/kommentar.md"
+
+      - name: Rød kjøring ved funn som krever handling
+        if: steps.vurder.outputs.status == 'varsle' || steps.vurder.outputs.status == 'feil'
+        env:
+          STATUS: ${{ steps.vurder.outputs.status }}
+        run: |
+          echo "::error::Selvheling: status $STATUS — se issuen med etiketten security-audit"
+          exit 1
 
   close-issue:
     name: Lukk security-audit-issue
-    needs: npm-audit
-    if: success()
+    needs: [npm-audit, selvheling]
+    if: ${{ !cancelled() && needs.npm-audit.result == 'success' && needs.selvheling.result == 'success' && (needs.selvheling.outputs.status == 'ren' || needs.selvheling.outputs.status == 'venter') }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -194,9 +317,12 @@ jobs:
         run: |
           set -euo pipefail
           for NR in $(gh issue list --label security-audit --state open --json number --jq '.[].number'); do
-            gh issue close "$NR" --comment "Auditen er grønn igjen — lukkes automatisk."
+            gh issue close "$NR" --comment "Ingen funn krever handling lenger — lukkes automatisk."
           done
 
+  # Bare SARIF-opplasting til code scanning. `selvheling` avgjør om funn krever handling,
+  # så denne skal ikke gjøre kjøringen rød. Imaget i .github/scripts/osv-skann.sh er pinnet
+  # på samme versjon — bump dem sammen.
   osv-scan:
     name: OSV Scanner
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0
@@ -205,6 +331,7 @@ jobs:
       contents: read
       actions: read
     with:
+      fail-on-vuln: false
       # --config: samme unntaksliste for alle lockfiler, også lambda.
       scan-args: |-
         --config=./osv-scanner.toml
