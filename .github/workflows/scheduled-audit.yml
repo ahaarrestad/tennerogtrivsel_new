@@ -10,7 +10,8 @@ name: Scheduled Security Audit
 #      ren/venter → grønn (venting vises som advarsel med dato), varsle/feil → rød kjøring og
 #      en issue med etiketten `security-audit`. Nye funn i en åpen issue gir én kommentar.
 #      Lave funn som står igjen, ignoreres.
-# Issuen lukkes automatisk når status er ren eller venter. «Ren» gjelder lockfila i PR-en.
+# Issuen lukkes automatisk når npm-audit og selvheling er grønne og status er ren eller venter.
+# «Ren» gjelder lockfila i PR-en.
 # `npm-audit` er bare informativ, og `osv-scan` laster bare opp SARIF til code scanning.
 # Kjente funn uten fiks kan unntas midlertidig i osv-scanner.toml (med utløpsdato).
 
@@ -194,6 +195,7 @@ jobs:
           [ -n "$VULNS" ] || feil "npm audit feilet uten resultat (nett/registry), eller osv-scanner.toml har et unntak uten gyldig ignoreUntil"
 
           UT="$RUNNER_TEMP/vurder.out"
+          : > "$UT"
           GITHUB_OUTPUT="$UT" node scripts/audit-selvheling.mjs vurder "$RUNNER_TEMP/osv-2.json" --cutoff "$CUTOFF" --na "$NAA" \
             || feil "Vurderingen av OSV-funnene feilet (exit $?) — se loggen"
           STATUS=$(sed -n 's/^status=//p' "$UT")
@@ -235,9 +237,16 @@ jobs:
             PR_URL=$(gh pr create --base main --head "$BRANCH" \
               --title "chore(deps): sikkerhetsfiks (automatisk)" --body-file "$RUNNER_TEMP/body.md")
           fi
-          # Kan feile om PR-en allerede har auto-merge eller er «clean» — ufarlig.
-          gh pr merge --auto --rebase "$PR_URL" || echo "::warning::Kunne ikke slå på auto-merge for $PR_URL"
+          # Kan feile om PR-en allerede har auto-merge eller er «clean» — derfor sjekkes resultatet,
+          # ikke exit-koden. Uten auto-merge ser ikke stuck-pr-watch.yml PR-en, og fiksen ville
+          # aldri nådd main mens kjøringen var grønn. Feiler steget, åpner issue-steget en issue.
+          gh pr merge --auto --rebase "$PR_URL" || true
           echo "PR: $PR_URL"
+          OK=$(gh pr view "$PR_URL" --json autoMergeRequest,state --jq '.autoMergeRequest != null or .state == "MERGED"')
+          if [ "$OK" != true ]; then
+            echo "::error::Auto-merge er ikke slått på for $PR_URL — fiksen når ikke main av seg selv"
+            exit 1
+          fi
 
       # github.token holder for issues (samme valg som node-version-watch.yml). Markøren
       # (skjult HTML-kommentar) husker hvilke funn issuen alt nevner; bare nye funn gir en
