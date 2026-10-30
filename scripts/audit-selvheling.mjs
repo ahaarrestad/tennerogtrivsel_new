@@ -15,15 +15,25 @@ const GRUNN_UTENFOR = 'fiks finnes, men ikke innenfor package.json-rangene (majo
 const KJØRETIME_UTC = 6;
 const DAG_MS = 24 * 60 * 60 * 1000;
 
-/** CVSS-score først (<4 lav, <7 medium, <9 høy, ellers kritisk), så GitHubs nivå, ellers medium. */
-export function alvor(score, dbSeverity) {
+const NIVÅER = ['lav', 'medium', 'høy', 'kritisk'];
+
+function alvorFraCvss(score) {
     const tall = score === '' || score == null ? NaN : Number(score);
-    if (Number.isFinite(tall)) {
-        if (tall < 4) return 'lav';
-        if (tall < 7) return 'medium';
-        return tall < 9 ? 'høy' : 'kritisk';
-    }
-    return ALVOR_FRA_DB[dbSeverity] ?? 'medium';
+    if (!Number.isFinite(tall)) return undefined;
+    if (tall < 4) return 'lav';
+    if (tall < 7) return 'medium';
+    return tall < 9 ? 'høy' : 'kritisk';
+}
+
+/**
+ * Det strengeste av CVSS-score (<4 lav, <7 medium, <9 høy, ellers kritisk) og GitHubs nivå, ellers
+ * medium. Det strengeste, fordi `npm audit` bruker GitHubs nivå: et funn GitHub kaller høyt skal
+ * rettes straks her også, ikke vente på cooldown mens npm audit varsler.
+ */
+export function alvor(score, dbSeverity) {
+    const kandidater = [alvorFraCvss(score), ALVOR_FRA_DB[dbSeverity]].filter(Boolean);
+    if (kandidater.length === 0) return 'medium';
+    return NIVÅER[Math.max(...kandidater.map((n) => NIVÅER.indexOf(n)))];
 }
 
 function delOpp(v) {
@@ -128,8 +138,10 @@ export function vurder(funn, publisert, cutoff, nå) {
     const fiks = fiksFor(funn);
     if (!fiks || !publisert[fiks]) return { ...funn, utfall: 'varsle', grunn: GRUNN_INGEN_FIKS };
     const t = new Date(publisert[fiks]);
-    if (t > grense(funn.alvor, cutoff, nå)) {
-        const aktuellFra = førsteKjøring(new Date(t.getTime() + (nå - cutoff)));
+    const g = grense(funn.alvor, cutoff, nå);
+    if (t > g) {
+        // Fiksen blir aktuell når grensen har nådd t: etter cooldownen, eller neste kjøring for høy/kritisk.
+        const aktuellFra = førsteKjøring(new Date(t.getTime() + (nå - g)));
         return { ...funn, utfall: 'venter', aktuellFra, grunn: `fiks ${fiks} er yngre enn cooldownen` };
     }
     return { ...funn, utfall: 'varsle', grunn: GRUNN_UTENFOR };
@@ -140,7 +152,7 @@ export function unikeIder(vurderinger) {
 }
 
 export function lagMarkør(ider) {
-    return `<!-- audit-funn: ${[...ider].sort().join(',')} -->`;
+    return `<!-- audit-funn: ${[...new Set(ider)].sort().join(',')} -->`;
 }
 
 /** Unionen av alle markører. Kalleren sender bare tekst workflowen selv har skrevet. */

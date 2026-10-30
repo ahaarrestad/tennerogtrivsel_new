@@ -118,7 +118,7 @@ Testet 2026-10-29 i en kopi med den gamle lockfila (qs 6.16.0):
 - Hvordan datoen for «fiksen blir aktuell» regnes ut (for eksempel publiseringstid fra
   `npm view <pakke> time` + 7 dager).
 - Skriptspråk (bash eller Node) og navn på skript og jobber.
-- **Mitt valg:** alvorlighet fra OSV tolkes via CVSS-score (lav < 4,0). Funn uten alvorlighet
+- **Mitt valg:** alvorlighet er det strengeste av CVSS-score (lav < 4,0) og GitHubs nivå (endret etter review, så npm audit og OSV er enige om hva som er høyt). Funn uten alvorlighet
   behandles som medium, så de varsles heller enn å forsvinne.
 - **Mitt valg:** venteadvarselen skrives som `::warning::` og i jobbsammendraget, ikke som issue.
 - **Mitt valg — OSV-funn som `npm audit` ikke kjenner:** de skal ikke gå rett til issue, siden det

@@ -94,6 +94,9 @@ describe('alvor', () => {
         ['', undefined, 'medium'],
         ['abc', undefined, 'medium'],
         [undefined, 'UKJENT', 'medium'],
+        ['5.3', 'HIGH', 'høy'],
+        ['9.1', 'MODERATE', 'kritisk'],
+        ['3.1', 'LOW', 'lav'],
     ])('(%j, %j) gir %s', (score, db, forventet) => {
         expect(alvor(score, db)).toBe(forventet);
     });
@@ -246,6 +249,11 @@ describe('vurder', () => {
         expect(v).toMatchObject({ utfall: 'venter', aktuellFra: dato, pakke: 'qs' });
     });
 
+    it('høyt funn med fiks publisert etter kjøringen er aktuelt neste kjøring, ikke om 7 dager', () => {
+        const v = vurder(funn({ alvor: 'høy' }), { '6.16.1': '2026-10-30T06:00:05Z' }, CUTOFF, NÅ);
+        expect(v).toMatchObject({ utfall: 'venter', aktuellFra: '2026-10-31' });
+    });
+
     it('gammel fiks som ikke er tatt, gir varsel om rangene', () => {
         const v = vurder(funn(), { '6.16.1': '2026-10-14T22:06:17Z' }, CUTOFF, NÅ);
         expect(v.utfall).toBe('varsle');
@@ -284,6 +292,7 @@ describe('markører', () => {
 
     it('lagMarkør lager en skjult HTML-kommentar', () => {
         expect(lagMarkør(['B', 'A'])).toBe('<!-- audit-funn: A,B -->');
+        expect(lagMarkør(['A', 'A'])).toBe('<!-- audit-funn: A -->');
     });
 
     it.each([
@@ -427,7 +436,8 @@ describe('main: vurder', () => {
     });
 
     it('lave funn hentes ikke og gir ren', async () => {
-        const osv = { results: [resultat('.', 'qs', '6.16.0', [QS_VULN], '2.0')] };
+        const lav = { ...QS_VULN, database_specific: { severity: 'LOW' } };
+        const osv = { results: [resultat('.', 'qs', '6.16.0', [lav], '2.0')] };
         const { deps, skrevet, hentet } = lagDeps({ filer: { '/osv.json': JSON.stringify(osv) } });
         expect(await main(VURDER, deps)).toBe(0);
         expect(output(skrevet['/out']).status).toBe('ren');

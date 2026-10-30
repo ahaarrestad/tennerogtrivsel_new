@@ -512,12 +512,13 @@ Frekvensen ble 2026-09-15 hevet fra ukentlig til **daglig**, samtidig som audit-
 | Medium+ uten publisert fiks | `varsle` — unntak i `osv-scanner.toml` eller vent på fiks |
 | Skann, registry, `npm ci` eller `npm audit` feiler | `feil` — aldri `ren`, issuen lukkes ikke |
 
-Alvor kommer fra CVSS (`max_severity`), ellers GitHubs nivå, ellers medium. `varsle` og `feil` gir rød kjøring og issue. Issuen har en skjult markør (`<!-- audit-funn: … -->`) med funn-id-ene; den leses fra issue-teksten og workflowens egne kommentarer, så kommentarer fra andre kan ikke undertrykke varsler (issue-teksten sjekkes ikke for forfatter, men etiketten krever triage-tilgang). Endrede lockfiler pushes også ved `varsle` (delvis fiks er bedre enn ingen). «Ren» gjelder lockfila i PR-en; står PR-en fast, varsler `stuck-pr-watch.yml`.
+Alvor er det strengeste av CVSS (`max_severity`) og GitHubs nivå (det `npm audit` bruker), ellers medium. `varsle` og `feil` gir rød kjøring og issue. Issuen har en skjult markør (`<!-- audit-funn: … -->`) med funn-id-ene; den leses fra issue-teksten og workflowens egne kommentarer, så kommentarer fra andre kan ikke undertrykke varsler (issue-teksten sjekkes ikke for forfatter, men etiketten krever triage-tilgang). Endrede lockfiler pushes også ved `varsle` (delvis fiks er bedre enn ingen). «Ren» gjelder lockfila i PR-en; står PR-en fast, varsler `stuck-pr-watch.yml`.
 
 **Kjente hull:**
 - `npm audit fix` bruker cooldownen for alle nivåer; bare den målrettede `npm update` tar høy/kritisk straks. Krever fiksen en ny foreldrepakke yngre enn 7 dager, blir et høyt funn en issue i stedet for en PR.
 - Feiler `npm-audit`-jobben (f.eks. `npm ci`) eller `osv-scan` (SARIF-opplasting), blir kjøringen rød uten issue, og `close-issue` hoppes over. Sjeldent; helsesjekken fanger den røde kjøringen.
 - Feiler `npm update` (nettverk), står funnet igjen og varsles som «ikke innenfor package.json-rangene» — riktig rødt, men feil grunn. Se loggen.
+- Slås ikke auto-merge på for PR-en, feiler jobben og åpner issue — ellers ville `stuck-pr-watch.yml` (som bare ser auto-merge-PR-er) aldri sett den.
 
 **Nivåforskjell:** her teller høy/kritisk fra `npm audit` og medium+ fra OSV, mens `deploy.yml` bare stopper på `critical`. Scheduled-workflowen er et tidlig varslingssystem som retter selv; deploy.yml er den harde CI-gaten. Lav ignoreres for å holde støyen nede.
 
