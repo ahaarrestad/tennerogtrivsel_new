@@ -397,7 +397,7 @@ Målet er at siden holder seg trygg uten at noen må følge med. Fire planlagte 
 
 | Workflow | Når | Gjør selv | Issue (etikett) |
 |----------|-----|-----------|-----------------|
-| `scheduled-audit.yml` | Daglig 06:00 UTC | Feiler auditen (høy/kritisk, minus unntak — se under): `npm audit fix --package-lock-only` (rot + lambda), verifiserer med `npm ci` + audit, og åpner PR fra `auto/npm-audit-fix` med auto-merge. CI og CodeQL-porten avgjør om den merges. | `security-audit` — når fiksen ikke gjør auditen grønn (typisk major-bump eller override), når `npm ci` feiler på den fiksede lockfila, eller når `npm audit` selv feiler (teksten sier hvilket). Lukkes automatisk når auditen er grønn. |
+| `scheduled-audit.yml` | Daglig 06:00 UTC | Jobben `selvheling` kjører hver dag: `npm audit fix` og en målrettet `npm update` for pakker OSV flagger (rot + lambda, bare lockfilene). Høy/kritisk rettes straks; lav/medium bare med versjoner eldre enn 7 dager. Verifiserer med `npm ci` + audit og åpner PR fra `auto/npm-audit-fix` med auto-merge. CI og CodeQL-porten avgjør om den merges. Venter en fiks på cooldownen, er kjøringen grønn med en advarsel og datoen fiksen blir aktuell. Detaljer under. | `security-audit` («Sikkerhetsfunn — krever manuell fiks») — når et medium+ funn står igjen etter fiksforsøket (ingen fiks publisert, eller fiksen krever major-bump/override), eller når noe i kjeden feiler (skann, registry, `npm ci`, nedgradering). Nye funn i en åpen issue gir én kommentar. Lukkes automatisk når ingen funn krever handling. |
 | `uptime-check.yml` | Hver time | Sjekker at forsiden gir 200 med riktig `<title>`, at sikkerhetsheaderne fra CloudFront finnes, at http/apex ender på `https://www…/`, og at TLS har ≥ 14 dager igjen. | `uptime` — ved første feil (dedupes mot åpne). Lukkes automatisk når sjekken er grønn. |
 | `stuck-pr-watch.yml` | Hver 3. time, og etter hver PR-CI (`workflow_run`) | Finner åpne PR-er med auto-merge der `ci-ok` er ferdig og ikke grønn (varsles straks), eller der auto-merge har vært på i over 6 timer (normalt merges de på under 5 min): branchen er bak main (`BEHIND`), CodeQL-blokkering eller feilet analyse. | `pr-stuck` — én issue som lister PR-ene (dedupes mot åpne). Lukkes automatisk når ingen sitter fast. |
 | `dependabot-rebase.yml` | Ved push til main, og hver time | Ved push: `@dependabot rebase` på Dependabot-PR-er, update-branch på andre. Hver time: auto-merge-PR-er som fortsatt står `BEHIND` (og main er minst 30 min gammel) får nytt forsøk; har Dependabot ikke svart på to kommentarer siden head-commiten, oppdateres PR-en med update-branch (eskalering). Kommenterer og oppdaterer som PAT-eieren, fordi Dependabot ser ut til å ta kommandoer bare fra brukere med skrivetilgang, og en oppdatering med `GITHUB_TOKEN` ikke trigger CI. Eskaleringen er et bevisst unntak fra fiksen 2026-09-21 (ikke rebase Dependabot-PR-er med PAT): den gjelder bare når auto-merge allerede er på, så `fetch-metadata` ikke kan nekte det. Slås «Require approval of the most recent reviewable push» på i branch protection, stopper eskaleringen. | Ingen — `stuck-pr-watch.yml` varsler hvis PR-en likevel blir stående. |
@@ -408,7 +408,7 @@ Workflowene dedupes på etikett mot åpne issues, så et vedvarende problem gir 
 
 **Hvorfor `auto/npm-audit-fix` og ikke `review/**`:** `auto-pr.yml` lager PR for `review/**`-pusher, og ville kappløpt med workflowen. Pushen gjøres med `MY_GITHUB_PAT` fordi en push med `GITHUB_TOKEN` ikke trigger CI, og uten `ci-ok`-sjekken merges PR-en aldri.
 
-**Ingen token under install-scripts:** `npm audit fix` kan dra inn versjoner forbi Dependabot-cooldownen. Derfor kjøres alt med `--ignore-scripts`, checkouten har `persist-credentials: false`, og PAT-en brukes kun i selve push-kommandoen. Lockfila pushes bare hvis `npm ci` lykkes på den.
+**Ingen token under install-scripts:** `npm audit fix` og `npm update` kjøres med `--before` (cooldown), men høy/kritisk rettes med nyeste fiks, og den kan være timer gammel. Derfor kjøres alt med `--ignore-scripts`, checkouten har `persist-credentials: false`, og PAT-en brukes kun i selve push-kommandoen. Lockfila pushes bare hvis `npm ci` lykkes på den.
 
 **Restrisiko:** GitHub skrur av planlagte workflows i offentlige repoer etter 60 dager uten aktivitet. Dependabot-merger holder repoet aktivt i dag; stopper de, må workflowene skrus på igjen under Actions.
 
@@ -486,20 +486,39 @@ Dependabot og CI-audit ved push dekker bare kjente CVE-er og nye avhengighetsver
 
 Frekvensen ble 2026-09-15 hevet fra ukentlig til **daglig**, samtidig som audit-gaten ble gjort betinget på dispatch-stien: alle gatene i `deploy.yml` står på `critical`, så et `high`-avvik fanges kun her og av Dependabot-alerten — som kommer innen timer, men ikke blokkerer noe. Ukentlig kadens gir opptil sju døgns forsinkelse i verste fall; daglig kutter det til ett. Observerte kjøringer tar under et halvt minutt.
 
-**Men kadensen var ikke problemet 2026-09-15.** Den ukentlige kjøringen `34843733661` (2026-09-14 12:29 UTC) fanget GHSA-26w7-cxv4-gfx2 og feilet med «4 vulnerabilities (3 high, 1 critical)» ~32 timer før deployen ble blokkert. Signalet fantes; det nådde bare ingen som handlet på det, fordi en rød scheduled-kjøring gir en e-post og ikke en oppgave. **Kjent svakhet:** i motsetning til `build` oppretter denne workflowen ingen issue. Det bør rettes — se TODO-backloggen.
+**Men kadensen var ikke problemet 2026-09-15.** Den ukentlige kjøringen `34843733661` (2026-09-14 12:29 UTC) fanget GHSA-26w7-cxv4-gfx2 og feilet med «4 vulnerabilities (3 high, 1 critical)» ~32 timer før deployen ble blokkert. Signalet fantes; det nådde bare ingen som handlet på det, fordi en rød scheduled-kjøring gir en e-post og ikke en oppgave. Siden da oppretter workflowen en `security-audit`-issue når et funn krever handling (se under).
 
 **Oppsettet (`scheduled-audit.yml`):**
 
 | Komponent | Hva det gjør |
 |-----------|--------------|
-| `npm-audit` (jobb) | Kjører `npm audit --audit-level=high` i rotmappen og `lambda/kontakt-form-handler` daglig 06:00 UTC. Feiler ved high/critical → GitHub sender e-post. |
-| `osv-scan` (jobb) | Kjører Google OSV Scanner via reusable workflow, skanner begge `package-lock.json`-filene rekursivt, laster opp SARIF til GitHub Security-fanen. |
+| `npm-audit` (jobb) | Teller høy/kritisk (minus unntak) i rotmappen og `lambda/kontakt-form-handler` og advarer ved funn. Informativ: avgjør ingenting, men blir rød hvis `npm audit` eller `osv-scanner.toml` er ugyldig. |
+| `selvheling` (jobb) | Fiksforsøk, PR og issue — se tabellen under. Kjører OSV Scanner selv (Docker-imaget, pinnet på digest i `.github/scripts/osv-skann.sh`) for å skille funn (exit 1) fra feil (exit > 1). Beslutningene ligger i `scripts/audit-selvheling.mjs` (enhetstestet). |
+| `close-issue` (jobb) | Lukker `security-audit`-issuen når `npm-audit` og `selvheling` er grønne og status er `ren` eller `venter`. |
+| `osv-scan` (jobb) | Google OSV Scanner via reusable workflow med `fail-on-vuln: false`: laster bare opp SARIF til Security-fanen. Imaget i `osv-skann.sh` bumpes sammen med SHA-en her (Dependabot ser bare SHA-en). |
 
-**Nivåforskjell:** `--audit-level=high` her vs. `--audit-level=critical` i `deploy.yml`. Scheduled-workflowen er et tidlig varslingssystem; deploy.yml er den harde CI-gaten. Juster ned til `--audit-level=critical` ved for mye støy fra dev-avhengigheter.
+**Selvheling steg for steg:**
+
+1. `npm audit fix --package-lock-only --ignore-scripts --before=<nå − 7 d>` i begge katalogene.
+2. OSV-skann. For hver pakke som fortsatt flagges: `npm update <pakke> --before=<grense>`, der grensen er nå for høy/kritisk og nå − 7 d ellers. Bare innenfor package.json-rangene.
+3. Nedgraderingsvakt: går en pakke bakover i versjon, pushes ingenting og status blir `feil`.
+4. Nytt OSV-skann er fasiten. Per funn som står igjen:
+
+| Funn som står igjen | Utfall |
+|---------------------|--------|
+| Lav | Ignoreres |
+| Medium med fiks yngre enn 7 dager | `venter` — grønn kjøring, `::warning::` med datoen fiksen blir aktuell (første kjøring etter 7 dager) |
+| Medium+ med eldre fiks (eller høy/kritisk uansett alder) | `varsle` — fiksen krever major-bump eller override |
+| Medium+ uten publisert fiks | `varsle` — unntak i `osv-scanner.toml` eller vent på fiks |
+| Skann, registry, `npm ci` eller `npm audit` feiler | `feil` — aldri `ren`, issuen lukkes ikke |
+
+Alvor kommer fra CVSS (`max_severity`), ellers GitHubs nivå, ellers medium. `varsle` og `feil` gir rød kjøring og issue. Issuen har en skjult markør (`<!-- audit-funn: … -->`) med funn-id-ene; den leses bare fra issue-teksten og workflowens egne kommentarer, så andre brukere ikke kan undertrykke varsler. Endrede lockfiler pushes også ved `varsle` (delvis fiks er bedre enn ingen). «Ren» gjelder lockfila i PR-en; står PR-en fast, varsler `stuck-pr-watch.yml`.
+
+**Nivåforskjell:** her teller høy/kritisk fra `npm audit` og medium+ fra OSV, mens `deploy.yml` bare stopper på `critical`. Scheduled-workflowen er et tidlig varslingssystem som retter selv; deploy.yml er den harde CI-gaten. Lav ignoreres for å holde støyen nede.
 
 **Dependabot alerts og automated security fixes:** Verifisert aktivert via `gh api` (HTTP 204 og `{"enabled":true,"paused":false}`). Disse supplerer scheduled-audit ved å åpne PR-er automatisk ved kjente CVE-er i avhengigheter.
 
-**OSV Scanner vs. npm audit:** OSV-databasen er bredere enn npm Advisory Database — fanger sårbarheter som ennå ikke er meldt inn til npm-registryet. SARIF-resultater er synlige i GitHub Security-fanen.
+**OSV Scanner vs. npm audit:** OSV-databasen er bredere enn npm Advisory Database — fanger sårbarheter som ennå ikke er meldt inn til npm-registryet, og flagger også medium og lav. Før 2026-10-30 ga et OSV-funn bare en rød kjøring uten issue eller PR (qs, GHSA-6pq8-jhm2-2vcw); nå er OSV fasiten i `selvheling`. SARIF-resultater er synlige i GitHub Security-fanen.
 
 **Kjent begrensning:** GitHub deaktiverer scheduled workflows etter 60 dager uten repo-aktivitet. For en statisk side som kan gå måneder uten push betyr dette at varslingen stilner uten varsel. Reaktiveres manuelt i Actions-fanen. Akseptert risiko gitt prosjektets størrelse.
 
