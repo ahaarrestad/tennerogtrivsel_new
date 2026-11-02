@@ -114,7 +114,8 @@ jobs:
               echo
               echo "1. Sett ny versjon i \`.nvmrc\` (eksakt \`X.Y.Z\`, ingen \`v\`). CI leser den via \`node-version-file\`."
               echo "   Velg nyeste versjon i linjen fra https://nodejs.org/dist/index.json, ikke nødvendigvis den i tittelen."
-              echo "2. Ved major-bytte: oppdater også \`engines.node\` i \`package.json\` (gulv og tak)."
+              echo "2. Ved major-bytte: løft taket i \`engines.node\` i \`package.json\` (og synk lockfila). La gulvet stå så lenge"
+              echo "   Dependabots npm-image kjører forrige major. Med \`engine-strict=true\` feiler Dependabot ellers stille på \`EBADENGINE\`."
               echo "3. Lokalt: \`nvm install\` i repo-roten, deretter \`npm ci\`."
               echo
               echo "La issuen stå åpen til \`.nvmrc\` er oppgradert, og lukk den i samme PR"

@@ -3,6 +3,13 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **Node 26 LTS (26.13.0)** ([plan](docs/plans/archive/2026-11-02-node-26-lts.md)) ([spec](docs/designs/archive/2026-11-02-node-26-lts.md))
+  - **Problem:** issue #530 (`node-lts-watch`): Node 26 «Lithium» ble LTS 2026-10-28, og vi var låst til 24.22.1.
+  - **Tiltak:** `.nvmrc` → 26.13.0 (alle `setup-node`-steg leser den). Taket i `engines.node` er løftet til `<27`, og gulvet står på 24.15.0. Lockfila endret bare rot-`engines`. Commiten har `Closes #530`.
+  - **Hvorfor gulvet står:** Dependabots npm-image kjører fortsatt Node 24, og `.npmrc` har `engine-strict=true`. Et gulv på 26 ville gitt `EBADENGINE` i alle Dependabot-jobber for roten, uten varsel (bekreftet empirisk). Issue-teksten i `node-version-watch.yml` sier nå «løft taket, la gulvet stå», så lærdommen ikke går tapt ved Node 28.
+  - **Verifisert under 26:** lint, `astro check`, 1911 unit-tester + dekning, 96 E2E, `build:ci`, ekte sync + bygg, audit. `npm ci --ignore-scripts` virker fortsatt under 24.
+  - **Ikke med:** Lambda-runtime i AWS (`nodejs24.x`, støttet til 2028).
+
 - [x] **Security Audit: OSV-funn skal fikses automatisk eller varsles** ([plan](docs/plans/archive/2026-10-30-osv-selvheling.md)) ([spec](docs/designs/archive/2026-10-30-osv-selvheling.md))
   - **Problem:** selvhelingen dekket bare `npm audit` på høy/kritisk. 2026-10-28 ble `osv-scan` rød på `qs@6.16.0` (GHSA-6pq8-jhm2-2vcw, middels) uten PR eller issue, og funnet ble først oppdaget av `/helsesjekk` dagen etter.
   - **Tiltak:** ny jobb `selvheling` kjører `npm audit fix` og målrettet `npm update` for pakker OSV flagger. Høy/kritisk rettes straks, lav/medium bare med versjoner eldre enn 7 dager (eierens valg 2026-10-30). Et nytt OSV-skann er fasiten: `ren`/`venter` gir grønn kjøring (venting som `::warning::` med dato), `varsle`/`feil` gir rød kjøring og `security-audit`-issue. Lave funn ignoreres. `npm-audit` er nå bare informativ, og `osv-scan` laster bare opp SARIF.
