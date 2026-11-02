@@ -19,6 +19,11 @@
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
   - ~~**Task 10:**~~ Løst ved beslutning — `repository_dispatch` bygger kun kode på `main` som allerede har passert tester. Deps endres aldri der.
 
+- [ ] **Node 26 LTS (26.13.0)** ([plan](docs/plans/2026-11-02-node-26-lts.md)) ([spec](docs/designs/2026-11-02-node-26-lts.md))
+  - Issue #530 (`node-lts-watch`): Node 26 «Lithium» ble LTS 2026-10-28. Vi er på 24.22.1
+  - `.nvmrc` → 26.13.0. Taket i `engines.node` løftes til `<27`, men gulvet blir på 24, fordi Dependabots npm-image fortsatt kjører Node 24 og `engine-strict=true`
+  - Lambda-runtime i AWS (`nodejs24.x`) er ikke med
+
 ## Backlog
 
 - [ ] **AI-søk (GEO) del 2: FAQ** — *ingen plan ennå*
