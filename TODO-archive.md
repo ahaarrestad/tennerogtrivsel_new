@@ -3,6 +3,11 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **minimatch-override for GHSA-g3hv-75wg-m249**
+  - **Problem:** issue #532 (`security-audit`): medium funn i `minimatch@10.2.6` (bare under utvikling, via eslint og typescript-eslint). Fiksen finnes bare i 11.0.1+, og eslint, `@eslint/config-array` og `@typescript-eslint/typescript-estree` krever `^10`, så verken selvhelingen eller Dependabot kom forbi. Commiten har `Closes #532`.
+  - **Tiltak:** `overrides.minimatch: ^11.0.1` i `package.json`. Lockfila er løst med 7-dagers cooldown (`--before`) og gir 11.0.2 pluss den nye avhengigheten `@isaacs/nonrecursive-glob-match` 1.0.2 (samme vedlikeholder). `npm audit` gir 0 funn.
+  - **Vakt:** ny jobb `minimatch-override` i `blocked-upgrades-watch.yml` åpner en `override-watch`-issue når ingen av de tre pakkene krever `^10` lenger. Den sjekker åpne issues på tittel, ikke bare etikett, fordi postcss-jobben deler etiketten.
+
 - [x] **Node 26 LTS (26.13.0)** ([plan](docs/plans/archive/2026-11-02-node-26-lts.md)) ([spec](docs/designs/archive/2026-11-02-node-26-lts.md))
   - **Problem:** issue #530 (`node-lts-watch`): Node 26 «Lithium» ble LTS 2026-10-28, og vi var låst til 24.22.1.
   - **Tiltak:** `.nvmrc` → 26.13.0 (alle `setup-node`-steg leser den). Taket i `engines.node` er løftet til `<27`, og gulvet står på 24.15.0. Lockfila endret bare rot-`engines`. Commiten har `Closes #530`.
