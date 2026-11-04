@@ -204,14 +204,16 @@ jobs:
           gh label create override-watch \
             --description "Watchdog: en npm-override bør vurderes" \
             --color 0e8a16 --force
-          AAPNE=$(gh issue list --label override-watch --state open --limit 1 --json number --jq 'length')
+          TITTEL="postcss-selector-parser-overriden bør vurderes"
+          # Sjekk på tittel, ikke bare etikett: andre override-jobber deler etiketten.
+          AAPNE=$(gh issue list --label override-watch --state open --search "\"$TITTEL\" in:title" --json number --jq 'length')
           if [ "$AAPNE" != "0" ]; then
             echo "Åpen issue finnes allerede — gjør ingenting."
             exit 0
           fi
           gh issue create \
             --label override-watch \
-            --title "postcss-selector-parser-overriden bør vurderes" \
+            --title "$TITTEL" \
             --body-file - <<EOF
           \`@tailwindcss/typography@${VERSJON}\` krever nå \`postcss-selector-parser ${KRAV}\`
           (var nøyaktig \`6.0.10\`). \`package.json\` overstyrer til \`^7.1.6\` pga.
@@ -241,6 +243,8 @@ jobs:
       # minimatch ^10, men fiksen for GHSA-g3hv-75wg-m249 finnes bare i 11.0.1+, så
       # package.json overstyrer til ^11.0.1. Når alle tre har gått bort fra ^10, er
       # overriden overflødig — og ved ^12 ville den holdt dem stille tilbake.
+      # Overriden er global: en ny pakke som krever minimatch ^3 eller ^9 får også 11
+      # (annet API). Se `npm ls minimatch` når nye dev-avhengigheter kommer til.
       - name: Har eslint-pakkene endret kravet sitt?
         id: probe
         run: |
@@ -263,7 +267,7 @@ jobs:
             KRAV=$(npm view "$PAKKE@latest" dependencies.minimatch)
             KRAV=${KRAV:-ingen}
             echo "$PAKKE $VERSJON krever minimatch $KRAV"
-            KRAV_LISTE="$KRAV_LISTE $PAKKE@$VERSJON→$KRAV"
+            KRAV_LISTE="${KRAV_LISTE:+$KRAV_LISTE, }\`$PAKKE@$VERSJON\` → \`$KRAV\`"
             case "$KRAV" in
               ^10.*) FORTSATT_10=true ;;
             esac
@@ -296,7 +300,7 @@ jobs:
             --label override-watch \
             --title "$TITTEL" \
             --body-file - <<EOF
-          Ingen av eslint-pakkene krever lenger minimatch \`^10\`:${KRAV}.
+          Ingen av eslint-pakkene krever lenger minimatch \`^10\`: ${KRAV}.
           \`package.json\` overstyrer til \`^11.0.1\` pga. GHSA-g3hv-75wg-m249.
 
           1. Dekker alle kravene ≥ 11.0.1: fjern overriden, kjør \`npm install\` og porten.
