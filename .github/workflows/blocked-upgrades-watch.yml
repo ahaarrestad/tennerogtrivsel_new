@@ -222,3 +222,85 @@ jobs:
           3. Slett jobben \`postcss-selector-parser-override\` i
              \`.github/workflows/blocked-upgrades-watch.yml\`.
           EOF
+
+  minimatch-override:
+    name: Trengs minimatch-overriden fortsatt?
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version-file: '.nvmrc'
+
+      # eslint, @eslint/config-array og @typescript-eslint/typescript-estree krever
+      # minimatch ^10, men fiksen for GHSA-g3hv-75wg-m249 finnes bare i 11.0.1+, så
+      # package.json overstyrer til ^11.0.1. Når alle tre har gått bort fra ^10, er
+      # overriden overflødig — og ved ^12 ville den holdt dem stille tilbake.
+      - name: Har eslint-pakkene endret kravet sitt?
+        id: probe
+        run: |
+          set -e
+          if ! jq -e '.overrides["minimatch"]' package.json >/dev/null; then
+            echo "::notice::Overriden er borte fra package.json — denne jobben kan slettes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          FORTSATT_10=false
+          KRAV_LISTE=""
+          for PAKKE in eslint @eslint/config-array @typescript-eslint/typescript-estree; do
+            # Tom versjon betyr at registeret svarte rart — feil høyt i stedet for
+            # å rapportere «uendret». Tomt krav betyr at pakken ikke bruker minimatch.
+            VERSJON=$(npm view "$PAKKE@latest" version)
+            if [ -z "$VERSJON" ]; then
+              echo "::error::Fikk ikke lest $PAKKE fra registeret."
+              exit 1
+            fi
+            KRAV=$(npm view "$PAKKE@latest" dependencies.minimatch)
+            KRAV=${KRAV:-ingen}
+            echo "$PAKKE $VERSJON krever minimatch $KRAV"
+            KRAV_LISTE="$KRAV_LISTE $PAKKE@$VERSJON→$KRAV"
+            case "$KRAV" in
+              ^10.*) FORTSATT_10=true ;;
+            esac
+          done
+          if [ "$FORTSATT_10" = "true" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "krav=$KRAV_LISTE" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Åpne issue om at overriden bør vurderes
+        if: steps.probe.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KRAV: ${{ steps.probe.outputs.krav }}
+        run: |
+          set -e
+          gh label create override-watch \
+            --description "Watchdog: en npm-override bør vurderes" \
+            --color 0e8a16 --force
+          TITTEL="minimatch-overriden bør vurderes"
+          # Sjekk på tittel, ikke bare etikett: andre override-jobber deler etiketten.
+          AAPNE=$(gh issue list --label override-watch --state open --search "\"$TITTEL\" in:title" --json number --jq 'length')
+          if [ "$AAPNE" != "0" ]; then
+            echo "Åpen issue finnes allerede — gjør ingenting."
+            exit 0
+          fi
+          gh issue create \
+            --label override-watch \
+            --title "$TITTEL" \
+            --body-file - <<EOF
+          Ingen av eslint-pakkene krever lenger minimatch \`^10\`:${KRAV}.
+          \`package.json\` overstyrer til \`^11.0.1\` pga. GHSA-g3hv-75wg-m249.
+
+          1. Dekker alle kravene ≥ 11.0.1: fjern overriden, kjør \`npm install\` og porten.
+          2. Er et krav ^12 eller nyere: overriden holder pakken tilbake — fjern den.
+          3. Slett jobben \`minimatch-override\` i
+             \`.github/workflows/blocked-upgrades-watch.yml\`.
+          EOF
