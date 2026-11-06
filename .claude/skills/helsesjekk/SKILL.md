@@ -55,8 +55,8 @@ dynamiske), så `--workflow "CodeQL"` feiler.
 
 ## Tolkning
 
-- **Uptime:** OK = ingen åpen `uptime`-issue **og** siste kjøring er under ~8 timer gammel
-  (GitHub dropper mange timeskjøringer, så ~4 per døgn og hull på 6 timer er normalt). Eldre enn det → ⚠️, vakta kan
+- **Uptime:** OK = ingen åpen `uptime`-issue **og** siste kjøring er under ~12 timer gammel
+  (GitHub dropper de fleste timeskjøringene, så ~4 per døgn og hull på opptil ~11 timer er normalt). Eldre enn det → ⚠️, vakta kan
   ha stoppet. Uptime-issuen dekker også kart-tiles (CARTO-nøkkelen) og tomt innhold fra
   Drive/Sheets — les funnlinjene i issuen, de sier hva som er galt.
 - **Dependabot Updates:** kjøringene gjelder ulike pakker/kataloger. Er den nyeste kjøringen rød,
@@ -80,8 +80,8 @@ dynamiske), så `--workflow "CodeQL"` feiler.
   `skipped` (CI som ikke er PR, f.eks. push til main) og `cancelled` (køen fortrenger ventende
   kjøringer) normalt.
   Auto-Rebase Open PRs hører også til raden: timeskjøringen (`--event schedule`) prøver
-  `BEHIND`-PR-er på nytt. GitHub dropper de fleste timeskjøringene (hull på 8–10 timer er
-  normalt), så eldre enn ~12 timer eller `conclusion` ≠ `success` → ⚠️. Den er grønn
+  `BEHIND`-PR-er på nytt. GitHub dropper de fleste timeskjøringene (hull på opptil ~11 timer
+  er normalt), så eldre enn ~12 timer eller `conclusion` ≠ `success` → ⚠️. Den er grønn
   også når den har kommentert eller eskalert; loggen viser hva den gjorde.
 - **CI/CD-deploy `cancelled`:** deploy-jobben har én-om-gangen-kø; en ventende deploy avbrytes
   når en nyere kommer. Normalt så lenge en senere kjøring er grønn.
