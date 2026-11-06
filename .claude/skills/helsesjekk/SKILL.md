@@ -80,7 +80,8 @@ dynamiske), så `--workflow "CodeQL"` feiler.
   `skipped` (CI som ikke er PR, f.eks. push til main) og `cancelled` (køen fortrenger ventende
   kjøringer) normalt.
   Auto-Rebase Open PRs hører også til raden: timeskjøringen (`--event schedule`) prøver
-  `BEHIND`-PR-er på nytt. Eldre enn ~4 timer eller `conclusion` ≠ `success` → ⚠️. Den er grønn
+  `BEHIND`-PR-er på nytt. GitHub dropper de fleste timeskjøringene (hull på 8–10 timer er
+  normalt), så eldre enn ~12 timer eller `conclusion` ≠ `success` → ⚠️. Den er grønn
   også når den har kommentert eller eskalert; loggen viser hva den gjorde.
 - **CI/CD-deploy `cancelled`:** deploy-jobben har én-om-gangen-kø; en ventende deploy avbrytes
   når en nyere kommer. Normalt så lenge en senere kjøring er grønn.
