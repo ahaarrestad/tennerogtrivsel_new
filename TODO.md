@@ -47,7 +47,7 @@
 
 - [ ] **i18n — mulighetsstudie** — *ingen plan ennå*
   - Er det mulig og gjennomførbart å legge til flerspråklig støtte på siden?
-  - Kartlegg hva Astro 5 tilbyr av i18n-støtte, hva som må oversettes (innhold vs. UI-tekster), og konsekvenser for CMS-flyten (Google Sheets/Drive)
+  - Kartlegg hva Astro 7 tilbyr av i18n-støtte, hva som må oversettes (innhold vs. UI-tekster), og konsekvenser for CMS-flyten (Google Sheets/Drive)
   - Vurder kostnad/nytte: er det faktisk et behov, og er det verdt arbeidsmengden?
   - Avslutt med en anbefaling: gjør det / gjør det ikke / gjør det men bare X
 
@@ -60,7 +60,7 @@
   - Fra admin-panelet skal man kunne velge om en seksjon vises på framsiden på mobil, og om tilhørende menylenke skal gå til ankerpunkt på framsiden (`/#seksjon`) eller til en separat side (`/seksjon/`)
   - Gjelder seksjonene Galleri, Tjenester og Tannleger — Forside og Kontakt er alltid synlige
   - Innstillingene lagres i Google Sheets og leses via `getSiteSettings()` på byggetid
-  - Avhengig av at «Mobil: framsiden og meny ikke i sync»-oppgaven er løst først (hardkodet fix som baseline)
+  - Bygger på «Mobil: framsiden og meny ikke i sync» (fullført, se [arkivet](TODO-archive.md)) — den hardkodede fiksen er baseline
 
 - [ ] **GDPR: Bekreft og dokumenter databehandleravtale med AWS SES** — *ingen plan ennå*
   - Personvernet nevner AWS SES som databehandler, men bekrefter ikke at DPA er inngått
