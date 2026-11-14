@@ -32,7 +32,7 @@
     "@googleapis/drive": "^26.0.2",
     "@googleapis/sheets": "^18.1.2",
     "@tailwindcss/vite": "^4.3.4",
-    "astro": "^7.4.5",
+    "astro": "^7.4.7",
     "dompurify": "^3.4.17",
     "easymde": "^2.21.0",
     "flatpickr": "^4.6.13",
