@@ -14,4 +14,4 @@
 [[IgnoredVulns]]
 id = "GHSA-fc5q-39xc-vjpf"
 ignoreUntil = 2026-12-31
-reason = "picomatch <=4.0.7 ReDoS via egne extglob-mønstre. Ingen fiks publisert (rådgivningen utvidet 2026-11-17). Kun bygg-/dev-tid (astro, vite, tailwind, vitest), og alle glob-mønstre kommer fra vår egen kode og config — ingen vei for angriperstyrt mønster. Ikke del av den statiske siden."
+reason = "picomatch <=4.0.7 ReDoS via extglob-mønstre som angriper styrer. Ingen fiks publisert (rådgivningen utvidet 2026-11-17). Kun bygg-/dev-tid (astro, vite, tailwind, vitest; også picomatch 2.3.2 via astro → unstorage → anymatch — 2.x-linja får kanskje ikke fiks når 4.x gjør det), og alle glob-mønstre kommer fra vår egen kode og config — ingen vei for angriperstyrt mønster. Ikke del av den statiske siden."
