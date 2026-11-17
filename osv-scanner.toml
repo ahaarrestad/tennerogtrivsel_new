@@ -4,9 +4,14 @@
 # Etter datoen varsler begge igjen. Forleng bare etter ny vurdering.
 # id må være GHSA-id-en i doble anførselstegn (det npm-skriptet matcher på).
 #
-# Ingen aktive unntak. Format:
+# Format:
 #
 # [[IgnoredVulns]]
 # id = "GHSA-xxxx-xxxx-xxxx"
 # ignoreUntil = 2026-12-31
 # reason = "Hvorfor funnet ikke kan utnyttes her, og hvorfor det ikke kan fikses nå."
+
+[[IgnoredVulns]]
+id = "GHSA-fc5q-39xc-vjpf"
+ignoreUntil = 2026-12-31
+reason = "picomatch <=4.0.7 ReDoS via egne extglob-mønstre. Ingen fiks publisert (rådgivningen utvidet 2026-11-17). Kun bygg-/dev-tid (astro, vite, tailwind, vitest), og alle glob-mønstre kommer fra vår egen kode og config — ingen vei for angriperstyrt mønster. Ikke del av den statiske siden."
