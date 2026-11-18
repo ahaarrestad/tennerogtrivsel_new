@@ -21,6 +21,12 @@
 
 ## Backlog
 
+- [ ] **Koble Google-bedriftsprofilen til Gule Sider-profilen** — *ingen plan ennå*
+  - Manuell oppgave, ingen kode. Klinikken har bedt om det. Instruksene ligger i en e-post fra Gule Sider/Robin datert 27.10.2026
+  - Klinikken har allerede en Google-bedriftsprofil, så du trenger ikke ta eierskap til den
+  - Logg inn på bedriftsprofilen. I menyen ⋮ ved «Din bedrift på Google» velger du «Bedriftsprofilinnstillinger» → «Personer og tilgang» → «Legg til». Legg inn invitasjonskoden fra e-posten, velg «Customer Success NO» og rollen «Ansvarlig», og trykk «Inviter». Svar på e-posten når invitasjonen er sendt
+  - Henger sammen med GEO del 2: Gule Sider viser gammel adresse. Sjekk at adresse, telefon og åpningstider er like på Google, Gule Sider og nettsiden. Vurder også å legge Google-profilen i `sameAs` i schema.org-dataene
+
 - [ ] **AI-søk (GEO) del 2: FAQ** — *ingen plan ennå*
   - Claude lager et utkast fra eksisterende innhold (tjenester, kontakt, prisliste), og klinikken godkjenner det
   - FAQ-en skal kunne redigeres i admin, som resten av CMS-et. Siden får `FAQPage`-schema som bare beskriver det som står synlig
