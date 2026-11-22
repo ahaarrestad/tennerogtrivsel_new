@@ -274,12 +274,13 @@ export function applyCropSliderAvailability({ prefix, img, container }) {
 }
 
 /**
- * Holder slider-tilgjengeligheten oppdatert ved zoom-endring og bilde-load.
+ * Holder slider-tilgjengeligheten oppdatert ved zoom-endring og bilde-load/-feil.
  * Returnerer en refresh-funksjon for andre endringer (f.eks. rammens form).
  */
 export function bindCropSliderAvailability({ prefix, img, container }) {
     const refresh = () => applyCropSliderAvailability({ prefix, img, container });
     img?.addEventListener('load', refresh);
+    img?.addEventListener('error', refresh);
     document.getElementById(`${prefix}-scale`)?.addEventListener('input', refresh);
     refresh();
     return refresh;
