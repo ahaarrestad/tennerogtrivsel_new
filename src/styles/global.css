@@ -756,10 +756,9 @@
                disabled:active:scale-100;
     }
 
-    /* BILDEUTSNITT — posisjons-slider uten effekt (se getCropAxisMovability) */
-    .crop-slider:disabled {
-        @apply opacity-40 cursor-not-allowed;
-    }
+    /* BILDEUTSNITT — hint under posisjons-slider uten effekt (se getCropAxisMovability).
+       Selve slideren dempes med disabled:-utilities i markupen: en regel her ville tapt
+       mot cursor-pointer i utilities-laget. */
     .crop-axis-hint {
         @apply mt-1 text-[10px] text-admin-muted-light;
     }

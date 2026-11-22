@@ -205,7 +205,7 @@ export function renderImageCropSliders({ prefix, valPrefix, scale = 1, posX = 50
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="button" class="slider-step-btn" data-target="${prefix}-x" data-step="-1">&minus;</button>
-                    <input type="range" id="${prefix}-x" min="0" max="100" value="${posX}" aria-describedby="${prefix}-x-hint" class="crop-slider flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
+                    <input type="range" id="${prefix}-x" min="0" max="100" value="${posX}" aria-describedby="${prefix}-x-hint" class="flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand disabled:cursor-not-allowed disabled:opacity-40">
                     <button type="button" class="slider-step-btn" data-target="${prefix}-x" data-step="1">+</button>
                 </div>
                 <p id="${prefix}-x-hint" class="crop-axis-hint" hidden>${CROP_AXIS_HINTS.x}</p>
@@ -217,7 +217,7 @@ export function renderImageCropSliders({ prefix, valPrefix, scale = 1, posX = 50
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="button" class="slider-step-btn" data-target="${prefix}-y" data-step="-1">&minus;</button>
-                    <input type="range" id="${prefix}-y" min="0" max="100" value="${posY}" aria-describedby="${prefix}-y-hint" class="crop-slider flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
+                    <input type="range" id="${prefix}-y" min="0" max="100" value="${posY}" aria-describedby="${prefix}-y-hint" class="flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand disabled:cursor-not-allowed disabled:opacity-40">
                     <button type="button" class="slider-step-btn" data-target="${prefix}-y" data-step="1">+</button>
                 </div>
                 <p id="${prefix}-y-hint" class="crop-axis-hint" hidden>${CROP_AXIS_HINTS.y}</p>
