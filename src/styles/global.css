@@ -750,7 +750,18 @@
                bg-admin-hover text-admin-muted font-bold text-sm
                hover:bg-brand hover:text-white
                active:scale-95 transition-all shrink-0
-               select-none;
+               select-none
+               disabled:opacity-40 disabled:cursor-not-allowed
+               disabled:hover:bg-admin-hover disabled:hover:text-admin-muted
+               disabled:active:scale-100;
+    }
+
+    /* BILDEUTSNITT — posisjons-slider uten effekt (se getCropAxisMovability) */
+    .crop-slider:disabled {
+        @apply opacity-40 cursor-not-allowed;
+    }
+    .crop-axis-hint {
+        @apply mt-1 text-[10px] text-admin-muted-light;
     }
 
     /* TOGGLE SWITCH — drevet av data-active attributt */

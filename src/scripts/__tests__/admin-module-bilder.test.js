@@ -57,6 +57,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
     createAutoSaver: createMockAutoSaver(),
     bindSliderStepButtons: vi.fn(),
     bindWheelPrevent: vi.fn(),
+    bindCropSliderAvailability: vi.fn(() => vi.fn()),
     showSaveBar: vi.fn(),
     hideSaveBar: vi.fn(),
     resolveImagePreview: vi.fn().mockResolvedValue({ src: '', imageId: null }),
@@ -78,7 +79,7 @@ import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadGallery, setupUploadHandler } from '../admin-gallery.js';
 import { loadGalleriListeModule, reorderGalleriItem } from '../admin-dashboard.js';
 import { animateSwap, disableReorderButtons, enableReorderButtons } from '../admin-reorder.js';
-import { getAdminConfig, showDeletionToast, bindSliderStepButtons, bindWheelPrevent, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave, checkDriveConsistency } from '../admin-editor-helpers.js';
+import { getAdminConfig, showDeletionToast, bindSliderStepButtons, bindWheelPrevent, bindCropSliderAvailability, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave, checkDriveConsistency } from '../admin-editor-helpers.js';
 import { loadBilderModule } from '../admin-module-bilder.js';
 
 beforeEach(() => {
@@ -721,6 +722,64 @@ describe('editGalleriBilde (via loadBilderModule callback)', () => {
 
         const saveFn = createAutoSaver.mock.calls[0][0];
         await expect(saveFn()).rejects.toThrow('save fail');
+    });
+
+    const openGalleriEditor = async (type = 'galleri') => {
+        getSheetParentFolder.mockResolvedValue('folder-123');
+        migrateForsideBildeToGalleri.mockResolvedValue();
+        await loadBilderModule();
+        const editFn = loadGalleriListeModule.mock.calls[0][1];
+        getGalleriRaw.mockResolvedValue([
+            {
+                rowIndex: 2, title: 'Bilde', image: 'img.jpg', altText: '',
+                active: true, order: 1, scale: 1, positionX: 50, positionY: 50, type
+            }
+        ]);
+        await editFn(2);
+    };
+
+    it('binder slider-tilgjengelighet til preview-bildet og rammen', async () => {
+        await openGalleriEditor();
+        expect(bindCropSliderAvailability).toHaveBeenCalledWith({
+            prefix: 'galleri-edit',
+            img: document.getElementById('galleri-preview-img'),
+            container: document.getElementById('galleri-preview-container'),
+        });
+    });
+
+    it.each([
+        ['forsidebilde på', 'galleri', 'galleri-edit-forsidebilde', true, 'aspect-[16/10]'],
+        ['forsidebilde av', 'forsidebilde', 'galleri-edit-forsidebilde', false, 'aspect-[4/3]'],
+        ['fellesbilde på', 'galleri', 'galleri-edit-fellesbilde', true, 'aspect-[16/9]'],
+        ['fellesbilde av', 'fellesbilde', 'galleri-edit-fellesbilde', false, 'aspect-[4/3]'],
+    ])('beregner slider-tilgjengelighet på nytt etter rammebytte (%s)', async (_desc, type, checkboxId, checked, aspectClass) => {
+        await openGalleriEditor(type);
+        const refresh = vi.mocked(bindCropSliderAvailability).mock.results.at(-1).value;
+        refresh.mockClear();
+        setForsideBildeInGalleri.mockResolvedValue();
+        setFellesBildeInGalleri.mockResolvedValue();
+        updateGalleriRow.mockResolvedValue();
+
+        const checkbox = document.getElementById(checkboxId);
+        checkbox.checked = checked;
+        checkbox.dispatchEvent(new Event('change'));
+
+        await vi.waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+        expect(document.getElementById('galleri-preview-container').classList.contains(aspectClass)).toBe(true);
+    });
+
+    it('beregner ikke på nytt når rammebyttet feiler', async () => {
+        await openGalleriEditor();
+        const refresh = vi.mocked(bindCropSliderAvailability).mock.results.at(-1).value;
+        refresh.mockClear();
+        setForsideBildeInGalleri.mockRejectedValue(new Error('fail'));
+
+        const checkbox = document.getElementById('galleri-edit-forsidebilde');
+        checkbox.checked = true;
+        checkbox.dispatchEvent(new Event('change'));
+
+        await vi.waitFor(() => expect(showToast).toHaveBeenCalled());
+        expect(refresh).not.toHaveBeenCalled();
     });
 
     it('should handle forsidebilde checkbox toggle on', async () => {

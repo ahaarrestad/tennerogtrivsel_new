@@ -47,6 +47,7 @@ vi.mock('../admin-editor-helpers.js', () => ({
     createAutoSaver: createMockAutoSaver(),
     bindSliderStepButtons: vi.fn(),
     bindWheelPrevent: vi.fn(),
+    bindCropSliderAvailability: vi.fn(() => vi.fn()),
     showSaveBar: vi.fn(),
     hideSaveBar: vi.fn(),
     escapeHtml: vi.fn(s => String(s ?? '')),
@@ -66,7 +67,7 @@ import {
 } from '../admin-client.js';
 import { showConfirm, showToast } from '../admin-dialog.js';
 import { loadTannlegerModule } from '../admin-dashboard.js';
-import { showDeletionToast, attachToggleClick, bindSliderStepButtons, bindWheelPrevent, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave, checkDriveConsistency } from '../admin-editor-helpers.js';
+import { showDeletionToast, attachToggleClick, bindSliderStepButtons, bindWheelPrevent, bindCropSliderAvailability, createAutoSaver, resolveImagePreview, handleImageSelected, verifySave, checkDriveConsistency } from '../admin-editor-helpers.js';
 import { initTannlegerModule, reloadTannleger } from '../admin-module-tannleger.js';
 
 beforeEach(() => {
@@ -476,6 +477,23 @@ describe('editTannlege', () => {
         yInp.value = '70';
         yInp.dispatchEvent(new Event('input'));
         expect(document.getElementById('val-y').textContent).toBe('70%');
+    });
+
+    it('binder slider-tilgjengelighet til preview-bildet og tannlegekortet', async () => {
+        resolveImagePreview.mockResolvedValue({ src: '', imageId: null });
+
+        await window.editTannlege(2, {
+            name: 'N', title: 'T', description: 'D',
+            image: '', active: true, scale: 1, positionX: 50, positionY: 50
+        });
+
+        const img = document.getElementById('preview-img');
+        expect(bindCropSliderAvailability).toHaveBeenCalledWith({
+            prefix: 'edit-t',
+            img,
+            container: img.closest('.tannlege-kort'),
+        });
+        expect(img.closest('.tannlege-kort')).not.toBeNull();
     });
 
     it('should use fallback preview path from resolveImagePreview', async () => {
