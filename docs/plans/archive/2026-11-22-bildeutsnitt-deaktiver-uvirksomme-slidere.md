@@ -33,7 +33,7 @@ verdier, dra-panorering (se spec, Non-goals).
    - `.slider-step-btn`: `disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-admin-hover
      disabled:hover:text-admin-muted disabled:active:scale-100`.
    - Range: `disabled:cursor-not-allowed disabled:opacity-40` som utilities i markupen — en regel i components-laget taper mot `cursor-pointer` i utilities-laget.
-   - `.crop-axis-hint`: `text-[10px] text-admin-muted (muted-light gir for lav kontrast på 10 px) mt-1`. Kun token-klasser.
+   - `.crop-axis-hint`: `text-[10px] text-admin-muted mt-1` (muted-light gir for lav kontrast på 10 px). Kun token-klasser.
 
 5. **Galleri** — `src/scripts/admin-module-bilder.js`
    - Etter at preview-bildet er satt: `const refreshCropAvailability = bindCropSliderAvailability({ prefix: 'galleri-edit', img: gPreviewImg, container: previewContainer })`.

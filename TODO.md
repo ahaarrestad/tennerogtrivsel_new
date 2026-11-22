@@ -14,10 +14,6 @@
 
 ## Pågående
 
-- [ ] **Bildeutsnitt i admin: deaktiver X/Y-slidere uten effekt** ([plan](docs/plans/2026-11-22-bildeutsnitt-deaktiver-uvirksomme-slidere.md)) ([spec](docs/designs/2026-11-22-bildeutsnitt-deaktiver-uvirksomme-slidere.md))
-  - Ved zoom 1,0 flytter X/Y bare langs aksen der bildet stikker utenfor rammen (`object-cover`). Sliderne ser aktive ut, men gjør ingenting — oppleves som en bug (eier, 2026-11-22)
-  - Deaktiver slider + −/+ med hint når aksen ikke kan flytte bildet. Beregnes live ved zoom, bilde-load og typebytte (forsidebilde/fellesbilde). Gjelder galleri og tannleger
-
 - [ ] **Sikkerhetshardening — supply-chain & defense-in-depth** ([plan](docs/plans/2026-04-28-sikkerhetshardening.md))
   - Task 1, 2, 4–9, 11, 12 er fullført. Gjenstående tasks:
   - **Task 3:** Begrens `MY_GITHUB_PAT` blast-radius — migrer til fine-grained PAT eller GitHub App *(utsatt)*
