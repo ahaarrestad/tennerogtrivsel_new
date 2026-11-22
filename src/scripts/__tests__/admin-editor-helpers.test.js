@@ -26,6 +26,7 @@ import {
     getAdminConfig, setToggleState, renderToggleHtml,
     attachToggleClick, showDeletionToast, initMarkdownEditor, initEditors,
     renderImageCropSliders, createAutoSaver, bindSliderStepButtons, bindWheelPrevent,
+    getCropAxisMovability, applyCropSliderAvailability, bindCropSliderAvailability,
     showSaveBar, hideSaveBar, resolveImagePreview, handleImageSelected, verifySave,
     escapeHtml, validateSheetInput, handleSaveError, handleDeleteError, checkDriveConsistency
 } from '../admin-editor-helpers.js';
@@ -301,6 +302,157 @@ describe('renderImageCropSliders', () => {
     it('should include heading text', () => {
         const html = renderImageCropSliders({ prefix: 'p', valPrefix: 'v' });
         expect(html).toContain('Bildeutsnitt (Zoom og posisjon)');
+    });
+
+    it('should render hidden axis hints linked via aria-describedby', () => {
+        const html = renderImageCropSliders({ prefix: 'p', valPrefix: 'v' });
+        // safe: statisk markup fra renderImageCropSliders med faste testverdier
+        document.body.innerHTML = html;
+        for (const axis of ['x', 'y']) {
+            const hint = document.getElementById(`p-${axis}-hint`);
+            expect(hint).not.toBeNull();
+            expect(hint.hidden).toBe(true);
+            expect(document.getElementById(`p-${axis}`).getAttribute('aria-describedby')).toBe(`p-${axis}-hint`);
+        }
+        expect(document.getElementById('p-scale').hasAttribute('aria-describedby')).toBe(false);
+    });
+});
+
+describe('getCropAxisMovability', () => {
+    it.each([
+        // [beskrivelse, naturalWidth, naturalHeight, boxWidth, boxHeight, scale, forventet]
+        ['samme form som rammen (4:3 i 4:3)', 1200, 900, 400, 300, 1, { x: false, y: false }],
+        ['bredere bilde enn rammen (16:9 i 4:3)', 1600, 900, 400, 300, 1, { x: true, y: false }],
+        ['høyere bilde enn rammen (3:4 i 4:3)', 900, 1200, 400, 300, 1, { x: false, y: true }],
+        ['avvik innenfor toleransen (0,5 % bredere)', 1206, 900, 400, 300, 1, { x: false, y: false }],
+        ['avvik over toleransen (2 % bredere)', 1224, 900, 400, 300, 1, { x: true, y: false }],
+        ['zoom over 1 gjør begge flyttbare', 1200, 900, 400, 300, 1.01, { x: true, y: true }],
+        ['ukjent bildestørrelse', 0, 0, 400, 300, 1, { x: true, y: true }],
+        ['ukjent rammestørrelse', 1200, 900, 0, 0, 1, { x: true, y: true }],
+        ['ugyldig zoom tolkes som 1', 1200, 900, 400, 300, NaN, { x: false, y: false }],
+    ])('%s', (_desc, naturalWidth, naturalHeight, boxWidth, boxHeight, scale, expected) => {
+        expect(getCropAxisMovability({ naturalWidth, naturalHeight, boxWidth, boxHeight, scale })).toEqual(expected);
+    });
+});
+
+/** Setter opp sliderne + et preview-bilde/ramme med gitte dimensjoner (jsdom har ingen layout). */
+function setupCropDom({ natural = [1200, 900], box = [400, 300], scale = 1 } = {}) {
+    // safe: statisk markup fra renderImageCropSliders med faste testverdier
+    document.body.innerHTML = `<div id="box"><img id="img"></div>${renderImageCropSliders({ prefix: 'p', valPrefix: 'v', scale })}`;
+    const img = document.getElementById('img');
+    const container = document.getElementById('box');
+    const setNatural = ([w, h]) => {
+        Object.defineProperty(img, 'naturalWidth', { configurable: true, value: w });
+        Object.defineProperty(img, 'naturalHeight', { configurable: true, value: h });
+    };
+    const setBox = ([w, h]) => {
+        Object.defineProperty(container, 'clientWidth', { configurable: true, value: w });
+        Object.defineProperty(container, 'clientHeight', { configurable: true, value: h });
+    };
+    setNatural(natural);
+    setBox(box);
+    return { img, container, setNatural, setBox };
+}
+
+function axisState(axis) {
+    return {
+        slider: document.getElementById(`p-${axis}`).disabled,
+        buttons: [...document.querySelectorAll(`.slider-step-btn[data-target="p-${axis}"]`)].map(b => b.disabled),
+        hintHidden: document.getElementById(`p-${axis}-hint`).hidden,
+    };
+}
+
+const DISABLED = { slider: true, buttons: [true, true], hintHidden: false };
+const ENABLED = { slider: false, buttons: [false, false], hintHidden: true };
+
+describe('applyCropSliderAvailability', () => {
+    it('deaktiverer begge akser når bildet har samme form som rammen', () => {
+        const { img, container } = setupCropDom();
+        applyCropSliderAvailability({ prefix: 'p', img, container });
+        expect(axisState('x')).toEqual(DISABLED);
+        expect(axisState('y')).toEqual(DISABLED);
+    });
+
+    it('deaktiverer kun aksen uten overflow', () => {
+        const { img, container } = setupCropDom({ natural: [1600, 900] });
+        applyCropSliderAvailability({ prefix: 'p', img, container });
+        expect(axisState('x')).toEqual(ENABLED);
+        expect(axisState('y')).toEqual(DISABLED);
+    });
+
+    it('aktiverer igjen når betingelsene endres', () => {
+        const { img, container, setNatural } = setupCropDom();
+        applyCropSliderAvailability({ prefix: 'p', img, container });
+        setNatural([900, 1200]);
+        applyCropSliderAvailability({ prefix: 'p', img, container });
+        expect(axisState('x')).toEqual(DISABLED);
+        expect(axisState('y')).toEqual(ENABLED);
+    });
+
+    it('bevarer slider-verdiene ved deaktivering', () => {
+        const { img, container } = setupCropDom();
+        document.getElementById('p-x').value = '30';
+        applyCropSliderAvailability({ prefix: 'p', img, container });
+        expect(document.getElementById('p-x').value).toBe('30');
+    });
+
+    it('gjør ingenting når img eller container mangler', () => {
+        setupCropDom();
+        expect(() => applyCropSliderAvailability({ prefix: 'p', img: null, container: null })).not.toThrow();
+        expect(axisState('x')).toEqual(ENABLED);
+    });
+
+    it('tåler manglende slidere og hint', () => {
+        const { img, container } = setupCropDom();
+        expect(() => applyCropSliderAvailability({ prefix: 'finnes-ikke', img, container })).not.toThrow();
+    });
+});
+
+describe('bindCropSliderAvailability', () => {
+    it('beregner umiddelbart', () => {
+        const { img, container } = setupCropDom();
+        bindCropSliderAvailability({ prefix: 'p', img, container });
+        expect(axisState('x')).toEqual(DISABLED);
+    });
+
+    it('oppdateres live når zoom endres opp og ned igjen', () => {
+        const { img, container } = setupCropDom();
+        bindCropSliderAvailability({ prefix: 'p', img, container });
+        const scale = document.getElementById('p-scale');
+
+        scale.value = '1.5';
+        scale.dispatchEvent(new Event('input'));
+        expect(axisState('x')).toEqual(ENABLED);
+        expect(axisState('y')).toEqual(ENABLED);
+
+        scale.value = '1';
+        scale.dispatchEvent(new Event('input'));
+        expect(axisState('x')).toEqual(DISABLED);
+        expect(axisState('y')).toEqual(DISABLED);
+    });
+
+    it('beregner på nytt når et nytt bilde lastes', () => {
+        const { img, container, setNatural } = setupCropDom({ natural: [0, 0] });
+        bindCropSliderAvailability({ prefix: 'p', img, container });
+        expect(axisState('x')).toEqual(ENABLED);
+
+        setNatural([1200, 900]);
+        img.dispatchEvent(new Event('load'));
+        expect(axisState('x')).toEqual(DISABLED);
+    });
+
+    it('returnerer en refresh-funksjon for rammeendringer', () => {
+        const { img, container, setBox } = setupCropDom();
+        const refresh = bindCropSliderAvailability({ prefix: 'p', img, container });
+        setBox([400, 250]); // 16:10-ramme → 4:3-bildet er høyere
+        refresh();
+        expect(axisState('x')).toEqual(DISABLED);
+        expect(axisState('y')).toEqual(ENABLED);
+    });
+
+    it('tåler manglende img', () => {
+        setupCropDom();
+        expect(() => bindCropSliderAvailability({ prefix: 'p', img: null, container: null })()).not.toThrow();
     });
 });
 

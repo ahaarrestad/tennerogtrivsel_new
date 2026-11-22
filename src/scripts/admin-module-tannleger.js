@@ -10,7 +10,7 @@ import { loadTannlegerModule } from './admin-dashboard.js';
 import {
     getAdminConfig, renderToggleHtml, attachToggleClick,
     showDeletionToast, renderImageCropSliders, createAutoSaver,
-    bindSliderStepButtons, bindWheelPrevent,
+    bindSliderStepButtons, bindWheelPrevent, bindCropSliderAvailability,
     escapeHtml, resolveImagePreview, handleImageSelected, verifySave,
     checkDriveConsistency
 } from './admin-editor-helpers.js';
@@ -265,6 +265,10 @@ async function editTannlege(rowIndex, data = null) {
 
     bindSliderStepButtons(inner);
     bindWheelPrevent(inner);
+
+    // Deaktiver X/Y når de ikke kan flytte bildet — oppdateres ved zoom og bilde-load
+    const cropPreviewImg = document.getElementById('preview-img');
+    bindCropSliderAvailability({ prefix: 'edit-t', img: cropPreviewImg, container: cropPreviewImg?.closest('.tannlege-kort') });
 }
 
 async function toggleTannlegeActive(rowIndex, t) {

@@ -205,9 +205,10 @@ export function renderImageCropSliders({ prefix, valPrefix, scale = 1, posX = 50
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="button" class="slider-step-btn" data-target="${prefix}-x" data-step="-1">&minus;</button>
-                    <input type="range" id="${prefix}-x" min="0" max="100" value="${posX}" class="flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
+                    <input type="range" id="${prefix}-x" min="0" max="100" value="${posX}" aria-describedby="${prefix}-x-hint" class="crop-slider flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
                     <button type="button" class="slider-step-btn" data-target="${prefix}-x" data-step="1">+</button>
                 </div>
+                <p id="${prefix}-x-hint" class="crop-axis-hint" hidden>${CROP_AXIS_HINTS.x}</p>
             </div>
             <div>
                 <div class="flex justify-between mb-2">
@@ -216,12 +217,72 @@ export function renderImageCropSliders({ prefix, valPrefix, scale = 1, posX = 50
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="button" class="slider-step-btn" data-target="${prefix}-y" data-step="-1">&minus;</button>
-                    <input type="range" id="${prefix}-y" min="0" max="100" value="${posY}" class="flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
+                    <input type="range" id="${prefix}-y" min="0" max="100" value="${posY}" aria-describedby="${prefix}-y-hint" class="crop-slider flex-grow h-2 bg-admin-border rounded-lg appearance-none cursor-pointer accent-brand">
                     <button type="button" class="slider-step-btn" data-target="${prefix}-y" data-step="1">+</button>
                 </div>
+                <p id="${prefix}-y-hint" class="crop-axis-hint" hidden>${CROP_AXIS_HINTS.y}</p>
             </div>
         </div>
     </div>`;
+}
+
+/** Avvik i bredde/høyde-forhold under dette regnes som «ingenting å flytte» (få piksler). */
+const CROP_AXIS_TOLERANCE = 0.01;
+
+const CROP_AXIS_HINTS = {
+    x: 'Bildet fyller rammen i bredden — øk zoom for å flytte sideveis.',
+    y: 'Bildet fyller rammen i høyden — øk zoom for å flytte opp eller ned.',
+};
+
+/**
+ * Hvilke posisjonsakser som faktisk kan flytte bildet i en `object-fit: cover`-ramme.
+ * Ved zoom 1 flytter `object-position` kun langs aksen der bildet stikker utenfor rammen,
+ * og `transform-origin` har ingen effekt. Ved zoom > 1 virker begge akser.
+ * Ukjente dimensjoner (bilde ikke lastet, ramme skjult) gir begge `true` — ikke blokker.
+ */
+export function getCropAxisMovability({ naturalWidth, naturalHeight, boxWidth, boxHeight, scale }) {
+    if (!naturalWidth || !naturalHeight || !boxWidth || !boxHeight) return { x: true, y: true };
+    if (scale > 1) return { x: true, y: true };
+    const imgRatio = naturalWidth / naturalHeight;
+    const boxRatio = boxWidth / boxHeight;
+    return {
+        x: imgRatio > boxRatio * (1 + CROP_AXIS_TOLERANCE),
+        y: boxRatio > imgRatio * (1 + CROP_AXIS_TOLERANCE),
+    };
+}
+
+/** Deaktiverer X/Y-slider + step-knapper som ikke har effekt, og viser hint. Endrer ikke verdiene. */
+export function applyCropSliderAvailability({ prefix, img, container }) {
+    if (!img || !container) return;
+    const scaleInput = document.getElementById(`${prefix}-scale`);
+    const movable = getCropAxisMovability({
+        naturalWidth: img.naturalWidth,
+        naturalHeight: img.naturalHeight,
+        boxWidth: container.clientWidth,
+        boxHeight: container.clientHeight,
+        scale: parseFloat(scaleInput?.value ?? '1'),
+    });
+    for (const axis of ['x', 'y']) {
+        const disabled = !movable[axis];
+        const slider = document.getElementById(`${prefix}-${axis}`);
+        if (slider) slider.disabled = disabled;
+        document.querySelectorAll(`.slider-step-btn[data-target="${prefix}-${axis}"]`)
+            .forEach(btn => { btn.disabled = disabled; });
+        const hint = document.getElementById(`${prefix}-${axis}-hint`);
+        if (hint) hint.hidden = !disabled;
+    }
+}
+
+/**
+ * Holder slider-tilgjengeligheten oppdatert ved zoom-endring og bilde-load.
+ * Returnerer en refresh-funksjon for andre endringer (f.eks. rammens form).
+ */
+export function bindCropSliderAvailability({ prefix, img, container }) {
+    const refresh = () => applyCropSliderAvailability({ prefix, img, container });
+    img?.addEventListener('load', refresh);
+    document.getElementById(`${prefix}-scale`)?.addEventListener('input', refresh);
+    refresh();
+    return refresh;
 }
 
 export function bindSliderStepButtons(container) {

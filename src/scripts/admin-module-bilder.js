@@ -11,7 +11,7 @@ import { loadGalleriListeModule, reorderGalleriItem, formatTimestamp, ICON_ADD }
 import {
     getAdminConfig, renderToggleHtml, setToggleState, attachToggleClick,
     showDeletionToast, renderImageCropSliders, createAutoSaver,
-    bindSliderStepButtons, bindWheelPrevent,
+    bindSliderStepButtons, bindWheelPrevent, bindCropSliderAvailability,
     resolveImagePreview, handleImageSelected, verifySave,
     checkDriveConsistency
 } from './admin-editor-helpers.js';
@@ -184,6 +184,9 @@ export async function loadBilderModule() {
             if (valX) valX.textContent = `${item.positionX ?? 50}%`;
             if (valY) valY.textContent = `${item.positionY ?? 50}%`;
 
+            // Deaktiver X/Y når de ikke kan flytte bildet — oppdateres ved zoom, bilde-load og typebytte
+            const refreshCropAvailability = bindCropSliderAvailability({ prefix: 'galleri-edit', img: gPreviewImg, container: previewContainer });
+
             // Breadcrumb editor navigation
             window.setBreadcrumbEditor?.('Redigerer bilde', loadBilderModule);
             // "Lagre og gå tilbake" button
@@ -206,6 +209,7 @@ export async function loadBilderModule() {
                                 previewContainer.classList.remove('aspect-[4/3]');
                                 previewContainer.classList.add('aspect-[16/10]');
                             }
+                            refreshCropAvailability();
                             if (previewLabelEl) previewLabelEl.textContent = 'Forhåndsvisning (16:10)';
                         } catch (e) {
                             showToast('Kunne ikke sette forsidebilde: ' + e.message, 'error');
@@ -219,6 +223,7 @@ export async function loadBilderModule() {
                                 previewContainer.classList.remove('aspect-[16/10]');
                                 previewContainer.classList.add('aspect-[4/3]');
                             }
+                            refreshCropAvailability();
                             if (previewLabelEl) previewLabelEl.textContent = 'Forhåndsvisning (4:3)';
                         } catch (e) {
                             showToast('Kunne ikke endre type: ' + e.message, 'error');
@@ -243,6 +248,7 @@ export async function loadBilderModule() {
                                 previewContainer.classList.remove('aspect-[4/3]', 'aspect-[16/10]');
                                 previewContainer.classList.add('aspect-[16/9]');
                             }
+                            refreshCropAvailability();
                             if (previewLabelEl) previewLabelEl.textContent = 'Forhåndsvisning (16:9)';
                         } catch (e) {
                             showToast('Kunne ikke sette fellesbilde: ' + e.message, 'error');
@@ -257,6 +263,7 @@ export async function loadBilderModule() {
                                 previewContainer.classList.remove('aspect-[16/9]');
                                 previewContainer.classList.add('aspect-[4/3]');
                             }
+                            refreshCropAvailability();
                             if (previewLabelEl) previewLabelEl.textContent = 'Forhåndsvisning (4:3)';
                         } catch (e) {
                             showToast('Kunne ikke endre type: ' + e.message, 'error');
