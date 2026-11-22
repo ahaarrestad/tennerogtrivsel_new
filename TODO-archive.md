@@ -3,6 +3,12 @@
 > Arkiv over ferdige oppgaver. Aktive oppgaver finnes i [TODO.md](TODO.md). Forkastede oppgaver finnes i [TODO-abandoned.md](TODO-abandoned.md).
 
 
+- [x] **Bildeutsnitt i admin: deaktiver X/Y-slidere uten effekt** ([plan](docs/plans/archive/2026-11-22-bildeutsnitt-deaktiver-uvirksomme-slidere.md)) ([spec](docs/designs/archive/2026-11-22-bildeutsnitt-deaktiver-uvirksomme-slidere.md))
+  - **Problem:** ved zoom 1,0 flytter X/Y bare langs aksen der bildet stikker utenfor rammen (`object-cover`). Sliderne så aktive ut uten å gjøre noe, og det opplevdes som en bug (eier, 2026-11-22).
+  - **Tiltak:** ren regel `getCropAxisMovability` (1 % toleranse, zoom > 1 gir begge akser, ukjent størrelse gir aktive akser). `bindCropSliderAvailability` deaktiverer slider og −/+ og viser et hint koblet med `aria-describedby`. Beregnes live ved zoom, bilde-load og lastefeil, og galleri kaller refresh etter vellykket bytte av forsidebilde/fellesbilde. Gjelder galleri og tannleger. Verdier bevares.
+  - **Styling:** deaktivert slider bruker `disabled:`-utilities i markupen (en regel i components-laget tapte mot `cursor-pointer`). Hint i `text-admin-muted` for kontrast.
+  - CSP-hashene i `src/generated/csp-hashes.json` er generert på nytt; endringen kom fra Astro-bumpen i #549, ikke fra denne oppgaven.
+
 - [x] **minimatch-override for GHSA-g3hv-75wg-m249**
   - **Problem:** issue #532 (`security-audit`): medium funn i `minimatch@10.2.6` (bare under utvikling, via eslint og typescript-eslint). Fiksen finnes bare i 11.0.1+, og eslint, `@eslint/config-array` og `@typescript-eslint/typescript-estree` krever `^10`, så verken selvhelingen eller Dependabot kom forbi. Commiten har `Closes #532`.
   - **Tiltak:** `overrides.minimatch: ^11.0.1` i `package.json`. Lockfila er løst med 7-dagers cooldown (`--before`) og gir 11.0.2 pluss den nye avhengigheten `@isaacs/nonrecursive-glob-match` 1.0.2 (samme vedlikeholder). `npm audit` gir 0 funn.
