@@ -760,7 +760,7 @@
        Selve slideren dempes med disabled:-utilities i markupen: en regel her ville tapt
        mot cursor-pointer i utilities-laget. */
     .crop-axis-hint {
-        @apply mt-1 text-[10px] text-admin-muted-light;
+        @apply mt-1 text-[10px] text-admin-muted;
     }
 
     /* TOGGLE SWITCH — drevet av data-active attributt */

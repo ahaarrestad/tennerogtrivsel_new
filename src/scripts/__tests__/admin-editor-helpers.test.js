@@ -441,6 +441,17 @@ describe('bindCropSliderAvailability', () => {
         expect(axisState('x')).toEqual(DISABLED);
     });
 
+    it('slipper låsen når et nytt bilde feiler å laste', () => {
+        const { img, container, setNatural } = setupCropDom();
+        bindCropSliderAvailability({ prefix: 'p', img, container });
+        expect(axisState('x')).toEqual(DISABLED);
+
+        setNatural([0, 0]); // ødelagt bilde: ukjent størrelse
+        img.dispatchEvent(new Event('error'));
+        expect(axisState('x')).toEqual(ENABLED);
+        expect(axisState('y')).toEqual(ENABLED);
+    });
+
     it('returnerer en refresh-funksjon for rammeendringer', () => {
         const { img, container, setBox } = setupCropDom();
         const refresh = bindCropSliderAvailability({ prefix: 'p', img, container });

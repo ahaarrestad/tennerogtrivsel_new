@@ -24,7 +24,7 @@ verdier, dra-panorering (se spec, Non-goals).
    - `export function applyCropSliderAvailability({ prefix, img, container })`: leser
      `img.naturalWidth/Height`, `container.clientWidth/Height` og `${prefix}-scale`-verdien, kaller
      regelen, og setter per akse `disabled` på `${prefix}-x` og `.slider-step-btn[data-target="${prefix}-x"]`
-     + `hidden` på hinten. Skjult `img` (klasse `hidden`/tom `src`) → behandles som ukjent.
+     + `hidden` på hinten. Bilde uten kjent størrelse (`naturalWidth` 0: ikke lastet, tom `src` eller lastefeil) → behandles som ukjent; `error` lytter også, så et bilde som feiler slipper låsen.
    - `export function bindCropSliderAvailability({ prefix, img, container })`: kaller apply én gang,
      legger på `img`-`load`-lytter og `input`-lytter på zoom-slideren, og returnerer `apply`-funksjonen
      for eksplisitte kall (typebytte).
@@ -32,8 +32,8 @@ verdier, dra-panorering (se spec, Non-goals).
 4. **CSS** — `src/styles/global.css`
    - `.slider-step-btn`: `disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-admin-hover
      disabled:hover:text-admin-muted disabled:active:scale-100`.
-   - Range: `input[type="range"]:disabled` → `opacity-40 cursor-not-allowed` (i admin-scope).
-   - `.crop-axis-hint`: `text-[10px] text-admin-muted-light mt-1`. Kun token-klasser.
+   - Range: `disabled:cursor-not-allowed disabled:opacity-40` som utilities i markupen — en regel i components-laget taper mot `cursor-pointer` i utilities-laget.
+   - `.crop-axis-hint`: `text-[10px] text-admin-muted (muted-light gir for lav kontrast på 10 px) mt-1`. Kun token-klasser.
 
 5. **Galleri** — `src/scripts/admin-module-bilder.js`
    - Etter at preview-bildet er satt: `const refreshCropAvailability = bindCropSliderAvailability({ prefix: 'galleri-edit', img: gPreviewImg, container: previewContainer })`.
