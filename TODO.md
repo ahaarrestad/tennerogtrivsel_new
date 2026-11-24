@@ -21,6 +21,11 @@
 
 ## Backlog
 
+- [ ] **Fjern minimatch-overriden (#551)** — *ingen plan ennå* — ⏸️ **venter til `typescript-eslint` ≥ 8.74.0 er merget (tidligst ~2026-11-30, 7-dagers cooldown)**
+  - Vakta (`override-watch`) slo ut 2026-11-23 basert på *nyeste* versjoner. Installert `typescript-eslint` 8.72.2 krever fortsatt `minimatch ^10.2.2` — fjernes overriden nå, kommer sårbar 10.x tilbake (GHSA-g3hv-75wg-m249)
+  - Når 8.74.0 er inne: fjern `overrides.minimatch` i `package.json`, `npm install` (skal gi ≥ 11.0.5, eslint krever det), slett jobben `minimatch-override` i `.github/workflows/blocked-upgrades-watch.yml`, kvalitetsport, `Closes #551`
+  - Overriden tvinger i dag 11.0.2, under eslint-pakkenes eget krav `^11.0.5` — enda en grunn til å fjerne den raskt
+
 - [ ] **Koble Google-bedriftsprofilen til Gule Sider-profilen** — *ingen plan ennå* — ⏸️ **på vent**
   - 2026-11-18: klinikken har bedt oss vente. Ikke start før de sier fra
   - Manuell oppgave, ingen kode. Klinikken har bedt om det. Instruksene ligger i en e-post fra Gule Sider/Robin datert 27.10.2026
